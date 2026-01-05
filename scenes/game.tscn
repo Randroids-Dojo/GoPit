@@ -201,6 +201,7 @@ layout_mode = 2
 script = ExtResource("4_fire")
 
 [node name="GameOverOverlay" type="Control" parent="UI"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -266,6 +267,7 @@ size_flags_vertical = 10
 text = "Restart"
 
 [node name="LevelUpOverlay" type="Control" parent="UI"]
+visible = false
 process_mode = 3
 layout_mode = 3
 anchors_preset = 15
