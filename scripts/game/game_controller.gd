@@ -10,6 +10,7 @@ extends Node2D
 @onready var joystick: Control = $UI/HUD/InputContainer/HBoxContainer/JoystickContainer/VirtualJoystick
 @onready var fire_button: Control = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton
 @onready var aim_line: Line2D = $GameArea/AimLine
+@onready var pause_overlay: CanvasLayer = $UI/PauseOverlay
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 
@@ -143,6 +144,14 @@ func _on_fire_pressed() -> void:
 
 func _process(_delta: float) -> void:
 	_cleanup_offscreen_balls()
+
+
+func _notification(what: int) -> void:
+	# Auto-pause when app loses focus (mobile)
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			if pause_overlay:
+				pause_overlay.show_pause()
 
 
 func _cleanup_offscreen_balls() -> void:

@@ -5,6 +5,13 @@ var _players: Array[AudioStreamPlayer] = []
 const MAX_PLAYERS := 8
 const SAMPLE_RATE := 44100.0
 
+# Mute state
+var is_muted: bool = false:
+	set(value):
+		is_muted = value
+		AudioServer.set_bus_mute(0, is_muted)
+		_save_settings()
+
 enum SoundType {
 	FIRE,
 	HIT_WALL,
@@ -18,11 +25,33 @@ enum SoundType {
 
 
 func _ready() -> void:
+	_load_settings()
 	for i in MAX_PLAYERS:
 		var player := AudioStreamPlayer.new()
 		player.bus = "Master"
 		add_child(player)
 		_players.append(player)
+
+
+func toggle_mute() -> void:
+	is_muted = !is_muted
+
+
+func _save_settings() -> void:
+	var data := {"muted": is_muted}
+	var file := FileAccess.open("user://audio_settings.save", FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data))
+
+
+func _load_settings() -> void:
+	if FileAccess.file_exists("user://audio_settings.save"):
+		var file := FileAccess.open("user://audio_settings.save", FileAccess.READ)
+		if file:
+			var data = JSON.parse_string(file.get_as_text())
+			if data and data.has("muted"):
+				is_muted = data["muted"]
+				AudioServer.set_bus_mute(0, is_muted)
 
 
 func play(sound_type: SoundType) -> void:

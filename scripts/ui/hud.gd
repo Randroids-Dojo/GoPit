@@ -4,8 +4,11 @@ extends Control
 @onready var hp_bar: ProgressBar = $TopBar/HPBar
 @onready var hp_label: Label = $TopBar/HPBar/HPLabel
 @onready var wave_label: Label = $TopBar/WaveLabel
+@onready var pause_button: Button = $TopBar/PauseButton
 @onready var xp_bar: ProgressBar = $XPBarContainer/XPBar
 @onready var level_label: Label = $XPBarContainer/LevelLabel
+
+var pause_overlay: CanvasLayer
 
 
 func _ready() -> void:
@@ -13,8 +16,20 @@ func _ready() -> void:
 	_update_wave()
 	_update_xp()
 
+	# Get reference to pause overlay
+	pause_overlay = get_node_or_null("../PauseOverlay")
+
+	# Connect pause button
+	if pause_button:
+		pause_button.pressed.connect(_on_pause_pressed)
+
 	# Connect to GameManager signals
 	GameManager.state_changed.connect(_on_state_changed)
+
+
+func _on_pause_pressed() -> void:
+	if pause_overlay:
+		pause_overlay.show_pause()
 
 
 func _process(_delta: float) -> void:
