@@ -102,10 +102,11 @@ void RemoteDebugger::_send_node_info(const String &p_path) {
 ```
 
 ### Status
-- **Not fixed yet** - requires changes to the Godot automation fork at https://github.com/Randroids-Dojo/godot
-- Tests are currently non-blocking in CI (`|| true` in workflow)
+- **Fixed** (2026-01-05) - Added `is_inside_tree()` guards to all affected functions in `core/debugger/remote_debugger.cpp`
+- Functions fixed: `_send_scene_tree()`, `_send_node_info()`, `_send_property()`, `_set_property()`, `_call_method()`, `_send_screenshot()`, `_query_nodes()`, `_count_nodes()`
+- Pending: Push changes to https://github.com/Randroids-Dojo/godot automation branch
 
-### Impact
+### Impact (Before Fix)
 - Cannot run automated PlayGodot tests
 - Cannot verify UI fixes through automation
 - Manual testing required for now
