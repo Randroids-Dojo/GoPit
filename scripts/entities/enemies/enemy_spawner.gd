@@ -14,6 +14,10 @@ signal enemy_died(enemy: EnemyBase)
 @export var burst_count_min: int = 2
 @export var burst_count_max: int = 3
 
+# Enemy variety
+var bat_scene: PackedScene = preload("res://scenes/entities/enemies/bat.tscn")
+var crab_scene: PackedScene = preload("res://scenes/entities/enemies/crab.tscn")
+
 var _spawn_timer: Timer
 var _screen_width: float
 
@@ -52,11 +56,12 @@ func set_spawn_interval(interval: float) -> void:
 
 
 func spawn_enemy() -> EnemyBase:
-	if not slime_scene:
-		push_warning("EnemySpawner: No slime_scene assigned")
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene:
+		push_warning("EnemySpawner: No enemy scene available")
 		return null
 
-	var enemy: EnemyBase = slime_scene.instantiate()
+	var enemy: EnemyBase = scene.instantiate()
 	var spawn_x := randf_range(spawn_margin, _screen_width - spawn_margin)
 	enemy.global_position = Vector2(spawn_x, spawn_y_offset)
 	enemy.died.connect(_on_enemy_died)
@@ -64,6 +69,29 @@ func spawn_enemy() -> EnemyBase:
 	get_parent().add_child(enemy)
 	enemy_spawned.emit(enemy)
 	return enemy
+
+
+func _choose_enemy_type() -> PackedScene:
+	var wave: int = GameManager.current_wave
+
+	# Wave 1: Only slimes
+	if wave <= 1:
+		return slime_scene
+
+	# Wave 2-3: Introduce bats (30% chance)
+	if wave <= 3:
+		if randf() < 0.3:
+			return bat_scene
+		return slime_scene
+
+	# Wave 4+: All enemy types
+	var roll: float = randf()
+	if roll < 0.5:
+		return slime_scene
+	elif roll < 0.8:
+		return bat_scene
+	else:
+		return crab_scene
 
 
 func _on_spawn_timer_timeout() -> void:

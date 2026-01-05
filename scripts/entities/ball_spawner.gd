@@ -15,6 +15,7 @@ var ball_spread: float = 0.15  # radians between balls
 var pierce_count: int = 0
 var max_bounces: int = 10  # default wall bounces
 var crit_chance: float = 0.0
+var ball_type: int = 0  # 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
 
 
 func _ready() -> void:
@@ -54,6 +55,10 @@ func _spawn_ball(direction: Vector2) -> void:
 	ball.max_bounces = max_bounces
 	ball.crit_chance = crit_chance
 
+	# Set ball type if not normal
+	if ball_type > 0 and ball.has_method("set_ball_type"):
+		ball.set_ball_type(ball_type)
+
 	if balls_container:
 		balls_container.add_child(ball)
 	else:
@@ -84,6 +89,10 @@ func add_ricochet(amount: int) -> void:
 
 func add_crit_chance(amount: float) -> void:
 	crit_chance = minf(1.0, crit_chance + amount)
+
+
+func set_ball_type(new_type: int) -> void:
+	ball_type = new_type
 
 
 func get_spawn_position() -> Vector2:

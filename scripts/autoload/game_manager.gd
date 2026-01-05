@@ -16,6 +16,13 @@ signal level_up_triggered
 signal level_up_completed
 signal player_damaged(amount: int)
 signal wave_changed(new_wave: int)
+signal hp_changed(current_hp: int, max_hp: int)
+signal combo_changed(combo: int, multiplier: float)
+
+# Combo system
+var combo_count: int = 0
+var combo_timer: float = 0.0
+var combo_timeout: float = 2.0  # Seconds before combo resets
 
 var current_state: GameState = GameState.MENU:
 	set(value):
@@ -32,6 +39,11 @@ var xp_to_next_level: int = 100
 var player_level: int = 1
 var gem_magnetism_range: float = 0.0
 
+# High score persistence
+var high_score_wave: int = 0
+var high_score_level: int = 0
+const HIGH_SCORE_PATH := "user://high_score.save"
+
 # Session stats (reset each run)
 var stats := {
 	"enemies_killed": 0,
@@ -43,16 +55,44 @@ var stats := {
 
 
 func _ready() -> void:
-	pass
+	_load_high_scores()
 
 
 func _process(delta: float) -> void:
 	if current_state == GameState.PLAYING:
 		stats["time_survived"] += delta
+		# Update combo timer
+		if combo_count > 0:
+			combo_timer -= delta
+			if combo_timer <= 0:
+				_reset_combo()
 
 
 func record_enemy_kill() -> void:
 	stats["enemies_killed"] += 1
+	_increment_combo()
+
+
+func _increment_combo() -> void:
+	combo_count += 1
+	combo_timer = combo_timeout
+	combo_changed.emit(combo_count, get_combo_multiplier())
+
+
+func _reset_combo() -> void:
+	if combo_count > 0:
+		combo_count = 0
+		combo_timer = 0.0
+		combo_changed.emit(combo_count, 1.0)
+
+
+func get_combo_multiplier() -> float:
+	# 1x at 1-2 combo, 1.5x at 3-4, 2x at 5+
+	if combo_count >= 5:
+		return 2.0
+	elif combo_count >= 3:
+		return 1.5
+	return 1.0
 
 
 func record_ball_fired() -> void:
@@ -76,6 +116,7 @@ func start_game() -> void:
 func end_game() -> void:
 	current_state = GameState.GAME_OVER
 	SoundManager.play(SoundManager.SoundType.GAME_OVER)
+	_check_high_scores()
 	game_over.emit()
 
 
@@ -111,7 +152,8 @@ func return_to_menu() -> void:
 
 
 func add_xp(amount: int) -> void:
-	current_xp += amount
+	var final_xp: int = int(amount * get_combo_multiplier())
+	current_xp += final_xp
 	if current_xp >= xp_to_next_level:
 		trigger_level_up()
 
@@ -120,6 +162,9 @@ func take_damage(amount: int) -> void:
 	player_hp = max(0, player_hp - amount)
 	SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
 	player_damaged.emit(amount)
+	hp_changed.emit(player_hp, max_hp)
+	# Reset combo on damage
+	_reset_combo()
 	# Big screen shake on player damage
 	CameraShake.shake(15.0, 3.0)
 	if player_hp <= 0:
@@ -128,6 +173,7 @@ func take_damage(amount: int) -> void:
 
 func heal(amount: int) -> void:
 	player_hp = min(max_hp, player_hp + amount)
+	hp_changed.emit(player_hp, max_hp)
 
 
 func advance_wave() -> void:
@@ -156,3 +202,43 @@ func _calculate_xp_requirement(level: int) -> int:
 
 func _on_state_changed(old_state: GameState, new_state: GameState) -> void:
 	state_changed.emit(old_state, new_state)
+
+
+func _load_high_scores() -> void:
+	if not FileAccess.file_exists(HIGH_SCORE_PATH):
+		return
+
+	var file := FileAccess.open(HIGH_SCORE_PATH, FileAccess.READ)
+	if not file:
+		return
+
+	var data = JSON.parse_string(file.get_as_text())
+	if data:
+		high_score_wave = data.get("wave", 0)
+		high_score_level = data.get("level", 0)
+
+
+func _check_high_scores() -> void:
+	var is_new_high_score := false
+
+	if current_wave > high_score_wave:
+		high_score_wave = current_wave
+		is_new_high_score = true
+
+	if player_level > high_score_level:
+		high_score_level = player_level
+		is_new_high_score = true
+
+	if is_new_high_score:
+		_save_high_scores()
+
+
+func _save_high_scores() -> void:
+	var data := {
+		"wave": high_score_wave,
+		"level": high_score_level
+	}
+
+	var file := FileAccess.open(HIGH_SCORE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data))

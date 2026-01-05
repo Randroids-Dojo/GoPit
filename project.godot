@@ -20,6 +20,7 @@ config/features=PackedStringArray("4.5", "GL Compatibility")
 GameManager="*res://scripts/autoload/game_manager.gd"
 SoundManager="*res://scripts/autoload/sound_manager.gd"
 CameraShake="*res://scripts/effects/camera_shake.gd"
+MusicManager="*res://scripts/autoload/music_manager.gd"
 
 [display]
 

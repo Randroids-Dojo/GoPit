@@ -16,11 +16,11 @@ func _ready() -> void:
 	tween.tween_callback(queue_free)
 
 
-static func spawn(parent: Node, pos: Vector2, damage: int, damage_color: Color = Color.WHITE) -> void:
+static func spawn(parent: Node, pos: Vector2, value: int, text_color: Color = Color.WHITE, prefix: String = "") -> void:
 	var scene := preload("res://scenes/effects/damage_number.tscn")
 	var label: Label = scene.instantiate()
-	label.text = str(damage)
+	label.text = prefix + str(value)
 	label.position = pos + Vector2(randf_range(-10, 10), randf_range(-10, 10))
-	label.modulate = damage_color
+	label.modulate = text_color
 	label.z_index = 100
 	parent.add_child(label)

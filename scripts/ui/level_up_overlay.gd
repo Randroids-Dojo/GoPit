@@ -13,7 +13,10 @@ enum UpgradeType {
 	RICOCHET,
 	CRITICAL,
 	MAGNETISM,
-	HEAL
+	HEAL,
+	FIRE_BALL,
+	ICE_BALL,
+	LIGHTNING_BALL
 }
 
 const UPGRADE_DATA := {
@@ -76,6 +79,24 @@ const UPGRADE_DATA := {
 		"description": "Restore 30 HP",
 		"apply": "_apply_heal",
 		"max_stacks": 99
+	},
+	UpgradeType.FIRE_BALL: {
+		"name": "Fire Ball",
+		"description": "Burn enemies",
+		"apply": "_apply_fire_ball",
+		"max_stacks": 1
+	},
+	UpgradeType.ICE_BALL: {
+		"name": "Ice Ball",
+		"description": "Slow enemies",
+		"apply": "_apply_ice_ball",
+		"max_stacks": 1
+	},
+	UpgradeType.LIGHTNING_BALL: {
+		"name": "Lightning Ball",
+		"description": "Chain damage",
+		"apply": "_apply_lightning_ball",
+		"max_stacks": 1
 	}
 }
 
@@ -224,3 +245,21 @@ func _apply_magnetism() -> void:
 
 func _apply_heal() -> void:
 	GameManager.heal(30)
+
+
+func _apply_fire_ball() -> void:
+	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
+	if ball_spawner and ball_spawner.has_method("set_ball_type"):
+		ball_spawner.set_ball_type(1)  # FIRE
+
+
+func _apply_ice_ball() -> void:
+	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
+	if ball_spawner and ball_spawner.has_method("set_ball_type"):
+		ball_spawner.set_ball_type(2)  # ICE
+
+
+func _apply_lightning_ball() -> void:
+	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
+	if ball_spawner and ball_spawner.has_method("set_ball_type"):
+		ball_spawner.set_ball_type(3)  # LIGHTNING

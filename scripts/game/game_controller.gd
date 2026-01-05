@@ -62,11 +62,13 @@ func _ready() -> void:
 func _on_game_started() -> void:
 	if enemy_spawner:
 		enemy_spawner.start_spawning()
+	MusicManager.start_music()
 
 
 func _on_game_over() -> void:
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
+	MusicManager.stop_music()
 
 
 func _on_player_damaged(_amount: int) -> void:
@@ -84,11 +86,20 @@ func _on_player_zone_body_entered(body: Node2D) -> void:
 func _on_player_zone_area_entered(area: Area2D) -> void:
 	# Check if it's a gem (collision layer 8)
 	if area.collision_layer & 8:
+		var xp_value: int = 10
 		if area.has_method("get_xp_value"):
-			GameManager.add_xp(area.get_xp_value())
+			xp_value = area.get_xp_value()
+			GameManager.add_xp(xp_value)
 		GameManager.record_gem_collected()
 		SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
+		# Show floating XP text
+		_show_xp_text(area.global_position, xp_value)
 		area.queue_free()
+
+
+func _show_xp_text(pos: Vector2, xp: int) -> void:
+	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+	DamageNumber.spawn(self, pos, xp, Color(0.3, 1.0, 0.5), "+")  # Green "+X" for XP
 
 
 func _on_enemy_spawned(enemy: EnemyBase) -> void:
@@ -150,6 +161,9 @@ func _advance_wave() -> void:
 		# Increase spawn rate
 		var new_interval: float = max(0.5, enemy_spawner.spawn_interval - 0.1)
 		enemy_spawner.set_spawn_interval(new_interval)
+
+	# Increase music intensity
+	MusicManager.set_intensity(float(GameManager.current_wave))
 
 
 func _on_joystick_direction_changed(direction: Vector2) -> void:

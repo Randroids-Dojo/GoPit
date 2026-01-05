@@ -25,9 +25,15 @@ func _on_game_over() -> void:
 
 func _update_stats() -> void:
 	if wave_label:
-		wave_label.text = "Reached Wave %d" % GameManager.current_wave
+		var best_text := ""
+		if GameManager.current_wave >= GameManager.high_score_wave:
+			best_text = " (NEW BEST!)"
+		wave_label.text = "Reached Wave %d%s" % [GameManager.current_wave, best_text]
 	if score_label:
-		score_label.text = "Level %d" % GameManager.player_level
+		var best_text := ""
+		if GameManager.player_level >= GameManager.high_score_level:
+			best_text = " (NEW BEST!)"
+		score_label.text = "Level %d%s" % [GameManager.player_level, best_text]
 	if stats_label:
 		var time: float = GameManager.stats["time_survived"]
 		var minutes: int = int(time) / 60
@@ -35,12 +41,15 @@ func _update_stats() -> void:
 		stats_label.text = """Enemies: %d
 Damage: %d
 Gems: %d
-Time: %d:%02d""" % [
+Time: %d:%02d
+Best Wave: %d | Best Level: %d""" % [
 			GameManager.stats["enemies_killed"],
 			GameManager.stats["damage_dealt"],
 			GameManager.stats["gems_collected"],
 			minutes,
-			seconds
+			seconds,
+			GameManager.high_score_wave,
+			GameManager.high_score_level
 		]
 
 

@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://bat_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/bat.gd" id="1_bat"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bat"]
+radius = 15.0
+
+[node name="Bat" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 18
+script = ExtResource("1_bat")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bat")
