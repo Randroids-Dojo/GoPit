@@ -19,3 +19,11 @@
 .mono/
 data_*/
 mono_crash.*.json
+
+# Build output
+build/
+
+# Vercel
+.vercel/
+.vercel
+.env*.local
