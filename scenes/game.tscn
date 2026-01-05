@@ -1,0 +1,64 @@
+[gd_scene load_steps=1 format=3 uid="uid://game_scene"]
+
+[node name="Game" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.102, 0.102, 0.18, 1)
+
+[node name="GameArea" type="Node2D" parent="."]
+
+[node name="Walls" type="Node2D" parent="GameArea"]
+
+[node name="Balls" type="Node2D" parent="GameArea"]
+
+[node name="Enemies" type="Node2D" parent="GameArea"]
+
+[node name="Gems" type="Node2D" parent="GameArea"]
+
+[node name="PlayerZone" type="Area2D" parent="GameArea"]
+position = Vector2(360, 1200)
+
+[node name="PlayerZoneShape" type="CollisionShape2D" parent="GameArea/PlayerZone"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="HBoxContainer" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 60.0
+grow_horizontal = 2
+
+[node name="XPBarContainer" type="MarginContainer" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -200.0
+offset_bottom = -150.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="InputContainer" type="Control" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -140.0
+grow_horizontal = 2
+grow_vertical = 0
