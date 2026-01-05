@@ -92,8 +92,10 @@ func on_enemy_hit() -> void:
 
 
 func _load_tutorial_state() -> bool:
+	# EMERGENCY: Tutorial disabled by default due to input blocking bug
+	# TODO: Re-enable when mouse_filter fix is verified working
 	if not FileAccess.file_exists(SETTINGS_PATH):
-		return false
+		return true  # Treat as completed (skip tutorial)
 
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
 	if not file:
