@@ -38,3 +38,38 @@ bd sync               # Sync with git
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 
+## Godot UI Best Practices
+
+### Mouse/Touch Event Handling
+
+**CRITICAL**: When creating overlay UI elements (tutorials, popups, HUD elements), you MUST explicitly set `mouse_filter` on ALL Control nodes to prevent blocking input to elements underneath.
+
+```
+mouse_filter values:
+- 0 (MOUSE_FILTER_STOP)   - Captures events, blocks pass-through (DEFAULT for Control nodes!)
+- 1 (MOUSE_FILTER_PASS)   - Receives events AND passes to nodes below
+- 2 (MOUSE_FILTER_IGNORE) - Ignores events, passes to nodes below
+```
+
+**Rules:**
+1. **Overlay containers** (ColorRect backgrounds, Panel, etc.) should use `mouse_filter = 2` unless they need to block interaction
+2. **ALL child Control nodes** inherit default `MOUSE_FILTER_STOP` - you must explicitly set `mouse_filter = 2` on each one that shouldn't capture input
+3. **When positioning UI over interactive elements** (buttons, joysticks), verify the overlay and ALL its children have appropriate mouse_filter settings
+4. **Test on mobile** - touch events behave the same as mouse but bugs are more noticeable when you can't click around an overlay
+
+**Common mistake:**
+```gdscript
+# Parent has mouse_filter = 2, but child Control still blocks!
+[node name="Overlay" type="ColorRect"]
+mouse_filter = 2  # Good
+
+[node name="ChildControl" type="Control" parent="Overlay"]
+# BAD: No mouse_filter set, defaults to STOP and blocks input!
+```
+
+**Correct:**
+```gdscript
+[node name="ChildControl" type="Control" parent="Overlay"]
+mouse_filter = 2  # Explicitly set to IGNORE
+```
+

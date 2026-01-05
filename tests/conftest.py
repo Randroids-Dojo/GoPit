@@ -1,9 +1,14 @@
+import os
 import pytest_asyncio
 from pathlib import Path
 from playgodot import Godot
 
 GODOT_PROJECT = Path(__file__).parent.parent
-GODOT_PATH = "/Applications/Godot.app/Contents/MacOS/Godot"
+# Use GODOT_PATH env var (CI), fallback to local macOS path
+GODOT_PATH = os.environ.get(
+    "GODOT_PATH",
+    "/tmp/godot-automation-build/godot.macos.editor.universal"
+)
 
 
 @pytest_asyncio.fixture
