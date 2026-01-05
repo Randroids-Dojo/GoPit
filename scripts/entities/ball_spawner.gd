@@ -37,6 +37,7 @@ func fire() -> void:
 		get_parent().add_child(ball)
 
 	ball_spawned.emit(ball)
+	SoundManager.play(SoundManager.SoundType.FIRE)
 
 
 func increase_damage(amount: int) -> void:

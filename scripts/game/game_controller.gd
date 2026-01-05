@@ -76,6 +76,7 @@ func _on_player_zone_area_entered(area: Area2D) -> void:
 	if area.collision_layer & 8:
 		if area.has_method("get_xp_value"):
 			GameManager.add_xp(area.get_xp_value())
+		SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
 		area.queue_free()
 
 

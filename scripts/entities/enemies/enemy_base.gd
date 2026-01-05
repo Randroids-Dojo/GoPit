@@ -73,5 +73,6 @@ func _flash_hit() -> void:
 
 
 func _die() -> void:
+	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 	died.emit(self)
 	queue_free()

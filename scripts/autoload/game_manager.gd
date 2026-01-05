@@ -42,11 +42,13 @@ func start_game() -> void:
 
 func end_game() -> void:
 	current_state = GameState.GAME_OVER
+	SoundManager.play(SoundManager.SoundType.GAME_OVER)
 	game_over.emit()
 
 
 func trigger_level_up() -> void:
 	current_state = GameState.LEVEL_UP
+	SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 	level_up_triggered.emit()
 
 
@@ -83,6 +85,7 @@ func add_xp(amount: int) -> void:
 
 func take_damage(amount: int) -> void:
 	player_hp = max(0, player_hp - amount)
+	SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
 	if player_hp <= 0:
 		end_game()
 

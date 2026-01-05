@@ -31,6 +31,7 @@ func _physics_process(delta: float) -> void:
 		# Bounce off walls
 		if collider.collision_layer & 1:  # walls layer
 			direction = direction.bounce(collision.get_normal())
+			SoundManager.play(SoundManager.SoundType.HIT_WALL)
 
 		# Hit enemy
 		elif collider.collision_layer & 4:  # enemies layer
@@ -38,6 +39,7 @@ func _physics_process(delta: float) -> void:
 			if collider.has_method("take_damage"):
 				collider.take_damage(damage)
 			hit_enemy.emit(collider)
+			SoundManager.play(SoundManager.SoundType.HIT_ENEMY)
 
 		# Hit gem
 		elif collider.collision_layer & 8:  # gems layer
