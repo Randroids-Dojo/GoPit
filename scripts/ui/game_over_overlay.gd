@@ -29,9 +29,9 @@ func _update_stats() -> void:
 	if score_label:
 		score_label.text = "Level %d" % GameManager.player_level
 	if stats_label:
-		var time := GameManager.stats["time_survived"]
-		var minutes := int(time) / 60
-		var seconds := int(time) % 60
+		var time: float = GameManager.stats["time_survived"]
+		var minutes: int = int(time) / 60
+		var seconds: int = int(time) % 60
 		stats_label.text = """Enemies: %d
 Damage: %d
 Gems: %d
