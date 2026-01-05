@@ -1,0 +1,66 @@
+class_name EnemyBase
+extends CharacterBody2D
+## Base class for all enemies - handles HP, movement, damage, and death
+
+signal died(enemy: EnemyBase)
+signal took_damage(enemy: EnemyBase, amount: int)
+
+@export var max_hp: int = 10
+@export var speed: float = 100.0
+@export var damage_to_player: int = 10
+@export var xp_value: int = 10
+
+var hp: int:
+	set(value):
+		hp = clampi(value, 0, max_hp)
+		if hp <= 0:
+			_die()
+
+var _flash_tween: Tween
+
+
+func _ready() -> void:
+	hp = max_hp
+	_setup_collision()
+	queue_redraw()
+
+
+func _physics_process(delta: float) -> void:
+	_move(delta)
+
+
+func _setup_collision() -> void:
+	collision_layer = 4  # enemies layer
+	collision_mask = 2 | 16  # balls + player_zone
+
+
+func _move(_delta: float) -> void:
+	# Override in subclasses for specific movement patterns
+	velocity = Vector2.DOWN * speed
+	move_and_slide()
+
+
+func _draw() -> void:
+	# Override in subclasses for specific visuals
+	pass
+
+
+func take_damage(amount: int) -> void:
+	hp -= amount
+	took_damage.emit(self, amount)
+	_flash_hit()
+
+
+func _flash_hit() -> void:
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+
+	modulate = Color.WHITE
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(self, "modulate", Color(1, 0.3, 0.3), 0.05)
+	_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.1)
+
+
+func _die() -> void:
+	died.emit(self)
+	queue_free()

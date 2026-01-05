@@ -1,6 +1,21 @@
-[gd_scene load_steps=1 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=9 format=3 uid="uid://game_scene"]
+
+[ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="2_spawner"]
+[ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="3_joystick"]
+[ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="4_fire"]
+[ext_resource type="Script" path="res://scripts/input/aim_line.gd" id="5_aimline"]
+[ext_resource type="Script" path="res://scripts/entities/enemies/enemy_spawner.gd" id="6_enemy_spawner"]
+[ext_resource type="PackedScene" uid="uid://slime_scene" path="res://scenes/entities/enemies/slime.tscn" id="7_slime"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(20, 1280)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player_zone"]
+size = Vector2(720, 80)
 
 [node name="Game" type="Node2D"]
+script = ExtResource("1_controller")
 
 [node name="Background" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -14,16 +29,46 @@ color = Color(0.102, 0.102, 0.18, 1)
 
 [node name="Walls" type="Node2D" parent="GameArea"]
 
+[node name="LeftWall" type="StaticBody2D" parent="GameArea/Walls"]
+position = Vector2(10, 640)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameArea/Walls/LeftWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="GameArea/Walls"]
+position = Vector2(710, 640)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameArea/Walls/RightWall"]
+shape = SubResource("RectangleShape2D_wall")
+
 [node name="Balls" type="Node2D" parent="GameArea"]
 
 [node name="Enemies" type="Node2D" parent="GameArea"]
+
+[node name="EnemySpawner" type="Node2D" parent="GameArea/Enemies"]
+script = ExtResource("6_enemy_spawner")
+slime_scene = ExtResource("7_slime")
 
 [node name="Gems" type="Node2D" parent="GameArea"]
 
 [node name="PlayerZone" type="Area2D" parent="GameArea"]
 position = Vector2(360, 1200)
+collision_layer = 16
+collision_mask = 4
 
 [node name="PlayerZoneShape" type="CollisionShape2D" parent="GameArea/PlayerZone"]
+shape = SubResource("RectangleShape2D_player_zone")
+
+[node name="BallSpawner" type="Node2D" parent="GameArea"]
+position = Vector2(360, 1100)
+script = ExtResource("2_spawner")
+
+[node name="AimLine" type="Line2D" parent="GameArea"]
+script = ExtResource("5_aimline")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -62,3 +107,30 @@ anchor_bottom = 1.0
 offset_top = -140.0
 grow_horizontal = 2
 grow_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/HUD/InputContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="JoystickContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VirtualJoystick" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/JoystickContainer"]
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 2
+script = ExtResource("3_joystick")
+
+[node name="FireButtonContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FireButton" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/FireButtonContainer"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+script = ExtResource("4_fire")
