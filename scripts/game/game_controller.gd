@@ -13,6 +13,7 @@ extends Node2D
 @onready var pause_overlay: CanvasLayer = $UI/PauseOverlay
 @onready var damage_vignette: ColorRect = $UI/DamageVignette
 @onready var tutorial_overlay: CanvasLayer = $UI/TutorialOverlay
+@onready var danger_indicator: Control = $UI/DangerIndicator
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 
@@ -85,6 +86,7 @@ func _on_player_zone_area_entered(area: Area2D) -> void:
 	if area.collision_layer & 8:
 		if area.has_method("get_xp_value"):
 			GameManager.add_xp(area.get_xp_value())
+		GameManager.record_gem_collected()
 		SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
 		area.queue_free()
 
@@ -94,11 +96,20 @@ func _on_enemy_spawned(enemy: EnemyBase) -> void:
 	enemy.died.connect(_on_enemy_died)
 	# Connect to enemy damage for tutorial
 	enemy.took_damage.connect(_on_enemy_took_damage)
+	# Connect danger zone signals
+	if danger_indicator:
+		enemy.entered_danger_zone.connect(danger_indicator.add_danger)
+		enemy.left_danger_zone.connect(danger_indicator.remove_danger)
+		enemy.died.connect(func(_e):
+			if enemy.in_danger_zone:
+				danger_indicator.remove_danger()
+		)
 
 
 func _on_enemy_died(enemy: EnemyBase) -> void:
 	_spawn_gem(enemy.global_position, enemy.xp_value)
 	_check_wave_progress()
+	GameManager.record_enemy_kill()
 
 
 func _on_enemy_took_damage(_enemy: EnemyBase, _amount: int) -> void:
@@ -131,6 +142,7 @@ func _check_wave_progress() -> void:
 
 func _advance_wave() -> void:
 	enemies_killed_this_wave = 0
+	SoundManager.play(SoundManager.SoundType.WAVE_COMPLETE)
 	GameManager.advance_wave()
 
 	# Increase difficulty
@@ -160,6 +172,7 @@ func _on_joystick_released() -> void:
 func _on_fire_pressed() -> void:
 	if ball_spawner:
 		ball_spawner.fire()
+		GameManager.record_ball_fired()
 
 	# Notify tutorial
 	if tutorial_overlay and tutorial_overlay.has_method("on_ball_fired"):

@@ -1,8 +1,10 @@
-[gd_scene load_steps=15 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=17 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
 [ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
+[ext_resource type="Script" path="res://scripts/ui/wave_announcement.gd" id="14_wave"]
+[ext_resource type="Script" path="res://scripts/effects/danger_indicator.gd" id="15_danger"]
 [ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="2_spawner"]
 [ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="3_joystick"]
 [ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="4_fire"]
@@ -247,6 +249,15 @@ horizontal_alignment = 1
 [node name="WaveLabel" type="Label" parent="UI/GameOverOverlay/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Reached Wave 1"
+horizontal_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="UI/GameOverOverlay/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Enemies: 0
+Damage: 0
+Gems: 0
+Time: 0:00"
 horizontal_alignment = 1
 
 [node name="RestartButton" type="Button" parent="UI/GameOverOverlay/Panel/VBoxContainer"]
@@ -494,3 +505,47 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 0.8, 0.2, 0.3)
+
+[node name="WaveAnnouncement" type="CanvasLayer" parent="UI"]
+layer = 5
+script = ExtResource("14_wave")
+
+[node name="CenterContainer" type="CenterContainer" parent="UI/WaveAnnouncement"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="WaveLabel" type="Label" parent="UI/WaveAnnouncement/CenterContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 72
+text = "WAVE 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DangerIndicator" type="Control" parent="UI"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -220.0
+offset_bottom = -200.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("15_danger")
+
+[node name="Indicator" type="ColorRect" parent="UI/DangerIndicator"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0, 0, 0)

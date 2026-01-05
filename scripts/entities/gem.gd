@@ -9,6 +9,9 @@ signal collected(gem: Node2D)
 @export var fall_speed: float = 150.0
 @export var sparkle_speed: float = 3.0
 
+const PLAYER_ZONE_Y: float = 1200.0
+const MAGNETISM_SPEED: float = 500.0
+
 var _time: float = 0.0
 
 
@@ -24,7 +27,21 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	position.y += fall_speed * delta
+
+	# Check for magnetism
+	var magnetism_range := GameManager.gem_magnetism_range
+	if magnetism_range > 0:
+		var distance_to_zone := PLAYER_ZONE_Y - global_position.y
+		if distance_to_zone > 0 and distance_to_zone < magnetism_range:
+			# Accelerate toward player zone
+			var pull_strength := 1.0 - (distance_to_zone / magnetism_range)
+			var current_speed := lerpf(fall_speed, MAGNETISM_SPEED, pull_strength)
+			position.y += current_speed * delta
+		else:
+			position.y += fall_speed * delta
+	else:
+		position.y += fall_speed * delta
+
 	queue_redraw()
 
 	# Despawn if off screen

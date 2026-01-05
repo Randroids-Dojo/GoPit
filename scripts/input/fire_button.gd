@@ -4,6 +4,7 @@ extends Control
 signal fired
 signal cooldown_started
 signal cooldown_finished
+signal blocked
 
 @export var button_radius: float = 50.0
 @export var cooldown_duration: float = 0.5
@@ -13,12 +14,15 @@ signal cooldown_finished
 
 var is_ready: bool = true
 var cooldown_timer: float = 0.0
+var _shake_tween: Tween
+var _original_position: Vector2
 
 
 func _ready() -> void:
 	add_to_group("fire_button")
 	custom_minimum_size = Vector2(button_radius * 2, button_radius * 2)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	_original_position = position
 
 
 func _process(delta: float) -> void:
@@ -66,11 +70,17 @@ func _draw_arc_filled(center: Vector2, radius: float, start_angle: float, end_an
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_try_fire()
+			if is_ready:
+				_try_fire()
+			else:
+				_on_blocked()
 
 	elif event is InputEventScreenTouch:
 		if event.pressed:
-			_try_fire()
+			if is_ready:
+				_try_fire()
+			else:
+				_on_blocked()
 
 
 func _try_fire() -> void:
@@ -80,6 +90,31 @@ func _try_fire() -> void:
 		cooldown_started.emit()
 		fired.emit()
 		queue_redraw()
+
+
+func _on_blocked() -> void:
+	blocked.emit()
+	_shake_button()
+	_flash_red()
+	SoundManager.play(SoundManager.SoundType.BLOCKED)
+
+
+func _shake_button() -> void:
+	if _shake_tween and _shake_tween.is_valid():
+		_shake_tween.kill()
+
+	_shake_tween = create_tween()
+	_shake_tween.tween_property(self, "position:x", _original_position.x + 5, 0.05)
+	_shake_tween.tween_property(self, "position:x", _original_position.x - 5, 0.05)
+	_shake_tween.tween_property(self, "position:x", _original_position.x + 3, 0.05)
+	_shake_tween.tween_property(self, "position:x", _original_position.x, 0.05)
+
+
+func _flash_red() -> void:
+	var original := modulate
+	modulate = Color(1.5, 0.5, 0.5)
+	var tween := create_tween()
+	tween.tween_property(self, "modulate", original, 0.1)
 
 
 func can_fire() -> bool:

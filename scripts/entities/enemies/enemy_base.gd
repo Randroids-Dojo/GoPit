@@ -4,6 +4,11 @@ extends CharacterBody2D
 
 signal died(enemy: EnemyBase)
 signal took_damage(enemy: EnemyBase, amount: int)
+signal entered_danger_zone
+signal left_danger_zone
+
+const DANGER_ZONE_Y: float = 1000.0  # 200px above player zone at 1200
+var in_danger_zone: bool = false
 
 @export var max_hp: int = 10
 @export var speed: float = 100.0
@@ -38,6 +43,7 @@ func _scale_with_wave() -> void:
 
 func _physics_process(delta: float) -> void:
 	_move(delta)
+	_check_danger_zone()
 
 
 func _setup_collision() -> void:
@@ -51,6 +57,27 @@ func _move(_delta: float) -> void:
 	move_and_slide()
 
 
+func _check_danger_zone() -> void:
+	var now_in_danger := global_position.y >= DANGER_ZONE_Y
+	if now_in_danger and not in_danger_zone:
+		in_danger_zone = true
+		entered_danger_zone.emit()
+		_on_enter_danger_zone()
+	elif not now_in_danger and in_danger_zone:
+		in_danger_zone = false
+		left_danger_zone.emit()
+		_on_exit_danger_zone()
+
+
+func _on_enter_danger_zone() -> void:
+	# Tint enemy red to indicate danger
+	modulate = Color(1.5, 0.5, 0.5)
+
+
+func _on_exit_danger_zone() -> void:
+	modulate = Color.WHITE
+
+
 func _draw() -> void:
 	# Override in subclasses for specific visuals
 	pass
@@ -59,6 +86,7 @@ func _draw() -> void:
 func take_damage(amount: int) -> void:
 	hp -= amount
 	took_damage.emit(self, amount)
+	GameManager.record_damage_dealt(amount)
 	_flash_hit()
 	_spawn_hit_effects(amount)
 

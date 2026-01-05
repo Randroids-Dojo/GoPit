@@ -20,7 +20,23 @@ enum SoundType {
 	GEM_COLLECT,
 	PLAYER_DAMAGE,
 	LEVEL_UP,
-	GAME_OVER
+	GAME_OVER,
+	WAVE_COMPLETE,
+	BLOCKED
+}
+
+# Per-sound pitch/volume variance settings
+const SOUND_SETTINGS := {
+	SoundType.FIRE: {"pitch_var": 0.15, "vol_var": 0.1},
+	SoundType.HIT_WALL: {"pitch_var": 0.2, "vol_var": 0.15},
+	SoundType.HIT_ENEMY: {"pitch_var": 0.1, "vol_var": 0.1},
+	SoundType.ENEMY_DEATH: {"pitch_var": 0.05, "vol_var": 0.05},
+	SoundType.GEM_COLLECT: {"pitch_var": 0.2, "vol_var": 0.1},
+	SoundType.PLAYER_DAMAGE: {"pitch_var": 0.05, "vol_var": 0.0},
+	SoundType.LEVEL_UP: {"pitch_var": 0.0, "vol_var": 0.0},
+	SoundType.GAME_OVER: {"pitch_var": 0.0, "vol_var": 0.0},
+	SoundType.WAVE_COMPLETE: {"pitch_var": 0.0, "vol_var": 0.0},
+	SoundType.BLOCKED: {"pitch_var": 0.1, "vol_var": 0.0}
 }
 
 
@@ -60,6 +76,15 @@ func play(sound_type: SoundType) -> void:
 		return
 
 	player.stream = _generate_sound(sound_type)
+
+	# Apply pitch and volume variance
+	var settings: Dictionary = SOUND_SETTINGS.get(sound_type, {})
+	var pitch_var: float = settings.get("pitch_var", 0.1)
+	var vol_var: float = settings.get("vol_var", 0.1)
+
+	player.pitch_scale = randf_range(1.0 - pitch_var, 1.0 + pitch_var)
+	player.volume_db = randf_range(-vol_var * 6.0, vol_var * 6.0)
+
 	player.play()
 
 
@@ -95,6 +120,10 @@ func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
 			data = _generate_arpeggio(0.3, [400.0, 500.0, 600.0, 800.0])
 		SoundType.GAME_OVER:
 			data = _generate_sweep(0.4, 400.0, 100.0)
+		SoundType.WAVE_COMPLETE:
+			data = _generate_arpeggio(0.4, [523.0, 659.0, 784.0, 1047.0])  # C5-E5-G5-C6
+		SoundType.BLOCKED:
+			data = _generate_blip(0.05, 100.0, 80.0)  # Short, low, muted click
 
 	wav.data = data
 	return wav

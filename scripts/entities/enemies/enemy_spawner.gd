@@ -9,6 +9,10 @@ signal enemy_died(enemy: EnemyBase)
 @export var spawn_interval: float = 2.0
 @export var spawn_margin: float = 40.0  # Margin from screen edges
 @export var spawn_y_offset: float = -50.0  # Spawn above screen
+@export var spawn_variance: float = 0.5  # ±0.5 seconds random variance
+@export var burst_chance: float = 0.1  # 10% chance for burst spawn
+@export var burst_count_min: int = 2
+@export var burst_count_max: int = 3
 
 var _spawn_timer: Timer
 var _screen_width: float
@@ -21,23 +25,30 @@ func _ready() -> void:
 
 func _setup_timer() -> void:
 	_spawn_timer = Timer.new()
-	_spawn_timer.wait_time = spawn_interval
+	_spawn_timer.one_shot = true
 	_spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	add_child(_spawn_timer)
 
 
 func start_spawning() -> void:
-	_spawn_timer.start()
+	_start_spawn_timer()
 
 
 func stop_spawning() -> void:
 	_spawn_timer.stop()
 
 
+func _start_spawn_timer() -> void:
+	var variance := randf_range(-spawn_variance, spawn_variance)
+	var next_spawn := maxf(0.3, spawn_interval + variance)
+	_spawn_timer.wait_time = next_spawn
+	_spawn_timer.start()
+
+
 func set_spawn_interval(interval: float) -> void:
 	spawn_interval = interval
-	if _spawn_timer:
-		_spawn_timer.wait_time = interval
+	# Increase burst chance as game speeds up
+	burst_chance = minf(0.3, 0.1 + (2.0 - interval) * 0.1)
 
 
 func spawn_enemy() -> EnemyBase:
@@ -56,7 +67,20 @@ func spawn_enemy() -> EnemyBase:
 
 
 func _on_spawn_timer_timeout() -> void:
-	spawn_enemy()
+	# Check for burst spawn
+	if randf() < burst_chance:
+		_burst_spawn()
+	else:
+		spawn_enemy()
+
+	# Restart timer with new random interval
+	_start_spawn_timer()
+
+
+func _burst_spawn() -> void:
+	var count := randi_range(burst_count_min, burst_count_max)
+	for i in range(count):
+		spawn_enemy()
 
 
 func _on_enemy_died(enemy: EnemyBase) -> void:

@@ -1,14 +1,17 @@
 extends Line2D
-## Trajectory preview line for aiming
+## Trajectory preview line for aiming with ghost state when released
 
 @export var max_length: float = 400.0
 @export var line_color: Color = Color(1.0, 1.0, 1.0, 0.4)
+@export var ghost_color: Color = Color(0.5, 0.5, 0.5, 0.3)
 @export var line_width_value: float = 3.0
 @export var dash_length: float = 20.0
 @export var gap_length: float = 10.0
 
-var current_direction: Vector2 = Vector2.ZERO
-var is_visible_line: bool = false
+var current_direction: Vector2 = Vector2.UP
+var is_active: bool = false
+var _last_origin: Vector2 = Vector2.ZERO
+var _fade_tween: Tween
 
 
 func _ready() -> void:
@@ -19,27 +22,34 @@ func _ready() -> void:
 
 func show_line(direction: Vector2, start_pos: Vector2) -> void:
 	if direction == Vector2.ZERO:
-		hide_line()
 		return
 
 	current_direction = direction.normalized()
-	is_visible_line = true
+	is_active = true
 	visible = true
+	_last_origin = start_pos
 
+	# Cancel any fade animation
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+
+	default_color = line_color
 	_update_line(start_pos)
 
 
 func hide_line() -> void:
-	is_visible_line = false
-	visible = false
-	clear_points()
+	is_active = false
+	# Don't hide - fade to ghost state
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, "default_color", ghost_color, 0.2)
 
 
 func _update_line(start_pos: Vector2) -> void:
 	clear_points()
-
-	if not is_visible_line:
-		return
+	_last_origin = start_pos
 
 	# Create dashed line effect
 	var current_pos := start_pos
@@ -48,7 +58,7 @@ func _update_line(start_pos: Vector2) -> void:
 
 	while remaining > 0:
 		var segment_length := dash_length if is_dash else gap_length
-		segment_length = min(segment_length, remaining)
+		segment_length = minf(segment_length, remaining)
 
 		if is_dash:
 			add_point(current_pos)
@@ -60,7 +70,7 @@ func _update_line(start_pos: Vector2) -> void:
 
 
 func update_position(start_pos: Vector2) -> void:
-	if is_visible_line:
+	if visible:
 		_update_line(start_pos)
 
 
