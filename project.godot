@@ -12,7 +12,12 @@ config_version=5
 
 config/name="GoPit"
 config/version="0.1.0"
+run/main_scene="res://scenes/game.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
+
+[autoload]
+
+GameManager="*res://scripts/autoload/game_manager.gd"
 
 [display]
 
@@ -22,9 +27,14 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
-[autoload]
+[layer_names]
 
-GameManager="*res://scripts/autoload/game_manager.gd"
+2d_physics/layer_1="walls"
+2d_physics/layer_2="balls"
+2d_physics/layer_3="enemies"
+2d_physics/layer_4="gems"
+2d_physics/layer_5="player_zone"
+
 
 [rendering]
 

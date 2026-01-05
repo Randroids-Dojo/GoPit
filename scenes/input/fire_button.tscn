@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://fire_button"]
+
+[ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="1_fire"]
+
+[node name="FireButton" type="Control"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_fire")

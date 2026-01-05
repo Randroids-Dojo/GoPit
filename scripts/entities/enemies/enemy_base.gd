@@ -20,9 +20,20 @@ var _flash_tween: Tween
 
 
 func _ready() -> void:
+	_scale_with_wave()
 	hp = max_hp
 	_setup_collision()
 	queue_redraw()
+
+
+func _scale_with_wave() -> void:
+	var wave := GameManager.current_wave
+	# Scale HP: +10% per wave
+	max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
+	# Scale speed: +5% per wave (capped at 2x)
+	speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
+	# Scale XP: +5% per wave
+	xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
 
 
 func _physics_process(delta: float) -> void:
