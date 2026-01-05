@@ -1,6 +1,8 @@
-[gd_scene load_steps=13 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=15 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
+[ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
 [ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="2_spawner"]
 [ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="3_joystick"]
 [ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="4_fire"]
@@ -28,6 +30,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.102, 0.102, 0.18, 1)
+
+[node name="GameCamera" type="Camera2D" parent="."]
+position = Vector2(360, 640)
 
 [node name="GameArea" type="Node2D" parent="."]
 
@@ -432,3 +437,60 @@ text = "Sound: ON"
 [node name="QuitButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Quit"
+
+[node name="DamageVignette" type="ColorRect" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0, 0, 0)
+script = ExtResource("12_vignette")
+
+[node name="TutorialOverlay" type="CanvasLayer" parent="UI"]
+layer = 10
+script = ExtResource("13_tutorial")
+
+[node name="DimBackground" type="ColorRect" parent="UI/TutorialOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="HintLabel" type="Label" parent="UI/TutorialOverlay/DimBackground"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 200.0
+offset_right = 200.0
+offset_bottom = 280.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 32
+text = "Drag the JOYSTICK to aim"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HighlightRing" type="Control" parent="UI/TutorialOverlay/DimBackground"]
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 0
+offset_right = 180.0
+offset_bottom = 180.0
+
+[node name="Ring" type="ColorRect" parent="UI/TutorialOverlay/DimBackground/HighlightRing"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.8, 0.2, 0.3)

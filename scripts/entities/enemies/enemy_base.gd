@@ -60,6 +60,7 @@ func take_damage(amount: int) -> void:
 	hp -= amount
 	took_damage.emit(self, amount)
 	_flash_hit()
+	_spawn_hit_effects(amount)
 
 
 func _flash_hit() -> void:
@@ -70,6 +71,23 @@ func _flash_hit() -> void:
 	_flash_tween = create_tween()
 	_flash_tween.tween_property(self, "modulate", Color(1, 0.3, 0.3), 0.05)
 	_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.1)
+
+
+func _spawn_hit_effects(damage: int) -> void:
+	# Small screen shake
+	CameraShake.shake(3.0, 8.0)
+
+	var scene_root := get_tree().current_scene
+
+	# Spawn hit particles
+	var particles_scene := preload("res://scenes/effects/hit_particles.tscn")
+	var particles := particles_scene.instantiate()
+	particles.position = global_position
+	scene_root.add_child(particles)
+
+	# Spawn floating damage number
+	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+	DamageNumber.spawn(scene_root, global_position, damage, Color(1, 0.9, 0.3))
 
 
 func _die() -> void:

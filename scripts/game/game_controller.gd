@@ -11,6 +11,8 @@ extends Node2D
 @onready var fire_button: Control = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton
 @onready var aim_line: Line2D = $GameArea/AimLine
 @onready var pause_overlay: CanvasLayer = $UI/PauseOverlay
+@onready var damage_vignette: ColorRect = $UI/DamageVignette
+@onready var tutorial_overlay: CanvasLayer = $UI/TutorialOverlay
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 
@@ -46,6 +48,7 @@ func _ready() -> void:
 	# Connect to game state for enemy spawning
 	GameManager.game_started.connect(_on_game_started)
 	GameManager.game_over.connect(_on_game_over)
+	GameManager.player_damaged.connect(_on_player_damaged)
 
 	# Connect enemy spawner to spawn gems on death
 	if enemy_spawner:
@@ -63,6 +66,11 @@ func _on_game_started() -> void:
 func _on_game_over() -> void:
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
+
+
+func _on_player_damaged(_amount: int) -> void:
+	if damage_vignette:
+		damage_vignette.flash()
 
 
 func _on_player_zone_body_entered(body: Node2D) -> void:
@@ -84,11 +92,19 @@ func _on_player_zone_area_entered(area: Area2D) -> void:
 func _on_enemy_spawned(enemy: EnemyBase) -> void:
 	# Connect to enemy death to spawn gems
 	enemy.died.connect(_on_enemy_died)
+	# Connect to enemy damage for tutorial
+	enemy.took_damage.connect(_on_enemy_took_damage)
 
 
 func _on_enemy_died(enemy: EnemyBase) -> void:
 	_spawn_gem(enemy.global_position, enemy.xp_value)
 	_check_wave_progress()
+
+
+func _on_enemy_took_damage(_enemy: EnemyBase, _amount: int) -> void:
+	# Notify tutorial
+	if tutorial_overlay and tutorial_overlay.has_method("on_enemy_hit"):
+		tutorial_overlay.on_enemy_hit()
 
 
 func _spawn_gem(pos: Vector2, xp_value: int) -> void:
@@ -131,6 +147,10 @@ func _on_joystick_direction_changed(direction: Vector2) -> void:
 	if aim_line and ball_spawner:
 		aim_line.show_line(direction, ball_spawner.global_position)
 
+	# Notify tutorial
+	if tutorial_overlay and tutorial_overlay.has_method("on_joystick_used"):
+		tutorial_overlay.on_joystick_used()
+
 
 func _on_joystick_released() -> void:
 	if aim_line:
@@ -140,6 +160,10 @@ func _on_joystick_released() -> void:
 func _on_fire_pressed() -> void:
 	if ball_spawner:
 		ball_spawner.fire()
+
+	# Notify tutorial
+	if tutorial_overlay and tutorial_overlay.has_method("on_ball_fired"):
+		tutorial_overlay.on_ball_fired()
 
 
 func _process(_delta: float) -> void:

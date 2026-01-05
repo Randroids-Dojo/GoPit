@@ -14,6 +14,7 @@ signal game_started
 signal game_over
 signal level_up_triggered
 signal level_up_completed
+signal player_damaged(amount: int)
 
 var current_state: GameState = GameState.MENU:
 	set(value):
@@ -86,6 +87,9 @@ func add_xp(amount: int) -> void:
 func take_damage(amount: int) -> void:
 	player_hp = max(0, player_hp - amount)
 	SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
+	player_damaged.emit(amount)
+	# Big screen shake on player damage
+	CameraShake.shake(15.0, 3.0)
 	if player_hp <= 0:
 		end_game()
 
