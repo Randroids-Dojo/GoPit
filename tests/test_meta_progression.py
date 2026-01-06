@@ -161,12 +161,16 @@ async def test_meta_manager_persistence_functions(game):
 @pytest.mark.asyncio
 async def test_upgrade_purchase(game):
     """Test purchasing an upgrade."""
+    # Reset all meta data to ensure clean state
+    await game.call("/root/MetaManager", "reset_data")
+    await asyncio.sleep(0.1)
+
     # Give player enough coins for first HP upgrade (100 coins)
     await game.call("/root/MetaManager", "set", ["pit_coins", 200])
 
     # Get initial upgrade level
     hp_level = await game.call("/root/MetaManager", "get_upgrade_level", ["hp"])
-    assert hp_level == 0, "HP upgrade should start at level 0"
+    assert hp_level == 0, f"HP upgrade should start at level 0, got {hp_level}"
 
     # Purchase upgrade
     success = await game.call("/root/MetaManager", "purchase_upgrade", ["hp", 100])
