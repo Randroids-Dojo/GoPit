@@ -102,6 +102,26 @@ Before committing ANY code changes:
 - [ ] New features have corresponding tests
 - [ ] No test regressions introduced
 
+## Godot UI Best Practices
+
+When creating UI overlays and panels:
+
+1. **Overlay mouse_filter**: Visual-only overlays (like locked indicators, dim backgrounds) should use `mouse_filter = 2` (MOUSE_FILTER_IGNORE) so clicks pass through to interactive elements below.
+   ```
+   # In .tscn files:
+   mouse_filter = 2
+
+   # In GDScript:
+   overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+   ```
+
+2. **Common mouse_filter values**:
+   - `0` (STOP) - Captures mouse events, doesn't propagate (default for buttons)
+   - `1` (PASS) - Processes events but also passes to parent
+   - `2` (IGNORE) - Ignores mouse events entirely (use for visual-only elements)
+
+3. **Test UI interactions**: When adding overlays, verify that buttons/controls underneath remain clickable.
+
 ## Parallel Agent Coordination
 
 **CRITICAL: PlayGodot tests use a fixed port (6007) and cannot run concurrently.**
