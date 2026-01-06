@@ -102,6 +102,33 @@ Before committing ANY code changes:
 - [ ] New features have corresponding tests
 - [ ] No test regressions introduced
 
+## Parallel Agent Coordination
+
+**CRITICAL: PlayGodot tests use a fixed port (6007) and cannot run concurrently.**
+
+When multiple agents are working in parallel (e.g., in different tmux windows or worktrees):
+
+1. **Before running tests**, check if another agent is testing:
+   ```bash
+   lsof -i :6007  # Check if port is in use
+   pgrep -f godot  # Check for running Godot processes
+   ```
+
+2. **If port is in use**, wait or coordinate:
+   - Kill stale processes: `pkill -9 -f godot`
+   - Wait for the other agent to finish testing
+   - Use `bd show` to see what work is in progress
+
+3. **Avoid test conflicts**:
+   - Only ONE agent should run PlayGodot tests at a time
+   - If you see `OSError: [Errno 48] address already in use`, another test is running
+   - Coordinate via beads: check `bd list --status=in_progress` to see active work
+
+4. **Worktree considerations**:
+   - Each worktree shares the same test infrastructure
+   - Tests in different worktrees still conflict on port 6007
+   - Coordinate testing across worktrees
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
