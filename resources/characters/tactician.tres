@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Tactician"
+description = "A brilliant commander who leads an army of balls. Strength in numbers."
+endurance = 1.1
+strength = 0.8
+leadership = 1.6
+speed = 0.9
+dexterity = 0.9
+intelligence = 1.1
+starting_ball = 0
+passive_name = "Squad Leader"
+passive_description = "+2 starting baby balls. Baby balls spawn 30% faster."
+is_unlocked = true
+unlock_requirement = ""

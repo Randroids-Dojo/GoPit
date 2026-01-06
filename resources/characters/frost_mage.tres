@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Frost Mage"
+description = "A calculating strategist who freezes foes in place. Control the battlefield with ice."
+endurance = 0.9
+strength = 0.9
+leadership = 1.0
+speed = 0.9
+dexterity = 0.8
+intelligence = 1.5
+starting_ball = 2
+passive_name = "Shatter"
+passive_description = "Frozen enemies take +50% damage. Freeze duration increased by 30%."
+is_unlocked = true
+unlock_requirement = ""

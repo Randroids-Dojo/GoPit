@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=19 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/ui/wave_announcement.gd" id="14_wave"]
 [ext_resource type="Script" path="res://scripts/effects/danger_indicator.gd" id="15_danger"]
 [ext_resource type="PackedScene" uid="uid://meta_shop_scene" path="res://scenes/ui/meta_shop.tscn" id="16_meta_shop"]
+[ext_resource type="PackedScene" uid="uid://char_select_scene" path="res://scenes/ui/character_select.tscn" id="17_charselect"]
 [ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="2_spawner"]
 [ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="3_joystick"]
 [ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="4_fire"]
@@ -604,3 +605,5 @@ grow_vertical = 2
 color = Color(1, 0, 0, 0)
 
 [node name="MetaShop" parent="UI" instance=ExtResource("16_meta_shop")]
+
+[node name="CharacterSelect" parent="UI" instance=ExtResource("17_charselect")]

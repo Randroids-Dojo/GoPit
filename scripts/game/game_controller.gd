@@ -16,6 +16,7 @@ extends Node2D
 @onready var damage_vignette: ColorRect = $UI/DamageVignette
 @onready var tutorial_overlay: CanvasLayer = $UI/TutorialOverlay
 @onready var danger_indicator: Control = $UI/DangerIndicator
+@onready var character_select: CanvasLayer = $UI/CharacterSelect
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 var player_scene: PackedScene = preload("res://scenes/entities/player.tscn")
@@ -70,7 +71,34 @@ func _ready() -> void:
 	if enemy_spawner:
 		enemy_spawner.enemy_spawned.connect(_on_enemy_spawned)
 
-	# Auto-start the game
+	# Connect character select
+	if character_select:
+		character_select.character_selected.connect(_on_character_selected)
+		# Skip character select in headless mode (for testing)
+		if DisplayServer.get_name() == "headless":
+			GameManager.start_game()
+		else:
+			# Show character select for normal gameplay
+			character_select.show_select()
+	else:
+		# Fallback: auto-start if no character select
+		GameManager.start_game()
+
+
+func _on_character_selected(character: Resource) -> void:
+	# Apply character to GameManager
+	GameManager.set_character(character)
+
+	# Apply character stats to ball spawner
+	if ball_spawner:
+		# Apply damage multiplier
+		ball_spawner.ball_damage = int(10 * GameManager.character_damage_mult)
+		# Apply crit multiplier
+		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
+		# Set starting ball type
+		ball_spawner.set_ball_type(GameManager.character_starting_ball)
+
+	# Start the game
 	GameManager.start_game()
 
 
