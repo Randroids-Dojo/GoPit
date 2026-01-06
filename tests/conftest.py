@@ -17,7 +17,7 @@ async def game():
     async with Godot.launch(
         str(GODOT_PROJECT),
         headless=True,
-        resolution=(1280, 1280),  # Match game's expected resolution for UI input
+        resolution=(720, 1280),  # Match game's 9:16 portrait aspect ratio
         timeout=15.0,
         godot_path=GODOT_PATH,
     ) as g:
