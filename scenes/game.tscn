@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
 [ext_resource type="Script" path="res://scripts/ui/wave_announcement.gd" id="14_wave"]
 [ext_resource type="Script" path="res://scripts/effects/danger_indicator.gd" id="15_danger"]
+[ext_resource type="PackedScene" uid="uid://meta_shop_scene" path="res://scenes/ui/meta_shop.tscn" id="16_meta_shop"]
 [ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="2_spawner"]
 [ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="3_joystick"]
 [ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="4_fire"]
@@ -294,9 +295,26 @@ Gems: 0
 Time: 0:00"
 horizontal_alignment = 1
 
-[node name="RestartButton" type="Button" parent="UI/GameOverOverlay/Panel/VBoxContainer"]
+[node name="CoinsLabel" type="Label" parent="UI/GameOverOverlay/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 18
+text = "+0 Pit Coins (Total: 0)"
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="UI/GameOverOverlay/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 10
+theme_override_constants/separation = 20
+
+[node name="ShopButton" type="Button" parent="UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Shop"
+
+[node name="RestartButton" type="Button" parent="UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Restart"
 
 [node name="LevelUpOverlay" type="Control" parent="UI"]
@@ -584,3 +602,5 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 0, 0, 0)
+
+[node name="MetaShop" parent="UI" instance=ExtResource("16_meta_shop")]

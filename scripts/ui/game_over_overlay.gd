@@ -1,12 +1,16 @@
 extends Control
-## Game Over overlay with detailed stats and restart button
+## Game Over overlay with detailed stats, coins earned, and restart button
 
 signal restart_pressed
 
 @onready var score_label: Label = $Panel/VBoxContainer/ScoreLabel
 @onready var wave_label: Label = $Panel/VBoxContainer/WaveLabel
 @onready var stats_label: Label = $Panel/VBoxContainer/StatsLabel
-@onready var restart_button: Button = $Panel/VBoxContainer/RestartButton
+@onready var coins_label: Label = $Panel/VBoxContainer/CoinsLabel
+@onready var shop_button: Button = $Panel/VBoxContainer/ButtonsContainer/ShopButton
+@onready var restart_button: Button = $Panel/VBoxContainer/ButtonsContainer/RestartButton
+
+var _coins_earned: int = 0
 
 
 func _ready() -> void:
@@ -15,10 +19,18 @@ func _ready() -> void:
 	if restart_button:
 		restart_button.pressed.connect(_on_restart_pressed)
 
+	if shop_button:
+		shop_button.pressed.connect(_on_shop_pressed)
+
 	GameManager.game_over.connect(_on_game_over)
 
 
 func _on_game_over() -> void:
+	# Record run end and earn coins
+	if MetaManager:
+		MetaManager.record_run_end(GameManager.current_wave, GameManager.player_level)
+		_coins_earned = MetaManager.earn_coins(GameManager.current_wave, GameManager.player_level)
+
 	_update_stats()
 	visible = true
 
@@ -52,8 +64,19 @@ Best Wave: %d | Best Level: %d""" % [
 			GameManager.high_score_level
 		]
 
+	# Display coins earned
+	if coins_label and MetaManager:
+		coins_label.text = "+%d Pit Coins (Total: %d)" % [_coins_earned, MetaManager.pit_coins]
+
 
 func _on_restart_pressed() -> void:
 	restart_pressed.emit()
 	GameManager.return_to_menu()
 	get_tree().reload_current_scene()
+
+
+func _on_shop_pressed() -> void:
+	# Find and show the meta shop
+	var meta_shop := get_tree().get_first_node_in_group("meta_shop")
+	if meta_shop and meta_shop.has_method("show_shop"):
+		meta_shop.show_shop()
