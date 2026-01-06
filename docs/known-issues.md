@@ -104,12 +104,30 @@ void RemoteDebugger::_send_node_info(const String &p_path) {
 ### Status
 - **Fixed** (2026-01-05) - Added `is_inside_tree()` guards to all affected functions in `core/debugger/remote_debugger.cpp`
 - Functions fixed: `_send_scene_tree()`, `_send_node_info()`, `_send_property()`, `_set_property()`, `_call_method()`, `_send_screenshot()`, `_query_nodes()`, `_count_nodes()`
-- Pending: Push changes to https://github.com/Randroids-Dojo/godot automation branch
+- **Pushed** to https://github.com/Randroids-Dojo/godot automation branch
 
-### Impact (Before Fix)
-- Cannot run automated PlayGodot tests
-- Cannot verify UI fixes through automation
-- Manual testing required for now
+---
+
+## GUI Click Input Not Working in Headless Mode (2026-01-05)
+
+### Problem
+PlayGodot `.click()` calls were not triggering button presses in headless mode. The input events were sent but GUI controls never received them.
+
+### Root Cause
+`DisplayServerHeadless::window_get_size()` returned `Size2i()` (0x0), causing the viewport to fall back to a minimum 64x64 size. When clicking at coordinates like (1235, 45), `Viewport::gui_find_control()` couldn't find any controls since they were "outside" the tiny 64x64 viewport.
+
+### Fix Applied
+Modified `servers/display/display_server_headless.h`:
+1. Added `window_size` member variable to store the requested resolution
+2. Updated `create_func()` to store `p_resolution` parameter
+3. Updated `window_get_size()`, `screen_get_size()`, `window_set_size()` to use stored size
+
+Also added `DisplayServer::get_singleton()->process_events()` calls in `core/debugger/remote_debugger.cpp` after input injection to ensure events are properly dispatched.
+
+### Status
+- **Fixed** (2026-01-05)
+- **Pushed** to https://github.com/Randroids-Dojo/godot automation branch
+- Tests updated to use `.click()` instead of `.call("_try_fire")` workaround
 
 ---
 
