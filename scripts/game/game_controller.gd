@@ -69,6 +69,11 @@ func _on_game_over() -> void:
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
 	MusicManager.stop_music()
+	# Clear all existing enemies so they stop moving
+	if enemies_container:
+		for enemy in enemies_container.get_children():
+			if enemy is EnemyBase:
+				enemy.queue_free()
 
 
 func _on_player_damaged(_amount: int) -> void:
