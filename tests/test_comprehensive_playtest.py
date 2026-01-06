@@ -117,22 +117,32 @@ async def test_fire_button_cooldown(game, report):
     """Test that fire button respects cooldown timing."""
     # Fire first shot
     await game.click(PATHS["fire_button"])
+    await asyncio.sleep(0.2)  # Wait for ball to spawn
     balls_1 = await game.call(PATHS["balls"], "get_child_count")
+    assert balls_1 >= 1, "First fire should create a ball"
 
     # Immediately try to fire again (should fail - cooldown)
-    await asyncio.sleep(0.05)
-    await game.click(PATHS["fire_button"])
-    balls_2 = await game.call(PATHS["balls"], "get_child_count")
-
-    # Wait for cooldown (0.5s default)
-    await asyncio.sleep(0.5)
+    is_ready_during_cooldown = await game.get_property(PATHS["fire_button"], "is_ready")
+    assert not is_ready_during_cooldown, "Fire button should be in cooldown"
     await game.click(PATHS["fire_button"])
     await asyncio.sleep(0.1)
-    balls_3 = await game.call(PATHS["balls"], "get_child_count")
+    balls_2 = await game.call(PATHS["balls"], "get_child_count")
+    # Second fire should be blocked - ball count shouldn't increase
+    assert balls_2 <= balls_1, "Fire should be blocked during cooldown"
 
-    # Verify cooldown was respected
-    assert balls_2 == balls_1, "Fire should be blocked during cooldown"
-    assert balls_3 > balls_2, "Fire should work after cooldown"
+    # Wait for cooldown (0.5s default + buffer), verify button is ready
+    await asyncio.sleep(0.6)
+    is_ready_after_cooldown = await game.get_property(PATHS["fire_button"], "is_ready")
+    assert is_ready_after_cooldown, "Fire button should be ready after cooldown"
+
+    # Fire third shot and verify it works
+    balls_before_third = await game.call(PATHS["balls"], "get_child_count")
+    await game.click(PATHS["fire_button"])
+    await asyncio.sleep(0.2)  # Wait for ball to spawn
+    balls_after_third = await game.call(PATHS["balls"], "get_child_count")
+
+    # Third fire should work
+    assert balls_after_third > balls_before_third, "Fire should work after cooldown"
 
     # Check for issue: No visual feedback that fire is blocked
     report.add_issue(
