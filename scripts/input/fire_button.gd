@@ -1,19 +1,22 @@
 extends Control
-## Fire button with cooldown timer visualization
+## Fire button with cooldown timer visualization and autofire
 
 signal fired
 signal cooldown_started
 signal cooldown_finished
 signal blocked
+signal autofire_toggled(enabled: bool)
 
 @export var button_radius: float = 50.0
 @export var cooldown_duration: float = 0.5
 @export var base_color: Color = Color(0.8, 0.3, 0.3, 0.8)
 @export var cooldown_color: Color = Color(0.4, 0.2, 0.2, 0.5)
 @export var ready_color: Color = Color(0.3, 0.8, 0.3, 0.8)
+@export var autofire_color: Color = Color(0.3, 0.8, 0.6, 0.8)
 
 var is_ready: bool = true
 var cooldown_timer: float = 0.0
+var autofire_enabled: bool = false
 var _shake_tween: Tween
 
 
@@ -32,13 +35,20 @@ func _process(delta: float) -> void:
 			cooldown_finished.emit()
 		queue_redraw()
 
+	# Autofire: automatically fire when ready
+	if autofire_enabled and is_ready and GameManager.current_state == GameManager.GameState.PLAYING:
+		_try_fire()
+
 
 func _draw() -> void:
 	var center := size / 2
 
+	# Choose color based on autofire state
+	var active_ready_color := autofire_color if autofire_enabled else ready_color
+
 	if is_ready:
 		# Draw ready button
-		draw_circle(center, button_radius, ready_color)
+		draw_circle(center, button_radius, active_ready_color)
 	else:
 		# Draw cooldown background
 		draw_circle(center, button_radius, cooldown_color)
@@ -48,6 +58,10 @@ func _draw() -> void:
 		var start_angle := -PI / 2
 		var end_angle := start_angle + (TAU * progress)
 		_draw_arc_filled(center, button_radius * 0.9, start_angle, end_angle, base_color)
+
+	# Draw autofire indicator ring when enabled
+	if autofire_enabled:
+		draw_arc(center, button_radius + 3, 0, TAU, 32, Color(0.2, 1.0, 0.6, 0.8), 3.0)
 
 
 func _draw_arc_filled(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color) -> void:
@@ -125,3 +139,16 @@ func get_cooldown_progress() -> float:
 	if is_ready:
 		return 1.0
 	return 1.0 - (cooldown_timer / cooldown_duration)
+
+
+func toggle_autofire() -> void:
+	autofire_enabled = not autofire_enabled
+	autofire_toggled.emit(autofire_enabled)
+	queue_redraw()
+
+
+func set_autofire(enabled: bool) -> void:
+	if autofire_enabled != enabled:
+		autofire_enabled = enabled
+		autofire_toggled.emit(autofire_enabled)
+		queue_redraw()

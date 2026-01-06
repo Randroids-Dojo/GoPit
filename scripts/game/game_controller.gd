@@ -10,6 +10,7 @@ extends Node2D
 @onready var player: CharacterBody2D = $GameArea/Player
 @onready var joystick: Control = $UI/HUD/InputContainer/HBoxContainer/JoystickContainer/VirtualJoystick
 @onready var fire_button: Control = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton
+@onready var auto_toggle: Button = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/AutoToggle
 @onready var aim_line: Line2D = $GameArea/AimLine
 @onready var pause_overlay: CanvasLayer = $UI/PauseOverlay
 @onready var damage_vignette: ColorRect = $UI/DamageVignette
@@ -38,6 +39,11 @@ func _ready() -> void:
 	# Wire up fire button
 	if fire_button:
 		fire_button.fired.connect(_on_fire_pressed)
+
+	# Wire up autofire toggle
+	if auto_toggle and fire_button:
+		auto_toggle.toggled.connect(_on_auto_toggle_pressed)
+		fire_button.autofire_toggled.connect(_on_autofire_state_changed)
 
 	# Set up ball spawner
 	if ball_spawner:
@@ -229,6 +235,17 @@ func _on_fire_pressed() -> void:
 	# Notify tutorial
 	if tutorial_overlay and tutorial_overlay.has_method("on_ball_fired"):
 		tutorial_overlay.on_ball_fired()
+
+
+func _on_auto_toggle_pressed(button_pressed: bool) -> void:
+	if fire_button:
+		fire_button.set_autofire(button_pressed)
+
+
+func _on_autofire_state_changed(enabled: bool) -> void:
+	# Keep toggle button in sync with fire button state
+	if auto_toggle:
+		auto_toggle.set_pressed_no_signal(enabled)
 
 
 func _process(_delta: float) -> void:

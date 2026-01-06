@@ -213,13 +213,23 @@ custom_minimum_size = Vector2(140, 140)
 layout_mode = 2
 script = ExtResource("3_joystick")
 
-[node name="FireButtonContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
+[node name="FireButtonContainer" type="VBoxContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 5
+
+[node name="AutoToggle" type="Button" parent="UI/HUD/InputContainer/HBoxContainer/FireButtonContainer"]
+custom_minimum_size = Vector2(60, 30)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "AUTO"
+toggle_mode = true
 
 [node name="FireButton" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/FireButtonContainer"]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
+size_flags_horizontal = 4
 script = ExtResource("4_fire")
 
 [node name="GameOverOverlay" type="Control" parent="UI"]
