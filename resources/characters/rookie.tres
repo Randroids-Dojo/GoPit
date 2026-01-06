@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Rookie"
+description = "Jack of all trades, master of none. A balanced fighter learning the ropes of the Pit."
+endurance = 1.0
+strength = 1.0
+leadership = 1.0
+speed = 1.0
+dexterity = 1.0
+intelligence = 1.0
+starting_ball = 0
+passive_name = "Quick Learner"
+passive_description = "+10% XP gain from all sources"
+is_unlocked = true
+unlock_requirement = ""

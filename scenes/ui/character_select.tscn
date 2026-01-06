@@ -1,0 +1,273 @@
+[gd_scene load_steps=2 format=3 uid="uid://char_select_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/character_select.gd" id="1_charselect"]
+
+[node name="CharacterSelect" type="CanvasLayer"]
+process_mode = 3
+layer = 15
+script = ExtResource("1_charselect")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.1, 0.95)
+
+[node name="Panel" type="Panel" parent="DimBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -400.0
+offset_right = 340.0
+offset_bottom = 400.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DimBackground/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 36
+text = "SELECT CHARACTER"
+horizontal_alignment = 1
+
+[node name="CharacterPanel" type="Panel" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="PortraitContainer" type="CenterContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Portrait" type="ColorRect" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/PortraitContainer"]
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.4, 1)
+
+[node name="PortraitLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/PortraitContainer/Portrait"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 72
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoContainer" type="VBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "ROOKIE"
+horizontal_alignment = 1
+
+[node name="DescLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "Jack of all trades"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Separator" type="HSeparator" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+
+[node name="StatsContainer" type="VBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="HPStat" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/HPStat"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "HP"
+
+[node name="Bar" type="ProgressBar" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/HPStat"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 2.0
+value = 1.0
+show_percentage = false
+
+[node name="DMGStat" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/DMGStat"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "DMG"
+
+[node name="Bar" type="ProgressBar" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/DMGStat"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 2.0
+value = 1.0
+show_percentage = false
+
+[node name="SPDStat" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/SPDStat"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "SPD"
+
+[node name="Bar" type="ProgressBar" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/SPDStat"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 2.0
+value = 1.0
+show_percentage = false
+
+[node name="CRITStat" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/CRITStat"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "CRIT"
+
+[node name="Bar" type="ProgressBar" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/CRITStat"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 2.0
+value = 1.0
+show_percentage = false
+
+[node name="AbilityPanel" type="Panel" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+size_flags_vertical = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 5.0
+offset_right = -10.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PassiveName" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Passive: Quick Learner"
+
+[node name="PassiveDesc" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "+10% XP from all sources"
+autowrap_mode = 2
+
+[node name="BallLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "Starting: Basic Ball"
+
+[node name="NavContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 30
+
+[node name="PrevButton" type="Button" parent="DimBackground/Panel/VBoxContainer/NavContainer"]
+custom_minimum_size = Vector2(80, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "<"
+
+[node name="DotsContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/NavContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 15
+
+[node name="NextButton" type="Button" parent="DimBackground/Panel/VBoxContainer/NavContainer"]
+custom_minimum_size = Vector2(80, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = ">"
+
+[node name="StartButton" type="Button" parent="DimBackground/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "START"
+
+[node name="LockedOverlay" type="ColorRect" parent="DimBackground/Panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="LockLabel" type="Label" parent="DimBackground/Panel/LockedOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -50.0
+offset_right = 200.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "LOCKED
+Survive to wave 20"
+horizontal_alignment = 1
+vertical_alignment = 1

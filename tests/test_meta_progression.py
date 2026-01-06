@@ -162,7 +162,7 @@ async def test_meta_manager_persistence_functions(game):
 async def test_upgrade_purchase(game):
     """Test purchasing an upgrade."""
     # Reset all meta data to ensure clean state
-    await game.call("/root/MetaManager", "reset_data")
+    await game.call("/root/MetaManager", "reset_data", [])
     await asyncio.sleep(0.1)
 
     # Give player enough coins for first HP upgrade (100 coins)

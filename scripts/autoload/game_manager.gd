@@ -39,6 +39,15 @@ var xp_to_next_level: int = 100
 var player_level: int = 1
 var gem_magnetism_range: float = 0.0
 
+# Character system
+var selected_character: Resource = null
+var character_damage_mult: float = 1.0
+var character_speed_mult: float = 1.0
+var character_crit_mult: float = 1.0
+var character_leadership_mult: float = 1.0
+var character_intelligence_mult: float = 1.0
+var character_starting_ball: int = 0  # BallType enum
+
 # High score persistence
 var high_score_wave: int = 0
 var high_score_level: int = 0
@@ -105,6 +114,33 @@ func record_damage_dealt(amount: int) -> void:
 
 func record_gem_collected() -> void:
 	stats["gems_collected"] += 1
+
+
+func set_character(character: Resource) -> void:
+	if character == null:
+		_reset_character_stats()
+		return
+
+	selected_character = character
+	# Apply character stat multipliers
+	max_hp = int(100 * character.endurance)
+	character_damage_mult = character.strength
+	character_speed_mult = character.speed
+	character_crit_mult = character.dexterity
+	character_leadership_mult = character.leadership
+	character_intelligence_mult = character.intelligence
+	character_starting_ball = character.starting_ball
+
+
+func _reset_character_stats() -> void:
+	selected_character = null
+	max_hp = 100
+	character_damage_mult = 1.0
+	character_speed_mult = 1.0
+	character_crit_mult = 1.0
+	character_leadership_mult = 1.0
+	character_intelligence_mult = 1.0
+	character_starting_ball = 0
 
 
 func start_game() -> void:

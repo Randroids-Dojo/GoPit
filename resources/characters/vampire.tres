@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Vampire"
+description = "An immortal predator who feeds on fallen enemies. Sustain through carnage."
+endurance = 1.5
+strength = 1.0
+leadership = 0.8
+speed = 1.0
+dexterity = 1.0
+intelligence = 0.9
+starting_ball = 0
+passive_name = "Lifesteal"
+passive_description = "Heal 5% of damage dealt. Killing enemies has a 20% chance to drop a health gem."
+is_unlocked = false
+unlock_requirement = "Survive to wave 20"

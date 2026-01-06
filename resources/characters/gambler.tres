@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Gambler"
+description = "Fortune favors the bold. High risk, high reward - every hit is a roll of the dice."
+endurance = 0.8
+strength = 1.0
+leadership = 0.9
+speed = 1.1
+dexterity = 1.6
+intelligence = 0.8
+starting_ball = 3
+passive_name = "Jackpot"
+passive_description = "Critical hits deal 3x damage instead of 2x. +15% base crit chance."
+is_unlocked = true
+unlock_requirement = ""
