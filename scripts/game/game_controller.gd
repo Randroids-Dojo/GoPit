@@ -7,6 +7,7 @@ extends Node2D
 @onready var gems_container: Node2D = $GameArea/Gems
 @onready var enemy_spawner: EnemySpawner = $GameArea/Enemies/EnemySpawner
 @onready var player_zone: Area2D = $GameArea/PlayerZone
+@onready var player: CharacterBody2D = $GameArea/Player
 @onready var joystick: Control = $UI/HUD/InputContainer/HBoxContainer/JoystickContainer/VirtualJoystick
 @onready var fire_button: Control = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton
 @onready var aim_line: Line2D = $GameArea/AimLine
@@ -16,6 +17,7 @@ extends Node2D
 @onready var danger_indicator: Control = $UI/DangerIndicator
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
+var player_scene: PackedScene = preload("res://scenes/entities/player.tscn")
 
 # Viewport bounds for ball cleanup
 var viewport_height: float = 1280.0
@@ -28,7 +30,7 @@ var enemies_per_wave: int = 5
 func _ready() -> void:
 	viewport_height = get_viewport_rect().size.y
 
-	# Wire up joystick
+	# Wire up joystick - now controls player movement
 	if joystick:
 		joystick.direction_changed.connect(_on_joystick_direction_changed)
 		joystick.released.connect(_on_joystick_released)
@@ -41,7 +43,14 @@ func _ready() -> void:
 	if ball_spawner:
 		ball_spawner.balls_container = balls_container
 
-	# Connect player zone to detect enemies and gems
+	# Set up player
+	if player:
+		# Player starts at bottom center
+		player.position = Vector2(360, 1000)
+		# Connect player to ball spawner so balls spawn from player position
+		player.moved.connect(_on_player_moved)
+
+	# Connect player zone to detect enemies and gems (legacy, still used for gem magnet)
 	if player_zone:
 		player_zone.body_entered.connect(_on_player_zone_body_entered)
 		player_zone.area_entered.connect(_on_player_zone_area_entered)
@@ -171,12 +180,32 @@ func _advance_wave() -> void:
 	MusicManager.set_intensity(float(GameManager.current_wave))
 
 
-func _on_joystick_direction_changed(direction: Vector2) -> void:
+func _on_player_moved(pos: Vector2) -> void:
+	# Update ball spawner position to follow player
 	if ball_spawner:
-		ball_spawner.set_aim_direction(direction)
+		ball_spawner.global_position = pos
 
-	if aim_line and ball_spawner:
-		aim_line.show_line(direction, ball_spawner.global_position)
+	# Update PlayerZone position to follow player (for collision detection)
+	if player_zone:
+		player_zone.global_position = pos
+
+
+func _on_joystick_direction_changed(direction: Vector2) -> void:
+	# Control player movement
+	if player and player.has_method("set_movement_input"):
+		player.set_movement_input(direction)
+
+	# Set aim direction on ball spawner (use movement direction for aiming)
+	if ball_spawner:
+		if direction.length() > 0.1:
+			ball_spawner.set_aim_direction(direction)
+
+	# Show aim line from player position
+	if aim_line and player:
+		if direction.length() > 0.1:
+			aim_line.show_line(direction, player.global_position)
+		else:
+			aim_line.hide_line()
 
 	# Notify tutorial
 	if tutorial_overlay and tutorial_overlay.has_method("on_joystick_used"):
@@ -184,6 +213,10 @@ func _on_joystick_direction_changed(direction: Vector2) -> void:
 
 
 func _on_joystick_released() -> void:
+	# Stop player movement
+	if player and player.has_method("set_movement_input"):
+		player.set_movement_input(Vector2.ZERO)
+
 	if aim_line:
 		aim_line.hide_line()
 
