@@ -22,9 +22,8 @@ async def test_fire_once(game):
     is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
     assert is_ready, "Fire button should be ready"
 
-    # Fire by calling the button's _try_fire method directly
-    # (Click doesn't work reliably in headless mode)
-    await game.call(FIRE_BUTTON, "_try_fire")
+    # Click the fire button
+    await game.click(FIRE_BUTTON)
 
     # Small delay to let the ball spawn
     await asyncio.sleep(0.2)
@@ -50,8 +49,8 @@ async def test_fire_with_aim(game):
     is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
     assert is_ready, "Fire button should be ready"
 
-    # Fire
-    await game.call(FIRE_BUTTON, "_try_fire")
+    # Click the fire button
+    await game.click(FIRE_BUTTON)
     await asyncio.sleep(0.2)
 
     # Check ball was spawned
@@ -70,7 +69,7 @@ async def test_fire_multiple(game):
             await asyncio.sleep(0.1)
             is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
 
-        await game.call(FIRE_BUTTON, "_try_fire")
+        await game.click(FIRE_BUTTON)
         await asyncio.sleep(0.1)
 
     # Wait for all balls to spawn
