@@ -15,14 +15,12 @@ signal blocked
 var is_ready: bool = true
 var cooldown_timer: float = 0.0
 var _shake_tween: Tween
-var _original_position: Vector2
 
 
 func _ready() -> void:
 	add_to_group("fire_button")
 	custom_minimum_size = Vector2(button_radius * 2, button_radius * 2)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_original_position = position
 
 
 func _process(delta: float) -> void:
@@ -103,11 +101,13 @@ func _shake_button() -> void:
 	if _shake_tween and _shake_tween.is_valid():
 		_shake_tween.kill()
 
+	# Capture current position at shake time (after container layout)
+	var start_x := position.x
 	_shake_tween = create_tween()
-	_shake_tween.tween_property(self, "position:x", _original_position.x + 5, 0.05)
-	_shake_tween.tween_property(self, "position:x", _original_position.x - 5, 0.05)
-	_shake_tween.tween_property(self, "position:x", _original_position.x + 3, 0.05)
-	_shake_tween.tween_property(self, "position:x", _original_position.x, 0.05)
+	_shake_tween.tween_property(self, "position:x", start_x + 5, 0.05)
+	_shake_tween.tween_property(self, "position:x", start_x - 5, 0.05)
+	_shake_tween.tween_property(self, "position:x", start_x + 3, 0.05)
+	_shake_tween.tween_property(self, "position:x", start_x, 0.05)
 
 
 func _flash_red() -> void:
