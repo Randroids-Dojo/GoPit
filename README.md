@@ -64,16 +64,75 @@ Open the project in Godot and run `scenes/game.tscn`, or:
 /Applications/Godot.app/Contents/MacOS/Godot --path . scenes/game.tscn
 ```
 
-## Testing
+## Testing Setup
 
-Automated tests use [PlayGodot](https://github.com/Randroids-Dojo/PlayGodot) with a custom Godot fork.
+This project uses [PlayGodot](https://github.com/Randroids-Dojo/PlayGodot) for automated testing, which requires a custom Godot fork with automation protocol support.
 
-See [docs/testing.md](docs/testing.md) for setup instructions.
+### 1. Install Godot Automation Fork
 
-Quick start:
+Download the pre-built binary from GitHub Actions:
+
 ```bash
-python3 tests/launch_and_fire.py
+# List recent builds
+gh run list -R Randroids-Dojo/godot --branch automation -w "Build Godot Automation" --limit 5
+
+# Download macOS binary (replace RUN_ID with actual run ID)
+gh run download RUN_ID -R Randroids-Dojo/godot -n macos-editor -D ~/Documents/Dev/Godot/godot/bin
+
+# Make executable
+chmod +x ~/Documents/Dev/Godot/godot/bin/godot.macos.editor.*
 ```
+
+Or build from source:
+```bash
+git clone https://github.com/Randroids-Dojo/godot.git
+cd godot && git checkout automation
+scons platform=macos target=editor
+```
+
+### 2. Install PlayGodot Python Library
+
+```bash
+pip3 install playgodot
+
+# Or from source:
+git clone https://github.com/Randroids-Dojo/PlayGodot.git
+pip3 install -e PlayGodot/python
+```
+
+### 3. Configure Test Environment
+
+Update `tests/conftest.py` with your Godot path:
+
+```python
+GODOT_PATH = "/path/to/godot/bin/godot.macos.editor.arm64"
+```
+
+### 4. Run Tests
+
+```bash
+# Run all tests
+python3 -m pytest tests/ -v --tb=short
+
+# Run specific test file
+python3 -m pytest tests/test_fire.py -v
+
+# Run comprehensive playtest
+python3 -m pytest tests/test_comprehensive_playtest.py -v
+```
+
+### Claude Code Integration
+
+For AI-assisted development with testing, install the Godot skill:
+
+```bash
+# The skill is auto-loaded from ~/.claude/skills/godot
+# It provides PlayGodot testing guidance and commands
+```
+
+Invoke with `/godot` or let Claude auto-use it for Godot projects.
+
+See [docs/testing.md](docs/testing.md) for detailed API documentation.
 
 ## Controls
 

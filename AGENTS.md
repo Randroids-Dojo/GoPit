@@ -12,6 +12,96 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Testing Requirements
+
+**CRITICAL: All code changes MUST be validated with PlayGodot tests before committing.**
+
+### Running Tests
+
+```bash
+# Run all PlayGodot tests
+python3 -m pytest tests/ -v --tb=short
+
+# Run specific test file
+python3 -m pytest tests/test_fire.py -v
+
+# Run comprehensive playtest
+python3 -m pytest tests/test_comprehensive_playtest.py -v
+```
+
+### Test Coverage Expectations
+
+When implementing new features, you MUST:
+
+1. **Run existing tests** to ensure no regressions
+2. **Write new tests** for significant gameplay changes:
+   - New mechanics (enemies, weapons, upgrades)
+   - UI interactions (buttons, overlays)
+   - Game state changes (level-up, game over)
+3. **Update existing tests** if behavior changes intentionally
+
+### Writing PlayGodot Tests
+
+Tests live in `tests/` directory. Use this pattern:
+
+```python
+import asyncio
+import pytest
+
+@pytest.mark.asyncio
+async def test_my_feature(game):
+    """Test description."""
+    # Interact with game
+    await game.click("/root/Game/UI/SomeButton")
+    await asyncio.sleep(0.2)
+
+    # Verify results
+    result = await game.call("/root/Game/SomeNode", "some_method")
+    assert result == expected_value
+```
+
+### Common Node Paths
+
+```python
+PATHS = {
+    "game": "/root/Game",
+    "fire_button": "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton",
+    "balls": "/root/Game/GameArea/Balls",
+    "enemies": "/root/Game/GameArea/Enemies",
+    "gems": "/root/Game/GameArea/Gems",
+    "game_over_overlay": "/root/Game/UI/GameOverOverlay",
+    "level_up_overlay": "/root/Game/UI/LevelUpOverlay",
+}
+```
+
+### PlayGodot API Quick Reference
+
+```python
+# Click on UI element or coordinates
+await game.click("/root/Game/UI/Button")
+await game.click(300, 200)
+
+# Call methods on nodes
+result = await game.call("/root/Node", "method_name", [arg1, arg2])
+
+# Get/set properties (returns dict for Vector2, e.g., {'x': 1.0, 'y': 2.0})
+value = await game.get_property("/root/Node", "property_name")
+
+# Get node info
+node = await game.get_node("/root/Game")
+
+# Wait for game state
+await asyncio.sleep(0.5)
+```
+
+### Pre-Commit Checklist
+
+Before committing ANY code changes:
+
+- [ ] `python3 -m pytest tests/ -v` - All tests pass
+- [ ] New features have corresponding tests
+- [ ] No test regressions introduced
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
