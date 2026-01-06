@@ -1,8 +1,8 @@
 # GoPit - Game Design Document
 
-> **Version**: 0.1.0 (MVP)
+> **Version**: 0.2.0 (BallxPit Alignment)
 > **Last Updated**: January 2026
-> **Platform**: Mobile (iOS/Android), Web
+> **Platform**: Mobile (iOS/Android), Web, Desktop
 > **Engine**: Godot 4.x (automation branch)
 
 ---
@@ -10,7 +10,7 @@
 ## 1. Game Overview
 
 ### Concept
-**GoPit** is a mobile-first endless survival roguelike where players fire balls upward into a pit of descending enemies. Defeat enemies to collect gems, level up, and evolve your ball arsenal.
+**GoPit** is a roguelike action game inspired by [Ball x Pit](https://www.ballxpit.com/) by Kenny Sun. Players control a character who fires balls upward into a pit of descending enemies. Defeat enemies, collect gems, level up balls through fusion, and survive increasingly challenging waves.
 
 ### Tagline
 *"Bounce. Evolve. Survive the Pit."*
@@ -18,146 +18,313 @@
 ### Genre
 - Roguelike / Roguelite
 - Action / Arcade
-- Ball Physics
+- Ball Physics / Breakout-style
 
-### Inspiration
-Inspired by [Ball x Pit](https://www.ballxpit.com/) by Kenny Sun, combining Arkanoid-style ball mechanics with Vampire Survivors-style progression.
+### Reference Game
+**Ball x Pit** (Devolver Digital, 2025) - 1M+ copies sold
+- Arkanoid-style ball bouncing + Vampire Survivors progression
+- Ball fusion/evolution system with 100+ evolutions
+- Multiple playable characters with unique mechanics
+- Base-building meta-game between runs
 
 ### Core Loop
 ```
-Fire Balls → Defeat Enemies → Collect Gems → Level Up → Choose Upgrades → Repeat
+Fire Balls → Defeat Enemies → Collect Gems → Level Up → Fuse/Evolve Balls → Repeat
                                     ↓
-                            Enemies Reach Bottom
+                        Boss Fight (every 10 waves)
                                     ↓
-                            Take Damage → Game Over
+                           Stage Complete → Next Biome
+                                    ↓
+                              Final Boss → Victory!
 ```
 
 ---
 
-## 2. Core Mechanics
+## 2. Current State vs Target Design
 
-### 2.1 Ball Physics
-- Balls bounce off walls and enemies
-- Trajectory determined by virtual joystick angle
-- Multiple balls can be active simultaneously
-- Each ball type has unique bounce/damage properties
+### 2.1 Implementation Status
 
-### 2.2 Controls (Virtual Joystick)
-| Input | Action |
-|-------|--------|
-| Left stick drag | Aim trajectory (shows preview line) |
-| Fire button tap | Launch ball in aimed direction |
-| Fire button hold | Rapid fire (if unlocked) |
-
-### 2.3 Enemy Behavior
-- Spawn above the viewport
-- Descend at varying speeds based on type/wave
-- Each enemy has a health pool
-- When reaching bottom:
-  1. **Vibrate** for ~1 second (warning)
-  2. **Fling** at player position (deal damage)
-  3. Despawn after attack
-
-### 2.4 Health System
-- Player starts with **100 HP**
-- Damage scales with enemy type
-- No natural regeneration (heal via power-ups only)
-- **Game Over** when HP reaches 0
-
-### 2.5 Gem & XP System
-- Enemies drop **gems** on death
-- Gems are auto-collected (magnetic pull)
-- Gems fill the **XP bar**
-- Full XP bar triggers **Level Up**
+| Feature | Current GoPit | Target (BallxPit-aligned) | Status |
+|---------|---------------|---------------------------|--------|
+| **Player Movement** | Fixed at bottom | Free movement in play area | Gap |
+| **Ball Firing** | Manual tap only | Toggle autofire + manual | Gap |
+| **Baby Balls** | Not implemented | Auto-generated small balls | Gap |
+| **Ball Types** | Fire/Ice/Lightning | Status effects + Fusion system | Partial |
+| **Enemy Warning** | Instant damage at wall | Exclamation → Shake → Attack | Gap |
+| **Gem Collection** | Player zone area pickup | Walk over / magnetism | Gap |
+| **Bosses** | Not implemented | 2 stage + 1 final per level | Gap |
+| **Biomes** | Single environment | Multiple themed stages | Gap |
+| **Characters** | Single character | Multiple with unique abilities | Gap |
+| **Win Condition** | Endless survival | Level-based (beat final boss) | Gap |
 
 ---
 
-## 3. Ball System
+## 3. Core Mechanics
 
-### 3.1 Starter Balls (MVP)
+### 3.1 Player Character
 
-| Ball | Damage | Speed | Special |
-|------|--------|-------|---------|
-| **Basic Ball** | 10 | Normal | None |
-| **Heavy Ball** | 20 | Slow | Knockback |
-| **Swift Ball** | 5 | Fast | Pierces 1 enemy |
-| **Splitter Ball** | 8 | Normal | Splits into 2 on wall hit |
+**Movement**
+- Player can move freely within the play area (not just at bottom)
+- Virtual joystick controls movement direction
+- Movement speed affected by upgrades/character choice
 
-### 3.2 Upgrade Tiers
-Each ball can be upgraded through 3 levels:
+**Ball Firing**
+- Aim with joystick direction (shows trajectory preview)
+- Fire button: tap for single shot
+- **Autofire toggle**: Enable/disable automatic firing
+- Fire rate affected by upgrades
 
-| Level | Effect |
-|-------|--------|
-| **Level 1** | Base stats |
-| **Level 2** | +50% damage, slight visual change |
-| **Level 3** | +100% damage, can be fused |
+**Baby Balls** (NEW)
+- Player passively generates small "baby balls" over time
+- Baby balls deal reduced damage but fire automatically
+- "Leadership" stat affects baby ball generation rate
+- Some characters specialize in baby ball builds
 
-### 3.3 Ball Fusion
-When you have two **Level 3** balls of compatible types and find a **Fusion Reactor** drop:
-- Combine them into an **Evolved Ball**
-- Evolved balls have combined properties + bonus effect
+### 3.2 Ball System
 
-**Example Fusions:**
-| Ball A | Ball B | Result |
-|--------|--------|--------|
-| Heavy L3 | Swift L3 | **Meteor Ball** - Fast + High damage + Burn DoT |
-| Splitter L3 | Basic L3 | **Chain Ball** - Splits and each piece bounces more |
+**Ball Properties**
+| Property | Description |
+|----------|-------------|
+| Damage | Base damage dealt on hit |
+| Speed | Ball movement speed |
+| Bounce | Number of wall bounces before despawn |
+| Pierce | Enemies passed through before bounce |
+| Effect | Status effect applied on hit |
 
-### 3.4 Evolution Paths (Future)
+**Status Effects** (align with BallxPit)
+| Effect | Description | Visual |
+|--------|-------------|--------|
+| **Burn** | Damage over time (fire) | Orange particles |
+| **Freeze** | Slows enemy movement | Ice crystals |
+| **Poison** | DoT that spreads on death | Green bubbles |
+| **Bleed** | Stacking damage, lifesteal synergy | Red drips |
+| **Lightning** | Chains to nearby enemies | Electric arcs |
+| **Iron** | High physical damage, knockback | Metallic shine |
+
+**Ball Levels & Fusion**
 ```
-Basic Ball
-    ├─→ Fire Ball (+ burn damage)
-    └─→ Ice Ball (+ slow effect)
-         └─→ [Fusion with Fire] → Void Ball
+Level 1 (Basic) → Level 2 (+50% stats) → Level 3 (+100% stats, fusion-ready)
+                                                    ↓
+                                        Find Fusion Reactor drop
+                                                    ↓
+                                    Combine two L3 balls → Evolved Ball
 ```
+
+**Example Fusions** (based on BallxPit)
+| Ball A | Ball B | Result | Effect |
+|--------|--------|--------|--------|
+| Burn | Iron | **Bomb** | Explosion on hit |
+| Freeze | Lightning | **Blizzard** | AoE freeze + chain |
+| Poison | Bleed | **Virus** | Spreading DoT |
+| Burn | Poison | **Magma** | Large DoT pools |
+| Bleed | (evolve) | **Vampire** | Lifesteal on hit |
+
+### 3.3 Enemy System
+
+**Enemy Behavior (BallxPit-aligned)**
+1. Spawn above viewport
+2. Descend toward player
+3. When reaching attack range:
+   - **Red exclamation point** appears (warning)
+   - **Shake/vibrate** for ~1 second
+   - **Leap/attack** toward player position
+   - Deal damage on contact
+4. Despawn after attack (hit or miss)
+
+**Enemy Types**
+
+| Enemy | HP | Speed | Damage | Behavior | XP |
+|-------|-----|-------|--------|----------|-----|
+| **Slime** | 20 | Slow | 5 | Straight down | 10 |
+| **Bat** | 15 | Fast | 10 | Zigzag pattern | 12 |
+| **Crab** | 30 | Slow | 8 | Side-to-side | 15 |
+| **Golem** | 50 | V.Slow | 20 | Tank, armored | 25 |
+| **Swarm** | 5 | Normal | 3 | Groups of 5 | 5 |
+| **Archer** | 20 | Slow | 15 | Ranged attacks | 18 |
+| **Bomber** | 25 | Normal | 25 | Explodes near player | 20 |
+
+**Wave Scaling**
+| Wave | Enemy Count | Speed Mod | HP Mod | New Types |
+|------|-------------|-----------|--------|-----------|
+| 1-5 | 3-5 | 1.0x | 1.0x | Slime only |
+| 6-10 | 5-8 | 1.2x | 1.3x | +Bat |
+| 11-15 | 8-10 | 1.3x | 1.5x | +Crab |
+| 16-20 | 10-12 | 1.4x | 1.8x | +Golem, Swarm |
+| 21+ | 12+ | 1.5x | 2.0x+ | All types |
+
+### 3.4 Boss System (NEW)
+
+**Structure per Stage**
+- **Stage Boss 1**: Wave 10 - Mini-boss, introduces stage mechanic
+- **Stage Boss 2**: Wave 20 - Harder, bullet-hell patterns
+- **Final Boss**: Wave 30 - Screen-filling, multiple phases
+
+**Boss Mechanics**
+- Large HP pool (bullet sponge)
+- Unique attack patterns
+- Invulnerability phases
+- Adds spawn during fight
+- Telegraphed attacks (learn patterns)
+
+**Example Bosses**
+| Boss | Stage | HP | Attacks |
+|------|-------|-----|---------|
+| **Slime King** | Forest | 500 | Splits into smaller slimes, slam |
+| **Frost Wyrm** | Ice Cavern | 750 | Ice breath, tail swipe, summons |
+| **Sand Golem** | Desert | 1000 | Ground pound, rock throw, burrow |
+
+### 3.5 Gem & XP System
+
+**Gem Collection (BallxPit-aligned)**
+- Enemies drop gems on death
+- **Player must move to collect gems** (walk over them)
+- Gems do NOT auto-collect at player zone wall
+- **Magnetism upgrade**: Increases gem attraction range
+- Gems despawn after ~10 seconds if not collected
+
+**XP & Leveling**
+- Gems grant XP based on enemy killed
+- XP bar fills → Level Up triggered
+- XP requirement scales: `100 + (level - 1) * 50`
+
+**Combo System**
+- Kill enemies in quick succession for combo
+- Combo multiplier: 1x (1-2), 1.5x (3-4), 2x (5+)
+- Taking damage resets combo
 
 ---
 
 ## 4. Progression System
 
 ### 4.1 Per-Run Progression
-On **Level Up**, player chooses 1 of 3 options:
-- **New Ball** - Add a new ball type to your loadout
-- **Upgrade Ball** - Level up an existing ball
-- **Passive Item** - Gain a passive bonus
 
-**Passive Items (MVP Examples):**
-| Item | Effect |
+**Level Up Choices** (pick 1 of 3)
+1. **New Ball** - Add a new ball type with unique effect
+2. **Upgrade Ball** - Level up existing ball (L1→L2→L3)
+3. **Passive Item** - Permanent buff for the run
+
+**Passive Items**
+| Item | Effect | Max Stacks |
+|------|--------|------------|
+| Power Up | +5 ball damage | 10 |
+| Quick Fire | -0.1s cooldown | 4 |
+| Vitality | +25 max HP | 10 |
+| Multi Shot | +1 ball per shot | 3 |
+| Velocity | +100 ball speed | 5 |
+| Piercing | Pierce +1 enemy | 3 |
+| Ricochet | +5 wall bounces | 4 |
+| Critical Hit | +10% crit chance | 5 |
+| Magnetism | +200 gem range | 3 |
+| Heal | Restore 30 HP | ∞ |
+
+**Special Drops**
+- **Fusion Reactor**: Combine two L3 balls
+- **Fission Bomb**: Drops multiple random upgrades
+- **Evolution Stone**: Evolve compatible L3 ball
+
+### 4.2 Characters (NEW)
+
+Each character has unique starting ball, stats, and passive ability.
+
+| Character | Starting Ball | Passive | Playstyle |
+|-----------|---------------|---------|-----------|
+| **Rookie** | Basic | None (balanced stats) | Beginner-friendly |
+| **Pyro** | Burn | Fire balls deal +20% damage | Aggressive DoT |
+| **Frost Mage** | Freeze | Frozen enemies take +50% damage | Control |
+| **Tactician** | Iron | +2 baby balls | Swarm tactics |
+| **Gambler** | Random | Critical hits deal 3x damage | High risk/reward |
+| **Vampire** | Bleed | Lifesteal on all damage | Sustain |
+
+**Character Stats**
+| Stat | Effect |
 |------|--------|
-| Magnet | Increased gem pickup range |
-| Bounce+ | Balls bounce one extra time |
-| Damage Up | +10% all ball damage |
-| Fire Rate | -15% fire cooldown |
+| Endurance | Max HP |
+| Strength | Ball damage |
+| Leadership | Baby ball generation |
+| Speed | Movement velocity |
+| Dexterity | Critical hit chance |
+| Intelligence | Status effect duration |
 
-### 4.2 Meta Progression (MVP - Ball Upgrades Only)
-After each run, earn **Pit Coins** based on:
-- Enemies defeated
-- Time survived
-- Level reached
+### 4.3 Biomes/Stages (NEW)
 
-Spend Pit Coins on:
-- **Unlock new starter balls**
-- **Permanent stat bonuses** (+5% base HP, etc.)
-- **New passive items** in the level-up pool
+Each biome has unique visual theme, hazards, and enemy variants.
+
+| Biome | Theme | Hazards | Enemies |
+|-------|-------|---------|---------|
+| **The Pit** | Underground cave | Falling rocks | Slimes, Bats |
+| **Frozen Depths** | Ice cavern | Slippery floors, ice spikes | Ice Slimes, Yetis |
+| **Burning Sands** | Desert ruins | Quicksand, heat waves | Sand Golems, Scorpions |
+| **Toxic Swamp** | Poison marsh | Poison pools, vines | Toads, Mushrooms |
+| **Final Descent** | Eldritch void | Gravity shifts | All + Eldritch horrors |
 
 ---
 
-## 5. Enemy Types (MVP)
+## 5. Controls & UI
 
-| Enemy | HP | Speed | Damage | Behavior |
-|-------|-----|-------|--------|----------|
-| **Slime** | 20 | Slow | 5 | Basic, moves straight down |
-| **Bat** | 15 | Fast | 10 | Zigzag movement |
-| **Golem** | 50 | Very Slow | 20 | Tank, takes hits |
-| **Swarm** | 5 | Normal | 3 | Spawns in groups of 5 |
+### 5.1 Control Scheme
 
-### Wave Scaling
-| Wave | Enemy Count | Speed Modifier | HP Modifier |
-|------|-------------|----------------|-------------|
-| 1-5 | 3-5 | 1.0x | 1.0x |
-| 6-10 | 5-8 | 1.2x | 1.3x |
-| 11-20 | 8-12 | 1.4x | 1.6x |
-| 21+ | 12+ | 1.5x | 2.0x+ |
+**Mobile (Primary)**
+```
+┌─────────────────────────────────────┐
+│                                     │
+│         [GAME AREA]                 │
+│     Player can move freely          │
+│                                     │
+│                                     │
+├─────────────────────────────────────┤
+│  ┌─────┐              ┌─────┐       │
+│  │ ◎   │   [AUTO]     │ 🔥  │       │
+│  │MOVE │              │FIRE │       │
+│  └─────┘              └─────┘       │
+└─────────────────────────────────────┘
+     ↑                      ↑
+  Movement              Fire button
+  Joystick            + Autofire toggle
+```
+
+**Desktop/Web**
+- WASD / Arrow keys: Move
+- Mouse aim + Left click: Fire
+- Space: Toggle autofire
+- ESC: Pause
+
+### 5.2 HUD Layout
+
+```
+┌─────────────────────────────────────┐
+│ Wave: 5/30  [||]   HP: ████████░░   │  ← Top bar (wave, pause, HP)
+│ Lv.3  XP: ██████░░░░  Combo: x2.0   │  ← Stats bar
+├─────────────────────────────────────┤
+│                                     │
+│                                     │
+│           [GAME AREA]               │
+│         Enemies descend             │
+│         Player moves                │
+│         Balls bounce                │
+│                                     │
+│                                     │
+├─────────────────────────────────────┤
+│  (◎)                    [AUTO] [🔥] │  ← Controls
+└─────────────────────────────────────┘
+```
+
+### 5.3 Level Up Screen
+
+```
+┌─────────────────────────────────────┐
+│           LEVEL UP!                 │
+│                                     │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐│
+│  │  BURN   │ │ FREEZE  │ │MULTI-   ││
+│  │  BALL   │ │  (L2)   │ │  SHOT   ││
+│  │         │ │         │ │         ││
+│  │ DoT dmg │ │ +50%    │ │ +1 ball ││
+│  │         │ │ stats   │ │         ││
+│  └─────────┘ └─────────┘ └─────────┘│
+│                                     │
+│        [Tap card to select]         │
+└─────────────────────────────────────┘
+```
 
 ---
 
@@ -175,216 +342,89 @@ Spend Pit Coins on:
 - **Orientation**: Portrait (mobile-first)
 - **Base Resolution**: 720 x 1280
 - **Aspect Ratios**: Support 16:9 to 19.5:9
-- **Target FPS**: 60fps on mid-range devices
+- **Target FPS**: 60fps
 
-### 6.3 Rendering
-- Use `gl_compatibility` for broad mobile support
-- Minimize draw calls with batching
-- Simple particle effects (not GPU particles)
-
-### 6.4 Input
-- Touch input with virtual joystick
-- Keyboard/mouse fallback for desktop/web
-- Gamepad support (future)
-
----
-
-## 7. Art Direction
-
-### 7.1 Style: Minimalist Geometric
-- Clean shapes (circles, rectangles, hexagons)
-- Bold outlines
-- Limited color palette per enemy type
-- High contrast for mobile visibility
-
-### 7.2 Color Palette
-| Element | Color |
-|---------|-------|
-| Background | Dark blue/purple (#1a1a2e) |
-| Player Zone | Warm accent (#e94560) |
-| Balls | Bright, distinct per type |
-| Enemies | Contrasting to background |
-| UI | White/light with dark outlines |
-
-### 7.3 Visual Feedback
-- Screen shake on damage taken
-- Ball trail effects
-- Enemy hit flash
-- Gem sparkle and magnetism lines
-- Level-up fanfare overlay
+### 6.3 Collision Layers
+| Layer | Name | Objects |
+|-------|------|---------|
+| 1 | Walls | Stage boundaries |
+| 2 | Balls | Player projectiles |
+| 4 | Enemies | All enemy types |
+| 8 | Gems | Collectible XP gems |
+| 16 | Player | Player character |
 
 ---
 
-## 8. UI/UX
+## 7. Development Roadmap
 
-### 8.1 HUD Layout (Portrait)
-```
-┌─────────────────────┐
-│ Wave: 5    HP: ████ │  <- Top bar
-│                     │
-│                     │
-│    [GAME AREA]      │  <- Pit / enemies
-│                     │
-│                     │
-│  ┌───────────────┐  │
-│  │ XP: ████████░ │  │  <- XP bar
-│  └───────────────┘  │
-│                     │
-│  (⊙)          [🔥]  │  <- Joystick + Fire
-└─────────────────────┘
-```
+### Phase 1: Core Alignment (Current)
+- [ ] Player free movement (replace fixed position)
+- [ ] Autofire toggle
+- [ ] Enemy warning system (exclamation → shake → attack)
+- [ ] Gem collection via player movement
+- [ ] Baby ball system
 
-### 8.2 Level-Up Screen
-- Pause gameplay
-- Display 3 card-style options
-- Tap to select
-- Brief animation, resume
+### Phase 2: Ball Evolution
+- [ ] Status effect system (Burn, Freeze, Poison, Bleed)
+- [ ] Ball leveling (L1 → L2 → L3)
+- [ ] Fusion Reactor drops
+- [ ] Ball fusion combinations
+- [ ] Evolution stones
 
-### 8.3 Game Over Screen
-- Stats summary (time, kills, level)
-- Pit Coins earned
-- Retry / Main Menu buttons
+### Phase 3: Boss & Stages
+- [ ] Boss base class with phases
+- [ ] Stage 1 bosses (Slime King, etc.)
+- [ ] Biome system (visual themes + hazards)
+- [ ] Stage progression (Pit → Ice → Desert → Swamp → Final)
+- [ ] Win condition (beat Final Descent)
 
----
+### Phase 4: Characters
+- [ ] Character selection screen
+- [ ] 6 unique characters with abilities
+- [ ] Character-specific starting balls
+- [ ] Stat system (Endurance, Strength, etc.)
 
-## 9. Future Features (Post-MVP)
-
-### 9.1 Base Building
-- **New Ballbylon** - Village adjacent to the pit
-- Build structures with resources
-- Unlock characters, abilities, cosmetics
-- Based on Ball x Pit's meta-game
-
-### 9.2 Multiple Characters
-- Each character has unique starting ball
-- Special abilities (active/passive)
-- Unlock via base building or achievements
-
-### 9.3 Boss Battles
-- Mini-bosses every 10 waves
-- Final boss at wave 50 (optional win condition)
-- Unique attack patterns per boss
-
-### 9.4 Daily Challenges
-- Pre-seeded runs
-- Global leaderboards
-- Bonus rewards
-
-### 9.5 Additional Features
-- Achievements system
-- Ball collection / codex
-- Endless mode variants (modifiers)
-- Multiplayer co-op (stretch goal)
-
----
-
-## 10. File Structure
-
-```
-GoPit/
-├── GDD.md                      # This document
-├── project.godot               # Godot project config
-├── icon.svg                    # App icon
-├── export_presets.cfg          # Mobile export settings
-│
-├── scenes/
-│   ├── main_menu.tscn          # Main menu scene
-│   ├── game.tscn               # Core gameplay scene
-│   ├── game_over.tscn          # Game over screen
-│   ├── level_up.tscn           # Level-up selection
-│   └── ui/
-│       ├── hud.tscn            # In-game HUD
-│       └── virtual_joystick.tscn
-│
-├── scripts/
-│   ├── autoload/
-│   │   ├── game_manager.gd     # Global game state
-│   │   └── audio_manager.gd    # Sound management
-│   ├── ball/
-│   │   ├── ball.gd             # Base ball class
-│   │   ├── ball_types.gd       # Ball type definitions
-│   │   └── ball_spawner.gd     # Ball firing logic
-│   ├── enemy/
-│   │   ├── enemy.gd            # Base enemy class
-│   │   ├── enemy_spawner.gd    # Wave spawning logic
-│   │   └── enemy_types/        # Individual enemy scripts
-│   ├── player/
-│   │   └── player.gd           # Player health, position
-│   ├── progression/
-│   │   ├── xp_system.gd        # Gem/XP logic
-│   │   ├── level_up.gd         # Level-up choices
-│   │   └── meta_progression.gd # Pit coins, unlocks
-│   └── ui/
-│       ├── virtual_joystick.gd # Touch joystick input
-│       └── hud.gd              # HUD updates
-│
-├── resources/
-│   ├── balls/                  # Ball type resources
-│   ├── enemies/                # Enemy type resources
-│   └── themes/                 # UI themes
-│
-├── assets/
-│   ├── sprites/                # Game sprites
-│   ├── audio/                  # Sound effects, music
-│   └── fonts/                  # UI fonts
-│
-├── tests/                      # GdUnit4 unit tests
-│   ├── test_ball.gd
-│   ├── test_enemy.gd
-│   └── test_progression.gd
-│
-└── playgodot_tests/            # PlayGodot E2E tests
-    ├── conftest.py
-    ├── test_gameplay.py
-    └── test_ui.py
-```
-
----
-
-## 11. Development Milestones
-
-### Milestone 1: Core Loop
-- [ ] Virtual joystick + fire button
-- [ ] Ball physics (bounce, trajectory)
-- [ ] Basic enemy spawning
-- [ ] Collision detection
-- [ ] Enemy reaches bottom → damage player
-
-### Milestone 2: Progression
-- [ ] Gem drops + collection
-- [ ] XP bar + level up trigger
-- [ ] Level-up UI with 3 choices
-- [ ] Ball upgrades (Level 1-3)
-- [ ] Game over screen
-
-### Milestone 3: Content
-- [ ] 4 starter ball types
-- [ ] 4 enemy types
-- [ ] Wave difficulty scaling
-- [ ] 5+ passive items
-- [ ] Ball fusion system
-
-### Milestone 4: Polish
-- [ ] Sound effects + music
-- [ ] Visual juice (particles, shake)
+### Phase 5: Polish
+- [ ] Sound effects + music per biome
+- [ ] Visual juice (particles, screen shake)
 - [ ] Mobile optimization
-- [ ] PlayGodot test coverage
-
-### Milestone 5: Release
-- [ ] Meta progression (Pit Coins)
-- [ ] Ball unlock system
-- [ ] Export to iOS/Android/Web
-- [ ] Beta testing
+- [ ] Tutorial for new players
 
 ---
 
-## Appendix A: References
+## 8. References
 
 - [Ball x Pit (Steam)](https://store.steampowered.com/app/2062430/BALL_x_PIT/)
 - [Ball x Pit (Official Site)](https://www.ballxpit.com/)
-- [Ball x Pit Review - MonsterVine](https://monstervine.com/2025/10/ball-x-pit-review/)
-- [Vampire Survivors](https://store.steampowered.com/app/1794680/Vampire_Survivors/) - Progression inspiration
+- [Ball x Pit Wikipedia](https://en.wikipedia.org/wiki/Ball_x_Pit)
+- [Ball x Pit Tactics Guide](https://md-eksperiment.org/en/post/20251224-ball-x-pit-2025-pro-tactics-for-character-builds-boss-fights-and-efficient-bases)
+- [HTMAG Game of Year Article](https://howtomarketagame.com/2025/12/01/ball-x-pit-my-game-of-the-year-2025/)
 
 ---
 
-*This document will be updated as development progresses.*
+## Appendix A: Gap Analysis Summary
+
+**Critical Gaps** (fundamental mechanics different from BallxPit):
+1. Player cannot move (fixed position vs free movement)
+2. No baby ball generation
+3. Enemies deal instant damage (no warning/attack animation)
+4. Gems collected at wall (should require player to walk over)
+5. No boss fights
+6. Single character (no variety)
+7. Endless mode only (no level-based progression)
+
+**Partial Implementations** (started but incomplete):
+1. Ball types exist but limited (Fire/Ice/Lightning vs full status system)
+2. Level-up system works but needs ball fusion
+3. Wave scaling exists but no biome transitions
+
+**Working Features** (aligned with BallxPit):
+1. Ball physics (bounce, wall collision)
+2. Enemy spawning and descent
+3. XP/gem/level-up core loop
+4. Visual feedback (damage numbers, screen shake)
+5. Upgrade variety (10+ upgrade types)
+
+---
+
+*This document reflects alignment with Ball x Pit mechanics as of January 2026.*
