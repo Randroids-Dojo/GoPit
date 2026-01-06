@@ -102,18 +102,10 @@ func _on_player_zone_body_entered(_body: Node2D) -> void:
 	pass
 
 
-func _on_player_zone_area_entered(area: Area2D) -> void:
-	# Check if it's a gem (collision layer 8)
-	if area.collision_layer & 8:
-		var xp_value: int = 10
-		if area.has_method("get_xp_value"):
-			xp_value = area.get_xp_value()
-			GameManager.add_xp(xp_value)
-		GameManager.record_gem_collected()
-		SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
-		# Show floating XP text
-		_show_xp_text(area.global_position, xp_value)
-		area.queue_free()
+func _on_player_zone_area_entered(_area: Area2D) -> void:
+	# Gems are now collected by player contact, not player_zone
+	# This function is kept for potential future use
+	pass
 
 
 func _show_xp_text(pos: Vector2, xp: int) -> void:
@@ -160,8 +152,12 @@ func _spawn_gem(pos: Vector2, xp_value: int) -> void:
 
 
 func _on_gem_collected(gem: Node2D) -> void:
+	var xp_value: int = 10
 	if gem.has_method("get_xp_value"):
-		GameManager.add_xp(gem.get_xp_value())
+		xp_value = gem.get_xp_value()
+	GameManager.add_xp(xp_value)
+	GameManager.record_gem_collected()
+	_show_xp_text(gem.global_position, xp_value)
 
 
 func _check_wave_progress() -> void:

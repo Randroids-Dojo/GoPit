@@ -1,5 +1,5 @@
 extends Area2D
-## Gem entity - spawned from enemies, collected for XP
+## Gem entity - spawned from enemies, collected when player touches them
 
 signal collected(gem: Node2D)
 
@@ -8,19 +8,24 @@ signal collected(gem: Node2D)
 @export var radius: float = 8.0
 @export var fall_speed: float = 150.0
 @export var sparkle_speed: float = 3.0
+@export var despawn_time: float = 10.0
 
-const PLAYER_ZONE_Y: float = 1200.0
-const MAGNETISM_SPEED: float = 500.0
+const MAGNETISM_SPEED: float = 400.0
+const COLLECTION_RADIUS: float = 30.0
 
 var _time: float = 0.0
+var _player: Node2D = null
+var _being_attracted: bool = false
 
 
 func _ready() -> void:
 	collision_layer = 8  # gems layer
-	collision_mask = 16  # player_zone
+	collision_mask = 16  # player layer (CharacterBody2D)
 
 	body_entered.connect(_on_body_entered)
-	area_entered.connect(_on_area_entered)
+
+	# Find player reference
+	_player = get_tree().get_first_node_in_group("player")
 
 	queue_redraw()
 
@@ -28,31 +33,51 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 
-	# Check for magnetism
+	# Check for player proximity and collect
+	if _player and global_position.distance_to(_player.global_position) < COLLECTION_RADIUS:
+		_collect()
+		return
+
+	# Check for magnetism toward player
+	_being_attracted = false
 	var magnetism_range := GameManager.gem_magnetism_range
-	if magnetism_range > 0:
-		var distance_to_zone := PLAYER_ZONE_Y - global_position.y
-		if distance_to_zone > 0 and distance_to_zone < magnetism_range:
-			# Accelerate toward player zone
-			var pull_strength := 1.0 - (distance_to_zone / magnetism_range)
+	if magnetism_range > 0 and _player:
+		var distance_to_player := global_position.distance_to(_player.global_position)
+		if distance_to_player < magnetism_range:
+			_being_attracted = true
+			# Move toward player
+			var direction := (_player.global_position - global_position).normalized()
+			# Speed increases as gem gets closer
+			var pull_strength := 1.0 - (distance_to_player / magnetism_range)
 			var current_speed := lerpf(fall_speed, MAGNETISM_SPEED, pull_strength)
-			position.y += current_speed * delta
+			global_position += direction * current_speed * delta
 		else:
+			# Normal falling
 			position.y += fall_speed * delta
 	else:
+		# No magnetism, just fall
 		position.y += fall_speed * delta
 
 	queue_redraw()
 
-	# Despawn if off screen
-	if position.y > 1400:
+	# Despawn after timeout or if off screen
+	if _time > despawn_time or position.y > 1400:
 		queue_free()
 
 
 func _draw() -> void:
+	# Draw magnetism pull line when being attracted
+	if _being_attracted and _player:
+		var to_player := to_local(_player.global_position)
+		draw_line(Vector2.ZERO, to_player, Color(0.5, 1.0, 0.5, 0.3), 2.0)
+
 	# Draw gem with sparkle effect
 	var sparkle := (sin(_time * sparkle_speed) + 1.0) * 0.5
 	var current_color := gem_color.lightened(sparkle * 0.3)
+
+	# Glow effect when being attracted
+	if _being_attracted:
+		draw_circle(Vector2.ZERO, radius * 1.5, Color(0.5, 1.0, 0.5, 0.2))
 
 	# Draw diamond shape
 	var points := PackedVector2Array([
@@ -68,17 +93,15 @@ func _draw() -> void:
 	draw_circle(Vector2(-2, -2), 2, highlight)
 
 
-func _on_body_entered(_body: Node2D) -> void:
-	_collect()
-
-
-func _on_area_entered(area: Area2D) -> void:
-	if area.collision_layer & 16:  # player_zone
+func _on_body_entered(body: Node2D) -> void:
+	# Only collect if it's the player
+	if body.is_in_group("player"):
 		_collect()
 
 
 func _collect() -> void:
 	collected.emit(self)
+	SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
 	queue_free()
 
 
