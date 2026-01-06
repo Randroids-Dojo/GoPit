@@ -96,11 +96,10 @@ func _on_player_damaged(_amount: int) -> void:
 		damage_vignette.flash()
 
 
-func _on_player_zone_body_entered(body: Node2D) -> void:
-	# Check if it's an enemy
-	if body is EnemyBase:
-		GameManager.take_damage(body.damage_to_player)
-		body.queue_free()
+func _on_player_zone_body_entered(_body: Node2D) -> void:
+	# Enemies now handle their own attack logic with warning + lunge
+	# This function is kept for potential future use (other body types)
+	pass
 
 
 func _on_player_zone_area_entered(area: Area2D) -> void:

@@ -7,8 +7,20 @@ signal took_damage(enemy: EnemyBase, amount: int)
 signal entered_danger_zone
 signal left_danger_zone
 
+enum State { DESCENDING, WARNING, ATTACKING, DEAD }
+
 const DANGER_ZONE_Y: float = 1000.0  # 200px above player zone at 1200
+const ATTACK_RANGE_Y: float = 950.0  # When to start warning (before danger zone)
+const WARNING_DURATION: float = 1.0  # Seconds to show warning
+const ATTACK_SPEED: float = 600.0  # Speed when lunging at player
+
 var in_danger_zone: bool = false
+var current_state: State = State.DESCENDING
+var _warning_timer: float = 0.0
+var _attack_target: Vector2 = Vector2.ZERO
+var _shake_offset: Vector2 = Vector2.ZERO
+var _exclamation_label: Label
+var _pulse_tween: Tween
 
 @export var max_hp: int = 10
 @export var speed: float = 100.0
@@ -42,8 +54,20 @@ func _scale_with_wave() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_move(delta)
-	_check_danger_zone()
+	match current_state:
+		State.DESCENDING:
+			_move(delta)
+			_check_danger_zone()
+			# Check if we should enter warning state
+			if global_position.y >= ATTACK_RANGE_Y:
+				_enter_warning_state()
+		State.WARNING:
+			_do_warning(delta)
+			_check_danger_zone()
+		State.ATTACKING:
+			_do_attack(delta)
+		State.DEAD:
+			pass  # Do nothing, waiting for queue_free
 
 
 func _setup_collision() -> void:
@@ -119,6 +143,129 @@ func _spawn_hit_effects(damage: int) -> void:
 
 
 func _die() -> void:
+	current_state = State.DEAD
 	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 	died.emit(self)
 	queue_free()
+
+
+# === WARNING STATE ===
+
+func _enter_warning_state() -> void:
+	current_state = State.WARNING
+	_warning_timer = WARNING_DURATION
+	_show_exclamation()
+	SoundManager.play(SoundManager.SoundType.BLOCKED)  # Use blocked sound for warning
+
+
+func _do_warning(delta: float) -> void:
+	_warning_timer -= delta
+	_update_shake()
+
+	if _warning_timer <= 0:
+		_enter_attack_state()
+
+
+func _show_exclamation() -> void:
+	_exclamation_label = Label.new()
+	_exclamation_label.text = "!"
+	_exclamation_label.add_theme_font_size_override("font_size", 32)
+	_exclamation_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2))
+	_exclamation_label.position = Vector2(-8, -50)
+	add_child(_exclamation_label)
+
+	# Pulse animation
+	_pulse_tween = create_tween().set_loops()
+	_pulse_tween.tween_property(_exclamation_label, "scale", Vector2(1.3, 1.3), 0.15)
+	_pulse_tween.tween_property(_exclamation_label, "scale", Vector2(1.0, 1.0), 0.15)
+
+
+func _hide_exclamation() -> void:
+	if _pulse_tween and _pulse_tween.is_valid():
+		_pulse_tween.kill()
+	if _exclamation_label:
+		_exclamation_label.queue_free()
+		_exclamation_label = null
+
+
+func _update_shake() -> void:
+	# Remove previous shake offset
+	position -= _shake_offset
+	# Apply new shake
+	_shake_offset = Vector2(
+		randf_range(-5.0, 5.0),
+		randf_range(-5.0, 5.0)
+	)
+	position += _shake_offset
+
+
+func _stop_shake() -> void:
+	position -= _shake_offset
+	_shake_offset = Vector2.ZERO
+
+
+# === ATTACK STATE ===
+
+func _enter_attack_state() -> void:
+	current_state = State.ATTACKING
+	_hide_exclamation()
+	_stop_shake()
+
+	# Target player's current position
+	_attack_target = _get_player_position()
+
+	# Flash white briefly when attacking
+	modulate = Color(1.5, 1.5, 1.5)
+	var tween := create_tween()
+	tween.tween_property(self, "modulate", Color.WHITE, 0.1)
+
+
+func _do_attack(delta: float) -> void:
+	# Move toward attack target
+	var direction := (_attack_target - global_position).normalized()
+	velocity = direction * ATTACK_SPEED
+	move_and_slide()
+
+	# Check if we hit the player
+	var player := _get_player_node()
+	if player and global_position.distance_to(player.global_position) < 40:
+		_deal_damage_to_player()
+		queue_free()
+		return
+
+	# Despawn if off-screen or past target
+	if global_position.y > 1400 or global_position.y < -50:
+		queue_free()
+		return
+
+	# Also despawn if we've overshot the target significantly
+	var to_target := _attack_target - global_position
+	var was_moving_toward := to_target.dot(direction) > 0
+	if not was_moving_toward and global_position.distance_to(_attack_target) > 50:
+		queue_free()
+
+
+func _get_player_position() -> Vector2:
+	var player := _get_player_node()
+	if player:
+		return player.global_position
+	# Fallback: aim at bottom center of screen
+	return Vector2(360, 1100)
+
+
+func _get_player_node() -> Node2D:
+	var players := get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		return players[0] as Node2D
+	return null
+
+
+func _deal_damage_to_player() -> void:
+	var player := _get_player_node()
+	if player and player.has_method("take_damage"):
+		player.take_damage(damage_to_player)
+	else:
+		# Fallback: use GameManager directly
+		GameManager.take_damage(damage_to_player)
+
+	CameraShake.shake(8.0, 15.0)  # Big shake on player hit
