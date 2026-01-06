@@ -154,8 +154,8 @@ async def test_joystick_aim_direction(game, report):
     if not joystick_pos or not joystick_size:
         pytest.skip("Could not get joystick position")
 
-    center_x = joystick_pos.x + joystick_size.x / 2
-    center_y = joystick_pos.y + joystick_size.y / 2
+    center_x = joystick_pos['x'] + joystick_size['x'] / 2
+    center_y = joystick_pos['y'] + joystick_size['y'] / 2
 
     # Simulate drag to the right
     await game.click(center_x + 50, center_y)
@@ -187,8 +187,8 @@ async def test_joystick_dead_zone(game, report):
     if not joystick_pos or not joystick_size:
         pytest.skip("Could not get joystick position")
 
-    center_x = joystick_pos.x + joystick_size.x / 2
-    center_y = joystick_pos.y + joystick_size.y / 2
+    center_x = joystick_pos['x'] + joystick_size['x'] / 2
+    center_y = joystick_pos['y'] + joystick_size['y'] / 2
 
     # Click near center (within dead zone of 0.1 = 8px on 80px radius)
     await game.click(center_x + 5, center_y - 5)
@@ -215,8 +215,8 @@ async def test_ball_wall_bounce(game, report):
     joystick_size = await game.get_property(PATHS["joystick"], "size")
 
     if joystick_pos and joystick_size:
-        center_x = joystick_pos.x + joystick_size.x / 2
-        center_y = joystick_pos.y + joystick_size.y / 2
+        center_x = joystick_pos['x'] + joystick_size['x'] / 2
+        center_y = joystick_pos['y'] + joystick_size['y'] / 2
         await game.click(center_x + 70, center_y - 20)  # Strong right aim
         await asyncio.sleep(0.1)
 
@@ -566,8 +566,8 @@ async def test_full_gameplay_session(game, report):
                 import random
                 offset_x = random.randint(-60, 60)
                 offset_y = random.randint(-60, 0)  # Mostly aim upward
-                center_x = joystick_pos.x + joystick_size.x / 2
-                center_y = joystick_pos.y + joystick_size.y / 2
+                center_x = joystick_pos['x'] + joystick_size['x'] / 2
+                center_y = joystick_pos['y'] + joystick_size['y'] / 2
                 await game.click(center_x + offset_x, center_y + offset_y)
 
         await asyncio.sleep(0.5)
