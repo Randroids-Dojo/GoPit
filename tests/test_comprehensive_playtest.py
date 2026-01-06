@@ -148,8 +148,8 @@ async def test_fire_button_cooldown(game, report):
 async def test_joystick_aim_direction(game, report):
     """Test that joystick properly updates aim direction."""
     # Get joystick center
-    joystick_pos = await game.get(PATHS["joystick"], "global_position")
-    joystick_size = await game.get(PATHS["joystick"], "size")
+    joystick_pos = await game.get_property(PATHS["joystick"], "global_position")
+    joystick_size = await game.get_property(PATHS["joystick"], "size")
 
     if not joystick_pos or not joystick_size:
         pytest.skip("Could not get joystick position")
@@ -162,7 +162,7 @@ async def test_joystick_aim_direction(game, report):
     await asyncio.sleep(0.1)
 
     # Check aim line visibility
-    aim_visible = await game.get(PATHS["aim_line"], "visible")
+    aim_visible = await game.get_property(PATHS["aim_line"], "visible")
 
     # Fire and check ball direction
     await game.click(PATHS["fire_button"])
@@ -181,8 +181,8 @@ async def test_joystick_aim_direction(game, report):
 @pytest.mark.asyncio
 async def test_joystick_dead_zone(game, report):
     """Test joystick dead zone behavior."""
-    joystick_pos = await game.get(PATHS["joystick"], "global_position")
-    joystick_size = await game.get(PATHS["joystick"], "size")
+    joystick_pos = await game.get_property(PATHS["joystick"], "global_position")
+    joystick_size = await game.get_property(PATHS["joystick"], "size")
 
     if not joystick_pos or not joystick_size:
         pytest.skip("Could not get joystick position")
@@ -211,8 +211,8 @@ async def test_joystick_dead_zone(game, report):
 async def test_ball_wall_bounce(game, report):
     """Test that balls bounce off walls correctly."""
     # Aim hard right and fire
-    joystick_pos = await game.get(PATHS["joystick"], "global_position")
-    joystick_size = await game.get(PATHS["joystick"], "size")
+    joystick_pos = await game.get_property(PATHS["joystick"], "global_position")
+    joystick_size = await game.get_property(PATHS["joystick"], "size")
 
     if joystick_pos and joystick_size:
         center_x = joystick_pos.x + joystick_size.x / 2
@@ -316,7 +316,7 @@ async def test_enemy_spawn_rate(game, report):
 async def test_enemy_reach_player_zone(game, report):
     """Test what happens when enemy reaches player zone."""
     # Get initial HP
-    hp_before = await game.get("/root/GameManager", "player_hp")
+    hp_before = await game.get_property("/root/GameManager", "player_hp")
     if hp_before is None:
         hp_before = 100  # Default
 
@@ -324,7 +324,7 @@ async def test_enemy_reach_player_zone(game, report):
     # Time = 1250 / 100 = 12.5 seconds max, but spawn interval means ~15s
     await asyncio.sleep(15.0)
 
-    hp_after = await game.get("/root/GameManager", "player_hp")
+    hp_after = await game.get_property("/root/GameManager", "player_hp")
     if hp_after is None:
         hp_after = hp_before
 
@@ -341,7 +341,7 @@ async def test_enemy_reach_player_zone(game, report):
 @pytest.mark.asyncio
 async def test_wave_progression(game, report):
     """Test wave advancement mechanics."""
-    wave_before = await game.get("/root/GameManager", "current_wave")
+    wave_before = await game.get_property("/root/GameManager", "current_wave")
     if wave_before is None:
         wave_before = 1
 
@@ -364,7 +364,7 @@ async def test_wave_progression(game, report):
 @pytest.mark.asyncio
 async def test_gem_collection_in_player_zone(game, report):
     """Test that gems are collected when falling into player zone."""
-    xp_before = await game.get("/root/GameManager", "current_xp")
+    xp_before = await game.get_property("/root/GameManager", "current_xp")
     if xp_before is None:
         xp_before = 0
 
@@ -372,7 +372,7 @@ async def test_gem_collection_in_player_zone(game, report):
     # This requires enemies to die first
     await asyncio.sleep(10.0)
 
-    xp_after = await game.get("/root/GameManager", "current_xp")
+    xp_after = await game.get_property("/root/GameManager", "current_xp")
 
     # Issue: Gems just fall - no magnetism
     report.add_issue(
@@ -410,7 +410,7 @@ async def test_level_up_overlay_appears(game, report):
     # Would need to kill 10 enemies (10 XP each) naturally
 
     # Check overlay is initially hidden
-    visible = await game.get(PATHS["level_up_overlay"], "visible")
+    visible = await game.get_property(PATHS["level_up_overlay"], "visible")
     assert visible == False, "Level-up overlay should be hidden initially"
 
     # Issue: No XP progress indication
@@ -467,7 +467,7 @@ async def test_damage_feedback(game, report):
 async def test_game_over_flow(game, report):
     """Test game over screen and restart."""
     # Check game over overlay is hidden initially
-    visible = await game.get(PATHS["game_over_overlay"], "visible")
+    visible = await game.get_property(PATHS["game_over_overlay"], "visible")
     assert visible == False, "Game over overlay should be hidden initially"
 
     # Issue: No death animation
@@ -560,8 +560,8 @@ async def test_full_gameplay_session(game, report):
 
         # Occasionally aim in different directions
         if tick % 10 == 0:
-            joystick_pos = await game.get(PATHS["joystick"], "global_position")
-            joystick_size = await game.get(PATHS["joystick"], "size")
+            joystick_pos = await game.get_property(PATHS["joystick"], "global_position")
+            joystick_size = await game.get_property(PATHS["joystick"], "size")
             if joystick_pos and joystick_size:
                 import random
                 offset_x = random.randint(-60, 60)
@@ -573,13 +573,13 @@ async def test_full_gameplay_session(game, report):
         await asyncio.sleep(0.5)
 
         # Check game state
-        state = await game.get("/root/GameManager", "current_state")
+        state = await game.get_property("/root/GameManager", "current_state")
         if state == 4:  # GAME_OVER = 4
             break
 
         # Update metrics
-        wave = await game.get("/root/GameManager", "current_wave")
-        level = await game.get("/root/GameManager", "player_level")
+        wave = await game.get_property("/root/GameManager", "current_wave")
+        level = await game.get_property("/root/GameManager", "player_level")
         if wave and wave > metrics["max_wave_reached"]:
             metrics["max_wave_reached"] = wave
         if level and level > metrics["final_level"]:
@@ -614,8 +614,8 @@ async def test_full_gameplay_session(game, report):
 async def test_touch_target_sizes(game, report):
     """Test touch target sizes for mobile usability."""
     # Check fire button size
-    fire_size = await game.get(PATHS["fire_button"], "size")
-    joystick_size = await game.get(PATHS["joystick"], "size")
+    fire_size = await game.get_property(PATHS["fire_button"], "size")
+    joystick_size = await game.get_property(PATHS["joystick"], "size")
 
     # Issue: Touch targets might be too small
     report.add_issue(
