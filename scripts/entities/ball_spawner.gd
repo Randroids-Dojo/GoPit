@@ -1,5 +1,6 @@
 extends Node2D
 ## Spawns balls in the aimed direction when fire is triggered
+## Now integrates with BallRegistry for ball types and levels
 
 signal ball_spawned(ball: Node2D)
 
@@ -8,14 +9,18 @@ signal ball_spawned(ball: Node2D)
 @export var balls_container: Node2D
 
 var current_aim_direction: Vector2 = Vector2.UP
-var ball_damage: int = 10
-var ball_speed: float = 800.0
+var ball_damage: int = 10  # Base damage, can be modified by upgrades
+var ball_speed: float = 800.0  # Base speed, can be modified by upgrades
 var ball_count: int = 1
 var ball_spread: float = 0.15  # radians between balls
 var pierce_count: int = 0
 var max_bounces: int = 10  # default wall bounces
 var crit_chance: float = 0.0
-var ball_type: int = 0  # 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
+var ball_type: int = 0  # Legacy: 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
+
+# Bonus stats from upgrades (added on top of registry stats)
+var _damage_bonus: int = 0
+var _speed_bonus: float = 0.0
 
 
 func _ready() -> void:
@@ -49,15 +54,32 @@ func _spawn_ball(direction: Vector2) -> void:
 	var ball := ball_scene.instantiate()
 	ball.position = global_position + direction * spawn_offset
 	ball.set_direction(direction)
-	ball.damage = ball_damage
-	ball.speed = ball_speed
+
+	# Get stats from BallRegistry if available
+	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
+	if use_registry:
+		var active_type: int = BallRegistry.active_ball_type
+		var registry_damage: int = BallRegistry.get_damage(active_type)
+		var registry_speed: float = BallRegistry.get_speed(active_type)
+		var ball_level: int = BallRegistry.get_ball_level(active_type)
+
+		ball.damage = registry_damage + _damage_bonus
+		ball.speed = registry_speed + _speed_bonus
+		ball.ball_level = ball_level
+		ball.registry_type = active_type
+
+		# Map registry type to ball.gd BallType enum
+		ball.set_ball_type(_registry_to_ball_type(active_type))
+	else:
+		# Fallback to legacy behavior
+		ball.damage = ball_damage + _damage_bonus
+		ball.speed = ball_speed + _speed_bonus
+		if ball_type > 0 and ball.has_method("set_ball_type"):
+			ball.set_ball_type(ball_type)
+
 	ball.pierce_count = pierce_count
 	ball.max_bounces = max_bounces
 	ball.crit_chance = crit_chance
-
-	# Set ball type if not normal
-	if ball_type > 0 and ball.has_method("set_ball_type"):
-		ball.set_ball_type(ball_type)
 
 	if balls_container:
 		balls_container.add_child(ball)
@@ -67,12 +89,29 @@ func _spawn_ball(direction: Vector2) -> void:
 	ball_spawned.emit(ball)
 
 
+func _registry_to_ball_type(registry_type: int) -> int:
+	"""Map BallRegistry.BallType to ball.gd BallType enum"""
+	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6
+	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
+	match registry_type:
+		0: return 0  # BASIC -> NORMAL
+		1: return 1  # BURN -> FIRE
+		2: return 2  # FREEZE -> ICE
+		3: return 4  # POISON -> POISON
+		4: return 5  # BLEED -> BLEED
+		5: return 3  # LIGHTNING -> LIGHTNING
+		6: return 6  # IRON -> IRON
+	return 0
+
+
 func increase_damage(amount: int) -> void:
 	ball_damage += amount
+	_damage_bonus += amount
 
 
 func increase_speed(amount: float) -> void:
 	ball_speed += amount
+	_speed_bonus += amount
 
 
 func add_multi_shot() -> void:
@@ -93,6 +132,12 @@ func add_crit_chance(amount: float) -> void:
 
 func set_ball_type(new_type: int) -> void:
 	ball_type = new_type
+
+
+func set_active_ball_from_registry(registry_type: int) -> void:
+	"""Set active ball type using BallRegistry.BallType enum"""
+	if BallRegistry:
+		BallRegistry.set_active_ball(registry_type)
 
 
 func get_spawn_position() -> Vector2:

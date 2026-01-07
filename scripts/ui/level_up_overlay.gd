@@ -1,5 +1,5 @@
 extends Control
-## Level Up overlay with upgrade cards - expanded variety with 10 upgrade types
+## Level Up overlay with upgrade cards - supports ball types, ball leveling, and passive upgrades
 
 signal upgrade_selected(upgrade_type: String)
 
@@ -13,10 +13,14 @@ enum UpgradeType {
 	RICOCHET,
 	CRITICAL,
 	MAGNETISM,
-	HEAL,
-	FIRE_BALL,
-	ICE_BALL,
-	LIGHTNING_BALL
+	HEAL
+}
+
+# Upgrade categories for card generation
+enum CardType {
+	PASSIVE,      # Traditional stat upgrades
+	NEW_BALL,     # Acquire a new ball type
+	LEVEL_UP_BALL # Level up an owned ball (L1->L2 or L2->L3)
 }
 
 const UPGRADE_DATA := {
@@ -79,31 +83,14 @@ const UPGRADE_DATA := {
 		"description": "Restore 30 HP",
 		"apply": "_apply_heal",
 		"max_stacks": 99
-	},
-	UpgradeType.FIRE_BALL: {
-		"name": "Fire Ball",
-		"description": "Burn enemies",
-		"apply": "_apply_fire_ball",
-		"max_stacks": 1
-	},
-	UpgradeType.ICE_BALL: {
-		"name": "Ice Ball",
-		"description": "Slow enemies",
-		"apply": "_apply_ice_ball",
-		"max_stacks": 1
-	},
-	UpgradeType.LIGHTNING_BALL: {
-		"name": "Lightning Ball",
-		"description": "Chain damage",
-		"apply": "_apply_lightning_ball",
-		"max_stacks": 1
 	}
 }
 
 @onready var cards_container: HBoxContainer = $Panel/VBoxContainer/CardsContainer
 @onready var title_label: Label = $Panel/VBoxContainer/TitleLabel
 
-var _available_upgrades: Array[UpgradeType] = []
+# Each card is a Dictionary with: card_type, upgrade_type (for passive), ball_type (for ball cards)
+var _available_cards: Array[Dictionary] = []
 var upgrade_stacks: Dictionary = {}
 
 
@@ -125,66 +112,132 @@ func _setup_cards() -> void:
 
 
 func _on_level_up() -> void:
-	_randomize_upgrades()
+	_randomize_cards()
 	_update_cards()
 	visible = true
 	get_tree().paused = true
 
 
-func _randomize_upgrades() -> void:
-	_available_upgrades.clear()
-	var pool: Array[UpgradeType] = []
+func _randomize_cards() -> void:
+	_available_cards.clear()
+	var pool: Array[Dictionary] = []
 
-	# Add upgrades that haven't hit max stacks
+	# 1. Add new ball types (not yet owned)
+	if BallRegistry:
+		var unowned := BallRegistry.get_unowned_ball_types()
+		for ball_type in unowned:
+			pool.append({
+				"card_type": CardType.NEW_BALL,
+				"ball_type": ball_type
+			})
+
+		# 2. Add ball level-ups (owned balls below L3)
+		var upgradeable := BallRegistry.get_upgradeable_balls()
+		for ball_type in upgradeable:
+			pool.append({
+				"card_type": CardType.LEVEL_UP_BALL,
+				"ball_type": ball_type
+			})
+
+	# 3. Add passive upgrades that haven't hit max stacks
 	for upgrade_type in UPGRADE_DATA:
 		var data: Dictionary = UPGRADE_DATA[upgrade_type]
 		var current_stacks: int = upgrade_stacks.get(upgrade_type, 0)
 		if current_stacks < data.get("max_stacks", 99):
-			pool.append(upgrade_type)
+			pool.append({
+				"card_type": CardType.PASSIVE,
+				"upgrade_type": upgrade_type
+			})
 
 	pool.shuffle()
 	# Take first 3 (or fewer if pool is smaller)
-	_available_upgrades = pool.slice(0, mini(3, pool.size()))
+	_available_cards = pool.slice(0, mini(3, pool.size()))
 
 
 func _update_cards() -> void:
 	for i in range(cards_container.get_child_count()):
 		var card: Button = cards_container.get_child(i)
 
-		if i < _available_upgrades.size():
+		if i < _available_cards.size():
 			card.visible = true
-			var upgrade_type: UpgradeType = _available_upgrades[i]
-			var data: Dictionary = UPGRADE_DATA[upgrade_type]
-			var stacks: int = upgrade_stacks.get(upgrade_type, 0)
-
+			var card_data: Dictionary = _available_cards[i]
 			var name_label: Label = card.get_node_or_null("VBoxContainer/NameLabel")
 			var desc_label: Label = card.get_node_or_null("VBoxContainer/DescLabel")
 
-			if name_label:
-				if stacks > 0:
-					name_label.text = "%s (%d)" % [data["name"], stacks + 1]
-				else:
-					name_label.text = data["name"]
-			if desc_label:
-				desc_label.text = data["description"]
+			match card_data["card_type"]:
+				CardType.PASSIVE:
+					var upgrade_type: UpgradeType = card_data["upgrade_type"]
+					var data: Dictionary = UPGRADE_DATA[upgrade_type]
+					var stacks: int = upgrade_stacks.get(upgrade_type, 0)
+
+					if name_label:
+						if stacks > 0:
+							name_label.text = "%s (%d)" % [data["name"], stacks + 1]
+						else:
+							name_label.text = data["name"]
+					if desc_label:
+						desc_label.text = data["description"]
+
+				CardType.NEW_BALL:
+					var ball_type: int = card_data["ball_type"]
+					var ball_name: String = BallRegistry.get_ball_name(ball_type) if BallRegistry else "Ball"
+					var ball_desc: String = BallRegistry.get_ball_description(ball_type) if BallRegistry else ""
+
+					if name_label:
+						name_label.text = "NEW: %s Ball" % ball_name
+					if desc_label:
+						desc_label.text = ball_desc
+
+				CardType.LEVEL_UP_BALL:
+					var ball_type: int = card_data["ball_type"]
+					var ball_name: String = BallRegistry.get_ball_name(ball_type) if BallRegistry else "Ball"
+					var current_level: int = BallRegistry.get_ball_level(ball_type) if BallRegistry else 1
+					var next_level: int = current_level + 1
+
+					if name_label:
+						name_label.text = "%s L%d" % [ball_name, next_level]
+					if desc_label:
+						if next_level == 2:
+							desc_label.text = "+50% damage & speed"
+						elif next_level == 3:
+							desc_label.text = "+100% stats (Fusion ready!)"
 		else:
 			card.visible = false
 
 
 func _on_card_pressed(index: int) -> void:
-	if index >= _available_upgrades.size():
+	if index >= _available_cards.size():
 		return
 
-	var upgrade_type: UpgradeType = _available_upgrades[index]
-	var data: Dictionary = UPGRADE_DATA[upgrade_type]
+	var card_data: Dictionary = _available_cards[index]
+	var selected_name: String = ""
 
-	# Track stacks
-	upgrade_stacks[upgrade_type] = upgrade_stacks.get(upgrade_type, 0) + 1
+	match card_data["card_type"]:
+		CardType.PASSIVE:
+			var upgrade_type: UpgradeType = card_data["upgrade_type"]
+			var data: Dictionary = UPGRADE_DATA[upgrade_type]
 
-	# Apply the upgrade
-	call(data["apply"] as String)
+			# Track stacks
+			upgrade_stacks[upgrade_type] = upgrade_stacks.get(upgrade_type, 0) + 1
 
-	upgrade_selected.emit(data["name"])
+			# Apply the upgrade
+			call(data["apply"] as String)
+			selected_name = data["name"]
+
+		CardType.NEW_BALL:
+			var ball_type: int = card_data["ball_type"]
+			if BallRegistry:
+				BallRegistry.add_ball(ball_type)
+				selected_name = "NEW: %s Ball" % BallRegistry.get_ball_name(ball_type)
+
+		CardType.LEVEL_UP_BALL:
+			var ball_type: int = card_data["ball_type"]
+			if BallRegistry:
+				var new_level: int = BallRegistry.get_ball_level(ball_type) + 1
+				BallRegistry.level_up_ball(ball_type)
+				selected_name = "%s L%d" % [BallRegistry.get_ball_name(ball_type), new_level]
+
+	upgrade_selected.emit(selected_name)
 
 	# Resume game
 	get_tree().paused = false
@@ -245,21 +298,3 @@ func _apply_magnetism() -> void:
 
 func _apply_heal() -> void:
 	GameManager.heal(30)
-
-
-func _apply_fire_ball() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("set_ball_type"):
-		ball_spawner.set_ball_type(1)  # FIRE
-
-
-func _apply_ice_ball() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("set_ball_type"):
-		ball_spawner.set_ball_type(2)  # ICE
-
-
-func _apply_lightning_ball() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("set_ball_type"):
-		ball_spawner.set_ball_type(3)  # LIGHTNING

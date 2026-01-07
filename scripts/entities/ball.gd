@@ -5,7 +5,7 @@ signal hit_enemy(enemy: Node2D)
 signal hit_gem(gem: Node2D)
 signal despawned
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -18,8 +18,10 @@ var max_bounces: int = 10
 var crit_chance: float = 0.0
 var _bounce_count: int = 0
 
-# Ball type and effects
+# Ball type, level, and effects
 var ball_type: BallType = BallType.NORMAL
+var ball_level: int = 1  # 1-3, affects visuals
+var registry_type: int = -1  # BallRegistry.BallType if set from registry
 var _trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 8
 
@@ -44,39 +46,69 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.5, 0.9, 1.0)  # Cyan
 		BallType.LIGHTNING:
 			ball_color = Color(1.0, 1.0, 0.3)  # Yellow
+		BallType.POISON:
+			ball_color = Color(0.4, 0.9, 0.2)  # Green
+		BallType.BLEED:
+			ball_color = Color(0.9, 0.2, 0.3)  # Dark red
+		BallType.IRON:
+			ball_color = Color(0.7, 0.7, 0.75)  # Metallic gray
 
 
 func _draw() -> void:
+	# Level affects size: L1=1.0x, L2=1.1x, L3=1.2x
+	var level_size_mult := 1.0 + (ball_level - 1) * 0.1
+	var actual_radius := radius * level_size_mult
+
 	# Draw trail for special ball types
 	if ball_type != BallType.NORMAL and _trail_points.size() > 1:
 		for i in range(_trail_points.size() - 1):
 			var alpha: float = float(i) / _trail_points.size() * 0.5
 			var trail_color := ball_color
 			trail_color.a = alpha
-			var width: float = radius * 0.5 * (float(i) / _trail_points.size())
+			var width: float = actual_radius * 0.5 * (float(i) / _trail_points.size())
 			draw_line(_trail_points[i] - global_position, _trail_points[i + 1] - global_position, trail_color, width)
 
 	# Draw main ball
-	draw_circle(Vector2.ZERO, radius, ball_color)
+	draw_circle(Vector2.ZERO, actual_radius, ball_color)
+
+	# Level indicator rings
+	if ball_level >= 2:
+		# L2: single white ring
+		draw_arc(Vector2.ZERO, actual_radius + 2, 0, TAU, 24, Color(1.0, 1.0, 1.0, 0.7), 1.5)
+	if ball_level >= 3:
+		# L3: gold outer ring (fusion-ready)
+		draw_arc(Vector2.ZERO, actual_radius + 5, 0, TAU, 24, Color(1.0, 0.85, 0.0, 0.9), 2.0)
 
 	# Type-specific effects
 	match ball_type:
 		BallType.FIRE:
 			# Inner glow
-			draw_circle(Vector2.ZERO, radius * 0.6, Color(1.0, 0.8, 0.2))
+			draw_circle(Vector2.ZERO, actual_radius * 0.6, Color(1.0, 0.8, 0.2))
 		BallType.ICE:
 			# Crystal effect
 			for i in range(6):
 				var angle: float = TAU * i / 6.0
-				var point := Vector2.from_angle(angle) * radius * 0.7
+				var point := Vector2.from_angle(angle) * actual_radius * 0.7
 				draw_line(Vector2.ZERO, point, Color.WHITE, 1.5)
 		BallType.LIGHTNING:
 			# Spark effect
 			for i in range(4):
 				var angle: float = TAU * i / 4.0 + randf() * 0.3
-				var len: float = radius * (0.8 + randf() * 0.4)
+				var len: float = actual_radius * (0.8 + randf() * 0.4)
 				var point := Vector2.from_angle(angle) * len
 				draw_line(Vector2.ZERO, point, Color.WHITE, 1.0)
+		BallType.POISON:
+			# Bubble effect
+			for i in range(3):
+				var angle: float = TAU * i / 3.0 + randf() * 0.2
+				var bubble_pos := Vector2.from_angle(angle) * actual_radius * 0.5
+				draw_circle(bubble_pos, 3.0, Color(0.2, 0.7, 0.1, 0.6))
+		BallType.BLEED:
+			# Drip effect
+			draw_circle(Vector2(0, actual_radius * 0.4), 4.0, Color(0.7, 0.1, 0.1))
+		BallType.IRON:
+			# Metallic shine
+			draw_arc(Vector2(-actual_radius * 0.3, -actual_radius * 0.3), actual_radius * 0.4, -0.5, 1.0, 8, Color(1.0, 1.0, 1.0, 0.5), 2.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -179,6 +211,31 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 		BallType.LIGHTNING:
 			# Lightning: Chain to nearby enemies
 			_chain_lightning(enemy)
+
+		BallType.POISON:
+			# Poison: Green tint, damage over time visual
+			enemy.modulate = Color(0.6, 1.0, 0.5)
+			var tween := enemy.create_tween()
+			tween.tween_property(enemy, "modulate", Color.WHITE, 2.0)
+			# TODO: Implement actual poison DoT when status effect system is added
+
+		BallType.BLEED:
+			# Bleed: Red tint, stacking damage visual
+			enemy.modulate = Color(1.0, 0.5, 0.5)
+			var tween := enemy.create_tween()
+			tween.tween_property(enemy, "modulate", Color.WHITE, 1.0)
+			# TODO: Implement bleed stacking when status effect system is added
+
+		BallType.IRON:
+			# Iron: Knockback effect
+			if enemy is EnemyBase:
+				var knockback_dir := (enemy.global_position - global_position).normalized()
+				var knockback_strength := 50.0
+				enemy.global_position += knockback_dir * knockback_strength
+				# Metallic impact visual
+				enemy.modulate = Color(0.8, 0.8, 0.9)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
