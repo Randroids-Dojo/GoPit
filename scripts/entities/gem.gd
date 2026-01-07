@@ -5,13 +5,13 @@ signal collected(gem: Node2D)
 
 @export var xp_value: int = 10
 @export var gem_color: Color = Color(0.2, 0.9, 0.5)
-@export var radius: float = 8.0
+@export var radius: float = 14.0
 @export var fall_speed: float = 150.0
 @export var sparkle_speed: float = 3.0
 @export var despawn_time: float = 10.0
 
 const MAGNETISM_SPEED: float = 400.0
-const COLLECTION_RADIUS: float = 30.0
+const COLLECTION_RADIUS: float = 40.0
 
 var _time: float = 0.0
 var _player: Node2D = null

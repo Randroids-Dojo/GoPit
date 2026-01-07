@@ -11,7 +11,7 @@ enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
-@export var radius: float = 12.0
+@export var radius: float = 14.0
 @export var damage: int = 10
 
 var direction: Vector2 = Vector2.UP

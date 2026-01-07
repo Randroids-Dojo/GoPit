@@ -6,7 +6,7 @@ signal damaged(amount: int)
 signal moved(position: Vector2)
 
 @export var move_speed: float = 300.0
-@export var player_radius: float = 20.0
+@export var player_radius: float = 35.0
 @export var body_color: Color = Color(0.3, 0.7, 1.0, 0.9)
 @export var outline_color: Color = Color(0.5, 0.9, 1.0, 1.0)
 
@@ -14,7 +14,7 @@ var movement_input: Vector2 = Vector2.ZERO
 var last_aim_direction: Vector2 = Vector2.UP  # Default aim upward
 
 # Game bounds (set by game_controller)
-var bounds_min: Vector2 = Vector2(30, 200)  # Left wall + some padding, top area
+var bounds_min: Vector2 = Vector2(30, 280)  # Left wall + some padding, top area (below enlarged TopBar)
 var bounds_max: Vector2 = Vector2(690, 1150)  # Right wall - padding, above input area
 
 

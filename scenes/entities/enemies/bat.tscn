@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/entities/enemies/bat.gd" id="1_bat"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_bat"]
-radius = 15.0
+radius = 22.0
 
 [node name="Bat" type="CharacterBody2D"]
 collision_layer = 4
