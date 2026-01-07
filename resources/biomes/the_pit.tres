@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Biome" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
+
+[resource]
+script = ExtResource("1_biome")
+biome_name = "The Pit"
+background_color = Color(0.102, 0.102, 0.18, 1)
+wall_color = Color(0.2, 0.2, 0.35, 1)
+waves_before_boss = 10

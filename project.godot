@@ -23,6 +23,7 @@ CameraShake="*res://scripts/effects/camera_shake.gd"
 MusicManager="*res://scripts/autoload/music_manager.gd"
 MetaManager="*res://scripts/autoload/meta_manager.gd"
 BallRegistry="*res://scripts/autoload/ball_registry.gd"
+StageManager="*res://scripts/autoload/stage_manager.gd"
 
 [display]
 

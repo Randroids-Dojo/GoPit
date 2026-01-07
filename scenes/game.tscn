@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=20 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
@@ -18,6 +18,7 @@
 [ext_resource type="Script" path="res://scripts/ui/game_over_overlay.gd" id="9_gameover"]
 [ext_resource type="Script" path="res://scripts/ui/level_up_overlay.gd" id="10_levelup"]
 [ext_resource type="Script" path="res://scripts/ui/pause_overlay.gd" id="11_pause"]
+[ext_resource type="Script" path="res://scripts/ui/stage_complete_overlay.gd" id="18_stagecomplete"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -620,3 +621,61 @@ color = Color(1, 0, 0, 0)
 [node name="MetaShop" parent="UI" instance=ExtResource("16_meta_shop")]
 
 [node name="CharacterSelect" parent="UI" instance=ExtResource("17_charselect")]
+
+[node name="StageCompleteOverlay" type="CanvasLayer" parent="UI"]
+visible = false
+process_mode = 3
+layer = 15
+script = ExtResource("18_stagecomplete")
+
+[node name="DimBackground" type="ColorRect" parent="UI/StageCompleteOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="Panel" parent="UI/StageCompleteOverlay/DimBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -120.0
+offset_right = 180.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/StageCompleteOverlay/DimBackground/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="UI/StageCompleteOverlay/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "STAGE COMPLETE!"
+horizontal_alignment = 1
+
+[node name="StageLabel" type="Label" parent="UI/StageCompleteOverlay/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "The Pit cleared!"
+horizontal_alignment = 1
+
+[node name="ContinueButton" type="Button" parent="UI/StageCompleteOverlay/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 10
+text = "Continue"

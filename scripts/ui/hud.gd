@@ -55,7 +55,9 @@ func _update_hp() -> void:
 
 func _update_wave() -> void:
 	if wave_label:
-		wave_label.text = "Wave %d" % GameManager.current_wave
+		var stage_name := StageManager.get_stage_name()
+		var wave_in_stage := StageManager.wave_in_stage
+		wave_label.text = "%s %d/%d" % [stage_name, wave_in_stage, StageManager.current_biome.waves_before_boss if StageManager.current_biome else 10]
 
 
 func _update_xp() -> void:

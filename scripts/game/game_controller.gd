@@ -18,6 +18,10 @@ extends Node2D
 @onready var tutorial_overlay: CanvasLayer = $UI/TutorialOverlay
 @onready var danger_indicator: Control = $UI/DangerIndicator
 @onready var character_select: CanvasLayer = $UI/CharacterSelect
+@onready var background: ColorRect = $Background
+@onready var left_wall: StaticBody2D = $GameArea/Walls/LeftWall
+@onready var right_wall: StaticBody2D = $GameArea/Walls/RightWall
+@onready var stage_complete_overlay: CanvasLayer = $UI/StageCompleteOverlay
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 var player_scene: PackedScene = preload("res://scenes/entities/player.tscn")
@@ -72,6 +76,12 @@ func _ready() -> void:
 	GameManager.game_started.connect(_on_game_started)
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.player_damaged.connect(_on_player_damaged)
+
+	# Connect to stage manager for biome changes
+	StageManager.biome_changed.connect(_on_biome_changed)
+	StageManager.boss_wave_reached.connect(_on_boss_wave_reached)
+	StageManager.stage_completed.connect(_on_stage_completed)
+	StageManager.game_won.connect(_on_game_won)
 
 	# Connect enemy spawner to spawn gems on death
 	if enemy_spawner:
@@ -303,3 +313,49 @@ func _cleanup_offscreen_balls() -> void:
 	for ball in balls_container.get_children():
 		if ball.global_position.y < -50 or ball.global_position.y > viewport_height + 50:
 			ball.despawn()
+
+
+func _on_biome_changed(biome: Biome) -> void:
+	# Update background color
+	if background:
+		background.color = biome.background_color
+
+	# Update wall colors (via modulate since walls are StaticBody2D)
+	if left_wall:
+		_set_wall_color(left_wall, biome.wall_color)
+	if right_wall:
+		_set_wall_color(right_wall, biome.wall_color)
+
+
+func _set_wall_color(wall: StaticBody2D, color: Color) -> void:
+	# Walls don't have visual by default, add ColorRect if needed
+	var visual := wall.get_node_or_null("Visual") as ColorRect
+	if not visual:
+		visual = ColorRect.new()
+		visual.name = "Visual"
+		visual.size = Vector2(20, 1280)
+		visual.position = Vector2(-10, -640)
+		wall.add_child(visual)
+	visual.color = color
+
+
+func _on_boss_wave_reached(stage: int) -> void:
+	# Stop enemy spawning
+	if enemy_spawner:
+		enemy_spawner.stop_spawning()
+
+	# Show stage complete overlay (no boss yet, auto-complete)
+	if stage_complete_overlay:
+		stage_complete_overlay.show_stage_complete(stage)
+
+
+func _on_stage_completed(_stage: int) -> void:
+	# Resume enemy spawning for next stage
+	if enemy_spawner:
+		enemy_spawner.start_spawning()
+
+
+func _on_game_won() -> void:
+	# Show victory screen
+	if stage_complete_overlay:
+		stage_complete_overlay.show_victory()
