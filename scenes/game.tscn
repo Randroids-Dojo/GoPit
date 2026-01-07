@@ -206,18 +206,20 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20
 
-[node name="JoystickContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
+[node name="MoveJoystickContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="VirtualJoystick" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/JoystickContainer"]
+[node name="VirtualJoystick" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/MoveJoystickContainer"]
 custom_minimum_size = Vector2(140, 140)
 layout_mode = 2
 script = ExtResource("3_joystick")
+base_color = Color(0.2, 0.3, 0.5, 0.5)
+knob_color = Color(0.4, 0.6, 1.0, 0.8)
 
 [node name="FireButtonContainer" type="VBoxContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 2
 alignment = 1
 theme_override_constants/separation = 5
 
@@ -233,6 +235,17 @@ custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 size_flags_horizontal = 4
 script = ExtResource("4_fire")
+
+[node name="AimJoystickContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VirtualJoystick" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/AimJoystickContainer"]
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 2
+script = ExtResource("3_joystick")
+base_color = Color(0.5, 0.25, 0.2, 0.5)
+knob_color = Color(1.0, 0.5, 0.3, 0.8)
 
 [node name="GameOverOverlay" type="Control" parent="UI"]
 visible = false

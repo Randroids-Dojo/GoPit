@@ -1,9 +1,9 @@
 extends CanvasLayer
 ## First-time tutorial overlay with step-by-step hints
 
-enum TutorialStep { AIM, FIRE, HIT, COMPLETE }
+enum TutorialStep { MOVE, AIM, FIRE, HIT, COMPLETE }
 
-var current_step: TutorialStep = TutorialStep.AIM
+var current_step: TutorialStep = TutorialStep.MOVE
 var has_completed_tutorial: bool = false
 
 @onready var dim_background: ColorRect = $DimBackground
@@ -23,16 +23,19 @@ func _ready() -> void:
 		return
 
 	visible = true
-	_show_step(TutorialStep.AIM)
+	_show_step(TutorialStep.MOVE)
 
 
 func _show_step(step: TutorialStep) -> void:
 	current_step = step
 
 	match step:
+		TutorialStep.MOVE:
+			hint_label.text = "Drag LEFT joystick to MOVE"
+			_show_highlight_at("MoveJoystickContainer")
 		TutorialStep.AIM:
-			hint_label.text = "Drag the JOYSTICK to aim"
-			_show_highlight_at("VirtualJoystick")
+			hint_label.text = "Drag RIGHT joystick to AIM"
+			_show_highlight_at("AimJoystickContainer")
 		TutorialStep.FIRE:
 			hint_label.text = "Tap FIRE to shoot!"
 			_show_highlight_at("FireButton")
@@ -77,6 +80,13 @@ func _fade_out() -> void:
 
 
 func on_joystick_used() -> void:
+	# Called when move joystick is used
+	if current_step == TutorialStep.MOVE:
+		_show_step(TutorialStep.AIM)
+
+
+func on_aim_joystick_used() -> void:
+	# Called when aim joystick is used
 	if current_step == TutorialStep.AIM:
 		_show_step(TutorialStep.FIRE)
 

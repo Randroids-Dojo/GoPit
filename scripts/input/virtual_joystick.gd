@@ -6,7 +6,7 @@ signal released
 
 @export var base_radius: float = 80.0
 @export var knob_radius: float = 30.0
-@export var dead_zone: float = 0.1
+@export var dead_zone: float = 0.05  # 5% dead zone for responsive controls
 @export var base_color: Color = Color(0.3, 0.3, 0.4, 0.5)
 @export var knob_color: Color = Color(0.5, 0.7, 1.0, 0.8)
 

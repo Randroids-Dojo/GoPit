@@ -8,7 +8,8 @@ extends Node2D
 @onready var enemy_spawner: EnemySpawner = $GameArea/Enemies/EnemySpawner
 @onready var player_zone: Area2D = $GameArea/PlayerZone
 @onready var player: CharacterBody2D = $GameArea/Player
-@onready var joystick: Control = $UI/HUD/InputContainer/HBoxContainer/JoystickContainer/VirtualJoystick
+@onready var move_joystick: Control = $UI/HUD/InputContainer/HBoxContainer/MoveJoystickContainer/VirtualJoystick
+@onready var aim_joystick: Control = $UI/HUD/InputContainer/HBoxContainer/AimJoystickContainer/VirtualJoystick
 @onready var fire_button: Control = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton
 @onready var auto_toggle: Button = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/AutoToggle
 @onready var aim_line: Line2D = $GameArea/AimLine
@@ -32,10 +33,15 @@ var enemies_per_wave: int = 5
 func _ready() -> void:
 	viewport_height = get_viewport_rect().size.y
 
-	# Wire up joystick - now controls player movement
-	if joystick:
-		joystick.direction_changed.connect(_on_joystick_direction_changed)
-		joystick.released.connect(_on_joystick_released)
+	# Wire up move joystick (left) - controls player movement
+	if move_joystick:
+		move_joystick.direction_changed.connect(_on_move_joystick_direction_changed)
+		move_joystick.released.connect(_on_move_joystick_released)
+
+	# Wire up aim joystick (right) - controls aim direction
+	if aim_joystick:
+		aim_joystick.direction_changed.connect(_on_aim_joystick_direction_changed)
+		aim_joystick.released.connect(_on_aim_joystick_released)
 
 	# Wire up fire button
 	if fire_button:
@@ -219,15 +225,26 @@ func _on_player_moved(pos: Vector2) -> void:
 		player_zone.global_position = pos
 
 
-func _on_joystick_direction_changed(direction: Vector2) -> void:
-	# Control player movement
+func _on_move_joystick_direction_changed(direction: Vector2) -> void:
+	# Control player movement only
 	if player and player.has_method("set_movement_input"):
 		player.set_movement_input(direction)
 
-	# Set aim direction on ball spawner (use movement direction for aiming)
-	if ball_spawner:
-		if direction.length() > 0.1:
-			ball_spawner.set_aim_direction(direction)
+	# Notify tutorial
+	if tutorial_overlay and tutorial_overlay.has_method("on_joystick_used"):
+		tutorial_overlay.on_joystick_used()
+
+
+func _on_move_joystick_released() -> void:
+	# Stop player movement
+	if player and player.has_method("set_movement_input"):
+		player.set_movement_input(Vector2.ZERO)
+
+
+func _on_aim_joystick_direction_changed(direction: Vector2) -> void:
+	# Set aim direction on ball spawner
+	if ball_spawner and direction.length() > 0.1:
+		ball_spawner.set_aim_direction(direction)
 
 	# Show aim line from player position
 	if aim_line and player:
@@ -237,15 +254,11 @@ func _on_joystick_direction_changed(direction: Vector2) -> void:
 			aim_line.hide_line()
 
 	# Notify tutorial
-	if tutorial_overlay and tutorial_overlay.has_method("on_joystick_used"):
-		tutorial_overlay.on_joystick_used()
+	if tutorial_overlay and tutorial_overlay.has_method("on_aim_joystick_used"):
+		tutorial_overlay.on_aim_joystick_used()
 
 
-func _on_joystick_released() -> void:
-	# Stop player movement
-	if player and player.has_method("set_movement_input"):
-		player.set_movement_input(Vector2.ZERO)
-
+func _on_aim_joystick_released() -> void:
 	if aim_line:
 		aim_line.hide_line()
 
