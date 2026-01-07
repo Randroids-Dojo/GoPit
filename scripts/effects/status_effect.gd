@@ -18,12 +18,9 @@ var time_remaining: float = 0.0
 var tick_timer: float = 0.0
 
 
-static func create(effect_type: Type):  # -> StatusEffect (can't use return type in static)
-	var script := load("res://scripts/effects/status_effect.gd")
-	var effect = script.new()
-	effect.type = effect_type
-	effect._configure()
-	return effect
+func _init(effect_type: Type = Type.BURN) -> void:
+	type = effect_type
+	_configure()
 
 
 func _configure() -> void:

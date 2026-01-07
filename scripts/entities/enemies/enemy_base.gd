@@ -408,7 +408,7 @@ func _spread_poison() -> void:
 		if enemy is EnemyBase:
 			var dist: float = global_position.distance_to(enemy.global_position)
 			if dist <= SPREAD_RADIUS:
-				var poison := StatusEffect.create(StatusEffect.Type.POISON)
+				var poison := StatusEffect.new(StatusEffect.Type.POISON)
 				enemy.apply_status_effect(poison)
 
 

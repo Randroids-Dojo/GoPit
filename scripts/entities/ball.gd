@@ -193,7 +193,7 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 		BallType.FIRE:
 			# Fire: Apply burn status effect
 			if enemy.has_method("apply_status_effect"):
-				var burn = StatusEffect.create(StatusEffect.Type.BURN)
+				var burn = StatusEffect.new(StatusEffect.Type.BURN)
 				enemy.apply_status_effect(burn)
 			else:
 				# Fallback visual tint for non-EnemyBase
@@ -204,7 +204,7 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 		BallType.ICE:
 			# Ice: Apply freeze status effect (slows enemy)
 			if enemy.has_method("apply_status_effect"):
-				var freeze = StatusEffect.create(StatusEffect.Type.FREEZE)
+				var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
 				enemy.apply_status_effect(freeze)
 			else:
 				# Fallback direct slow for non-EnemyBase
@@ -219,7 +219,7 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 		BallType.POISON:
 			# Poison: Apply poison status effect (DoT + spreads on death)
 			if enemy.has_method("apply_status_effect"):
-				var poison = StatusEffect.create(StatusEffect.Type.POISON)
+				var poison = StatusEffect.new(StatusEffect.Type.POISON)
 				enemy.apply_status_effect(poison)
 			else:
 				# Fallback visual tint
@@ -230,7 +230,7 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 		BallType.BLEED:
 			# Bleed: Apply bleed status effect (stacking DoT)
 			if enemy.has_method("apply_status_effect"):
-				var bleed = StatusEffect.create(StatusEffect.Type.BLEED)
+				var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
 				enemy.apply_status_effect(bleed)
 			else:
 				# Fallback visual tint
