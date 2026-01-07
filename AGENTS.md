@@ -122,32 +122,42 @@ When creating UI overlays and panels:
 
 3. **Test UI interactions**: When adding overlays, verify that buttons/controls underneath remain clickable.
 
-## Parallel Agent Coordination
+## Parallel Test Execution
 
-**CRITICAL: PlayGodot tests use a fixed port (6007) and cannot run concurrently.**
+PlayGodot tests now support **automatic parallel execution** via dynamic port allocation.
 
-When multiple agents are working in parallel (e.g., in different tmux windows or worktrees):
+### How It Works
 
-1. **Before running tests**, check if another agent is testing:
-   ```bash
-   lsof -i :6007  # Check if port is in use
-   pgrep -f godot  # Check for running Godot processes
-   ```
+Each test session automatically gets a unique port:
 
-2. **If port is in use**, wait or coordinate:
-   - Kill stale processes: `pkill -9 -f godot`
-   - Wait for the other agent to finish testing
-   - Use `bd show` to see what work is in progress
+1. **PLAYGODOT_PORT env var** - Explicit override (highest priority)
+2. **pytest-xdist worker ID** - For parallel workers within a session
+3. **Dynamic free port** - Auto-allocated for cross-session safety
 
-3. **Avoid test conflicts**:
-   - Only ONE agent should run PlayGodot tests at a time
-   - If you see `OSError: [Errno 48] address already in use`, another test is running
-   - Coordinate via beads: check `bd list --status=in_progress` to see active work
+### Running Tests in Parallel
 
-4. **Worktree considerations**:
-   - Each worktree shares the same test infrastructure
-   - Tests in different worktrees still conflict on port 6007
-   - Coordinate testing across worktrees
+```bash
+# Sequential (auto port)
+pytest tests/ -v
+
+# Parallel within session (requires: pip install pytest-xdist)
+pytest tests/ -n 4
+
+# Multiple sessions (each gets unique port automatically)
+# Terminal 1: pytest tests/test_fire.py -v
+# Terminal 2: pytest tests/test_autofire.py -v
+
+# Explicit port override
+PLAYGODOT_PORT=7000 pytest tests/ -v
+```
+
+### Troubleshooting
+
+If you encounter stale Godot processes:
+```bash
+pgrep -f godot        # Check for running Godot processes
+pkill -9 -f godot     # Kill stale processes
+```
 
 ## Landing the Plane (Session Completion)
 
