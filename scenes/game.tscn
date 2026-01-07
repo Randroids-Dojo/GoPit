@@ -19,6 +19,7 @@
 [ext_resource type="Script" path="res://scripts/ui/level_up_overlay.gd" id="10_levelup"]
 [ext_resource type="Script" path="res://scripts/ui/pause_overlay.gd" id="11_pause"]
 [ext_resource type="Script" path="res://scripts/ui/stage_complete_overlay.gd" id="18_stagecomplete"]
+[ext_resource type="Script" path="res://scripts/entities/baby_ball_spawner.gd" id="19_baby_spawner"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -87,6 +88,9 @@ script = ExtResource("2_spawner")
 
 [node name="AimLine" type="Line2D" parent="GameArea"]
 script = ExtResource("5_aimline")
+
+[node name="BabyBallSpawner" type="Node2D" parent="GameArea"]
+script = ExtResource("19_baby_spawner")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

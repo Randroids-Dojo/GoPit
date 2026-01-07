@@ -25,6 +25,9 @@ var registry_type: int = -1  # BallRegistry.BallType if set from registry
 var _trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 8
 
+# Baby ball properties (auto-spawned, smaller, less damage)
+var is_baby_ball: bool = false
+
 
 func _ready() -> void:
 	_apply_ball_type_visuals()
@@ -55,6 +58,17 @@ func _apply_ball_type_visuals() -> void:
 
 
 func _draw() -> void:
+	# Baby balls are smaller and have a subtle glow
+	if is_baby_ball:
+		var baby_radius := radius * 0.5
+		# Outer glow
+		draw_circle(Vector2.ZERO, baby_radius + 3, Color(ball_color.r, ball_color.g, ball_color.b, 0.3))
+		# Main ball (slightly lighter)
+		draw_circle(Vector2.ZERO, baby_radius, ball_color.lightened(0.2))
+		# Sparkle highlight
+		draw_circle(Vector2(-baby_radius * 0.3, -baby_radius * 0.3), baby_radius * 0.25, Color(1.0, 1.0, 1.0, 0.6))
+		return
+
 	# Level affects size: L1=1.0x, L2=1.1x, L3=1.2x
 	var level_size_mult := 1.0 + (ball_level - 1) * 0.1
 	var actual_radius := radius * level_size_mult

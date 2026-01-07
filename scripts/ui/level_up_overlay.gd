@@ -13,7 +13,8 @@ enum UpgradeType {
 	RICOCHET,
 	CRITICAL,
 	MAGNETISM,
-	HEAL
+	HEAL,
+	LEADERSHIP
 }
 
 # Upgrade categories for card generation
@@ -83,6 +84,12 @@ const UPGRADE_DATA := {
 		"description": "Restore 30 HP",
 		"apply": "_apply_heal",
 		"max_stacks": 99
+	},
+	UpgradeType.LEADERSHIP: {
+		"name": "Leadership",
+		"description": "+20% Baby Ball rate",
+		"apply": "_apply_leadership",
+		"max_stacks": 5
 	}
 }
 
@@ -298,3 +305,7 @@ func _apply_magnetism() -> void:
 
 func _apply_heal() -> void:
 	GameManager.heal(30)
+
+
+func _apply_leadership() -> void:
+	GameManager.add_leadership(0.2)  # 20% faster baby balls per stack
