@@ -24,6 +24,7 @@ MusicManager="*res://scripts/autoload/music_manager.gd"
 MetaManager="*res://scripts/autoload/meta_manager.gd"
 BallRegistry="*res://scripts/autoload/ball_registry.gd"
 StageManager="*res://scripts/autoload/stage_manager.gd"
+FusionRegistry="*res://scripts/autoload/fusion_registry.gd"
 
 [display]
 
@@ -40,6 +41,7 @@ window/handheld/orientation=1
 2d_physics/layer_3="enemies"
 2d_physics/layer_4="gems"
 2d_physics/layer_5="player_zone"
+2d_physics/layer_6="fusion_reactors"
 
 
 [rendering]

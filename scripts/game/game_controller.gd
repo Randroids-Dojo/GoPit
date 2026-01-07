@@ -23,9 +23,11 @@ extends Node2D
 @onready var left_wall: StaticBody2D = $GameArea/Walls/LeftWall
 @onready var right_wall: StaticBody2D = $GameArea/Walls/RightWall
 @onready var stage_complete_overlay: CanvasLayer = $UI/StageCompleteOverlay
+@onready var fusion_overlay: Control = $UI/FusionOverlay
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 var player_scene: PackedScene = preload("res://scenes/entities/player.tscn")
+var fusion_reactor_scene: PackedScene = preload("res://scenes/entities/fusion_reactor.tscn")
 
 # Viewport bounds for ball cleanup
 var viewport_height: float = 1280.0
@@ -181,6 +183,7 @@ func _on_enemy_spawned(enemy: EnemyBase) -> void:
 
 func _on_enemy_died(enemy: EnemyBase) -> void:
 	_spawn_gem(enemy.global_position, enemy.xp_value)
+	_maybe_spawn_fusion_reactor(enemy.global_position)
 	_check_wave_progress()
 	GameManager.record_enemy_kill()
 
@@ -371,3 +374,28 @@ func _on_game_won() -> void:
 func _on_leadership_changed(new_value: float) -> void:
 	if baby_ball_spawner:
 		baby_ball_spawner.set_leadership(new_value)
+
+
+func _maybe_spawn_fusion_reactor(pos: Vector2) -> void:
+	"""Chance to spawn a fusion reactor when enemy dies"""
+	# Base 2% chance, +0.1% per wave
+	var chance := 0.02 + GameManager.current_wave * 0.001
+	if randf() < chance:
+		_spawn_fusion_reactor(pos)
+
+
+func _spawn_fusion_reactor(pos: Vector2) -> void:
+	"""Spawn a fusion reactor drop at position"""
+	if not gems_container:
+		return
+
+	var reactor := fusion_reactor_scene.instantiate()
+	reactor.position = pos
+	reactor.collected.connect(_on_fusion_reactor_collected)
+	gems_container.add_child(reactor)
+
+
+func _on_fusion_reactor_collected(_reactor: Node2D) -> void:
+	"""Handle fusion reactor collection - show fusion UI"""
+	if fusion_overlay:
+		fusion_overlay.show_fusion_ui()

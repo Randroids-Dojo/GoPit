@@ -30,6 +30,13 @@ const MAX_TRAIL_POINTS: int = 8
 # Baby ball properties (auto-spawned, smaller, less damage)
 var is_baby_ball: bool = false
 
+# Evolved/Fused ball properties
+var is_evolved: bool = false
+var evolved_type: int = 0  # FusionRegistry.EvolvedBallType
+var is_fused: bool = false
+var fused_id: String = ""
+var fused_effects: Array = []  # Array of effect strings for fused balls
+
 
 func _ready() -> void:
 	_apply_ball_type_visuals()
@@ -160,8 +167,14 @@ func _physics_process(delta: float) -> void:
 				actual_damage *= 2
 				is_crit = true
 
-			# Ball type bonus damage/effects
-			_apply_ball_type_effect(collider, actual_damage)
+			# Apply evolved/fused/normal ball effects
+			if is_evolved:
+				_apply_evolved_effect(collider, actual_damage)
+			elif is_fused:
+				_apply_fused_effects(collider, actual_damage)
+			else:
+				# Ball type bonus damage/effects
+				_apply_ball_type_effect(collider, actual_damage)
 
 			if collider.has_method("take_damage"):
 				collider.take_damage(actual_damage)
@@ -305,3 +318,237 @@ func _draw_lightning_arc(from: Vector2, to: Vector2) -> void:
 	var tween := line.create_tween()
 	tween.tween_property(line, "modulate:a", 0.0, 0.15)
 	tween.tween_callback(line.queue_free)
+
+
+func _apply_evolved_effect(enemy: Node2D, base_damage: int) -> void:
+	"""Apply unique evolved ball effects"""
+	# Access FusionRegistry for evolved ball data
+	if not FusionRegistry:
+		return
+
+	match evolved_type:
+		FusionRegistry.EvolvedBallType.BOMB:
+			# Explosion AoE - damage all enemies in radius
+			_do_explosion(enemy.global_position, base_damage)
+
+		FusionRegistry.EvolvedBallType.BLIZZARD:
+			# AoE freeze + chain
+			_do_blizzard(enemy)
+
+		FusionRegistry.EvolvedBallType.VIRUS:
+			# Spreading DoT + lifesteal
+			_do_virus(enemy)
+
+		FusionRegistry.EvolvedBallType.MAGMA:
+			# Spawn burning ground pool
+			_do_magma_pool(enemy.global_position)
+
+		FusionRegistry.EvolvedBallType.VOID:
+			# Alternating burn/freeze
+			_do_void_effect(enemy)
+
+
+func _do_explosion(pos: Vector2, base_damage: int) -> void:
+	"""BOMB effect - AoE explosion damage"""
+	var explosion_radius := 100.0
+	var explosion_damage := int(base_damage * 1.5)
+
+	# Find all enemies in radius
+	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	if not enemies_container:
+		return
+
+	for child in enemies_container.get_children():
+		if child is EnemyBase:
+			var dist: float = child.global_position.distance_to(pos)
+			if dist < explosion_radius:
+				if child.has_method("take_damage"):
+					child.take_damage(explosion_damage)
+
+	# Visual explosion effect
+	_spawn_explosion_visual(pos, explosion_radius)
+
+
+func _spawn_explosion_visual(pos: Vector2, radius: float) -> void:
+	"""Spawn explosion visual effect"""
+	var explosion := Control.new()
+	explosion.global_position = pos
+	explosion.z_index = 10
+
+	var circle := ColorRect.new()
+	circle.size = Vector2(radius * 2, radius * 2)
+	circle.position = Vector2(-radius, -radius)
+	circle.color = Color(1.0, 0.5, 0.0, 0.7)
+	explosion.add_child(circle)
+
+	get_tree().current_scene.add_child(explosion)
+
+	var tween := explosion.create_tween()
+	tween.tween_property(circle, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(explosion.queue_free)
+
+
+func _do_blizzard(hit_enemy: Node2D) -> void:
+	"""BLIZZARD effect - AoE freeze + chain to nearby enemies"""
+	var freeze_radius := 80.0
+	var chain_count := 3
+	var chains_done := 0
+
+	# Apply freeze to hit enemy
+	if hit_enemy.has_method("apply_status_effect"):
+		var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+		hit_enemy.apply_status_effect(freeze)
+
+	# Find and freeze nearby enemies
+	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	if not enemies_container:
+		return
+
+	for child in enemies_container.get_children():
+		if child is EnemyBase and child != hit_enemy and chains_done < chain_count:
+			var dist: float = child.global_position.distance_to(hit_enemy.global_position)
+			if dist < freeze_radius:
+				if child.has_method("apply_status_effect"):
+					var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+					child.apply_status_effect(freeze)
+				# Visual ice chain
+				_draw_ice_chain(hit_enemy.global_position, child.global_position)
+				chains_done += 1
+
+
+func _draw_ice_chain(from: Vector2, to: Vector2) -> void:
+	"""Draw ice chain visual"""
+	var line := Line2D.new()
+	line.width = 3.0
+	line.default_color = Color(0.5, 0.9, 1.0, 0.8)
+	line.add_point(from)
+	line.add_point(to)
+	get_tree().current_scene.add_child(line)
+
+	var tween := line.create_tween()
+	tween.tween_property(line, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(line.queue_free)
+
+
+func _do_virus(enemy: Node2D) -> void:
+	"""VIRUS effect - Spreading DoT + lifesteal"""
+	var spread_radius := 80.0
+	var lifesteal_amount := 0.2
+
+	# Apply poison and bleed to hit enemy
+	if enemy.has_method("apply_status_effect"):
+		var poison = StatusEffect.new(StatusEffect.Type.POISON)
+		var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+		enemy.apply_status_effect(poison)
+		enemy.apply_status_effect(bleed)
+
+	# Spread to nearby enemies
+	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	if enemies_container:
+		for child in enemies_container.get_children():
+			if child is EnemyBase and child != enemy:
+				var dist: float = child.global_position.distance_to(enemy.global_position)
+				if dist < spread_radius:
+					if child.has_method("apply_status_effect"):
+						var poison = StatusEffect.new(StatusEffect.Type.POISON)
+						child.apply_status_effect(poison)
+
+	# Lifesteal - heal player
+	var heal_amount := int(damage * lifesteal_amount)
+	GameManager.heal(heal_amount)
+
+
+func _do_magma_pool(pos: Vector2) -> void:
+	"""MAGMA effect - Spawn burning ground pool"""
+	var pool_duration := 3.0
+	var pool_dps := 5
+	var pool_radius := 50.0
+
+	# Create magma pool visual
+	var pool := Control.new()
+	pool.global_position = pos
+	pool.z_index = -1
+
+	var circle := ColorRect.new()
+	circle.size = Vector2(pool_radius * 2, pool_radius * 2)
+	circle.position = Vector2(-pool_radius, -pool_radius)
+	circle.color = Color(1.0, 0.4, 0.0, 0.6)
+	pool.add_child(circle)
+
+	get_tree().current_scene.add_child(pool)
+
+	# Pool damages enemies over time
+	var timer := Timer.new()
+	timer.wait_time = 0.5
+	timer.autostart = true
+	timer.timeout.connect(func():
+		var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+		if enemies_container:
+			for child in enemies_container.get_children():
+				if child is EnemyBase:
+					var dist: float = child.global_position.distance_to(pos)
+					if dist < pool_radius:
+						if child.has_method("take_damage"):
+							child.take_damage(pool_dps)
+						# Apply burn
+						if child.has_method("apply_status_effect"):
+							var burn = StatusEffect.new(StatusEffect.Type.BURN)
+							child.apply_status_effect(burn)
+	)
+	pool.add_child(timer)
+
+	# Remove pool after duration
+	var tween := pool.create_tween()
+	tween.tween_interval(pool_duration - 0.5)
+	tween.tween_property(circle, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(pool.queue_free)
+
+
+# Track void alternation state
+var _void_use_burn: bool = true
+
+func _do_void_effect(enemy: Node2D) -> void:
+	"""VOID effect - Alternates between burn and freeze each hit"""
+	if enemy.has_method("apply_status_effect"):
+		if _void_use_burn:
+			var burn = StatusEffect.new(StatusEffect.Type.BURN)
+			enemy.apply_status_effect(burn)
+		else:
+			var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+			enemy.apply_status_effect(freeze)
+
+	_void_use_burn = not _void_use_burn
+
+	# Visual void effect
+	var void_color := Color(0.3, 0.0, 0.5) if _void_use_burn else Color(0.0, 0.3, 0.5)
+	enemy.modulate = void_color
+	var tween := enemy.create_tween()
+	tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+
+
+func _apply_fused_effects(enemy: Node2D, base_damage: int) -> void:
+	"""Apply multiple effects from a fused ball"""
+	for effect in fused_effects:
+		match effect:
+			"burn":
+				if enemy.has_method("apply_status_effect"):
+					var burn = StatusEffect.new(StatusEffect.Type.BURN)
+					enemy.apply_status_effect(burn)
+			"freeze":
+				if enemy.has_method("apply_status_effect"):
+					var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+					enemy.apply_status_effect(freeze)
+			"poison":
+				if enemy.has_method("apply_status_effect"):
+					var poison = StatusEffect.new(StatusEffect.Type.POISON)
+					enemy.apply_status_effect(poison)
+			"bleed":
+				if enemy.has_method("apply_status_effect"):
+					var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+					enemy.apply_status_effect(bleed)
+			"lightning":
+				_chain_lightning(enemy)
+			"knockback":
+				if enemy is EnemyBase:
+					var knockback_dir := (enemy.global_position - global_position).normalized()
+					enemy.global_position += knockback_dir * 50.0
