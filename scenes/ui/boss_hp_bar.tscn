@@ -1,0 +1,69 @@
+[gd_scene load_steps=2 format=3 uid="uid://boss_hp_bar_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/boss_hp_bar.gd" id="1_boss_hp"]
+
+[node name="BossHPBar" type="Control"]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 100.0
+grow_horizontal = 2
+script = ExtResource("1_boss_hp")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 60.0
+offset_top = 10.0
+offset_right = -60.0
+offset_bottom = 90.0
+grow_horizontal = 2
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "BOSS NAME"
+horizontal_alignment = 1
+
+[node name="HPBarContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HPBar" type="ProgressBar" parent="VBoxContainer/HPBarContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/fill = null
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="VBoxContainer/HPBarContainer/HPBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -50.0
+offset_top = -12.0
+offset_right = 50.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 18
+text = "1000/1000"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PhaseContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
