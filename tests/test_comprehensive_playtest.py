@@ -250,18 +250,29 @@ async def test_ball_wall_bounce(game, report):
 @pytest.mark.asyncio
 async def test_ball_despawn_offscreen(game, report):
     """Test balls despawn when going off screen."""
+    # Stop baby ball spawner to prevent auto-spawned balls from affecting count
+    baby_spawner_path = "/root/Game/GameArea/BabyBallSpawner"
+    await game.call(baby_spawner_path, "stop")
+
+    # Clear any existing balls first
+    balls_container = await game.get_node(PATHS["balls"])
+    balls_before_fire = await game.call(PATHS["balls"], "get_child_count")
+
     # Fire straight up
     await game.click(PATHS["fire_button"])
     await asyncio.sleep(0.1)
 
     balls_initial = await game.call(PATHS["balls"], "get_child_count")
-    assert balls_initial >= 1
+    assert balls_initial >= 1, "Should have at least 1 ball after firing"
 
     # Wait for ball to go off top of screen (800 speed, ~1280 height = ~1.6s)
     await asyncio.sleep(2.0)
 
     balls_after = await game.call(PATHS["balls"], "get_child_count")
     assert balls_after < balls_initial, "Ball should despawn when off screen"
+
+    # Restart baby ball spawner
+    await game.call(baby_spawner_path, "start")
 
 
 @pytest.mark.asyncio

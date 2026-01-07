@@ -13,6 +13,7 @@ extends Node2D
 @onready var fire_button: Control = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton
 @onready var auto_toggle: Button = $UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/AutoToggle
 @onready var aim_line: Line2D = $GameArea/AimLine
+@onready var baby_ball_spawner: Node2D = $GameArea/BabyBallSpawner
 @onready var pause_overlay: CanvasLayer = $UI/PauseOverlay
 @onready var damage_vignette: ColorRect = $UI/DamageVignette
 @onready var tutorial_overlay: CanvasLayer = $UI/TutorialOverlay
@@ -76,6 +77,7 @@ func _ready() -> void:
 	GameManager.game_started.connect(_on_game_started)
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.player_damaged.connect(_on_player_damaged)
+	GameManager.leadership_changed.connect(_on_leadership_changed)
 
 	# Connect to stage manager for biome changes
 	StageManager.biome_changed.connect(_on_biome_changed)
@@ -121,12 +123,17 @@ func _on_character_selected(character: Resource) -> void:
 func _on_game_started() -> void:
 	if enemy_spawner:
 		enemy_spawner.start_spawning()
+	if baby_ball_spawner:
+		baby_ball_spawner.balls_container = balls_container
+		baby_ball_spawner.start()
 	MusicManager.start_music()
 
 
 func _on_game_over() -> void:
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
+	if baby_ball_spawner:
+		baby_ball_spawner.stop()
 	MusicManager.stop_music()
 	# Clear all existing enemies so they stop moving
 	if enemies_container:
@@ -359,3 +366,8 @@ func _on_game_won() -> void:
 	# Show victory screen
 	if stage_complete_overlay:
 		stage_complete_overlay.show_victory()
+
+
+func _on_leadership_changed(new_value: float) -> void:
+	if baby_ball_spawner:
+		baby_ball_spawner.set_leadership(new_value)

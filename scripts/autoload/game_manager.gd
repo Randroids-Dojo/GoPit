@@ -18,6 +18,7 @@ signal player_damaged(amount: int)
 signal wave_changed(new_wave: int)
 signal hp_changed(current_hp: int, max_hp: int)
 signal combo_changed(combo: int, multiplier: float)
+signal leadership_changed(new_value: float)
 
 # Combo system
 var combo_count: int = 0
@@ -38,6 +39,7 @@ var current_xp: int = 0
 var xp_to_next_level: int = 100
 var player_level: int = 1
 var gem_magnetism_range: float = 0.0
+var leadership: float = 0.0  # Affects baby ball spawn rate
 
 # Character system
 var selected_character: Resource = null
@@ -212,6 +214,11 @@ func heal(amount: int) -> void:
 	hp_changed.emit(player_hp, max_hp)
 
 
+func add_leadership(amount: float) -> void:
+	leadership += amount
+	leadership_changed.emit(leadership)
+
+
 func advance_wave() -> void:
 	current_wave += 1
 	wave_changed.emit(current_wave)
@@ -224,6 +231,7 @@ func _reset_stats() -> void:
 	player_level = 1
 	xp_to_next_level = _calculate_xp_requirement(player_level)
 	gem_magnetism_range = 0.0
+	leadership = 0.0
 	# Reset session stats
 	stats["enemies_killed"] = 0
 	stats["balls_fired"] = 0
