@@ -1,6 +1,8 @@
 extends CharacterBody2D
 ## Ball entity - moves in a direction and bounces off walls
 
+const StatusEffect := preload("res://scripts/effects/status_effect.gd")
+
 signal hit_enemy(enemy: Node2D)
 signal hit_gem(gem: Node2D)
 signal despawned
@@ -203,45 +205,55 @@ func despawn() -> void:
 func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 	match ball_type:
 		BallType.FIRE:
-			# Fire: Apply burn tint (visual effect)
-			if enemy.has_method("_apply_burn_effect"):
-				enemy._apply_burn_effect()
+			# Fire: Apply burn status effect
+			if enemy.has_method("apply_status_effect"):
+				var burn = StatusEffect.new(StatusEffect.Type.BURN)
+				enemy.apply_status_effect(burn)
 			else:
-				# Fallback visual tint
+				# Fallback visual tint for non-EnemyBase
 				enemy.modulate = Color(1.5, 0.7, 0.5)
 				var tween := enemy.create_tween()
 				tween.tween_property(enemy, "modulate", Color.WHITE, 0.5)
 
 		BallType.ICE:
-			# Ice: Slow enemy temporarily
-			if enemy is EnemyBase:
-				var original_speed: float = enemy.speed
-				enemy.speed *= 0.5
+			# Ice: Apply freeze status effect (slows enemy)
+			if enemy.has_method("apply_status_effect"):
+				var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+				enemy.apply_status_effect(freeze)
+			else:
+				# Fallback direct slow for non-EnemyBase
 				enemy.modulate = Color(0.7, 0.9, 1.2)
 				var tween := enemy.create_tween()
-				tween.tween_property(enemy, "speed", original_speed, 1.5)
-				tween.parallel().tween_property(enemy, "modulate", Color.WHITE, 1.5)
+				tween.tween_property(enemy, "modulate", Color.WHITE, 1.5)
 
 		BallType.LIGHTNING:
-			# Lightning: Chain to nearby enemies
+			# Lightning: Chain to nearby enemies (instant effect)
 			_chain_lightning(enemy)
 
 		BallType.POISON:
-			# Poison: Green tint, damage over time visual
-			enemy.modulate = Color(0.6, 1.0, 0.5)
-			var tween := enemy.create_tween()
-			tween.tween_property(enemy, "modulate", Color.WHITE, 2.0)
-			# TODO: Implement actual poison DoT when status effect system is added
+			# Poison: Apply poison status effect (DoT + spreads on death)
+			if enemy.has_method("apply_status_effect"):
+				var poison = StatusEffect.new(StatusEffect.Type.POISON)
+				enemy.apply_status_effect(poison)
+			else:
+				# Fallback visual tint
+				enemy.modulate = Color(0.6, 1.0, 0.5)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 2.0)
 
 		BallType.BLEED:
-			# Bleed: Red tint, stacking damage visual
-			enemy.modulate = Color(1.0, 0.5, 0.5)
-			var tween := enemy.create_tween()
-			tween.tween_property(enemy, "modulate", Color.WHITE, 1.0)
-			# TODO: Implement bleed stacking when status effect system is added
+			# Bleed: Apply bleed status effect (stacking DoT)
+			if enemy.has_method("apply_status_effect"):
+				var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+				enemy.apply_status_effect(bleed)
+			else:
+				# Fallback visual tint
+				enemy.modulate = Color(1.0, 0.5, 0.5)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 1.0)
 
 		BallType.IRON:
-			# Iron: Knockback effect
+			# Iron: Knockback effect (instant)
 			if enemy is EnemyBase:
 				var knockback_dir := (enemy.global_position - global_position).normalized()
 				var knockback_strength := 50.0

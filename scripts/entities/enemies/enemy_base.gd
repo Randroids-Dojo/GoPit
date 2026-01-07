@@ -2,10 +2,13 @@ class_name EnemyBase
 extends CharacterBody2D
 ## Base class for all enemies - handles HP, movement, damage, and death
 
+const StatusEffect := preload("res://scripts/effects/status_effect.gd")
+
 signal died(enemy: EnemyBase)
 signal took_damage(enemy: EnemyBase, amount: int)
 signal entered_danger_zone
 signal left_danger_zone
+signal status_effect_applied(enemy: EnemyBase, effect_type: int)
 
 enum State { DESCENDING, WARNING, ATTACKING, DEAD }
 
@@ -21,6 +24,11 @@ var _attack_target: Vector2 = Vector2.ZERO
 var _shake_offset: Vector2 = Vector2.ZERO
 var _exclamation_label: Label
 var _pulse_tween: Tween
+
+# Status effect tracking
+var _active_effects: Dictionary = {}  # StatusEffect.Type -> StatusEffect
+var _base_speed: float = 0.0  # Original speed before slow effects
+var _effect_tint: Color = Color.WHITE  # Combined tint from active effects
 
 @export var max_hp: int = 10
 @export var speed: float = 100.0
@@ -39,6 +47,7 @@ var _flash_tween: Tween
 func _ready() -> void:
 	_scale_with_wave()
 	hp = max_hp
+	_base_speed = speed  # Store original speed for slow calculations
 	_setup_collision()
 	queue_redraw()
 
@@ -54,6 +63,9 @@ func _scale_with_wave() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Process status effects first
+	_process_status_effects(delta)
+
 	match current_state:
 		State.DESCENDING:
 			_move(delta)
@@ -144,6 +156,9 @@ func _spawn_hit_effects(damage: int) -> void:
 
 func _die() -> void:
 	current_state = State.DEAD
+	# Handle poison spread before dying
+	if _active_effects.has(StatusEffect.Type.POISON):
+		_spread_poison()
 	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 	died.emit(self)
 	queue_free()
@@ -274,3 +289,141 @@ func _deal_damage_to_player() -> void:
 		GameManager.take_damage(damage_to_player)
 
 	CameraShake.shake(8.0, 15.0)  # Big shake on player hit
+
+
+# === STATUS EFFECTS ===
+
+func apply_status_effect(effect: StatusEffect) -> void:
+	"""Apply a status effect to this enemy"""
+	if current_state == State.DEAD:
+		return
+
+	var effect_type := effect.type
+
+	# Check for existing effect of same type
+	if _active_effects.has(effect_type):
+		var existing: StatusEffect = _active_effects[effect_type]
+		if effect.max_stacks > 1:
+			existing.add_stack()
+			existing.refresh()
+		else:
+			existing.refresh()
+	else:
+		# New effect
+		effect.apply()
+		_active_effects[effect_type] = effect
+		status_effect_applied.emit(self, effect_type)
+
+	# Update speed for freeze effects
+	_update_speed_from_effects()
+	# Update visuals
+	_update_effect_visuals()
+
+
+func _process_status_effects(delta: float) -> void:
+	"""Process all active status effects each frame"""
+	if _active_effects.is_empty():
+		return
+
+	var expired_effects: Array[int] = []
+	var total_dot_damage: int = 0
+
+	for effect_type in _active_effects:
+		var effect: StatusEffect = _active_effects[effect_type]
+		var damage := effect.update(delta)
+		total_dot_damage += damage
+
+		if effect.is_expired():
+			expired_effects.append(effect_type)
+
+	# Apply DoT damage
+	if total_dot_damage > 0:
+		_take_dot_damage(total_dot_damage)
+
+	# Remove expired effects
+	for effect_type in expired_effects:
+		_active_effects.erase(effect_type)
+
+	if expired_effects.size() > 0:
+		_update_speed_from_effects()
+		_update_effect_visuals()
+
+
+func _take_dot_damage(amount: int) -> void:
+	"""Take damage from DoT effects (doesn't trigger hit effects)"""
+	hp -= amount
+	# Spawn smaller damage number for DoT
+	var scene_root := get_tree().current_scene
+	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+	DamageNumber.spawn(scene_root, global_position + Vector2(randf_range(-20, 20), -10), amount, Color(1, 0.5, 0.2))
+
+
+func _update_speed_from_effects() -> void:
+	"""Recalculate speed based on active slow effects"""
+	var slow_mult: float = 1.0
+
+	for effect_type in _active_effects:
+		var effect: StatusEffect = _active_effects[effect_type]
+		if effect.slow_multiplier < slow_mult:
+			slow_mult = effect.slow_multiplier
+
+	speed = _base_speed * slow_mult
+
+
+func _update_effect_visuals() -> void:
+	"""Update visual tint based on active effects"""
+	if _active_effects.is_empty():
+		_effect_tint = Color.WHITE
+	else:
+		# Blend colors from all active effects
+		var r: float = 1.0
+		var g: float = 1.0
+		var b: float = 1.0
+
+		for effect_type in _active_effects:
+			var effect: StatusEffect = _active_effects[effect_type]
+			var color := effect.get_color()
+			r = max(r, color.r)
+			g = min(g, color.g) if color.g < 1.0 else g
+			b = min(b, color.b) if color.b < 1.0 else b
+
+		_effect_tint = Color(r, g, b)
+
+	# Apply tint if not in danger zone (danger zone has its own tint)
+	if not in_danger_zone and current_state != State.ATTACKING:
+		modulate = _effect_tint
+
+
+func _spread_poison() -> void:
+	"""Spread poison to nearby enemies when this enemy dies"""
+	const SPREAD_RADIUS: float = 100.0
+
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
+	if not enemies_container:
+		return
+
+	for enemy in enemies_container.get_children():
+		if enemy == self:
+			continue
+		if enemy is EnemyBase:
+			var dist: float = global_position.distance_to(enemy.global_position)
+			if dist <= SPREAD_RADIUS:
+				var poison := StatusEffect.new(StatusEffect.Type.POISON)
+				enemy.apply_status_effect(poison)
+
+
+func has_status_effect(effect_type: StatusEffect.Type) -> bool:
+	"""Check if enemy has a specific status effect"""
+	return _active_effects.has(effect_type)
+
+
+func get_status_effect(effect_type: StatusEffect.Type) -> StatusEffect:
+	"""Get a specific status effect if active, null otherwise"""
+	return _active_effects.get(effect_type)
+
+
+func clear_status_effects() -> void:
+	"""Remove all status effects"""
+	_active_effects.clear()
+	_update_speed_from_effects()
+	_update_effect_visuals()
