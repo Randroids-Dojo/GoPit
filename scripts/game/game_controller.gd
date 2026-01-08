@@ -27,7 +27,9 @@ extends Node2D
 @onready var boss_hp_bar: Control = $UI/BossHPBar
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
-var slime_king_scene: PackedScene = preload("res://scenes/entities/enemies/bosses/slime_king.tscn")
+# NOTE: Boss scenes use load() not preload() to avoid class resolution issues during import
+# See boss_base.gd for detailed explanation of Godot's class loading order problem
+var slime_king_scene: PackedScene
 
 # Boss tracking
 var _current_boss: Node = null
@@ -44,6 +46,9 @@ var enemies_per_wave: int = 5
 
 func _ready() -> void:
 	viewport_height = get_viewport_rect().size.y
+
+	# Load boss scenes at runtime to avoid class resolution issues during import
+	slime_king_scene = load("res://scenes/entities/enemies/bosses/slime_king.tscn")
 
 	# Wire up move joystick (left) - controls player movement
 	if move_joystick:
