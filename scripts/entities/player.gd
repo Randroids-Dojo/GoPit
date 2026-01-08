@@ -26,8 +26,9 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	# Apply movement
-	velocity = movement_input * move_speed
+	# Apply movement with character speed multiplier
+	var effective_speed := move_speed * GameManager.character_speed_mult
+	velocity = movement_input * effective_speed
 	move_and_slide()
 
 	# Clamp to bounds

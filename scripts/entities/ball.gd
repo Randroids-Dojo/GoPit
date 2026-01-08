@@ -162,10 +162,24 @@ func _physics_process(delta: float) -> void:
 			var actual_damage := damage
 			var is_crit := false
 
-			# Check for critical hit
-			if crit_chance > 0 and randf() < crit_chance:
-				actual_damage *= 2
+			# Check for critical hit (includes Jackpot bonus crit chance)
+			var total_crit_chance := crit_chance + GameManager.get_bonus_crit_chance()
+			if total_crit_chance > 0 and randf() < total_crit_chance:
+				actual_damage = int(actual_damage * GameManager.get_crit_damage_multiplier())
 				is_crit = true
+
+			# Inferno passive: +20% fire damage
+			if ball_type == BallType.FIRE:
+				actual_damage = int(actual_damage * GameManager.get_fire_damage_multiplier())
+
+			# Check for status-based damage bonuses
+			if collider.has_method("has_status_effect"):
+				# Shatter: +50% damage vs frozen
+				if collider.has_status_effect(StatusEffect.Type.FREEZE):
+					actual_damage = int(actual_damage * GameManager.get_damage_vs_frozen())
+				# Inferno: +25% damage vs burning
+				if collider.has_status_effect(StatusEffect.Type.BURN):
+					actual_damage = int(actual_damage * GameManager.get_damage_vs_burning())
 
 			# Apply evolved/fused/normal ball effects
 			if is_evolved:

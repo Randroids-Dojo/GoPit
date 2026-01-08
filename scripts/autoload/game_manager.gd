@@ -50,6 +50,10 @@ var character_leadership_mult: float = 1.0
 var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
+# Passive ability flags (set based on selected character)
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL }
+var active_passive: Passive = Passive.NONE
+
 # High score persistence
 var high_score_wave: int = 0
 var high_score_level: int = 0
@@ -112,6 +116,12 @@ func record_ball_fired() -> void:
 
 func record_damage_dealt(amount: int) -> void:
 	stats["damage_dealt"] += amount
+	# Lifesteal passive: heal 5% of damage dealt
+	var lifesteal := get_lifesteal_percent()
+	if lifesteal > 0:
+		var heal_amount := int(amount * lifesteal)
+		if heal_amount > 0:
+			heal(heal_amount)
 
 
 func record_gem_collected() -> void:
@@ -133,6 +143,27 @@ func set_character(character: Resource) -> void:
 	character_intelligence_mult = character.intelligence
 	character_starting_ball = character.starting_ball
 
+	# Set active passive based on character
+	_set_passive_from_name(character.passive_name)
+
+
+func _set_passive_from_name(passive_name: String) -> void:
+	match passive_name:
+		"Quick Learner":
+			active_passive = Passive.QUICK_LEARNER
+		"Shatter":
+			active_passive = Passive.SHATTER
+		"Jackpot":
+			active_passive = Passive.JACKPOT
+		"Inferno":
+			active_passive = Passive.INFERNO
+		"Squad Leader":
+			active_passive = Passive.SQUAD_LEADER
+		"Lifesteal":
+			active_passive = Passive.LIFESTEAL
+		_:
+			active_passive = Passive.NONE
+
 
 func _reset_character_stats() -> void:
 	selected_character = null
@@ -143,6 +174,7 @@ func _reset_character_stats() -> void:
 	character_leadership_mult = 1.0
 	character_intelligence_mult = 1.0
 	character_starting_ball = 0
+	active_passive = Passive.NONE
 
 
 func start_game() -> void:
@@ -190,7 +222,7 @@ func return_to_menu() -> void:
 
 
 func add_xp(amount: int) -> void:
-	var final_xp: int = int(amount * get_combo_multiplier())
+	var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier())
 	current_xp += final_xp
 	if current_xp >= xp_to_next_level:
 		trigger_level_up()
@@ -217,6 +249,85 @@ func heal(amount: int) -> void:
 func add_leadership(amount: float) -> void:
 	leadership += amount
 	leadership_changed.emit(leadership)
+
+
+# === Passive ability helpers ===
+
+func get_xp_multiplier() -> float:
+	## Returns XP multiplier (Quick Learner: +10%)
+	if active_passive == Passive.QUICK_LEARNER:
+		return 1.1
+	return 1.0
+
+
+func get_crit_damage_multiplier() -> float:
+	## Returns crit damage multiplier (Jackpot: 3x instead of 2x)
+	if active_passive == Passive.JACKPOT:
+		return 3.0
+	return 2.0
+
+
+func get_bonus_crit_chance() -> float:
+	## Returns bonus crit chance (Jackpot: +15%)
+	if active_passive == Passive.JACKPOT:
+		return 0.15
+	return 0.0
+
+
+func get_fire_damage_multiplier() -> float:
+	## Returns fire damage multiplier (Inferno: +20%)
+	if active_passive == Passive.INFERNO:
+		return 1.2
+	return 1.0
+
+
+func get_damage_vs_burning() -> float:
+	## Returns damage multiplier vs burning enemies (Inferno: +25%)
+	if active_passive == Passive.INFERNO:
+		return 1.25
+	return 1.0
+
+
+func get_damage_vs_frozen() -> float:
+	## Returns damage multiplier vs frozen enemies (Shatter: +50%)
+	if active_passive == Passive.SHATTER:
+		return 1.5
+	return 1.0
+
+
+func get_freeze_duration_bonus() -> float:
+	## Returns freeze duration bonus multiplier (Shatter: +30%)
+	if active_passive == Passive.SHATTER:
+		return 1.3
+	return 1.0
+
+
+func get_lifesteal_percent() -> float:
+	## Returns lifesteal percentage (Lifesteal: 5%)
+	if active_passive == Passive.LIFESTEAL:
+		return 0.05
+	return 0.0
+
+
+func get_health_gem_chance() -> float:
+	## Returns chance for health gem on kill (Lifesteal: 20%)
+	if active_passive == Passive.LIFESTEAL:
+		return 0.2
+	return 0.0
+
+
+func get_extra_baby_balls() -> int:
+	## Returns starting baby ball count bonus (Squad Leader: +2)
+	if active_passive == Passive.SQUAD_LEADER:
+		return 2
+	return 0
+
+
+func get_baby_ball_rate_bonus() -> float:
+	## Returns baby ball spawn rate bonus (Squad Leader: +30%)
+	if active_passive == Passive.SQUAD_LEADER:
+		return 0.3
+	return 0.0
 
 
 func advance_wave() -> void:

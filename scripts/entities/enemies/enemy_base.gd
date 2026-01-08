@@ -159,9 +159,23 @@ func _die() -> void:
 	# Handle poison spread before dying
 	if _active_effects.has(StatusEffect.Type.POISON):
 		_spread_poison()
+	# Lifesteal passive: chance to drop health gem on kill
+	var health_gem_chance := GameManager.get_health_gem_chance()
+	if health_gem_chance > 0 and randf() < health_gem_chance:
+		_spawn_health_gem()
 	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 	died.emit(self)
 	queue_free()
+
+
+func _spawn_health_gem() -> void:
+	# Spawn a healing gem at death location
+	var gem_scene := preload("res://scenes/entities/gem.tscn")
+	var gem := gem_scene.instantiate()
+	gem.global_position = global_position
+	gem.xp_value = 0  # No XP, just healing
+	gem.is_health_gem = true  # Mark as health gem for special effect
+	get_tree().current_scene.get_node("GameArea/Gems").add_child(gem)
 
 
 # === WARNING STATE ===

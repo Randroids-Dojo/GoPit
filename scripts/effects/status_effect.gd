@@ -24,24 +24,28 @@ func _init(effect_type: Type = Type.BURN) -> void:
 
 
 func _configure() -> void:
+	# Get intelligence multiplier for duration scaling
+	var int_mult: float = GameManager.character_intelligence_mult
+
 	match type:
 		Type.BURN:
-			duration = 3.0
+			duration = 3.0 * int_mult
 			damage_per_tick = 2.5  # 5 DPS (2.5 damage every 0.5s)
 			tick_interval = 0.5
 			max_stacks = 1  # Refreshes duration instead
 		Type.FREEZE:
-			duration = 2.0
+			# Shatter passive: +30% freeze duration
+			duration = 2.0 * int_mult * GameManager.get_freeze_duration_bonus()
 			damage_per_tick = 0.0
 			slow_multiplier = 0.5  # 50% slow
 			max_stacks = 1
 		Type.POISON:
-			duration = 5.0
+			duration = 5.0 * int_mult
 			damage_per_tick = 1.5  # 3 DPS
 			tick_interval = 0.5
 			max_stacks = 1
 		Type.BLEED:
-			duration = INF  # Permanent until enemy dies
+			duration = INF  # Permanent until enemy dies (not affected by intelligence)
 			damage_per_tick = 1.0  # 2 DPS per stack (1.0 every 0.5s)
 			tick_interval = 0.5
 			max_stacks = 5
