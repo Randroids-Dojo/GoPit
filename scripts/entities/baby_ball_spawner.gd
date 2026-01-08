@@ -49,9 +49,10 @@ func set_leadership(value: float) -> void:
 func _update_spawn_rate() -> void:
 	# Higher leadership = faster spawns
 	# leadership_bonus of 1.0 = 2x spawn rate
-	# Also apply character's leadership multiplier
+	# Also apply character's leadership multiplier and Squad Leader passive
 	var char_mult: float = GameManager.character_leadership_mult
-	var total_bonus: float = _leadership_bonus * char_mult
+	var passive_bonus: float = GameManager.get_baby_ball_rate_bonus()  # Squad Leader: +30%
+	var total_bonus: float = (_leadership_bonus * char_mult) + passive_bonus
 	var rate: float = base_spawn_interval / (1.0 + total_bonus)
 	_spawn_timer.wait_time = maxf(0.3, rate)
 

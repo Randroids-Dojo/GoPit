@@ -12,8 +12,14 @@ signal collected(gem: Node2D)
 
 const MAGNETISM_SPEED: float = 400.0
 const COLLECTION_RADIUS: float = 40.0
+const HEALTH_GEM_HEAL: int = 10  # HP restored by health gems
 
 var _time: float = 0.0
+var is_health_gem: bool = false:
+	set(value):
+		is_health_gem = value
+		if value:
+			gem_color = Color(1.0, 0.4, 0.5)  # Pink/red for health gems
 var _player: Node2D = null
 var _being_attracted: bool = false
 
@@ -101,9 +107,13 @@ func _on_body_entered(body: Node2D) -> void:
 
 func _collect() -> void:
 	collected.emit(self)
+	if is_health_gem:
+		GameManager.heal(HEALTH_GEM_HEAL)
 	SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
 	queue_free()
 
 
 func get_xp_value() -> int:
+	if is_health_gem:
+		return 0  # Health gems give no XP
 	return xp_value
