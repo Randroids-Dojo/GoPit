@@ -159,6 +159,89 @@ pgrep -f godot        # Check for running Godot processes
 pkill -9 -f godot     # Kill stale processes
 ```
 
+## Godot Class Loading in CI/Headless Mode
+
+**CRITICAL: Read this before creating ANY new GDScript that extends another custom class!**
+
+### The Problem
+
+Godot registers `class_name` declarations **alphabetically by filename** during headless/CI builds. This means a child class may be registered BEFORE its parent class, causing "Could not resolve class" errors.
+
+**This is NOT a bug you can debug locally** - the Godot editor caches class relationships, hiding the issue. It only manifests in:
+- Fresh CI builds (no `.godot` cache)
+- Headless Godot execution
+- First run after deleting `.godot` directory
+
+### Rule 1: Always Use Path-Based Extends for Custom Classes
+
+```gdscript
+# ❌ BAD - class_name reference fails if parent not registered yet
+extends MyParentClass
+
+# ✅ GOOD - explicit path forces correct load order
+extends "res://scripts/path/to/my_parent_class.gd"
+```
+
+**Apply this to EVERY script that extends another custom class (not built-ins like Node2D, Control, etc.)**
+
+### Rule 2: Never Preload Scenes with Inherited Scripts in _ready()
+
+```gdscript
+# ❌ BAD - preload runs during parse, before classes fully registered
+var my_scene: PackedScene = preload("res://scenes/my_scene.tscn")
+
+# ✅ GOOD - lazy load only when needed
+var my_scene: PackedScene
+
+func _some_function_that_needs_scene():
+    if not my_scene:
+        my_scene = load("res://scenes/my_scene.tscn")
+```
+
+**Why?** `preload()` executes during script parsing. If the scene's script has unresolved inheritance, it fails silently and can break game initialization in subtle ways.
+
+### Rule 3: Check the Entire Inheritance Chain
+
+If you have `A extends B extends C extends Node2D`:
+- `C` extends `Node2D` (built-in) → OK to use class name
+- `B` extends `C` → MUST use path: `extends "res://path/to/c.gd"`
+- `A` extends `B` → MUST use path: `extends "res://path/to/b.gd"`
+
+### Debugging CI Failures
+
+1. **Error signature:**
+   ```
+   SCRIPT ERROR: Parse Error: Could not resolve class "ClassName"
+   ```
+
+2. **Find problematic extends:**
+   ```bash
+   # Find all class_name extends (potential issues)
+   grep -rn "^extends [A-Z]" scripts/ --include="*.gd"
+   ```
+
+3. **Check CI logs for registration order:**
+   Look for `update_scripts_classes` - classes listed alphabetically.
+
+### Checklist for New Scripts
+
+When creating a script that extends a custom class:
+
+- [ ] Use `extends "res://full/path/to/parent.gd"` (not `extends ClassName`)
+- [ ] Verify parent class also uses path-based extends (whole chain!)
+- [ ] If scene uses this script, use `load()` not `preload()` where loaded
+- [ ] CI passes (local tests with cached `.godot` don't catch this!)
+
+### Why This Happens
+
+Godot 4.x processes scripts in this order during `--import`:
+1. Scan filesystem
+2. Register class_names **alphabetically by path**
+3. Parse script contents
+4. Resolve inheritance
+
+Step 2 happens before step 4, so `boss_base.gd` (alphabetically first) tries to resolve `EnemyBase` before `enemy_base.gd` has been processed.
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
