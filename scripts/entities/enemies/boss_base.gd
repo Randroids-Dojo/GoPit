@@ -1,6 +1,26 @@
 class_name BossBase
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Base class for all bosses - extends EnemyBase with phases, attack patterns, and HP bar
+##
+## IMPORTANT: Path-based extends required for CI/headless mode
+## ============================================================
+## We use `extends "res://..."` instead of `extends EnemyBase` because Godot's
+## class_name resolution has race conditions during headless/CI builds.
+##
+## During `--import`, Godot registers classes alphabetically by filename:
+##   - BossBase registered at ~50%
+##   - EnemyBase registered at ~54%
+##
+## Since BossBase is registered BEFORE EnemyBase, using `extends EnemyBase`
+## fails with "Could not resolve class" errors. Path-based extends forces
+## Godot to load the dependency explicitly, bypassing class registration order.
+##
+## This is NOT related to git worktrees - it affects fresh CI builds and any
+## headless Godot execution where the .godot cache doesn't exist yet.
+##
+## All scripts in inheritance chains should use path-based extends:
+##   - boss_base.gd: extends "res://scripts/entities/enemies/enemy_base.gd"
+##   - slime_king.gd: extends "res://scripts/entities/enemies/boss_base.gd"
 
 signal phase_changed(new_phase: BossPhase)
 signal boss_defeated
