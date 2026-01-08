@@ -32,3 +32,6 @@ __pycache__/
 
 # Local Godot path configuration (for PlayGodot tests)
 .godot-path
+
+# Claude Code user-specific settings (project settings.json is tracked)
+.claude/settings.local.json

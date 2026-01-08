@@ -195,6 +195,41 @@ pgrep -f godot        # Check for running Godot processes
 pkill -9 -f godot     # Kill stale processes
 ```
 
+## CI Monitoring (Automatic)
+
+Claude Code automatically monitors GitHub Actions CI after:
+1. **Creating a PR** (`gh pr create`) - monitors PR checks
+2. **Pushing to main** (`git push origin main`) - monitors deployment
+
+### How It Works
+
+A PostToolUse hook (`.claude/hooks/monitor-ci.py`) triggers after Bash commands:
+- Detects PR creation or main branch pushes
+- Polls `gh pr checks` or `gh run list` every 30 seconds
+- 15-minute timeout
+- **On failure: blocks with exit code 2** - forces proper fix
+
+### Behavior
+
+- CI failures **block further work** until properly resolved
+- No bypassing, hack fixes, or ignoring issues allowed
+- Work is not considered complete until CI passes
+- Deployment must succeed after merging to main
+
+### Manual CI Check
+
+If needed, check CI status manually:
+```bash
+# Check PR checks
+gh pr checks <PR_NUMBER>
+
+# Watch workflow run
+gh run watch
+
+# View failed logs
+gh run view <RUN_ID> --log-failed
+```
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
