@@ -29,3 +29,6 @@ build/
 .env*.local
 __pycache__/
 .venv/
+
+# Local Godot path configuration (for PlayGodot tests)
+.godot-path

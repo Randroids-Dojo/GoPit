@@ -2,6 +2,39 @@
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
+---
+
+## IMPORTANT: PlayGodot Testing (Read First!)
+
+**This project uses PlayGodot for testing, NOT GdUnit4.**
+
+PlayGodot is a game automation framework (like Playwright for games) that runs tests from Python, controlling a custom Godot fork with automation support.
+
+### Quick Test Command
+
+```bash
+./test.sh                    # Run all tests
+./test.sh tests/test_fire.py # Run specific file
+```
+
+Or manually:
+```bash
+source .venv/bin/activate
+python3 -m pytest tests/ -v --tb=short
+```
+
+### If Tests Fail to Start
+
+If you see "GODOT AUTOMATION FORK NOT FOUND":
+
+1. **Check sibling directory**: The Godot fork should be at `../godot/bin/`
+2. **Or create config file**: `echo '/path/to/godot/bin/godot.macos.editor.arm64' > .godot-path`
+3. **Or set env var**: `export GODOT_PATH=/path/to/godot`
+
+See [TESTING.md](TESTING.md) for full setup instructions.
+
+---
+
 ## Quick Reference
 
 ```bash
@@ -20,6 +53,9 @@ bd sync               # Sync with git
 
 ```bash
 # Run all PlayGodot tests
+./test.sh
+
+# Or with pytest directly
 python3 -m pytest tests/ -v --tb=short
 
 # Run specific test file
