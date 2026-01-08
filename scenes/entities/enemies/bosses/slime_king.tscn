@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://slime_king_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/bosses/slime_king.gd" id="1_king"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_king"]
+radius = 60.0
+
+[node name="SlimeKing" type="CharacterBody2D" groups=["boss", "enemies"]]
+collision_layer = 4
+collision_mask = 18
+script = ExtResource("1_king")
+max_hp = 500
+speed = 50.0
+damage_to_player = 30
+xp_value = 100
+boss_name = "Slime King"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_king")
