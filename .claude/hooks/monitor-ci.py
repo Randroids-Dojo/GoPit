@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Monitor CI after PR creation or push to main.
+Monitor CI after PR creation, merge, or push to main.
 
 This hook is triggered after Bash commands. It detects:
 1. `gh pr create` - monitors the newly created PR's checks
-2. `git push` to main/master - monitors the deployment workflow
+2. `gh pr merge` - monitors the deployment workflow on main
+3. `git push` to main/master - monitors the deployment workflow
 
 On CI failure, exits with code 2 to block Claude until properly fixed.
 """
@@ -80,6 +81,11 @@ def is_push_to_main(command: str) -> bool:
 def is_pr_create(command: str) -> bool:
     """Check if command creates a PR."""
     return "gh pr create" in command
+
+
+def is_pr_merge(command: str) -> bool:
+    """Check if command merges a PR."""
+    return "gh pr merge" in command
 
 
 def monitor_pr_checks(pr_number: str) -> bool:
@@ -243,6 +249,15 @@ def main() -> int:
         else:
             log("Could not extract PR number from output")
             return 0
+
+    # Check for PR merge (triggers main branch CI)
+    if is_pr_merge(command):
+        log("PR merged - monitoring deployment on main...")
+        success = monitor_branch_workflow("main")
+        if not success:
+            log("CI/DEPLOYMENT FAILED - You must fix the issues before continuing.")
+            return 2  # Block Claude
+        return 0
 
     # Check for push to main
     if is_push_to_main(command):

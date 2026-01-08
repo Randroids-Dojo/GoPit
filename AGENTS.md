@@ -199,7 +199,8 @@ pkill -9 -f godot     # Kill stale processes
 
 Claude Code automatically monitors GitHub Actions CI after:
 1. **Creating a PR** (`gh pr create`) - monitors PR checks
-2. **Pushing to main** (`git push origin main`) - monitors deployment
+2. **Merging a PR** (`gh pr merge`) - monitors deployment on main
+3. **Pushing to main** (`git push origin main`) - monitors deployment
 
 ### How It Works
 
