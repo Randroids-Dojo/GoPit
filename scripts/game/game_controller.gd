@@ -24,8 +24,13 @@ extends Node2D
 @onready var right_wall: StaticBody2D = $GameArea/Walls/RightWall
 @onready var stage_complete_overlay: CanvasLayer = $UI/StageCompleteOverlay
 @onready var fusion_overlay: Control = $UI/FusionOverlay
+@onready var boss_hp_bar: Control = $UI/BossHPBar
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
+var slime_king_scene: PackedScene = preload("res://scenes/entities/enemies/bosses/slime_king.tscn")
+
+# Boss tracking
+var _current_boss: Node = null
 var player_scene: PackedScene = preload("res://scenes/entities/player.tscn")
 var fusion_reactor_scene: PackedScene = preload("res://scenes/entities/fusion_reactor.tscn")
 
@@ -354,9 +359,12 @@ func _on_boss_wave_reached(stage: int) -> void:
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
 
-	# Show stage complete overlay (no boss yet, auto-complete)
-	if stage_complete_overlay:
-		stage_complete_overlay.show_stage_complete(stage)
+	# Stop baby ball spawner during boss
+	if baby_ball_spawner:
+		baby_ball_spawner.stop()
+
+	# Spawn the boss based on stage
+	_spawn_boss(stage)
 
 
 func _on_stage_completed(_stage: int) -> void:
@@ -399,3 +407,59 @@ func _on_fusion_reactor_collected(_reactor: Node2D) -> void:
 	"""Handle fusion reactor collection - show fusion UI"""
 	if fusion_overlay:
 		fusion_overlay.show_fusion_ui()
+
+
+func _spawn_boss(stage: int) -> void:
+	"""Spawn the appropriate boss for the current stage"""
+	var boss_scene: PackedScene = null
+
+	# Select boss based on stage
+	match stage:
+		0:  # The Pit
+			boss_scene = slime_king_scene
+		_:
+			# Fallback to Slime King for other stages (placeholder)
+			boss_scene = slime_king_scene
+
+	if not boss_scene:
+		# No boss for this stage, auto-complete
+		if stage_complete_overlay:
+			stage_complete_overlay.show_stage_complete(stage)
+		return
+
+	# Instantiate boss
+	_current_boss = boss_scene.instantiate()
+	enemies_container.add_child(_current_boss)
+
+	# Connect boss signals
+	if _current_boss.has_signal("boss_defeated"):
+		_current_boss.boss_defeated.connect(_on_boss_defeated)
+	if _current_boss.has_signal("died"):
+		_current_boss.died.connect(_on_boss_enemy_died)
+
+	# Show boss HP bar
+	if boss_hp_bar:
+		boss_hp_bar.show_boss(_current_boss)
+
+	# Announce boss
+	SoundManager.play(SoundManager.SoundType.WAVE_COMPLETE)
+
+
+func _on_boss_defeated() -> void:
+	"""Handle boss defeat - show stage complete"""
+	_current_boss = null
+
+	# Hide boss HP bar
+	if boss_hp_bar:
+		boss_hp_bar.hide_boss()
+
+	# Wait a moment then show stage complete
+	await get_tree().create_timer(1.5).timeout
+
+	if stage_complete_overlay:
+		stage_complete_overlay.show_stage_complete(StageManager.current_stage)
+
+
+func _on_boss_enemy_died(_enemy: Node) -> void:
+	"""Boss died signal handler - record kill"""
+	GameManager.record_enemy_kill()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=21 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
@@ -21,6 +21,7 @@
 [ext_resource type="Script" path="res://scripts/ui/pause_overlay.gd" id="11_pause"]
 [ext_resource type="Script" path="res://scripts/ui/stage_complete_overlay.gd" id="18_stagecomplete"]
 [ext_resource type="Script" path="res://scripts/entities/baby_ball_spawner.gd" id="19_baby_spawner"]
+[ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -28,7 +29,7 @@ size = Vector2(20, 1280)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player_zone"]
 size = Vector2(720, 80)
 
-[node name="Game" type="Node2D"]
+[node name="Game" type="Node2D" groups=["game"]]
 script = ExtResource("1_controller")
 
 [node name="Background" type="ColorRect" parent="."]
@@ -64,7 +65,7 @@ shape = SubResource("RectangleShape2D_wall")
 
 [node name="Balls" type="Node2D" parent="GameArea"]
 
-[node name="Enemies" type="Node2D" parent="GameArea"]
+[node name="Enemies" type="Node2D" parent="GameArea" groups=["enemies_container"]]
 
 [node name="EnemySpawner" type="Node2D" parent="GameArea/Enemies"]
 script = ExtResource("6_enemy_spawner")
@@ -252,6 +253,8 @@ layout_mode = 2
 script = ExtResource("3_joystick")
 base_color = Color(0.5, 0.25, 0.2, 0.5)
 knob_color = Color(1.0, 0.5, 0.3, 0.8)
+
+[node name="BossHPBar" parent="UI" instance=ExtResource("21_boss_hp")]
 
 [node name="GameOverOverlay" type="Control" parent="UI"]
 visible = false
