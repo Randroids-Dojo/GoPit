@@ -1,8 +1,9 @@
 class_name SlimeKing
-extends BossBase
+extends "res://scripts/entities/enemies/boss_base.gd"
 ## Slime King - First boss. A massive slime with slam, summon, and split attacks.
 
 const SLIME_SCENE: PackedScene = preload("res://scenes/entities/enemies/slime.tscn")
+const EnemyBaseScript = preload("res://scripts/entities/enemies/enemy_base.gd")
 
 # Visual settings
 @export var base_color: Color = Color(0.2, 0.8, 0.3)
@@ -385,7 +386,7 @@ func _defeat() -> void:
 
 # === HELPER CLASS: Medium Slime ===
 
-class MediumSlime extends EnemyBase:
+class MediumSlime extends "res://scripts/entities/enemies/enemy_base.gd":
 	"""Medium slime spawned by Split attack - 100 HP, 1.5x regular size"""
 
 	func _init() -> void:
