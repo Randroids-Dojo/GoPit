@@ -9,6 +9,7 @@ See TESTING.md for setup instructions.
 import os
 import platform
 import socket
+from typing import Optional
 import pytest_asyncio
 from pathlib import Path
 from playgodot import Godot
@@ -16,7 +17,7 @@ from playgodot import Godot
 GODOT_PROJECT = Path(__file__).parent.parent
 
 
-def find_godot_path() -> str | None:
+def find_godot_path() -> Optional[str]:
     """
     Auto-discover the Godot automation fork binary.
 
@@ -91,7 +92,7 @@ def find_godot_path() -> str | None:
     return None
 
 
-def validate_godot_path(path: str | None) -> str:
+def validate_godot_path(path: Optional[str]) -> str:
     """Validate the Godot path and provide helpful error messages."""
     if path is None:
         raise RuntimeError(
