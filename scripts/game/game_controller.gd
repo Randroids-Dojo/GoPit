@@ -47,9 +47,6 @@ var enemies_per_wave: int = 5
 func _ready() -> void:
 	viewport_height = get_viewport_rect().size.y
 
-	# Load boss scenes at runtime to avoid class resolution issues during import
-	slime_king_scene = load("res://scenes/entities/enemies/bosses/slime_king.tscn")
-
 	# Wire up move joystick (left) - controls player movement
 	if move_joystick:
 		move_joystick.direction_changed.connect(_on_move_joystick_direction_changed)
@@ -416,6 +413,10 @@ func _on_fusion_reactor_collected(_reactor: Node2D) -> void:
 
 func _spawn_boss(stage: int) -> void:
 	"""Spawn the appropriate boss for the current stage"""
+	# Lazy load boss scenes only when needed (avoids class resolution issues during import)
+	if not slime_king_scene:
+		slime_king_scene = load("res://scenes/entities/enemies/bosses/slime_king.tscn")
+
 	var boss_scene: PackedScene = null
 
 	# Select boss based on stage
