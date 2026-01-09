@@ -181,7 +181,7 @@ show_percentage = false
 
 [node name="AbilityPanel" type="Panel" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
 layout_mode = 2
-size_flags_vertical = 10
+size_flags_vertical = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel"]
 layout_mode = 1
