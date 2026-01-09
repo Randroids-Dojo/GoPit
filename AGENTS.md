@@ -195,6 +195,106 @@ pgrep -f godot        # Check for running Godot processes
 pkill -9 -f godot     # Kill stale processes
 ```
 
+---
+
+## Web Game Interaction (click_game.sh)
+
+For interacting with the deployed web version of GoPit (https://go-pit.vercel.app), use the `click_game.sh` script. This enables automated clicking on game UI elements when the game is running in a browser.
+
+### Prerequisites
+
+- **macOS only** (uses AppleScript and cliclick)
+- **cliclick** must be installed: `brew install cliclick`
+- Game must be running in **Dia browser** (the script targets this browser specifically)
+
+### Quick Start
+
+```bash
+# Show available commands
+./click_game.sh
+
+# Click a single element
+./click_game.sh pause
+./click_game.sh green_fire
+
+# Click multiple times
+./click_game.sh green_fire 10    # Fire 10 times
+```
+
+### Available Elements
+
+| Category | Elements |
+|----------|----------|
+| **Game Controls** | `pause`, `start`, `green_fire`, `orange_fire`, `auto`, `blue_ball` |
+| **Pause Menu** | `resume`, `sound`, `quit` |
+| **Game Over** | `shop`, `restart`, `close` |
+| **Level Up** | `levelup_left`, `levelup_mid`, `levelup_right` |
+
+### How It Works
+
+The script uses two positioning strategies to handle window resizing:
+
+1. **Edge-anchored elements** (e.g., pause button): Fixed pixel distance from window edge
+2. **Center-scaled elements** (e.g., menu items): Offset from window center, scaled proportionally
+
+This allows the script to work correctly regardless of window size or position.
+
+### Example Usage
+
+```bash
+# Play a game session
+./click_game.sh start                    # Start game from character select
+./click_game.sh green_fire 20            # Fire rapidly
+./click_game.sh levelup_mid              # Select middle upgrade on level-up
+
+# Navigate menus
+./click_game.sh pause                    # Pause the game
+./click_game.sh sound                    # Toggle sound
+./click_game.sh resume                   # Resume playing
+
+# After game over
+./click_game.sh shop                     # Open shop
+./click_game.sh close                    # Close shop
+./click_game.sh restart                  # Start new game
+```
+
+### Adapting for Different Browsers
+
+The script is configured for Dia browser. To use a different browser, modify the `get_window_info()` function in `click_game.sh`:
+
+```bash
+# Change this line:
+tell process "Dia"
+
+# To your browser, e.g.:
+tell process "Google Chrome"
+tell process "Safari"
+tell process "Arc"
+```
+
+### Recalibrating Coordinates
+
+If UI elements aren't clicking correctly (e.g., after game updates), recalibrate:
+
+1. Position your mouse over the element
+2. Run: `cliclick p` to get coordinates
+3. Calculate offset from window center or edge
+4. Update the `get_element_info()` function in `click_game.sh`
+
+For center-scaled elements:
+```bash
+# offset_x = click_x - (window_x + window_width/2)
+# offset_y = click_y - (window_y + window_height/2)
+```
+
+For edge-anchored elements (like pause):
+```bash
+# x_from_right = window_width - (click_x - window_x)
+# y_from_top = click_y - window_y
+```
+
+---
+
 ## CI Monitoring (Automatic)
 
 Claude Code automatically monitors GitHub Actions CI after:
