@@ -250,13 +250,6 @@ func _enter_attack_state() -> void:
 
 
 func _do_attack(delta: float) -> void:
-	# Check if we hit the player FIRST (before movement might get blocked)
-	var player := _get_player_node()
-	if player and global_position.distance_to(player.global_position) < 50:
-		_deal_damage_to_player()
-		queue_free()
-		return
-
 	# Move toward attack target
 	var direction := (_attack_target - global_position).normalized()
 	if direction.length() < 0.1:
@@ -266,6 +259,15 @@ func _do_attack(delta: float) -> void:
 
 	velocity = direction * ATTACK_SPEED
 	move_and_slide()
+
+	# Check for collision with player AFTER movement (uses physics collision)
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		var collider := collision.get_collider()
+		if collider and collider.is_in_group("player"):
+			_deal_damage_to_player()
+			queue_free()
+			return
 
 	# Despawn if off-screen or past target
 	if global_position.y > 1400 or global_position.y < -50:
