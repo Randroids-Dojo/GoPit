@@ -518,8 +518,8 @@ func _do_magma_pool(pos: Vector2) -> void:
 	tween.tween_callback(pool.queue_free)
 
 
-# Track void alternation state
-var _void_use_burn: bool = true
+# Track void alternation state (static so all void balls share state)
+static var _void_use_burn: bool = true
 
 func _do_void_effect(enemy: Node2D) -> void:
 	"""VOID effect - Alternates between burn and freeze each hit"""
