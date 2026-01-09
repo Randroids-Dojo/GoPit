@@ -16,11 +16,13 @@ const DANGER_ZONE_Y: float = 1000.0  # 200px above player zone at 1200
 const ATTACK_RANGE_Y: float = 950.0  # When to start warning (before danger zone)
 const WARNING_DURATION: float = 1.0  # Seconds to show warning
 const ATTACK_SPEED: float = 600.0  # Speed when lunging at player
+const ATTACK_SELF_DAMAGE: int = 3  # HP lost per attack attempt
 
 var in_danger_zone: bool = false
 var current_state: State = State.DESCENDING
 var _warning_timer: float = 0.0
 var _attack_target: Vector2 = Vector2.ZERO
+var _pre_attack_position: Vector2 = Vector2.ZERO  # Position before attack, to snap back to
 var _shake_offset: Vector2 = Vector2.ZERO
 var _exclamation_label: Label
 var _pulse_tween: Tween
@@ -70,16 +72,28 @@ func _physics_process(delta: float) -> void:
 		State.DESCENDING:
 			_move(delta)
 			_check_danger_zone()
-			# Check if we should enter warning state
-			if global_position.y >= ATTACK_RANGE_Y:
+			# Check if we should enter warning state (when at or below player's Y level)
+			if _should_attack():
 				_enter_warning_state()
 		State.WARNING:
 			_do_warning(delta)
 			_check_danger_zone()
+			# Cancel attack if player moved above us
+			if not _should_attack():
+				_cancel_warning()
 		State.ATTACKING:
 			_do_attack(delta)
 		State.DEAD:
 			pass  # Do nothing, waiting for queue_free
+
+
+func _should_attack() -> bool:
+	# Attack when enemy is at or below player's Y position
+	var player := _get_player_node()
+	if player:
+		return global_position.y >= player.global_position.y
+	# Fallback: use old threshold if no player found
+	return global_position.y >= ATTACK_RANGE_Y
 
 
 func _setup_collision() -> void:
@@ -185,8 +199,16 @@ func _spawn_health_gem() -> void:
 func _enter_warning_state() -> void:
 	current_state = State.WARNING
 	_warning_timer = WARNING_DURATION
+	_pre_attack_position = global_position  # Remember where we were
 	_show_exclamation()
 	SoundManager.play(SoundManager.SoundType.BLOCKED)  # Use blocked sound for warning
+
+
+func _cancel_warning() -> void:
+	# Player moved above us, cancel attack and resume descending
+	_hide_exclamation()
+	_stop_shake()
+	current_state = State.DESCENDING
 
 
 func _do_warning(delta: float) -> void:
@@ -253,12 +275,15 @@ func _enter_attack_state() -> void:
 
 func _do_attack(delta: float) -> void:
 	# Move toward attack target
-	var direction := (_attack_target - global_position).normalized()
-	if direction.length() < 0.1:
-		# Already at target, despawn
-		queue_free()
+	var to_target := _attack_target - global_position
+	var dist_to_target := to_target.length()
+
+	# If we've reached the target area, complete this attack attempt
+	if dist_to_target < 30:
+		_complete_attack_attempt(false)
 		return
 
+	var direction := to_target.normalized()
 	velocity = direction * ATTACK_SPEED
 	move_and_slide()
 
@@ -268,19 +293,32 @@ func _do_attack(delta: float) -> void:
 		var collider := collision.get_collider()
 		if collider and collider.is_in_group("player"):
 			_deal_damage_to_player()
-			queue_free()
+			_complete_attack_attempt(true)
 			return
 
-	# Despawn if off-screen or past target
+	# Despawn if off-screen (fell off the map)
 	if global_position.y > 1400 or global_position.y < -50:
 		queue_free()
 		return
 
-	# Also despawn if we've overshot the target significantly
-	var to_target := _attack_target - global_position
-	var was_moving_toward := to_target.dot(direction) > 0
-	if not was_moving_toward and global_position.distance_to(_attack_target) > 30:
-		queue_free()
+	# If we've overshot the target, complete this attack attempt
+	var new_to_target := _attack_target - global_position
+	var was_moving_toward := new_to_target.dot(direction) > 0
+	if not was_moving_toward:
+		_complete_attack_attempt(false)
+
+
+func _complete_attack_attempt(hit_player: bool) -> void:
+	# Take self-damage from the attack exertion
+	hp -= ATTACK_SELF_DAMAGE
+
+	# If still alive, snap back and continue descending
+	if hp > 0:
+		# Snap back to pre-attack position
+		global_position = _pre_attack_position
+		# Return to descending state - will re-trigger attack when reaching player level again
+		current_state = State.DESCENDING
+	# If dead, _die() is called automatically via hp setter
 
 
 func _get_player_position() -> Vector2:
