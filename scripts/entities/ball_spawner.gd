@@ -57,6 +57,7 @@ func _spawn_ball(direction: Vector2) -> void:
 
 	# Get stats from BallRegistry if available
 	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
+	var speed_mult: float = GameManager.character_speed_mult
 	if use_registry:
 		var active_type: int = BallRegistry.active_ball_type
 		var registry_damage: int = BallRegistry.get_damage(active_type)
@@ -64,7 +65,7 @@ func _spawn_ball(direction: Vector2) -> void:
 		var ball_level: int = BallRegistry.get_ball_level(active_type)
 
 		ball.damage = registry_damage + _damage_bonus
-		ball.speed = registry_speed + _speed_bonus
+		ball.speed = (registry_speed + _speed_bonus) * speed_mult
 		ball.ball_level = ball_level
 		ball.registry_type = active_type
 
@@ -73,7 +74,7 @@ func _spawn_ball(direction: Vector2) -> void:
 	else:
 		# Fallback to legacy behavior
 		ball.damage = ball_damage + _damage_bonus
-		ball.speed = ball_speed + _speed_bonus
+		ball.speed = (ball_speed + _speed_bonus) * speed_mult
 		if ball_type > 0 and ball.has_method("set_ball_type"):
 			ball.set_ball_type(ball_type)
 

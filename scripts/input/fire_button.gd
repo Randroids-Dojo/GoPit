@@ -98,7 +98,8 @@ func _gui_input(event: InputEvent) -> void:
 func _try_fire() -> void:
 	if is_ready:
 		is_ready = false
-		cooldown_timer = cooldown_duration
+		# Apply character speed multiplier to cooldown (higher speed = faster fire)
+		cooldown_timer = cooldown_duration / GameManager.character_speed_mult
 		cooldown_started.emit()
 		fired.emit()
 		queue_redraw()
