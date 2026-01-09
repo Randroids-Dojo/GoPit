@@ -251,6 +251,10 @@ func _on_player_moved(pos: Vector2) -> void:
 	if player_zone:
 		player_zone.global_position = pos
 
+	# Update aim line to follow player
+	if aim_line:
+		aim_line.update_position(pos)
+
 
 func _on_move_joystick_direction_changed(direction: Vector2) -> void:
 	# Control player movement only
