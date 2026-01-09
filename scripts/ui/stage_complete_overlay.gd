@@ -5,7 +5,12 @@ extends CanvasLayer
 @onready var panel: Panel = $DimBackground/Panel
 @onready var title_label: Label = $DimBackground/Panel/VBoxContainer/TitleLabel
 @onready var stage_label: Label = $DimBackground/Panel/VBoxContainer/StageLabel
-@onready var continue_button: Button = $DimBackground/Panel/VBoxContainer/ContinueButton
+@onready var stats_container: VBoxContainer = $DimBackground/Panel/VBoxContainer/StatsContainer
+@onready var time_label: Label = $DimBackground/Panel/VBoxContainer/StatsContainer/TimeLabel
+@onready var enemies_label: Label = $DimBackground/Panel/VBoxContainer/StatsContainer/EnemiesLabel
+@onready var level_label: Label = $DimBackground/Panel/VBoxContainer/StatsContainer/LevelLabel
+@onready var continue_button: Button = $DimBackground/Panel/VBoxContainer/ButtonsContainer/ContinueButton
+@onready var endless_button: Button = $DimBackground/Panel/VBoxContainer/ButtonsContainer/EndlessButton
 
 var _is_victory: bool = false
 
@@ -15,6 +20,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if continue_button:
 		continue_button.pressed.connect(_on_continue_pressed)
+	if endless_button:
+		endless_button.pressed.connect(_on_endless_pressed)
 
 
 func show_stage_complete(stage: int) -> void:
@@ -26,6 +33,12 @@ func show_stage_complete(stage: int) -> void:
 	stage_label.text = stage_name + " cleared!"
 	continue_button.text = "Continue"
 
+	# Hide stats and endless button for stage complete
+	if stats_container:
+		stats_container.visible = false
+	if endless_button:
+		endless_button.visible = false
+
 	_show()
 
 
@@ -35,7 +48,33 @@ func show_victory() -> void:
 	stage_label.text = "You conquered The Pit!"
 	continue_button.text = "Play Again"
 
+	# Show stats for victory
+	if stats_container:
+		stats_container.visible = true
+		_update_stats()
+
+	# Show endless mode button
+	if endless_button:
+		endless_button.visible = true
+
 	_show()
+
+
+func _update_stats() -> void:
+	# Format time
+	var time_secs: float = GameManager.stats["time_survived"]
+	var minutes := int(time_secs) / 60
+	var seconds := int(time_secs) % 60
+	if time_label:
+		time_label.text = "Time: %d:%02d" % [minutes, seconds]
+
+	# Enemies killed
+	if enemies_label:
+		enemies_label.text = "Enemies: %d" % GameManager.stats["enemies_killed"]
+
+	# Level reached
+	if level_label:
+		level_label.text = "Level: %d" % GameManager.player_level
 
 
 func _show() -> void:
@@ -53,3 +92,14 @@ func _on_continue_pressed() -> void:
 	else:
 		# Advance to next stage
 		StageManager.complete_stage()
+
+
+func _on_endless_pressed() -> void:
+	visible = false
+	get_tree().paused = false
+
+	# Enable endless mode and continue playing
+	GameManager.enable_endless_mode()
+
+	# Resume enemy spawning
+	StageManager.complete_stage()
