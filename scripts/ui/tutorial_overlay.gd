@@ -49,7 +49,7 @@ func _show_step(step: TutorialStep) -> void:
 
 func _show_highlight_at(node_name: String) -> void:
 	# Find the control in the HUD
-	var hud := get_tree().current_scene.get_node_or_null("UI/HUD")
+	var hud := get_tree().get_first_node_in_group("hud")
 	if not hud:
 		return
 

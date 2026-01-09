@@ -296,7 +296,7 @@ func _chain_lightning(hit_enemy: Node2D) -> void:
 	var chain_damage: int = int(damage * 0.5)
 
 	# Find nearby enemies
-	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 	if not enemies_container:
 		return
 
@@ -368,7 +368,7 @@ func _do_explosion(pos: Vector2, base_damage: int) -> void:
 	var explosion_damage := int(base_damage * 1.5)
 
 	# Find all enemies in radius
-	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 	if not enemies_container:
 		return
 
@@ -414,7 +414,7 @@ func _do_blizzard(hit_enemy: Node2D) -> void:
 		hit_enemy.apply_status_effect(freeze)
 
 	# Find and freeze nearby enemies
-	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 	if not enemies_container:
 		return
 
@@ -457,7 +457,7 @@ func _do_virus(enemy: Node2D) -> void:
 		enemy.apply_status_effect(bleed)
 
 	# Spread to nearby enemies
-	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 	if enemies_container:
 		for child in enemies_container.get_children():
 			if child is EnemyBase and child != enemy:
@@ -496,7 +496,7 @@ func _do_magma_pool(pos: Vector2) -> void:
 	timer.wait_time = 0.5
 	timer.autostart = true
 	timer.timeout.connect(func():
-		var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+		var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 		if enemies_container:
 			for child in enemies_container.get_children():
 				if child is EnemyBase:

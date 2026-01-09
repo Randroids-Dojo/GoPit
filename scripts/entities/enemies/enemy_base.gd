@@ -175,7 +175,9 @@ func _spawn_health_gem() -> void:
 	gem.global_position = global_position
 	gem.xp_value = 0  # No XP, just healing
 	gem.is_health_gem = true  # Mark as health gem for special effect
-	get_tree().current_scene.get_node("GameArea/Gems").add_child(gem)
+	var gems_container := get_tree().get_first_node_in_group("gems_container")
+	if gems_container:
+		gems_container.add_child(gem)
 
 
 # === WARNING STATE ===

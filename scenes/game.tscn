@@ -40,7 +40,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.102, 0.102, 0.18, 1)
 
-[node name="GameCamera" type="Camera2D" parent="."]
+[node name="GameCamera" type="Camera2D" parent="." groups=["game_camera"]]
 position = Vector2(360, 640)
 
 [node name="GameArea" type="Node2D" parent="."]
@@ -71,7 +71,7 @@ shape = SubResource("RectangleShape2D_wall")
 script = ExtResource("6_enemy_spawner")
 slime_scene = ExtResource("7_slime")
 
-[node name="Gems" type="Node2D" parent="GameArea"]
+[node name="Gems" type="Node2D" parent="GameArea" groups=["gems_container"]]
 
 [node name="Player" parent="GameArea" instance=ExtResource("16_player")]
 position = Vector2(360, 1000)
@@ -96,7 +96,7 @@ script = ExtResource("19_baby_spawner")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="HUD" type="Control" parent="UI"]
+[node name="HUD" type="Control" parent="UI" groups=["hud"]]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

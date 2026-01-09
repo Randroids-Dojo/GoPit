@@ -100,7 +100,7 @@ func _get_target_direction() -> Vector2:
 
 
 func _find_nearest_enemy() -> Node2D:
-	var enemies_container := get_tree().current_scene.get_node_or_null("GameArea/Enemies")
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 	if not enemies_container:
 		return null
 

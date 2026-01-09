@@ -17,7 +17,7 @@ func _on_scene_changed(_node: Node) -> void:
 
 
 func _find_camera() -> void:
-	_camera = get_tree().current_scene.get_node_or_null("GameCamera")
+	_camera = get_tree().get_first_node_in_group("game_camera")
 
 
 func _process(delta: float) -> void:
