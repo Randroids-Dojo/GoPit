@@ -14,6 +14,7 @@
 #
 # USAGE:
 #   ./click_game.sh <element> [count]
+#   ./click_game.sh -f <element> [count]    # Fullscreen mode
 #
 # ELEMENTS:
 #   Game:     pause, start, green_fire, orange_fire, auto, blue_ball
@@ -36,23 +37,40 @@ GAME_ASPECT=$(echo "scale=6; $GAME_WIDTH / $GAME_HEIGHT" | bc)
 
 # Browser chrome offset (tabs + address bar) - calibrated for Dia browser
 CHROME_HEIGHT=41
+CHROME_HEIGHT_FULLSCREEN=77
+
+# Fullscreen mode flag (set via -f argument)
+FULLSCREEN=0
+
+# Get screen dimensions for fullscreen mode
+get_screen_info() {
+    osascript -e 'tell application "Finder" to get bounds of window of desktop' | sed 's/, /,/g'
+}
 
 # Get Dia browser window position and size
 get_window_info() {
-    osascript -e '
-    tell application "System Events"
-        tell process "Dia"
-            set win to front window
-            set winPos to position of win
-            set winSize to size of win
-            set winX to item 1 of winPos as integer
-            set winY to item 2 of winPos as integer
-            set winW to item 1 of winSize as integer
-            set winH to item 2 of winSize as integer
-            return (winX as text) & "," & (winY as text) & "," & (winW as text) & "," & (winH as text)
+    if [ "$FULLSCREEN" -eq 1 ]; then
+        # In fullscreen, use screen dimensions
+        local screen=$(get_screen_info)
+        local screen_w=$(echo $screen | cut -d',' -f3)
+        local screen_h=$(echo $screen | cut -d',' -f4)
+        echo "0,0,$screen_w,$screen_h"
+    else
+        osascript -e '
+        tell application "System Events"
+            tell process "Dia"
+                set win to front window
+                set winPos to position of win
+                set winSize to size of win
+                set winX to item 1 of winPos as integer
+                set winY to item 2 of winPos as integer
+                set winW to item 1 of winSize as integer
+                set winH to item 2 of winSize as integer
+                return (winX as text) & "," & (winY as text) & "," & (winW as text) & "," & (winH as text)
+            end tell
         end tell
-    end tell
-    ' 2>/dev/null
+        ' 2>/dev/null
+    fi
 }
 
 # Calculate game canvas bounds within the browser window
@@ -63,11 +81,15 @@ get_canvas_bounds() {
     local win_w=$3
     local win_h=$4
 
+    # Use appropriate chrome height
+    local chrome=$CHROME_HEIGHT
+    [ "$FULLSCREEN" -eq 1 ] && chrome=$CHROME_HEIGHT_FULLSCREEN
+
     # Content area (excluding browser chrome)
     local content_x=$win_x
-    local content_y=$((win_y + CHROME_HEIGHT))
+    local content_y=$((win_y + chrome))
     local content_w=$win_w
-    local content_h=$((win_h - CHROME_HEIGHT))
+    local content_h=$((win_h - chrome))
 
     # Calculate canvas size maintaining 720:1280 aspect ratio
     local content_aspect=$(echo "scale=6; $content_w / $content_h" | bc)
@@ -244,10 +266,20 @@ calibrate_element() {
 }
 
 # Main
+
+# Parse -f flag for fullscreen mode
+if [ "$1" = "-f" ] || [ "$1" = "--fullscreen" ]; then
+    FULLSCREEN=1
+    shift
+fi
+
 if [ -z "$1" ]; then
     echo "GoPit Game Clicker"
-    echo "Usage: $0 <element_name> [count]"
-    echo "       $0 calibrate <element_name> [delay_seconds]"
+    echo "Usage: $0 [-f] <element_name> [count]"
+    echo "       $0 [-f] calibrate <element_name> [delay_seconds]"
+    echo ""
+    echo "Options:"
+    echo "  -f, --fullscreen    Use fullscreen mode (when browser is fullscreen)"
     echo ""
     echo "Elements:"
     echo "  Game:     pause, start, green_fire, orange_fire, auto, blue_ball"
@@ -267,7 +299,7 @@ fi
 # Handle calibrate command
 if [ "$1" = "calibrate" ]; then
     if [ -z "$2" ]; then
-        echo "Usage: $0 calibrate <element_name> [delay_seconds]"
+        echo "Usage: $0 [-f] calibrate <element_name> [delay_seconds]"
         exit 1
     fi
     calibrate_element "$2" "${3:-4}"
