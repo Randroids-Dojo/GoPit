@@ -33,6 +33,22 @@ If you see "GODOT AUTOMATION FORK NOT FOUND":
 
 See [TESTING.md](TESTING.md) for full setup instructions.
 
+### Working in Git Worktrees
+
+Git worktrees share the repository but NOT untracked files like `.venv`. When working in a worktree, **always symlink the venv from the main repo**:
+
+```bash
+cd /path/to/worktree
+ln -s ../GoPit/.venv .venv
+```
+
+This ensures:
+- Consistent dependencies across all worktrees
+- No need to reinstall packages per worktree
+- Tests work identically in main repo and worktrees
+
+**Do NOT create separate venvs per worktree** - this leads to dependency drift and wasted disk space.
+
 ---
 
 ## Quick Reference
