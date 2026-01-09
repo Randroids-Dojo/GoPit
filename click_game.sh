@@ -112,9 +112,8 @@ get_element_info() {
         resume)      echo "center,0,-.02" ;;
         sound)       echo "center,0,0" ;;
         quit)        echo "center,0,.04" ;;
-        shop)        echo "center,-0.09,0.23" ;;
-        restart)     echo "center,0.05,0.23" ;;
-        close)       echo "center,0.00,0.34" ;;
+        shop)        echo "center,-.08,.12" ;;
+        restart)     echo "center,.10,.13" ;;
         levelup_left)   echo "center,-.28,.03" ;;
         levelup_mid)    echo "center,0,.02" ;;
         levelup_right)  echo "center,.27,.03" ;;
@@ -122,6 +121,12 @@ get_element_info() {
         play_again)     echo "center,0,.08" ;;
         next_char)      echo "center,.18,.21" ;;
         prev_char)      echo "center,-.18,.22" ;;
+        shop_item1)     echo "center,-.28,-.01" ;;
+        shop_item2)     echo "center,0,0" ;;
+        shop_item3)     echo "center,.27,0" ;;
+        shop_item4)     echo "center,-.28,.14" ;;
+        shop_item5)     echo "center,0,.14" ;;
+        shop_close)     echo "center,0,.20" ;;
         *)           echo "" ;;
     esac
 }
@@ -247,7 +252,8 @@ if [ -z "$1" ]; then
     echo "Elements:"
     echo "  Game:     pause, start, green_fire, orange_fire, auto, blue_ball"
     echo "  Menu:     resume, sound, quit"
-    echo "  GameOver: shop, restart, close"
+    echo "  GameOver: shop, restart"
+    echo "  Shop:     shop_item1-5, shop_close"
     echo "  LevelUp:  levelup_left, levelup_mid, levelup_right"
     echo "  Stage:    continue, play_again"
     echo "  CharSel:  start, next_char, prev_char"
