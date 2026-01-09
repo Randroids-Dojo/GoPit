@@ -376,6 +376,8 @@ func _on_stage_completed(_stage: int) -> void:
 
 
 func _on_game_won() -> void:
+	# Trigger victory state in GameManager
+	GameManager.trigger_victory()
 	# Show victory screen
 	if stage_complete_overlay:
 		stage_complete_overlay.show_victory()

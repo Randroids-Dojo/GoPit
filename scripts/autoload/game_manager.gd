@@ -6,12 +6,14 @@ enum GameState {
 	PLAYING,
 	LEVEL_UP,
 	PAUSED,
-	GAME_OVER
+	GAME_OVER,
+	VICTORY
 }
 
 signal state_changed(old_state: GameState, new_state: GameState)
 signal game_started
 signal game_over
+signal game_victory
 signal level_up_triggered
 signal level_up_completed
 signal player_damaged(amount: int)
@@ -57,6 +59,8 @@ var active_passive: Passive = Passive.NONE
 # High score persistence
 var high_score_wave: int = 0
 var high_score_level: int = 0
+var total_victories: int = 0
+var is_endless_mode: bool = false  # True after victory if player continues
 const HIGH_SCORE_PATH := "user://high_score.save"
 
 # Session stats (reset each run)
@@ -188,6 +192,21 @@ func end_game() -> void:
 	SoundManager.play(SoundManager.SoundType.GAME_OVER)
 	_check_high_scores()
 	game_over.emit()
+
+
+func trigger_victory() -> void:
+	current_state = GameState.VICTORY
+	total_victories += 1
+	SoundManager.play(SoundManager.SoundType.LEVEL_UP)  # Victory sound
+	_check_high_scores()
+	_save_high_scores()
+	game_victory.emit()
+
+
+func enable_endless_mode() -> void:
+	## Called when player chooses to continue after victory
+	is_endless_mode = true
+	current_state = GameState.PLAYING
 
 
 func trigger_level_up() -> void:
@@ -343,6 +362,7 @@ func _reset_stats() -> void:
 	xp_to_next_level = _calculate_xp_requirement(player_level)
 	gem_magnetism_range = 0.0
 	leadership = 0.0
+	is_endless_mode = false
 	# Reset session stats
 	stats["enemies_killed"] = 0
 	stats["balls_fired"] = 0
@@ -371,6 +391,7 @@ func _load_high_scores() -> void:
 	if data:
 		high_score_wave = data.get("wave", 0)
 		high_score_level = data.get("level", 0)
+		total_victories = data.get("victories", 0)
 
 
 func _check_high_scores() -> void:
@@ -391,7 +412,8 @@ func _check_high_scores() -> void:
 func _save_high_scores() -> void:
 	var data := {
 		"wave": high_score_wave,
-		"level": high_score_level
+		"level": high_score_level,
+		"victories": total_victories
 	}
 
 	var file := FileAccess.open(HIGH_SCORE_PATH, FileAccess.WRITE)
