@@ -406,12 +406,49 @@ func _process_status_effects(delta: float) -> void:
 
 
 func _take_dot_damage(amount: int) -> void:
-	"""Take damage from DoT effects (doesn't trigger hit effects)"""
+	"""Take damage from DoT effects - subtle visual feedback"""
 	hp -= amount
+	GameManager.record_damage_dealt(amount)
+
+	# Subtle flash (less intense than direct hit)
+	_flash_dot()
+
+	# Very subtle screen shake (less than direct hit)
+	CameraShake.shake(1.0, 10.0)
+
 	# Spawn smaller damage number for DoT
 	var scene_root := get_tree().current_scene
 	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
 	DamageNumber.spawn(scene_root, global_position + Vector2(randf_range(-20, 20), -10), amount, Color(1, 0.5, 0.2))
+
+
+func _flash_dot() -> void:
+	"""Subtle flash for DoT damage - uses effect color instead of white"""
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+
+	# Get dominant effect color for the flash
+	var flash_color := _get_dominant_effect_color()
+
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(self, "modulate", flash_color.lightened(0.3), 0.05)
+	_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.15)
+
+
+func _get_dominant_effect_color() -> Color:
+	"""Get the color of the most damaging active effect"""
+	var colors := {
+		StatusEffect.Type.BURN: Color(1.0, 0.5, 0.2),    # Orange
+		StatusEffect.Type.POISON: Color(0.4, 0.9, 0.2),  # Green
+		StatusEffect.Type.BLEED: Color(0.9, 0.2, 0.3)    # Red
+	}
+
+	# Return color of first damaging effect found
+	for effect_type in _active_effects:
+		if effect_type in colors:
+			return colors[effect_type]
+
+	return Color(1.0, 0.5, 0.2)  # Default orange
 
 
 func _update_speed_from_effects() -> void:
