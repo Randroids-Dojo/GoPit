@@ -18,10 +18,10 @@ enum EvolvedBallType {
 
 # Recipe definitions: sorted [BallType, BallType] -> EvolvedBallType
 const EVOLUTION_RECIPES := {
-	# Key format: [smaller_enum, larger_enum] to ensure consistent lookup
+	# Key format: alphabetically sorted [Name_Name] to ensure consistent lookup
 	"BURN_IRON": EvolvedBallType.BOMB,
 	"FREEZE_LIGHTNING": EvolvedBallType.BLIZZARD,
-	"POISON_BLEED": EvolvedBallType.VIRUS,
+	"BLEED_POISON": EvolvedBallType.VIRUS,  # Alphabetically: BLEED < POISON
 	"BURN_POISON": EvolvedBallType.MAGMA,
 	"BURN_FREEZE": EvolvedBallType.VOID
 }
