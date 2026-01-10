@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://lightning_trail"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_lightning"]
+emission_shape = 1
+emission_sphere_radius = 4.0
+direction = Vector3(0, 0, 0)
+spread = 180.0
+initial_velocity_min = 20.0
+initial_velocity_max = 50.0
+gravity = Vector3(0, 0, 0)
+scale_min = 2.0
+scale_max = 4.0
+color = Color(1, 1, 0.3, 0.9)
+
+[node name="LightningTrail" type="GPUParticles2D"]
+amount = 8
+process_material = SubResource("ParticleProcessMaterial_lightning")
+lifetime = 0.2
+speed_scale = 2.0
+explosiveness = 0.3
+local_coords = false

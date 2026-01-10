@@ -26,6 +26,17 @@ var ball_level: int = 1  # 1-3, affects visuals
 var registry_type: int = -1  # BallRegistry.BallType if set from registry
 var _trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 8
+var _particle_trail: GPUParticles2D = null
+
+# Trail particle scenes per ball type
+const TRAIL_PARTICLES := {
+	BallType.FIRE: "res://scenes/effects/fire_trail.tscn",
+	BallType.ICE: "res://scenes/effects/ice_trail.tscn",
+	BallType.LIGHTNING: "res://scenes/effects/lightning_trail.tscn",
+	BallType.POISON: "res://scenes/effects/poison_trail.tscn",
+	BallType.BLEED: "res://scenes/effects/bleed_trail.tscn",
+	BallType.IRON: "res://scenes/effects/iron_trail.tscn"
+}
 
 # Baby ball properties (auto-spawned, smaller, less damage)
 var is_baby_ball: bool = false
@@ -64,6 +75,31 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.9, 0.2, 0.3)  # Dark red
 		BallType.IRON:
 			ball_color = Color(0.7, 0.7, 0.75)  # Metallic gray
+
+	# Spawn particle trail for special ball types
+	_spawn_particle_trail()
+
+
+func _spawn_particle_trail() -> void:
+	"""Spawn particle trail if ball type has one"""
+	# Remove existing trail
+	if _particle_trail:
+		_particle_trail.queue_free()
+		_particle_trail = null
+
+	# No trail for normal balls or baby balls
+	if ball_type == BallType.NORMAL or is_baby_ball:
+		return
+
+	# Check if we have a trail scene for this type
+	if not TRAIL_PARTICLES.has(ball_type):
+		return
+
+	var scene_path: String = TRAIL_PARTICLES[ball_type]
+	var trail_scene: PackedScene = load(scene_path)
+	if trail_scene:
+		_particle_trail = trail_scene.instantiate()
+		add_child(_particle_trail)
 
 
 func _draw() -> void:
