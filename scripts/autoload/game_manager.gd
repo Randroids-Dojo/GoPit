@@ -151,22 +151,28 @@ func set_character(character: Resource) -> void:
 	_set_passive_from_name(character.passive_name)
 
 
+## Valid passive names mapped to enum values
+const VALID_PASSIVES := {
+	"Quick Learner": Passive.QUICK_LEARNER,
+	"Shatter": Passive.SHATTER,
+	"Jackpot": Passive.JACKPOT,
+	"Inferno": Passive.INFERNO,
+	"Squad Leader": Passive.SQUAD_LEADER,
+	"Lifesteal": Passive.LIFESTEAL
+}
+
+
 func _set_passive_from_name(passive_name: String) -> void:
-	match passive_name:
-		"Quick Learner":
-			active_passive = Passive.QUICK_LEARNER
-		"Shatter":
-			active_passive = Passive.SHATTER
-		"Jackpot":
-			active_passive = Passive.JACKPOT
-		"Inferno":
-			active_passive = Passive.INFERNO
-		"Squad Leader":
-			active_passive = Passive.SQUAD_LEADER
-		"Lifesteal":
-			active_passive = Passive.LIFESTEAL
-		_:
-			active_passive = Passive.NONE
+	if passive_name.is_empty():
+		active_passive = Passive.NONE
+		return
+
+	if passive_name in VALID_PASSIVES:
+		active_passive = VALID_PASSIVES[passive_name]
+	else:
+		# Log warning for unrecognized passive name (likely a typo in Character resource)
+		push_warning("GameManager: Unrecognized passive name '%s'. Check Character resource for typos. Valid passives: %s" % [passive_name, VALID_PASSIVES.keys()])
+		active_passive = Passive.NONE
 
 
 func _reset_character_stats() -> void:
