@@ -7,6 +7,7 @@ signal ball_spawned(ball: Node2D)
 @export var ball_scene: PackedScene
 @export var spawn_offset: float = 30.0
 @export var balls_container: Node2D
+@export var max_balls: int = 30  ## Maximum simultaneous balls (0 = unlimited)
 
 var current_aim_direction: Vector2 = Vector2.UP
 var ball_damage: int = 10  # Base damage, can be modified by upgrades
@@ -38,6 +39,9 @@ func fire() -> void:
 	if current_aim_direction == Vector2.ZERO:
 		return
 
+	# Enforce ball limit by despawning oldest balls
+	_enforce_ball_limit(ball_count)
+
 	for i in range(ball_count):
 		# Calculate spread offset for multi-shot
 		var spread_offset: float = 0.0
@@ -48,6 +52,28 @@ func fire() -> void:
 		_spawn_ball(dir)
 
 	SoundManager.play(SoundManager.SoundType.FIRE)
+
+
+func _enforce_ball_limit(balls_to_add: int) -> void:
+	"""Despawn oldest balls to make room for new ones"""
+	if max_balls <= 0 or not balls_container:
+		return
+
+	var current_count := balls_container.get_child_count()
+	var available_slots := max_balls - current_count
+	var need_to_remove := balls_to_add - available_slots
+
+	if need_to_remove <= 0:
+		return
+
+	# Despawn oldest balls first (they're at the front of the child list)
+	for i in range(need_to_remove):
+		if balls_container.get_child_count() > 0:
+			var oldest := balls_container.get_child(0)
+			if oldest.has_method("despawn"):
+				oldest.despawn()
+			else:
+				oldest.queue_free()
 
 
 func _spawn_ball(direction: Vector2) -> void:
