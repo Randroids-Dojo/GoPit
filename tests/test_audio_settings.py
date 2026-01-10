@@ -107,3 +107,21 @@ async def test_volume_clamped_to_valid_range(game):
 
     # Restore
     await game.call(SOUND_MANAGER, "set_master_volume", [1.0])
+
+
+@pytest.mark.asyncio
+async def test_ball_type_sound_method_exists(game):
+    """SoundManager should have play_ball_type_sound method."""
+    # Call for fire ball (type 1) - shouldn't error
+    await game.call(SOUND_MANAGER, "play_ball_type_sound", [1])
+    await asyncio.sleep(0.1)
+    # If we get here without error, the method exists and works
+
+
+@pytest.mark.asyncio
+async def test_status_effect_sound_method_exists(game):
+    """SoundManager should have play_status_effect_sound method."""
+    # Call for burn effect (type 0) - shouldn't error
+    await game.call(SOUND_MANAGER, "play_status_effect_sound", [0])
+    await asyncio.sleep(0.1)
+    # If we get here without error, the method exists and works

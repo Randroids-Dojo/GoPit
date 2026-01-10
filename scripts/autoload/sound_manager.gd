@@ -46,7 +46,23 @@ enum SoundType {
 	LEVEL_UP,
 	GAME_OVER,
 	WAVE_COMPLETE,
-	BLOCKED
+	BLOCKED,
+	# Ball type sounds
+	FIRE_BALL,       # Whoosh with crackle
+	ICE_BALL,        # Crystal chime
+	LIGHTNING_BALL,  # Electric zap
+	POISON_BALL,     # Bubbling drip
+	BLEED_BALL,      # Wet slice
+	IRON_BALL,       # Metallic clang
+	# Status effect sounds
+	BURN_APPLY,      # Ignition
+	FREEZE_APPLY,    # Ice crack
+	POISON_APPLY,    # Toxic splash
+	BLEED_APPLY,     # Slice
+	# Fusion sounds
+	FUSION_REACTOR,  # Pickup sound
+	EVOLUTION,       # Success fanfare
+	FISSION          # Energy burst
 }
 
 # Per-sound pitch/volume variance settings
@@ -60,7 +76,23 @@ const SOUND_SETTINGS := {
 	SoundType.LEVEL_UP: {"pitch_var": 0.0, "vol_var": 0.0},
 	SoundType.GAME_OVER: {"pitch_var": 0.0, "vol_var": 0.0},
 	SoundType.WAVE_COMPLETE: {"pitch_var": 0.0, "vol_var": 0.0},
-	SoundType.BLOCKED: {"pitch_var": 0.1, "vol_var": 0.0}
+	SoundType.BLOCKED: {"pitch_var": 0.1, "vol_var": 0.0},
+	# Ball type sounds
+	SoundType.FIRE_BALL: {"pitch_var": 0.1, "vol_var": 0.1},
+	SoundType.ICE_BALL: {"pitch_var": 0.15, "vol_var": 0.1},
+	SoundType.LIGHTNING_BALL: {"pitch_var": 0.2, "vol_var": 0.1},
+	SoundType.POISON_BALL: {"pitch_var": 0.15, "vol_var": 0.1},
+	SoundType.BLEED_BALL: {"pitch_var": 0.1, "vol_var": 0.1},
+	SoundType.IRON_BALL: {"pitch_var": 0.1, "vol_var": 0.1},
+	# Status effect sounds
+	SoundType.BURN_APPLY: {"pitch_var": 0.1, "vol_var": 0.1},
+	SoundType.FREEZE_APPLY: {"pitch_var": 0.15, "vol_var": 0.1},
+	SoundType.POISON_APPLY: {"pitch_var": 0.1, "vol_var": 0.1},
+	SoundType.BLEED_APPLY: {"pitch_var": 0.1, "vol_var": 0.1},
+	# Fusion sounds
+	SoundType.FUSION_REACTOR: {"pitch_var": 0.05, "vol_var": 0.05},
+	SoundType.EVOLUTION: {"pitch_var": 0.0, "vol_var": 0.0},
+	SoundType.FISSION: {"pitch_var": 0.1, "vol_var": 0.1}
 }
 
 
@@ -95,6 +127,29 @@ func set_music_volume(value: float) -> void:
 
 func toggle_mute() -> void:
 	is_muted = !is_muted
+
+
+## Play sound for a specific ball type (when spawning/firing)
+func play_ball_type_sound(ball_type: int) -> void:
+	# Ball types: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
+	match ball_type:
+		1: play(SoundType.FIRE_BALL)
+		2: play(SoundType.ICE_BALL)
+		3: play(SoundType.LIGHTNING_BALL)
+		4: play(SoundType.POISON_BALL)
+		5: play(SoundType.BLEED_BALL)
+		6: play(SoundType.IRON_BALL)
+		# NORMAL (0) uses default FIRE sound
+
+
+## Play sound when status effect is applied to enemy
+func play_status_effect_sound(effect_type: int) -> void:
+	# StatusEffect.Type: BURN=0, FREEZE=1, POISON=2, BLEED=3
+	match effect_type:
+		0: play(SoundType.BURN_APPLY)
+		1: play(SoundType.FREEZE_APPLY)
+		2: play(SoundType.POISON_APPLY)
+		3: play(SoundType.BLEED_APPLY)
 
 
 func _save_settings() -> void:
@@ -198,6 +253,35 @@ func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
 			data = _generate_arpeggio(0.4, [523.0, 659.0, 784.0, 1047.0])  # C5-E5-G5-C6
 		SoundType.BLOCKED:
 			data = _generate_blip(0.05, 100.0, 80.0)  # Short, low, muted click
+		# Ball type sounds
+		SoundType.FIRE_BALL:
+			data = _generate_fire_whoosh()
+		SoundType.ICE_BALL:
+			data = _generate_ice_chime()
+		SoundType.LIGHTNING_BALL:
+			data = _generate_electric_zap()
+		SoundType.POISON_BALL:
+			data = _generate_bubble_drip()
+		SoundType.BLEED_BALL:
+			data = _generate_wet_slice()
+		SoundType.IRON_BALL:
+			data = _generate_metallic_clang()
+		# Status effect sounds
+		SoundType.BURN_APPLY:
+			data = _generate_ignition()
+		SoundType.FREEZE_APPLY:
+			data = _generate_ice_crack()
+		SoundType.POISON_APPLY:
+			data = _generate_toxic_splash()
+		SoundType.BLEED_APPLY:
+			data = _generate_slice()
+		# Fusion sounds
+		SoundType.FUSION_REACTOR:
+			data = _generate_reactor_pickup()
+		SoundType.EVOLUTION:
+			data = _generate_evolution_fanfare()
+		SoundType.FISSION:
+			data = _generate_energy_burst()
 
 	wav.data = data
 	return wav
@@ -270,5 +354,320 @@ func _generate_arpeggio(duration: float, frequencies: Array) -> PackedByteArray:
 		var sample := sin(t * freq * TAU) * envelope * overall_envelope * 0.25
 		var sample_16 := int(clampf(sample, -1.0, 1.0) * 32767)
 		data.encode_s16(i * 2, sample_16)
+
+	return data
+
+
+# ============================================================================
+# Ball Type Sounds
+# ============================================================================
+
+func _generate_fire_whoosh() -> PackedByteArray:
+	"""Fire ball: Whoosh with crackle"""
+	var samples := int(SAMPLE_RATE * 0.15)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 0.5)
+
+		# White noise for whoosh
+		var noise := (randf() * 2.0 - 1.0) * 0.3
+		# Low frequency modulation for warmth
+		var warm := sin(t * 150.0 * TAU) * 0.2
+		# Crackle (random high-frequency pops)
+		var crackle := 0.0
+		if randf() < 0.1:
+			crackle = (randf() * 2.0 - 1.0) * 0.4
+
+		var sample := (noise + warm + crackle) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_ice_chime() -> PackedByteArray:
+	"""Ice ball: Crystal chime"""
+	var samples := int(SAMPLE_RATE * 0.2)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 1.5)
+
+		# High frequencies for crystal
+		var crystal := sin(t * 1200.0 * TAU) * 0.4
+		crystal += sin(t * 1800.0 * TAU) * 0.25
+		crystal += sin(t * 2400.0 * TAU) * 0.15
+		# Add slight shimmer
+		var shimmer := sin(t * 50.0 * TAU) * 0.1
+
+		var sample := crystal * (1.0 + shimmer) * envelope * 0.2
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_electric_zap() -> PackedByteArray:
+	"""Lightning ball: Electric zap"""
+	var samples := int(SAMPLE_RATE * 0.1)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 2.0)
+
+		# Square wave for electric buzz
+		var phase := fmod(t * 800.0, 1.0)
+		var buzz := (1.0 if phase < 0.5 else -1.0) * 0.3
+		# Modulated by high frequency
+		buzz *= sin(t * 4000.0 * TAU) * 0.5 + 0.5
+		# Add some noise
+		var noise := (randf() * 2.0 - 1.0) * 0.2
+
+		var sample := (buzz + noise) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_bubble_drip() -> PackedByteArray:
+	"""Poison ball: Bubbling drip"""
+	var samples := int(SAMPLE_RATE * 0.15)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 0.7)
+
+		# Bubble pops at random intervals
+		var freq := 300.0 + sin(t * 20.0 * TAU) * 100.0
+		var bubble := sin(t * freq * TAU) * 0.4
+		# Low gurgle
+		var gurgle := sin(t * 80.0 * TAU) * 0.2
+
+		var sample := (bubble + gurgle) * envelope * 0.2
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_wet_slice() -> PackedByteArray:
+	"""Bleed ball: Wet slice"""
+	var samples := int(SAMPLE_RATE * 0.08)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 1.5)
+
+		# Sharp attack with noise
+		var noise := (randf() * 2.0 - 1.0)
+		# Filtered sweep
+		var sweep := sin(t * lerpf(500.0, 200.0, progress) * TAU) * 0.3
+
+		var sample := (noise * 0.3 + sweep) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_metallic_clang() -> PackedByteArray:
+	"""Iron ball: Metallic clang"""
+	var samples := int(SAMPLE_RATE * 0.2)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 2.0)
+
+		# Multiple harmonics for metallic sound
+		var metal := sin(t * 400.0 * TAU) * 0.3
+		metal += sin(t * 800.0 * TAU) * 0.2
+		metal += sin(t * 1600.0 * TAU) * 0.15
+		metal += sin(t * 3200.0 * TAU) * 0.1
+		# Slight detuning for realism
+		metal *= 1.0 + sin(t * 5.0 * TAU) * 0.02
+
+		var sample := metal * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+# ============================================================================
+# Status Effect Sounds
+# ============================================================================
+
+func _generate_ignition() -> PackedByteArray:
+	"""Burn apply: Ignition whoosh"""
+	var samples := int(SAMPLE_RATE * 0.2)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+
+		# Fast attack, medium decay
+		var envelope: float
+		if progress < 0.1:
+			envelope = progress / 0.1
+		else:
+			envelope = pow(1.0 - (progress - 0.1) / 0.9, 0.5)
+
+		# Rising whoosh with noise
+		var freq := lerpf(100.0, 400.0, progress)
+		var whoosh := sin(t * freq * TAU) * 0.3
+		var noise := (randf() * 2.0 - 1.0) * 0.3
+
+		var sample := (whoosh + noise) * envelope * 0.2
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_ice_crack() -> PackedByteArray:
+	"""Freeze apply: Ice crack"""
+	var samples := int(SAMPLE_RATE * 0.15)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+
+		# Sharp attack
+		var envelope := pow(1.0 - progress, 2.5)
+
+		# Cracking sound with high-freq components
+		var crack := sin(t * 2000.0 * TAU) * 0.3
+		crack += sin(t * 3500.0 * TAU) * 0.2
+		# Noise burst at start
+		var noise := (randf() * 2.0 - 1.0) * (1.0 if progress < 0.05 else 0.1)
+
+		var sample := (crack + noise) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_toxic_splash() -> PackedByteArray:
+	"""Poison apply: Toxic splash"""
+	var samples := int(SAMPLE_RATE * 0.18)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 0.8)
+
+		# Wet splash with bubbles
+		var splash := sin(t * 200.0 * TAU) * 0.3
+		var bubbles := sin(t * 600.0 * TAU) * sin(t * 15.0 * TAU) * 0.2
+		var noise := (randf() * 2.0 - 1.0) * 0.15
+
+		var sample := (splash + bubbles + noise) * envelope * 0.2
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_slice() -> PackedByteArray:
+	"""Bleed apply: Sharp slice"""
+	var samples := int(SAMPLE_RATE * 0.1)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 3.0)
+
+		# Sharp attack with downward sweep
+		var freq := lerpf(1500.0, 300.0, progress)
+		var slice := sin(t * freq * TAU) * 0.4
+		var noise := (randf() * 2.0 - 1.0) * 0.2 * (1.0 - progress)
+
+		var sample := (slice + noise) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+# ============================================================================
+# Fusion Sounds
+# ============================================================================
+
+func _generate_reactor_pickup() -> PackedByteArray:
+	"""Fusion reactor: Magical pickup"""
+	var samples := int(SAMPLE_RATE * 0.3)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+		var envelope := pow(1.0 - progress, 0.5)
+
+		# Rising magical tone
+		var freq := lerpf(300.0, 800.0, progress)
+		var tone := sin(t * freq * TAU) * 0.3
+		# Sparkle
+		var sparkle := sin(t * 2000.0 * TAU) * sin(t * 30.0 * TAU) * 0.15
+
+		var sample := (tone + sparkle) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+func _generate_evolution_fanfare() -> PackedByteArray:
+	"""Evolution: Success fanfare"""
+	return _generate_arpeggio(0.4, [523.0, 659.0, 784.0, 1047.0, 1319.0])  # C5-E5-G5-C6-E6
+
+
+func _generate_energy_burst() -> PackedByteArray:
+	"""Fission: Energy burst"""
+	var samples := int(SAMPLE_RATE * 0.25)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+
+		# Sharp attack, slow decay
+		var envelope: float
+		if progress < 0.05:
+			envelope = progress / 0.05
+		else:
+			envelope = pow(1.0 - (progress - 0.05) / 0.95, 0.7)
+
+		# Multiple frequencies spreading out
+		var freq1 := lerpf(400.0, 200.0, progress)
+		var freq2 := lerpf(400.0, 600.0, progress)
+		var freq3 := lerpf(400.0, 1000.0, progress)
+
+		var burst := sin(t * freq1 * TAU) * 0.3
+		burst += sin(t * freq2 * TAU) * 0.25
+		burst += sin(t * freq3 * TAU) * 0.2
+		var noise := (randf() * 2.0 - 1.0) * 0.1
+
+		var sample := (burst + noise) * envelope * 0.2
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
 
 	return data
