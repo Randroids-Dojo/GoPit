@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://freeze_particles"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_freeze"]
+emission_shape = 1
+emission_sphere_radius = 20.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 5.0
+initial_velocity_max = 15.0
+gravity = Vector3(0, 10, 0)
+scale_min = 2.0
+scale_max = 5.0
+color = Color(0.6, 0.9, 1, 0.7)
+
+[node name="FreezeParticles" type="GPUParticles2D"]
+amount = 8
+process_material = SubResource("ParticleProcessMaterial_freeze")
+lifetime = 0.8
+speed_scale = 0.8

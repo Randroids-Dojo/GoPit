@@ -31,6 +31,15 @@ var _pulse_tween: Tween
 var _active_effects: Dictionary = {}  # StatusEffect.Type -> StatusEffect
 var _base_speed: float = 0.0  # Original speed before slow effects
 var _effect_tint: Color = Color.WHITE  # Combined tint from active effects
+var _effect_particles: Dictionary = {}  # StatusEffect.Type -> GPUParticles2D
+
+# Particle scenes for status effects
+const EFFECT_PARTICLES := {
+	StatusEffect.Type.BURN: "res://scenes/effects/burn_particles.tscn",
+	StatusEffect.Type.FREEZE: "res://scenes/effects/freeze_particles.tscn",
+	StatusEffect.Type.POISON: "res://scenes/effects/poison_particles.tscn",
+	StatusEffect.Type.BLEED: "res://scenes/effects/bleed_particles.tscn"
+}
 
 @export var max_hp: int = 10
 @export var speed: float = 100.0
@@ -177,6 +186,8 @@ func _die() -> void:
 	var health_gem_chance := GameManager.get_health_gem_chance()
 	if health_gem_chance > 0 and randf() < health_gem_chance:
 		_spawn_health_gem()
+	# Clean up particle references (nodes will be freed with parent)
+	_effect_particles.clear()
 	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 	died.emit(self)
 	queue_free()
@@ -464,9 +475,10 @@ func _update_speed_from_effects() -> void:
 
 
 func _update_effect_visuals() -> void:
-	"""Update visual tint based on active effects"""
+	"""Update visual tint and particles based on active effects"""
 	if _active_effects.is_empty():
 		_effect_tint = Color.WHITE
+		_remove_all_effect_particles()
 	else:
 		# Blend colors from all active effects
 		var r: float = 1.0
@@ -480,11 +492,56 @@ func _update_effect_visuals() -> void:
 			g = min(g, color.g) if color.g < 1.0 else g
 			b = min(b, color.b) if color.b < 1.0 else b
 
+			# Spawn particles for this effect if not already present
+			_ensure_effect_particles(effect_type)
+
 		_effect_tint = Color(r, g, b)
+
+	# Remove particles for expired effects
+	_cleanup_expired_particles()
 
 	# Apply tint if not in danger zone (danger zone has its own tint)
 	if not in_danger_zone and current_state != State.ATTACKING:
 		modulate = _effect_tint
+
+
+func _ensure_effect_particles(effect_type: int) -> void:
+	"""Spawn particles for an effect if not already active"""
+	if _effect_particles.has(effect_type):
+		return  # Already have particles for this effect
+
+	if not EFFECT_PARTICLES.has(effect_type):
+		return  # No particle scene for this effect type
+
+	var scene_path: String = EFFECT_PARTICLES[effect_type]
+	var particle_scene: PackedScene = load(scene_path)
+	if particle_scene:
+		var particles: GPUParticles2D = particle_scene.instantiate()
+		add_child(particles)
+		_effect_particles[effect_type] = particles
+
+
+func _cleanup_expired_particles() -> void:
+	"""Remove particles for effects that are no longer active"""
+	var to_remove: Array[int] = []
+	for effect_type in _effect_particles:
+		if not _active_effects.has(effect_type):
+			to_remove.append(effect_type)
+
+	for effect_type in to_remove:
+		var particles: GPUParticles2D = _effect_particles[effect_type]
+		if is_instance_valid(particles):
+			particles.queue_free()
+		_effect_particles.erase(effect_type)
+
+
+func _remove_all_effect_particles() -> void:
+	"""Remove all effect particles (called on effect clear or death)"""
+	for effect_type in _effect_particles:
+		var particles: GPUParticles2D = _effect_particles[effect_type]
+		if is_instance_valid(particles):
+			particles.queue_free()
+	_effect_particles.clear()
 
 
 func _spread_poison() -> void:
