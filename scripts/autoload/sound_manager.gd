@@ -1,11 +1,35 @@
 extends Node
 ## SoundManager autoload - plays placeholder sounds using procedural audio
+## Manages audio settings (volume, mute) with persistence
 
 var _players: Array[AudioStreamPlayer] = []
 const MAX_PLAYERS := 8
 const SAMPLE_RATE := 44100.0
+const SETTINGS_PATH := "user://audio_settings.save"
 
-# Mute state
+# Audio settings
+var master_volume: float = 1.0:
+	set(value):
+		master_volume = clampf(value, 0.0, 1.0)
+		_apply_bus_volume(0, master_volume)  # Master bus index 0
+		_save_settings()
+
+var sfx_volume: float = 1.0:
+	set(value):
+		sfx_volume = clampf(value, 0.0, 1.0)
+		var sfx_idx := AudioServer.get_bus_index("SFX")
+		if sfx_idx >= 0:
+			_apply_bus_volume(sfx_idx, sfx_volume)
+		_save_settings()
+
+var music_volume: float = 1.0:
+	set(value):
+		music_volume = clampf(value, 0.0, 1.0)
+		var music_idx := AudioServer.get_bus_index("Music")
+		if music_idx >= 0:
+			_apply_bus_volume(music_idx, music_volume)
+		_save_settings()
+
 var is_muted: bool = false:
 	set(value):
 		is_muted = value
@@ -44,9 +68,29 @@ func _ready() -> void:
 	_load_settings()
 	for i in MAX_PLAYERS:
 		var player := AudioStreamPlayer.new()
-		player.bus = "Master"
+		player.bus = "SFX"  # Use SFX bus for sound effects
 		add_child(player)
 		_players.append(player)
+
+
+func _apply_bus_volume(bus_idx: int, volume: float) -> void:
+	## Convert linear volume (0.0-1.0) to decibels and apply to bus
+	if volume <= 0.0:
+		AudioServer.set_bus_volume_db(bus_idx, -80.0)  # Effectively silent
+	else:
+		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(volume))
+
+
+func set_master_volume(value: float) -> void:
+	master_volume = value
+
+
+func set_sfx_volume(value: float) -> void:
+	sfx_volume = value
+
+
+func set_music_volume(value: float) -> void:
+	music_volume = value
 
 
 func toggle_mute() -> void:
@@ -54,20 +98,50 @@ func toggle_mute() -> void:
 
 
 func _save_settings() -> void:
-	var data := {"muted": is_muted}
-	var file := FileAccess.open("user://audio_settings.save", FileAccess.WRITE)
+	var data := {
+		"muted": is_muted,
+		"master": master_volume,
+		"sfx": sfx_volume,
+		"music": music_volume
+	}
+	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
 
 
 func _load_settings() -> void:
-	if FileAccess.file_exists("user://audio_settings.save"):
-		var file := FileAccess.open("user://audio_settings.save", FileAccess.READ)
-		if file:
-			var data = JSON.parse_string(file.get_as_text())
-			if data and data.has("muted"):
-				is_muted = data["muted"]
-				AudioServer.set_bus_mute(0, is_muted)
+	if not FileAccess.file_exists(SETTINGS_PATH):
+		return
+
+	var file := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+	if not file:
+		return
+
+	var data = JSON.parse_string(file.get_as_text())
+	if not data:
+		return
+
+	# Load and apply settings without triggering save (use backing fields)
+	if data.has("muted"):
+		is_muted = data["muted"]
+	if data.has("master"):
+		master_volume = data["master"]
+	if data.has("sfx"):
+		sfx_volume = data["sfx"]
+	if data.has("music"):
+		music_volume = data["music"]
+
+	# Apply loaded settings to audio buses
+	AudioServer.set_bus_mute(0, is_muted)
+	_apply_bus_volume(0, master_volume)
+
+	var sfx_idx := AudioServer.get_bus_index("SFX")
+	if sfx_idx >= 0:
+		_apply_bus_volume(sfx_idx, sfx_volume)
+
+	var music_idx := AudioServer.get_bus_index("Music")
+	if music_idx >= 0:
+		_apply_bus_volume(music_idx, music_volume)
 
 
 func play(sound_type: SoundType) -> void:

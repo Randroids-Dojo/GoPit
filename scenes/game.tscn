@@ -140,6 +140,10 @@ layout_mode = 2
 text = "Wave 1"
 horizontal_alignment = 2
 
+[node name="MuteButton" type="Button" parent="UI/HUD/TopBar"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+
 [node name="PauseButton" type="Button" parent="UI/HUD/TopBar"]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2

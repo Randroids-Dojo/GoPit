@@ -4,6 +4,7 @@ extends Control
 @onready var hp_bar: ProgressBar = $TopBar/HPBar
 @onready var hp_label: Label = $TopBar/HPBar/HPLabel
 @onready var wave_label: Label = $TopBar/WaveLabel
+@onready var mute_button: Button = $TopBar/MuteButton
 @onready var pause_button: Button = $TopBar/PauseButton
 @onready var xp_bar: ProgressBar = $XPBarContainer/XPBar
 @onready var level_label: Label = $XPBarContainer/LevelLabel
@@ -11,6 +12,10 @@ extends Control
 
 var pause_overlay: CanvasLayer
 var _combo_tween: Tween
+
+# Speaker icons (using Unicode)
+const SPEAKER_ON := "\U0001F50A"  # Speaker with sound waves
+const SPEAKER_OFF := "\U0001F507"  # Muted speaker
 
 
 func _ready() -> void:
@@ -25,6 +30,11 @@ func _ready() -> void:
 	# Get reference to pause overlay
 	pause_overlay = get_node_or_null("../PauseOverlay")
 
+	# Connect mute button
+	if mute_button:
+		mute_button.pressed.connect(_on_mute_pressed)
+		_update_mute_button()
+
 	# Connect pause button
 	if pause_button:
 		pause_button.pressed.connect(_on_pause_pressed)
@@ -32,6 +42,16 @@ func _ready() -> void:
 	# Connect to GameManager signals
 	GameManager.state_changed.connect(_on_state_changed)
 	GameManager.combo_changed.connect(_on_combo_changed)
+
+
+func _on_mute_pressed() -> void:
+	SoundManager.toggle_mute()
+	_update_mute_button()
+
+
+func _update_mute_button() -> void:
+	if mute_button:
+		mute_button.text = SPEAKER_OFF if SoundManager.is_muted else SPEAKER_ON
 
 
 func _on_pause_pressed() -> void:

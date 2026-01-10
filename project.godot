@@ -48,3 +48,7 @@ window/handheld/orientation=1
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"

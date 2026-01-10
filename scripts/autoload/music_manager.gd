@@ -32,17 +32,17 @@ func _ready() -> void:
 
 func _setup_players() -> void:
 	_bass_player = AudioStreamPlayer.new()
-	_bass_player.bus = "Master"
+	_bass_player.bus = "Music"
 	_bass_player.volume_db = -8.0
 	add_child(_bass_player)
 
 	_drum_player = AudioStreamPlayer.new()
-	_drum_player.bus = "Master"
+	_drum_player.bus = "Music"
 	_drum_player.volume_db = -6.0
 	add_child(_drum_player)
 
 	_melody_player = AudioStreamPlayer.new()
-	_melody_player.bus = "Master"
+	_melody_player.bus = "Music"
 	_melody_player.volume_db = -10.0
 	add_child(_melody_player)
 
