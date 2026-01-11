@@ -2072,10 +2072,35 @@ Research: [BallxPit.org Buildings Guide](https://ballxpit.org/guides/buildings-g
 4. Unlock new characters, stats, mechanics
 5. Stronger runs → Better rewards → Repeat
 
+**Worker Assignment System:**
+Research: [Deltia's Gaming - Worker Assignment](https://deltiasgaming.com/ball-x-pit-worker-assignment/)
+
+Workers can be assigned to buildings for passive resource collection:
+1. Build the specific building (e.g., Farm)
+2. Place resource fields (e.g., wheat farms) touching the building's grid
+3. Select building → Click "Assigned Worker" box
+4. Choose a character from available roster
+5. Assigned worker automatically harvests resources while you're in the pit
+
+**Worker Strategy:**
+- Assign characters that don't contribute much to harvesting
+- Some characters are valuable for runs (e.g., The Cogitator adds 2s to harvest clock)
+- Workers reduce active harvesters but provide constant passive income
+- Upgrading buildings = more output + reduced cooldown
+
+**Harvest Menus (4 Total):**
+| Menu | Function |
+|------|----------|
+| **Build** | Select and place tiles (wheat, wood, stone fields) |
+| **Harvest** | Click to collect resources (requires cooldown) |
+| **Rearrange** | Move existing tiles for better organization |
+| **Expand** | Increase placeable area (starts at 200 coins) |
+
 **Gold Farming (Critical):**
 - 7 Gold Mines in U-formation = 1,500+ gold/harvest
 - Spa building = instant re-harvest for gold
 - 25K-35K gold/hour with optimal setup
+- Worker assignment provides background income during runs
 
 **Key Differences from GoPit:**
 - Visual city that grows over time
@@ -2083,6 +2108,7 @@ Research: [BallxPit.org Buildings Guide](https://ballxpit.org/guides/buildings-g
 - Buildings physically constructed by bouncing
 - Character unlocks tied to specific buildings
 - Buff buildings affect nearby structures
+- Worker assignment for passive income
 
 ### Gap Analysis
 
@@ -2362,20 +2388,74 @@ static func apply_fission() -> Dictionary:
 Research sources:
 - [BallxPit Fast Mode Guide](https://ballxpit.org/guides/fast-mode/)
 - [BallxPit NG+ Guide](https://ballxpit.org/guides/new-game-plus/)
+- [BallxPit Speedrun Strategies](https://ballxpit.org/guides/speedrun-strategies/)
+- [Boss Battle Strategies](https://ballxpit.org/guides/boss-battle-strategies/)
 
-### BallxPit Difficulty System
+### BallxPit Wave Structure
 
-**Speed Control (R1 button):**
-| Speed | Usage |
-|-------|-------|
-| Speed 3 (Fast) | Waves 1-10, farming |
-| Speed 2 (Normal) | Waves 10-15 |
-| Speed 1 (Slow) | Bosses, new enemies |
+**Boss Timing:**
+- Bosses appear every **10 waves** (Wave 10, 20, 30, 40, 50+)
+- Each level has **3 bosses total**: 2 mini-bosses + 1 final boss
+- Defeating stage bosses rewards **guaranteed Fusion upgrades**
 
-**Difficulty Modes:**
+**Wave Progression Gates:**
+| Wave | Requirements | Notes |
+|------|--------------|-------|
+| 1-9 | None | Early game, focus on AoE evolutions |
+| 10 | 1-2 ball evolutions | First boss gate |
+| 20 | 2-3 ball evolutions + 2-3 passives | Mid-game |
+| 30+ | All 8 passive evolutions | **HARD GATE** - cannot progress without |
+| 40+ | Perfect ball evolution + S-Rank stats | Elite territory |
+| 50+ | Optimized build | End-game campaign |
+
+### BallxPit Speed Control System
+
+**Speed Toggle (R1/RB/R key):**
+| Speed | Enemy Scaling | Loot Quality | Usage |
+|-------|---------------|--------------|-------|
+| Speed 1 (Normal) | 1x | Standard | Bosses, new enemies, learning |
+| Speed 2 (Fast) | 1.5x | +25% | Waves 1-10, farming |
+| Speed 3 (Fast+2) | 2.5x | +50% | Competitive play, speedruns |
+
+**Speed Affects:**
+- Enemy movement speed
+- Enemy spawn rates
+- Projectile speed
+- Overall game pacing
+
+**CRITICAL: Dynamic Speed Control**
+- "Speed does NOT pause during upgrades" - DPS loss during selection
+- Speedrunners: Speed 3 for farming, Speed 1 for bosses
+- "Speed 3 during laser-heavy levels = instant death"
+- Even world-record holders slow down for difficult sections
+
+### Run Completion Times
+
+| Mode | Target Time | Notes |
+|------|------------|-------|
+| Normal | 15-20 min | Learning/testing |
+| Fast | 10-13 min | Efficient farming |
+| Fast+2 | 8-10 min | Competitive play |
+| Fast+3 | 6-8 min | World record territory |
+
+- Current world record: **7:53** (Any% NG+ Fast+)
+- Standard runs average: **12-15 minutes**
+
+### BallxPit Difficulty Modes
+
+**Game Mode Progression:**
 - Normal, Fast, Fast+2, Fast+3
 - Exponential scaling in Fast modes
-- New Game Plus: +50% HP/damage globally
+- Each mode affects: enemy movement, spawn rates, projectile speed
+
+**New Game Plus (NG+):**
+- Unlocks after completing all 8 biomes on normal
+- +50% enemy HP and damage globally
+- **Checkpoints REMOVED** (restart from Wave 1 on death)
+- Building costs 2-3x normal
+- Runs extend from 30-60 min to **60-90 min**
+- Sustain builds become mandatory (Mosquito King, Soul Sucker prioritized)
+- Pure damage strategies fail at this level
 
 **Post-Boss Spike:**
 - ~3x HP jump after first boss
@@ -2394,21 +2474,31 @@ speed *= min(2.0, 1.0 + (wave - 1) * 0.05)  // +5% speed (cap 2x)
 - Start: 2.0s, decrease by 0.1s per wave
 - Minimum: 0.5s
 
-**No speed control, no difficulty modes, linear scaling only.**
+**Wave Structure:**
+- 10 waves per stage
+- 5 enemies per wave
+- 1 boss per stage (4 stages total)
+- No speed control, no difficulty modes, linear scaling only
 
-### GAPS
+### CRITICAL GAPS
 
 | Feature | GoPit | BallxPit | Priority |
 |---------|-------|----------|----------|
-| Speed control | No | 3 speeds | P2 |
-| Difficulty modes | No | 4+ modes | P3 |
+| **Speed control** | None | 3 speeds (toggleable) | **P1** |
+| **Wave gates** | None | Evolution requirements | P2 |
+| Difficulty modes | None | 4+ modes (Fast/Fast+) | P2 |
+| Post-boss spike | None | ~3x HP | P2 |
+| Run duration control | Fixed | Dynamic (player controls) | P2 |
 | Scaling type | Linear | Exponential | P3 |
-| Post-boss spike | No | ~3x HP | P2 |
+| NG+ mode | None | Full second difficulty tier | P3 |
 
 ### Recommendations
 
-1. [ ] **Add speed control** - 3 speeds with UI toggle
+1. [ ] **Add speed control (P1)** - 3 speeds with R key toggle, affects all game pacing
 2. [ ] **Add post-boss HP spike** - Difficulty phases
+3. [ ] **Add wave evolution gates** - Require minimum evolutions at Wave 10, 20, etc.
+4. [ ] **Target 10-15 min runs** - BallxPit's sweet spot for engagement
+5. [ ] **Consider NG+ mode** - For post-game challenge
 
 ---
 
@@ -6065,4 +6155,81 @@ Menu-based upgrades only:
 ### Related Beads
 
 - **GoPit-kohr**: City builder meta-progression (P3)
+
+---
+
+## Appendix BP: Achievement System and Game Structure (NEW)
+
+Research sources:
+- [Deltia's Gaming - All Achievements](https://deltiasgaming.com/ball-x-pit-achievements/)
+
+### BallxPit: 63 Total Achievements
+
+The achievement list reveals the full game structure.
+
+### Stage Achievements (16)
+
+**8 First Completions + 8 Conquests (10 chars each):**
+| Stage | First Complete | Conquest |
+|-------|---------------|----------|
+| BONExYARD | ✓ | 10 characters |
+| SNOWYxSHORES | ✓ | 10 characters |
+| LIMINALxDESERT | ✓ | 10 characters |
+| GORYxGRASSLANDS | ✓ | 10 characters |
+| FUNGALxFOREST | ✓ | 10 characters |
+| SMOLDERINGxDEPTHS | ✓ | 10 characters |
+| HEAVENLYxGATES | ✓ | 10 characters |
+| VASTxVOID | ✓ | 10 characters |
+
+### Character Achievements (16)
+
+Complete all stages with each character:
+- True Warrior, Repentance, Itch Scratched, Cogitate
+- Master General, All Spent, Embedder, Radicalized
+- Golden Years, Long Shadow, Unpacked, Gravity's Rainbow
+- Brick Breaker, Herculean, Masochist, Entertainer
+
+### Resource Achievements (8)
+
+**4 Resource Types:**
+| Resource | Total | Single Harvest |
+|----------|-------|----------------|
+| Gold | 5000 | 1000 |
+| Wheat | 1000 | 100 |
+| Wood | 1000 | 100 |
+| Stone | 1000 | 100 |
+
+### Building Achievements (10)
+
+- Trophy, Monument, Worker's Guild, Evolution Chamber
+- Relic Collector, Bag Maker, Carpenter
+- Structural Power (+5 stat bonus)
+- Land Grabber (5 expansions)
+- Neighborhood (15 housing)
+
+### Evolution Achievements (5)
+
+Nuclear Bomb, Nosferatu, Satan, Soul Reaver, Deadeye's Cross
+
+### Milestones
+
+- **Legion Slayer**: 100,000 kills
+- **S Rank**: Max stat scaling
+- **Scholar**: Complete Encyclopedia
+- **Ballbylon Has Risen**: Complete game
+
+### GoPit: No Achievements
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Achievements** | 0 | 63 | **CRITICAL** |
+| **Stage tracking** | None | 16 | **MISSING** |
+| **Character tracking** | None | 16 | **MISSING** |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add achievement system | Track milestones |
+| **P3** | Track char×stage matrix | Completion tracking |
 
