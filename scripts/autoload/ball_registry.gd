@@ -12,7 +12,10 @@ enum BallType {
 	POISON,
 	BLEED,
 	LIGHTNING,
-	IRON
+	IRON,
+	RADIATION,
+	DISEASE,
+	FROSTBURN
 }
 
 const BALL_DATA := {
@@ -71,6 +74,30 @@ const BALL_DATA := {
 		"base_speed": 600.0,
 		"color": Color(0.7, 0.7, 0.75),  # Metallic gray
 		"effect": "knockback"
+	},
+	BallType.RADIATION: {
+		"name": "Radiation",
+		"description": "Amplifies all damage",
+		"base_damage": 6,
+		"base_speed": 850.0,
+		"color": Color(0.5, 1.0, 0.2),  # Toxic yellow-green
+		"effect": "radiation"
+	},
+	BallType.DISEASE: {
+		"name": "Disease",
+		"description": "Stacking DoT",
+		"base_damage": 7,
+		"base_speed": 800.0,
+		"color": Color(0.6, 0.3, 0.8),  # Sickly purple
+		"effect": "disease"
+	},
+	BallType.FROSTBURN: {
+		"name": "Frostburn",
+		"description": "Slow + damage amp",
+		"base_damage": 8,
+		"base_speed": 800.0,
+		"color": Color(0.3, 0.6, 1.0),  # Pale frost blue
+		"effect": "frostburn"
 	}
 }
 

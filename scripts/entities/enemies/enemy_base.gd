@@ -141,11 +141,22 @@ func _draw() -> void:
 
 
 func take_damage(amount: int) -> void:
-	hp -= amount
-	took_damage.emit(self, amount)
-	GameManager.record_damage_dealt(amount)
+	# Apply damage amplification from status effects (Radiation, Frostburn)
+	var amplified_amount := _apply_damage_amplification(amount)
+	hp -= amplified_amount
+	took_damage.emit(self, amplified_amount)
+	GameManager.record_damage_dealt(amplified_amount)
 	_flash_hit()
-	_spawn_hit_effects(amount)
+	_spawn_hit_effects(amplified_amount)
+
+
+func _apply_damage_amplification(base_damage: int) -> int:
+	"""Apply damage amplification from active status effects"""
+	var amp_mult: float = 1.0
+	for effect_type in _active_effects:
+		var effect: StatusEffect = _active_effects[effect_type]
+		amp_mult += effect.get_damage_amplification()
+	return int(base_damage * amp_mult)
 
 
 func _flash_hit() -> void:
@@ -455,7 +466,10 @@ func _get_dominant_effect_color() -> Color:
 	var colors := {
 		StatusEffect.Type.BURN: Color(1.0, 0.5, 0.2),    # Orange
 		StatusEffect.Type.POISON: Color(0.4, 0.9, 0.2),  # Green
-		StatusEffect.Type.BLEED: Color(0.9, 0.2, 0.3)    # Red
+		StatusEffect.Type.BLEED: Color(0.9, 0.2, 0.3),   # Red
+		StatusEffect.Type.RADIATION: Color(0.5, 1.0, 0.2),  # Toxic yellow-green
+		StatusEffect.Type.DISEASE: Color(0.6, 0.3, 0.8),    # Sickly purple
+		StatusEffect.Type.FROSTBURN: Color(0.3, 0.6, 1.0)   # Pale frost blue
 	}
 
 	# Return color of first damaging effect found

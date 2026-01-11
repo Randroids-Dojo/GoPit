@@ -8,7 +8,7 @@ signal hit_gem(gem: Node2D)
 signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -77,6 +77,12 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.9, 0.2, 0.3)  # Dark red
 		BallType.IRON:
 			ball_color = Color(0.7, 0.7, 0.75)  # Metallic gray
+		BallType.RADIATION:
+			ball_color = Color(0.5, 1.0, 0.2)  # Toxic yellow-green
+		BallType.DISEASE:
+			ball_color = Color(0.6, 0.3, 0.8)  # Sickly purple
+		BallType.FROSTBURN:
+			ball_color = Color(0.3, 0.6, 1.0)  # Pale frost blue
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -409,6 +415,39 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 				enemy.modulate = Color(0.8, 0.8, 0.9)
 				var tween := enemy.create_tween()
 				tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
+
+		BallType.RADIATION:
+			# Radiation: Apply radiation status (damage amplification)
+			if enemy.has_method("apply_status_effect"):
+				var radiation = StatusEffect.new(StatusEffect.Type.RADIATION)
+				enemy.apply_status_effect(radiation)
+			else:
+				# Fallback visual tint
+				enemy.modulate = Color(0.5, 1.0, 0.2)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 1.0)
+
+		BallType.DISEASE:
+			# Disease: Apply disease status (stacking DoT)
+			if enemy.has_method("apply_status_effect"):
+				var disease = StatusEffect.new(StatusEffect.Type.DISEASE)
+				enemy.apply_status_effect(disease)
+			else:
+				# Fallback visual tint
+				enemy.modulate = Color(0.6, 0.3, 0.8)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 1.5)
+
+		BallType.FROSTBURN:
+			# Frostburn: Apply frostburn status (slow + damage amp)
+			if enemy.has_method("apply_status_effect"):
+				var frostburn = StatusEffect.new(StatusEffect.Type.FROSTBURN)
+				enemy.apply_status_effect(frostburn)
+			else:
+				# Fallback visual tint
+				enemy.modulate = Color(0.3, 0.6, 1.0)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 1.0)
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
@@ -838,3 +877,15 @@ func _apply_fused_effects(enemy: Node2D, base_damage: int) -> void:
 				if enemy is EnemyBase:
 					var knockback_dir := (enemy.global_position - global_position).normalized()
 					enemy.global_position += knockback_dir * 50.0
+			"radiation":
+				if enemy.has_method("apply_status_effect"):
+					var radiation = StatusEffect.new(StatusEffect.Type.RADIATION)
+					enemy.apply_status_effect(radiation)
+			"disease":
+				if enemy.has_method("apply_status_effect"):
+					var disease = StatusEffect.new(StatusEffect.Type.DISEASE)
+					enemy.apply_status_effect(disease)
+			"frostburn":
+				if enemy.has_method("apply_status_effect"):
+					var frostburn = StatusEffect.new(StatusEffect.Type.FROSTBURN)
+					enemy.apply_status_effect(frostburn)
