@@ -608,12 +608,25 @@ Based on guides and character analysis:
 
 These are fundamental mechanics differences that should be addressed first:
 
-| Gap | Current GoPit | BallxPit | Recommendation |
-|-----|---------------|----------|----------------|
-| **Fission in Level-Up** | Drop-only | Level-up option | Add Fission card type |
-| **Autofire Default** | Toggle (off by default) | Primary mode | Make autofire default ON |
-| **Ball Catching** | Not implemented | Manually catch for DPS | Consider adding |
-| **Character Firing** | All same direction | Unique per character | Add 1-2 unique characters |
+| Gap | Current GoPit | BallxPit | Recommendation | Bead |
+|-----|---------------|----------|----------------|------|
+| **Bounce Damage Scaling** | No scaling | +5% per bounce | Add damage per bounce | GoPit-gdj |
+| **Fission in Level-Up** | Drop-only | Level-up option | Add Fission card type | GoPit-hfi |
+| **Autofire Default** | Toggle (off default) | Primary mode | Make autofire default ON | GoPit-7n5 |
+| **Ball Catching** | Not implemented | Instant re-fire | Consider adding | - |
+| **Character Firing** | All same direction | Unique per character | Add 1-2 unique characters | GoPit-8a9 |
+
+### NEW: Bounce Damage is Core Mechanic
+
+**This is the biggest alignment gap discovered.**
+
+In BallxPit, +5% damage per bounce fundamentally changes gameplay:
+- Ricochet becomes a strategy, not a limitation
+- Aiming at walls is often better than aiming at enemies
+- The Repentant character specializes in bounce damage
+- Narrow areas become tactical opportunities
+
+In GoPit, bounces are a limitation (max 10) not an opportunity. This inverts the entire gameplay incentive.
 
 ### Content Expansion (Priority 2)
 
@@ -641,12 +654,12 @@ Based on online guides, we now understand:
 ### Research Still Needed
 
 1. [ ] **Play BallxPit directly** - First-hand experience
-2. [ ] **Document all evolutions** - Build complete recipe list
+2. [x] **Document all evolutions** - See Appendix B below
 3. [ ] **Map all characters** - Document unique mechanics
 
 ---
 
-## Appendix: File Reference
+## Appendix A: File Reference
 
 ### Core Game Files
 - `scripts/game/game_controller.gd` - Main game orchestration
@@ -668,6 +681,318 @@ Based on online guides, we now understand:
 ### UI Files
 - `scripts/ui/level_up_overlay.gd` - Level-up card selection
 - `scripts/ui/character_select.gd` - Character selection
+
+---
+
+## Appendix B: BallxPit Evolution Recipes
+
+Research sources:
+- [GAM3S.GG Evolution Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-evolution-guide/)
+- [Dexerto Evolution List](https://www.dexerto.com/wikis/ball-x-pit/all-evolution-recipes-combinations/)
+- [ballxpit.net Evolutions](https://ballxpit.net/evolutions)
+
+### Ball Types in BallxPit (not all in GoPit)
+
+**Base Ball Types**:
+- Burn, Freeze, Poison, Bleed (we have these)
+- Iron, Lightning (we have these)
+- Dark, Light, Wind, Earthquake, Ghost (we DON'T have)
+- Charm, Vampire, Cell, Brood Mother, Egg Sack, Laser (we DON'T have)
+
+### Starter Evolution Recipes (Tier S/A)
+
+| Evolution | Recipe | Effect | GoPit Has? |
+|-----------|--------|--------|------------|
+| **Bomb** | Burn + Iron | Explosive AoE damage | YES |
+| **Sun** | Burn + Light | Blinding radiance | No (no Light) |
+| **Magma** | Burn + Earthquake | Lava pools | Partial (Burn + Poison) |
+| **Blizzard** | Lightning + Freeze | AoE freeze + chain | YES |
+| **Frozen Flame** | Burn + Freeze | Contradictory power | YES (Void) |
+| **Inferno** | Burn + Wind | Spreading fire | No (no Wind) |
+
+### Bleed Evolution Recipes
+
+| Evolution | Recipe | Effect | GoPit Has? |
+|-----------|--------|--------|------------|
+| **Vampire Lord** | Bleed + Vampire | Ultimate life drain | No (no Vampire) |
+| **Hemorrhage** | Bleed + Iron | Armor-piercing bleed | No |
+| **Leech** | Bleed + Brood Mother | Life-stealing | No (no Brood Mother) |
+| **Berserk** | Bleed + Charm | Massive damage boost | No (no Charm) |
+| **Sacrifice** | Bleed + Dark | Curse activation | No (no Dark) |
+
+### Lightning Evolution Recipes
+
+| Evolution | Recipe | Effect | GoPit Has? |
+|-----------|--------|--------|------------|
+| **Lightning Rod** | Lightning + Iron | Concentrated damage | No |
+| **Flash** | Lightning + Light | Blinding speed | No (no Light) |
+| **Storm** | Lightning + Wind | Chaotic weather | No (no Wind) |
+
+### Advanced Multi-Tier Evolutions
+
+These require evolving evolutions together:
+
+| Evolution | Recipe | Requirement | GoPit Has? |
+|-----------|--------|-------------|------------|
+| **Nuclear Bomb** | Bomb + Poison | Achievement unlock | No |
+| **Black Hole** | Sun + Dark | Sun evolution first | No |
+| **Satan** | Incubus + Succubus | Both evolutions | No |
+| **Nosferatu** | Vampire Lord + Mosquito King + Spider Queen | Three evolutions | No |
+
+### GoPit Current Evolutions vs BallxPit
+
+**GoPit Has (5 total):**
+| GoPit Name | Recipe | BallxPit Equivalent |
+|------------|--------|---------------------|
+| Bomb | Burn + Iron | Bomb (exact match) |
+| Blizzard | Freeze + Lightning | Blizzard (exact match) |
+| Virus | Poison + Bleed | Similar to Leech/Virus |
+| Magma | Burn + Poison | Different (BxP: Burn + Earthquake) |
+| Void | Burn + Freeze | Similar to Frozen Flame |
+
+**Missing Ball Types for More Evolutions:**
+1. **Dark** - Needed for: Phantom, Assassin, Flicker, Sacrifice, Black Hole
+2. **Light** - Needed for: Sun, Flash, Lovestruck
+3. **Wind** - Needed for: Inferno, Storm, Sandstorm, Noxious
+4. **Earthquake** - Needed for: Magma (proper), Glacier, Sandstorm, Swamp
+5. **Ghost** - Needed for: Phantom, Wraith, Soul Sucker
+6. **Vampire** - Needed for: Vampire Lord, Soul Sucker, Succubus, Mosquito King
+7. **Brood Mother** - Needed for: Leech, Maggot, Mosquito King, Spider Queen
+8. **Charm** - Needed for: Berserk, Incubus, Lovestruck, Succubus
+9. **Cell** - Needed for: Maggot, Overgrowth, Radiation Beam, Virus
+10. **Laser** - Needed for: Radiation Beam
+
+### Evolution Expansion Priority
+
+To add more evolutions, we should prioritize ball types that unlock multiple recipes:
+
+| Ball Type | Evolutions Unlocked | Priority |
+|-----------|---------------------|----------|
+| Dark | 5+ (Phantom, Assassin, Sacrifice, etc.) | High |
+| Vampire | 4+ (Vampire Lord, Nosferatu chain) | High |
+| Light | 3+ (Sun, Flash, Lovestruck) | Medium |
+| Wind | 4+ (Inferno, Storm, etc.) | Medium |
+| Ghost | 3+ (Phantom, Wraith, Soul Sucker) | Medium |
+| Earthquake | 4+ (Magma, Glacier, etc.) | Medium |
+| Brood Mother | 3+ (Baby ball spawning theme) | Low |
+| Charm | 3+ (Crowd control theme) | Low |
+
+---
+
+## Appendix C: Baby Ball Mechanics Comparison
+
+Research sources:
+- [Ball x Pit Brood Mother Guide](https://gamerblurb.com/articles/ball-x-pit-brood-mother-guide)
+- [Ball x Pit Wiki - Balls](https://ballpit.fandom.com/wiki/Balls)
+
+### BallxPit Baby Ball System
+
+**Two Types of Baby Balls:**
+1. **Personal Baby Balls** (auto-generated from Leadership)
+   - Number capped by Leadership stat
+   - Base 4 Leadership = 11-17 damage baby balls
+   - Act like "auto attacks"
+
+2. **Brood Mother Baby Balls** (from ball type)
+   - Spawned on impact
+   - Inherit traits of fused ball
+   - Multiply exponentially with ball count
+
+**Key Stats Affecting Baby Balls:**
+| Stat | Effect |
+|------|--------|
+| Leadership | Baby ball count + damage |
+| Ball Count | Multiplies spawn rates |
+| Baby Ball Damage | Direct damage per ball |
+
+**Brood Mother Evolutions:**
+| Evolution | Recipe | Effect |
+|-----------|--------|--------|
+| Spider Queen | Brood Mother + Egg Sac | 25% chance spawn egg sac on hit |
+| Mosquito King | Brood Mother + Vampire | Flying spawns that drain HP |
+| Maggot | Brood Mother + Cell | Increased spawn rate + poison |
+
+### GoPit Baby Ball System
+
+From `baby_ball_spawner.gd`:
+- **Base spawn interval**: 2.0 seconds
+- **Damage multiplier**: 0.5x of main ball damage
+- **Scale**: 0.6x of main ball
+- **Targeting**: Aims at nearest enemy
+- **Silent**: No fire sound (reduces audio spam)
+
+**Leadership Scaling:**
+```
+rate = base_interval / ((1.0 + leadership_bonus * char_mult) * speed_mult)
+```
+- 1.0 leadership = 2x spawn rate (1.0s interval)
+- Capped at minimum 0.3s interval
+
+**Character Bonuses:**
+- Squad Leader passive: +30% spawn rate
+- Extra starting baby balls: +2 (from Squad Leader)
+
+### Comparison
+
+| Feature | GoPit | BallxPit | Match |
+|---------|-------|----------|-------|
+| Leadership stat | Yes | Yes | Yes |
+| Baby ball count cap | No (unlimited) | Yes | Gap |
+| Baby ball damage scaling | 50% fixed | Scales with Leadership | Partial |
+| Brood Mother ball type | No | Yes | Gap |
+| Baby balls from ball hits | No | Yes (Brood Mother) | Gap |
+| Targeting | Nearest enemy | Variable | Similar |
+
+### Gaps to Address
+
+1. **Baby Ball Count Cap** - BallxPit caps active baby balls based on Leadership
+2. **Brood Mother Ball Type** - Add a ball type that spawns babies on hit
+3. **Leadership Damage Scaling** - Baby ball damage should scale with Leadership
+4. **Ball Inheritance** - Brood Mother babies should inherit effects
+
+### Recommendations
+
+1. [ ] **Add baby ball count limit** - Cap based on Leadership stat
+2. [ ] **Add Brood Mother ball type** - Spawns babies on enemy hit
+3. [ ] **Scale baby damage with Leadership** - Not just spawn rate
+4. [ ] **Add egg sac drop mechanic** - Like Spider Queen evolution
+
+---
+
+## Appendix D: Ball Bounce and Catching Mechanics
+
+Research sources:
+- [Steam Guide - Ball x Pit Beginner Tips](https://steamcommunity.com/sharedfiles/filedetails/?id=3635216044)
+- [The Repentant Build Guide](https://gamepadsquire.com/blog/ball-x-pit/ball-x-pit-ultimate-guide-repentant-evolutions-strategies/)
+- [Ball x Pit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+
+### BallxPit Bounce Mechanics
+
+**Bounce Damage Scaling:**
+- ALL balls gain +5% damage per bounce
+- This creates exponential damage for ricochet shots
+- The Repentant character specializes in this mechanic
+
+**Ball Catching:**
+- Players can manually catch balls
+- Catching = instant re-fire (saves 2-3 seconds)
+- Shieldbearer: +100% damage to caught balls
+- Active play rewards: more catches = more DPS
+
+**Ball Return:**
+- Balls return to player after hitting back wall
+- Return path damages all enemies passed through
+- Strategic goal: get balls behind enemies for bounce damage
+
+**Ricochet Strategy:**
+- Aim at walls, not directly at enemies
+- Narrow gaps cause rapid bouncing = more damage
+- Closed spaces = more bounces = more hits
+- "Bounce channels" trap enemies in high-damage zones
+
+### GoPit Bounce Mechanics
+
+From `ball.gd`:
+- **Max bounces**: 10 (default), increased via Ricochet upgrade
+- **Bounce behavior**: `direction.bounce(collision.get_normal())`
+- **Pierce count**: Reduces per enemy hit
+- **No damage scaling per bounce**
+
+**Current Ricochet Upgrade:**
+- Level-up option: +5 wall bounces per stack
+- Max stacks: 4 (total +20 bounces)
+- No damage increase per bounce
+
+**Ball Catching:** NOT IMPLEMENTED
+
+### Critical Gaps
+
+| Feature | GoPit | BallxPit | Impact |
+|---------|-------|----------|--------|
+| **Bounce damage scaling** | No | +5% per bounce | **HIGH** |
+| Ball catching | No | Instant re-fire | Medium |
+| Ball return path damage | No | Damages on return | Medium |
+| Ricochet strategy | Bounces are passive | Core mechanic | HIGH |
+
+### Why Bounce Damage Matters
+
+BallxPit's +5% damage per bounce fundamentally changes gameplay:
+
+1. **Positioning becomes strategic** - Where you aim matters more
+2. **Ricochet builds viable** - The Repentant character exists for this
+3. **Narrow areas are valuable** - Tactical use of level geometry
+4. **Player skill expression** - Better aim = more damage
+
+Without bounce damage scaling, GoPit treats bounces as a limitation (max 10), not an opportunity.
+
+### Recommendations
+
+**Priority 1 (Core Mechanic):**
+1. [ ] **Add +5% damage per bounce** - Critical alignment gap
+2. [ ] **Remove max bounce limit or increase dramatically** - Bounces should be rewarded
+
+**Priority 2 (Enhanced):**
+3. [ ] **Add ball catching mechanic** - Tap to catch and re-fire
+4. [ ] **Add return path damage** - Balls damage enemies on way back
+
+**Priority 3 (Character):**
+5. [ ] **Add Repentant-style character** - Specializes in ricochet damage
+6. [ ] **Add Shieldbearer catch bonus** - +100% damage to caught balls
+
+---
+
+## Appendix E: Difficulty and Pacing Analysis
+
+### Enemy Spawn Rates (GoPit Current)
+
+From `enemy_spawner.gd`:
+- **Base interval**: 2.0 seconds
+- **Variance**: ±0.5 seconds
+- **Scaling**: -0.1s per wave (minimum 0.5s)
+- **Burst chance**: 10% base, increases as interval decreases
+
+| Wave | Spawn Interval | Burst Chance |
+|------|----------------|--------------|
+| 1 | 2.0s | 10% |
+| 5 | 1.6s | 14% |
+| 10 | 1.1s | 19% |
+| 15 | 0.6s | 24% |
+| 16+ | 0.5s (cap) | 25%+ |
+
+### Enemies Per Wave
+
+From `game_controller.gd`:
+- **Enemies to advance wave**: 5 (constant)
+
+### Wave Scaling (enemy_base.gd)
+
+| Wave | HP Multiplier | Speed Multiplier | XP Multiplier |
+|------|---------------|------------------|---------------|
+| 1 | 1.0x | 1.0x | 1.0x |
+| 5 | 1.4x | 1.2x | 1.2x |
+| 10 | 1.9x | 1.45x | 1.45x |
+| 15 | 2.4x | 1.7x | 1.7x |
+| 20 | 2.9x | 1.95x | 1.95x |
+| 21+ | 3.0x+ | 2.0x (cap) | 2.0x+ |
+
+### BallxPit Pacing (from guides)
+
+Recommended focus split:
+- **Waves 1-5**: 80% dodging, 20% aiming (survival focused)
+- **Waves 10+**: 60% dodging, 40% aiming (DPS focused)
+
+This suggests BallxPit early waves should be relatively easy, with gradual difficulty increase.
+
+### Potential Pacing Issues
+
+**GoPit may be too hard early:**
+- 2 second spawn with 5 kills per wave = 10s minimum per wave
+- Combined with learning curve, may be punishing
+
+**Recommendations:**
+1. [ ] **Slower early spawn rate** - 3s for waves 1-5
+2. [ ] **Fewer kills for early waves** - 3 enemies for wave 1-3
+3. [ ] **Gentler scaling curve** - HP +5% instead of +10%
 
 ---
 
