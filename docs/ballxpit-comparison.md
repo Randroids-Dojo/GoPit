@@ -7307,11 +7307,97 @@ var magnetism_range := GameManager.gem_magnetism_range
 
 ---
 
+## Appendix CE: Shooting Mechanics Comparison
+
+Research sources:
+- [Autofire Guide](https://deltiasgaming.com/ball-x-pit-autofire-guide/)
+- [What does fire rate do?](https://steamcommunity.com/app/2062430/discussions/0/624436409752895957/)
+- [Should You Use Autofire?](https://screenrant.com/ball-x-pit-should-you-use-autofire/)
+
+### BallxPit Shooting System
+
+**Core Mechanics:**
+- Manual fire or autofire toggle
+- **Ball queue system** - visual indicator of queued balls
+- **Catch returned balls** to reload faster
+- Shooting **slows movement speed**
+- Fire rate affects evolution triggers (2x rate = 2x procs)
+
+**Autofire Behavior:**
+> "Autofire launches balls as soon as possible, in the order they're gathered, whether by catching them or having them return automatically."
+
+**Fire Rate Impact:**
+- Every evolution triggers on hit
+- 2x fire rate = 2x more hits = 2x more evolution triggers
+- Bomb explosions, DoT applications proc more frequently
+- "Double attack speed equals double damage output"
+
+### GoPit Shooting System
+
+**Implementation (fire_button.gd):**
+```gdscript
+@export var cooldown_duration: float = 0.5  # 0.5s between shots
+var autofire_enabled: bool = false
+
+func _try_fire() -> void:
+    cooldown_timer = cooldown_duration / GameManager.character_speed_mult
+    fired.emit()
+```
+
+**Features:**
+- ✅ Autofire toggle
+- ✅ Cooldown visualization (arc fill)
+- ✅ Speed multiplier affects fire rate
+- ✅ Blocked feedback (shake, flash)
+- ❌ No ball queue system
+- ❌ No movement penalty
+- ❌ No ball catching to reload
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Manual fire | ✅ | ✅ |
+| Autofire toggle | ✅ | ✅ |
+| Cooldown visual | ✅ Arc fill | ✅ Queue display |
+| Ball queue | ❌ None | ✅ Visual queue |
+| Movement penalty | ❌ None | ✅ Slows movement |
+| Ball catching | ❌ Balls despawn | ✅ Catch to reload |
+| Fire rate → procs | ⚠️ Basic | ✅ Full system |
+
+### The Queue System Gap
+
+**BallxPit queue UI shows:**
+- Current special balls ready
+- Baby balls available
+- Order of fire
+- Visual feedback on catches
+
+**GoPit has no queue** - fires instantly, one type at a time.
+
+### Movement Penalty Gap
+
+**BallxPit:** Shooting slows movement, creating tactical tradeoff.
+**GoPit:** No penalty, pure shoot-and-move.
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P0** | Ball slot system first | Prerequisites for queue |
+| **P1** | Add ball queue UI | Show available balls |
+| **P2** | Add movement penalty | Slow while shooting |
+| **P2** | Fire rate → proc system | Effects trigger on hit frequency |
+
+**GoPit's autofire is solid - needs ball queue and movement tradeoffs.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **88 appendices** (A through CD)
+- **89 appendices** (A through CE)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
