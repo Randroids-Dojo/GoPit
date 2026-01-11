@@ -59,13 +59,18 @@ func _update_spawn_rate() -> void:
 
 
 func _spawn_baby_ball() -> void:
-	if not _player or not ball_scene:
+	if not _player:
 		return
 
 	if GameManager.current_state != GameManager.GameState.PLAYING:
 		return
 
-	var ball := ball_scene.instantiate()
+	# Get ball from pool if available, otherwise instantiate
+	var ball: Node
+	if PoolManager:
+		ball = PoolManager.get_ball()
+	else:
+		ball = ball_scene.instantiate()
 	ball.position = _player.global_position
 	ball.scale = Vector2(baby_ball_scale, baby_ball_scale)
 	ball.is_baby_ball = true

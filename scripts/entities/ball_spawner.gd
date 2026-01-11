@@ -77,7 +77,12 @@ func _enforce_ball_limit(balls_to_add: int) -> void:
 
 
 func _spawn_ball(direction: Vector2) -> void:
-	var ball := ball_scene.instantiate()
+	# Get ball from pool if available, otherwise instantiate
+	var ball: Node
+	if PoolManager:
+		ball = PoolManager.get_ball()
+	else:
+		ball = ball_scene.instantiate()
 	ball.position = global_position + direction * spawn_offset
 	ball.set_direction(direction)
 

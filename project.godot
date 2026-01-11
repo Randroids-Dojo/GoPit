@@ -25,6 +25,7 @@ MetaManager="*res://scripts/autoload/meta_manager.gd"
 BallRegistry="*res://scripts/autoload/ball_registry.gd"
 StageManager="*res://scripts/autoload/stage_manager.gd"
 FusionRegistry="*res://scripts/autoload/fusion_registry.gd"
+PoolManager="*res://scripts/autoload/pool_manager.gd"
 
 [display]
 

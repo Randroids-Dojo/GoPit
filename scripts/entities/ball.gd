@@ -270,7 +270,58 @@ func set_direction(dir: Vector2) -> void:
 
 func despawn() -> void:
 	despawned.emit()
-	queue_free()
+	# Return to pool if pooled, otherwise free
+	if has_meta("pooled") and PoolManager:
+		reset()
+		PoolManager.release_ball(self)
+	else:
+		queue_free()
+
+
+func reset() -> void:
+	"""Reset ball state for object pool reuse"""
+	# Reset position and physics
+	direction = Vector2.UP
+	velocity = Vector2.ZERO
+	_bounce_count = 0
+
+	# Reset stats to defaults
+	speed = 800.0
+	damage = 10
+	pierce_count = 0
+	max_bounces = 10
+	crit_chance = 0.0
+
+	# Reset type/level
+	ball_type = BallType.NORMAL
+	ball_level = 1
+	registry_type = -1
+
+	# Clear trail
+	_trail_points.clear()
+	if _particle_trail:
+		_particle_trail.queue_free()
+		_particle_trail = null
+
+	# Reset flags
+	is_baby_ball = false
+	is_evolved = false
+	evolved_type = 0
+	is_fused = false
+	fused_id = ""
+	fused_effects.clear()
+
+	# Reset visual state
+	modulate = Color.WHITE
+	scale = Vector2.ONE
+	ball_color = Color(0.3, 0.7, 1.0)
+
+	# Reset collision shape to default radius
+	var collision := get_node_or_null("CollisionShape2D")
+	if collision and collision.shape is CircleShape2D:
+		collision.shape.radius = radius
+
+	queue_redraw()
 
 
 func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
