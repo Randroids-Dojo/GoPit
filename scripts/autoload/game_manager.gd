@@ -26,6 +26,7 @@ signal ultimate_used
 signal ultimate_charge_changed(current: float, max_val: float)
 signal invincibility_changed(is_invincible: bool)
 signal shooting_changed(is_shooting: bool)
+signal speed_tier_changed(tier: int, multiplier: float, loot_bonus: float)
 
 # Combo system
 var combo_count: int = 0
@@ -40,6 +41,17 @@ var invincibility_timer: float = 0.0
 # Shooting slows movement (creates trade-off: autofire = damage but slow, manual = full speed)
 const SHOOTING_SPEED_MULT: float = 0.5  # 50% speed while shooting
 var is_shooting: bool = false
+
+# Game speed toggle system (like BallxPit)
+# Press R to cycle: Normal -> Fast -> Fast+2 -> Fast+3 -> Normal
+enum SpeedTier { NORMAL, FAST, FAST_2, FAST_3 }
+const SPEED_TIER_DATA := {
+	SpeedTier.NORMAL: {"speed": 1.0, "loot": 1.0, "name": "Normal"},
+	SpeedTier.FAST: {"speed": 1.5, "loot": 1.25, "name": "Fast"},
+	SpeedTier.FAST_2: {"speed": 2.5, "loot": 1.5, "name": "Fast+2"},
+	SpeedTier.FAST_3: {"speed": 4.0, "loot": 2.0, "name": "Fast+3"},
+}
+var current_speed_tier: SpeedTier = SpeedTier.NORMAL
 
 var current_state: GameState = GameState.MENU:
 	set(value):
@@ -273,7 +285,7 @@ func return_to_menu() -> void:
 
 
 func add_xp(amount: int) -> void:
-	var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier())
+	var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier() * get_loot_multiplier())
 	current_xp += final_xp
 	if current_xp >= xp_to_next_level:
 		trigger_level_up()
@@ -442,6 +454,43 @@ func get_movement_speed_mult() -> float:
 	return base
 
 
+# === Game speed toggle system ===
+
+func toggle_speed() -> void:
+	## Cycle to next speed tier (R key)
+	var next_tier := (current_speed_tier + 1) % 4
+	set_speed_tier(next_tier)
+
+
+func set_speed_tier(tier: int) -> void:
+	## Set specific speed tier (0-3)
+	tier = clampi(tier, 0, 3)
+	if current_speed_tier == tier:
+		return
+
+	current_speed_tier = tier as SpeedTier
+	var data: Dictionary = SPEED_TIER_DATA[current_speed_tier]
+	Engine.time_scale = data["speed"]
+	speed_tier_changed.emit(current_speed_tier, data["speed"], data["loot"])
+
+
+func get_speed_tier() -> int:
+	return current_speed_tier
+
+
+func get_speed_tier_name() -> String:
+	return SPEED_TIER_DATA[current_speed_tier]["name"]
+
+
+func get_speed_multiplier() -> float:
+	return SPEED_TIER_DATA[current_speed_tier]["speed"]
+
+
+func get_loot_multiplier() -> float:
+	## Returns loot multiplier based on speed tier (higher speed = more loot)
+	return SPEED_TIER_DATA[current_speed_tier]["loot"]
+
+
 func advance_wave() -> void:
 	current_wave += 1
 	wave_changed.emit(current_wave)
@@ -457,6 +506,9 @@ func _reset_stats() -> void:
 	leadership = 0.0
 	is_endless_mode = false
 	ultimate_charge = 0.0
+	# Reset speed tier
+	current_speed_tier = SpeedTier.NORMAL
+	Engine.time_scale = 1.0
 	# Reset session stats
 	stats["enemies_killed"] = 0
 	stats["balls_fired"] = 0

@@ -24,6 +24,7 @@
 [ext_resource type="Script" path="res://scripts/entities/baby_ball_spawner.gd" id="19_baby_spawner"]
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 [ext_resource type="Script" path="res://scripts/ui/ultimate_button.gd" id="22_ultimate"]
+[ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -141,6 +142,12 @@ vertical_alignment = 1
 layout_mode = 2
 text = "Wave 1"
 horizontal_alignment = 2
+
+[node name="SpeedIndicator" type="Label" parent="UI/HUD/TopBar"]
+layout_mode = 2
+text = "1x"
+horizontal_alignment = 1
+script = ExtResource("speed_indicator")
 
 [node name="MuteButton" type="Button" parent="UI/HUD/TopBar"]
 custom_minimum_size = Vector2(60, 60)
