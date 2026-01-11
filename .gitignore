@@ -35,3 +35,7 @@ __pycache__/
 
 # Claude Code user-specific settings (project settings.json is tracked)
 .claude/settings.local.json
+.claude/*.local.md
+
+# Node.js (if accidentally created)
+node_modules/
