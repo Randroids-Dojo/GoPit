@@ -13863,3 +13863,111 @@ Type.BLEED:
 Sources:
 - [Ball x Pit Advanced Mechanics Guide](https://ballxpit.org/guides/advanced-mechanics/)
 - [Steam Discussion: How Stats Work](https://steamcommunity.com/app/2062430/discussions/0/687489618510307449/)
+
+---
+
+## Appendix FA: Difficulty Scaling & Wave Progression Deep Dive
+
+### BallxPit Difficulty System
+
+**Speed Modes (4 levels):**
+
+| Mode | Speed | Enemy Scaling | Loot Bonus | Time/Run |
+|------|-------|---------------|------------|----------|
+| Normal | 1.0x | Baseline | Standard | 15-20 min |
+| Fast | 1.5x | 1.5x HP/damage | +25% drops | 10-13 min |
+| Fast+2 | 2.5x | 2.5x HP/damage | +50% drops | 8-10 min |
+| Fast+3 | 4.0x | 4.0x HP/damage | +100% drops | 6-8 min |
+
+**Toggle:** R1 (PS5) / RB (Xbox) / R (PC)
+
+**Benefits of Fast Mode:**
+- +25-100% XP rates
+- Reduce character grind by 30-50%
+- 4-6 runs/hour vs 3 runs/hour (normal)
+
+**New Game Plus (NG+):**
+- All enemies: +50% HP, +50% damage
+- Exponential scaling in late-game
+- 10 damage → 15 damage
+- Boss fights: 2-3 min → 4-5 min
+
+**Evolution Multipliers:**
+- Bomb: 2.0x
+- Nuclear Bomb: 3.0x
+- Satan: 4.0x
+
+### GoPit Difficulty System
+
+**Current Scaling (per wave):**
+
+```gdscript
+func _scale_with_wave() -> void:
+    var wave := GameManager.current_wave
+    # HP: +10% per wave
+    max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
+    # Speed: +5% per wave (capped at 2x)
+    speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
+    # XP: +5% per wave
+    xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
+
+func _advance_wave() -> void:
+    # Spawn rate: -0.1s per wave (min 0.5s)
+    var new_interval: float = max(0.5, spawn_interval - 0.1)
+```
+
+**Wave 10 Example:**
+- HP: Base × 1.9 (+90%)
+- Speed: Base × 1.45 (+45%)
+- XP: Base × 1.45 (+45%)
+- Spawn interval: 0.5s (minimum)
+
+### Comparison Table
+
+| Mechanic | BallxPit | GoPit | Gap |
+|----------|----------|-------|-----|
+| Speed modes | 4 levels (1x-4x) | None | MAJOR |
+| HP scaling | Up to 4x (Fast+3) | +10%/wave | Different approach |
+| Damage scaling | Up to 4x (Fast+3) | None | MAJOR |
+| Loot quality | +25-100% bonus | None | SIGNIFICANT |
+| NG+ mode | +50% all stats | None | MAJOR |
+| Toggle hotkey | Yes (R1) | None | MAJOR |
+
+### Wave Progression Comparison
+
+**BallxPit:**
+- Bosses every 10 waves (10, 20, 30, 40, 50+)
+- 3 bosses per level (2 mini + 1 final)
+- Wave 50+ requires % HP damage (Hemorrhage)
+- Exponential difficulty curve
+
+**GoPit:**
+- Bosses at end of each stage (every ~10 waves)
+- 1 boss per stage
+- Linear scaling (+10% HP/wave)
+- No late-game % HP mechanics
+
+### Recommendations
+
+1. **Add Speed Toggle System** (GoPit-21cr exists)
+   - 1x, 1.5x, 2x speeds
+   - Scale enemy HP/damage with speed
+   - Bonus XP/loot at higher speeds
+
+2. **Add Damage Scaling:**
+   - Enemies currently deal fixed damage
+   - Should scale with wave (+5%/wave?)
+
+3. **Add Late-Game Mechanics:**
+   - Hemorrhage for % HP damage
+   - Damage amplification for wave 20+
+
+4. **Consider NG+ Mode:**
+   - After first victory
+   - +50% enemy stats
+   - Better rewards
+
+Sources:
+- [Fast Mode Guide](https://ballxpit.org/guides/fast-mode/)
+- [New Game Plus Guide](https://ballxpit.org/guides/new-game-plus/)
+- [Boss Battle Strategies](https://ballxpit.org/guides/boss-battle-strategies/)
