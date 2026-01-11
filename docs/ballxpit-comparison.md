@@ -57,7 +57,7 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 - U: [Input and Controls](#appendix-u-input-and-controls-comparison-new) ⭐ NEW
 - V: [Achievements and Progression](#appendix-v-achievements-and-progression-system-new) ⭐ NEW
 - W: [Audio and Sound Design](#appendix-w-audio-and-sound-design-new) ⭐ NEW
-- X: [Visual Feedback and Polish](#appendix-x-visual-feedback-and-polish-new) ⭐ NEW
+- W2: [Visual Feedback and Polish](#appendix-w2-visual-feedback-and-polish-new) ⭐ NEW
 
 ---
 
@@ -2533,7 +2533,7 @@ _generate_metallic_clang()   // Multiple harmonics + detuning
 
 ---
 
-## Appendix X: Visual Feedback and Polish (NEW)
+## Appendix W2: Visual Feedback and Polish (NEW)
 
 Research sources:
 - [Settings Optimization Guide](https://ballxpit.org/guides/settings-optimization/)
@@ -2889,3 +2889,49 @@ func _spawn_baby_balls_from_slots() -> void:
 - Baby ball rate per slot (or shared timer)
 - Type-specific baby ball visuals
 - Status effect application from baby balls
+
+
+## Appendix AA: Visual Feedback and Juice Comparison (NEW)
+
+### GoPit Current Implementation
+
+**What GoPit HAS:**
+| Feature | Location | Quality |
+|---------|----------|---------|
+| Screen shake | `camera_shake.gd` | ✅ Good |
+| Damage numbers | `damage_number.gd` | ✅ Basic |
+| Hit flash | `enemy_base.gd:153` | ✅ Good |
+| Hit particles | `hit_particles.tscn` | ✅ Good |
+| Combo counter | `hud.gd`, `game_manager.gd` | ✅ Good |
+| Pop animations | Various | ✅ Good |
+| Particle trails | Ball types | ✅ Good |
+
+**What GoPit LACKS:**
+| Feature | Description | Impact |
+|---------|-------------|--------|
+| Crit numbers | Red/special crit damage | MEDIUM |
+| Hit stop | Brief freeze on big hits | LOW |
+| Bounce damage indicator | Show bonus per bounce | MEDIUM (if bounce damage added) |
+| Kill streak announcer | "TRIPLE KILL!" etc | LOW |
+
+### Comparison to BallxPit
+
+BallxPit has similar juice elements:
+- Floating damage numbers
+- Screen shake on big hits
+- Enemy flash on hit
+- Particle effects on special balls
+
+**Key differences:**
+1. BallxPit may have more pronounced crit effects
+2. BallxPit likely has bounce damage visual feedback
+3. Both games have adequate "game feel"
+
+### Assessment
+
+**GoPit's juice is ADEQUATE** - no urgent work needed here. Priority should be on core mechanics (ball slots, bounce damage) rather than additional polish.
+
+**Low priority improvements:**
+- Red crit numbers with "CRIT!" prefix
+- Hit stop on boss kills (50ms)
+- Bounce damage indicator (if bounce damage added)
