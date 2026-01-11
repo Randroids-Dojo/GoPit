@@ -10201,3 +10201,331 @@ Spawned on enemy damage for satisfying impact feedback.
 
 **Rating**: ⭐⭐⭐⭐⭐ EXCELLENT POLISH
 
+---
+
+## Appendix DG: Game Controller (Main Orchestration)
+
+**Source**: `scripts/game/game_controller.gd` (493 lines)
+
+### Role
+
+The Game Controller is the central nervous system of GoPit. It:
+- Wires all components together
+- Handles signal routing between systems
+- Manages game flow (start, waves, bosses, game over)
+- Spawns gems and fusion reactors
+- Controls biome visual updates
+
+### Major Components Wired
+
+```gdscript
+@onready var ball_spawner: Node2D = $GameArea/BallSpawner
+@onready var enemy_spawner: EnemySpawner = $GameArea/Enemies/EnemySpawner
+@onready var player: CharacterBody2D = $GameArea/Player
+@onready var move_joystick: Control = $UI/HUD/.../VirtualJoystick
+@onready var aim_joystick: Control = $UI/HUD/.../VirtualJoystick
+@onready var fire_button: Control = $UI/HUD/.../FireButton
+@onready var baby_ball_spawner: Node2D = $GameArea/BabyBallSpawner
+@onready var boss_hp_bar: Control = $UI/BossHPBar
+```
+
+### Wave Progression
+
+```gdscript
+var enemies_killed_this_wave: int = 0
+var enemies_per_wave: int = 5
+
+func _check_wave_progress() -> void:
+    enemies_killed_this_wave += 1
+    if enemies_killed_this_wave >= enemies_per_wave:
+        _advance_wave()
+
+func _advance_wave() -> void:
+    enemies_killed_this_wave = 0
+    GameManager.advance_wave()
+
+    // Increase difficulty
+    var new_interval := max(0.5, enemy_spawner.spawn_interval - 0.1)
+    enemy_spawner.set_spawn_interval(new_interval)
+
+    MusicManager.set_intensity(float(GameManager.current_wave))
+```
+
+5 kills per wave, then difficulty increases.
+
+### Fusion Reactor Spawning
+
+```gdscript
+func _maybe_spawn_fusion_reactor(pos: Vector2) -> void:
+    // Base 2% chance, +0.1% per wave
+    var chance := 0.02 + GameManager.current_wave * 0.001
+    if randf() < chance:
+        _spawn_fusion_reactor(pos)
+```
+
+| Wave | Fusion Reactor Chance |
+|------|----------------------|
+| 1 | 2.1% |
+| 10 | 3.0% |
+| 20 | 4.0% |
+| 50 | 7.0% |
+
+### Boss Flow
+
+```gdscript
+func _on_boss_wave_reached(stage: int) -> void:
+    enemy_spawner.stop_spawning()
+    baby_ball_spawner.stop()
+    _spawn_boss(stage)
+
+func _spawn_boss(stage: int) -> void:
+    match stage:
+        0: boss_scene = slime_king_scene  // The Pit
+        _: boss_scene = slime_king_scene  // Fallback
+
+    _current_boss = boss_scene.instantiate()
+    enemies_container.add_child(_current_boss)
+    boss_hp_bar.show_boss(_current_boss)
+```
+
+### Biome Changes
+
+```gdscript
+func _on_biome_changed(biome: Biome) -> void:
+    background.color = biome.background_color
+    _set_wall_color(left_wall, biome.wall_color)
+    _set_wall_color(right_wall, biome.wall_color)
+```
+
+### Mobile Features
+
+```gdscript
+func _notification(what: int) -> void:
+    // Auto-pause when app loses focus (mobile)
+    if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+        if GameManager.current_state == GameManager.GameState.PLAYING:
+            pause_overlay.show_pause()
+```
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Signal wiring | ✅ Comprehensive | All systems connected |
+| Wave progression | ✅ Working | 5 kills per wave |
+| Boss integration | ✅ Working | Spawns, tracks, shows HP |
+| Mobile handling | ✅ Good | Auto-pause on focus loss |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT ORCHESTRATION
+
+---
+
+## Appendix DH: Slime King Boss
+
+**Source**: `scripts/entities/enemies/bosses/slime_king.gd` (419 lines)
+
+### Overview
+
+The Slime King is GoPit's first (and currently only) boss. A massive green slime with a crown, featuring 4 distinct attacks and 3 visual phases.
+
+### Boss Stats
+
+```gdscript
+boss_name = "Slime King"
+max_hp = 500
+xp_value = 100
+slam_damage = 30
+slam_radius = 120.0
+phase_thresholds = [1.0, 0.66, 0.33, 0.0]
+```
+
+### Phase Colors
+
+| Phase | HP Range | Color | Speed |
+|-------|----------|-------|-------|
+| 1 | 100%-66% | Green | Normal |
+| 2 | 66%-33% | Yellow | Normal |
+| 3 | 33%-0% | Red (Enraged) | Fast |
+
+### Attack Patterns
+
+```gdscript
+phase_attacks = {
+    BossPhase.PHASE_1: ["slam", "summon"],
+    BossPhase.PHASE_2: ["slam", "summon", "split"],
+    BossPhase.PHASE_3: ["slam", "summon", "rage"],
+}
+```
+
+### Attack: Slam
+
+```gdscript
+func _do_slam_attack() -> void:
+    _original_position = global_position
+    _slam_phase = 1  // Rising
+
+    // Rise up
+    tween.tween_property(self, "global_position:y", slam_height, 0.3)
+    tween.tween_callback(_slam_fall)
+
+func _slam_fall() -> void:
+    _slam_phase = 2  // Falling
+    tween.tween_property(self, "global_position", _slam_target, 0.2)
+    tween.tween_callback(_slam_impact)
+
+func _slam_impact() -> void:
+    CameraShake.shake(12.0, 6.0)
+    // Check for player hit within slam_radius
+    if dist < slam_radius:
+        GameManager.damage_player(slam_damage)
+```
+
+Jump up, slam down at player's location. 30 damage if hit.
+
+### Attack: Summon
+
+```gdscript
+func _do_summon_attack() -> void:
+    var count := randi_range(2, 3)
+    spawn_adds(SLIME_SCENE, count, 150.0)
+    is_invulnerable = true  // Brief invulnerability
+```
+
+Spawns 2-3 regular slimes to overwhelm player.
+
+### Attack: Split (Phase 2+)
+
+```gdscript
+func _do_split_attack() -> void:
+    for i in 2:
+        var medium := MediumSlime.new()  // 100 HP, 1.5x size
+        medium.global_position = global_position + Vector2((i * 2 - 1) * 80, 0)
+        enemies_container.add_child(medium)
+
+    // Boss shrinks temporarily
+    shrink_tween.tween_property(self, "scale", Vector2(0.7, 0.7), 0.2)
+```
+
+Spawns 2 medium slimes (100 HP each).
+
+### Attack: Rage (Phase 3)
+
+```gdscript
+func _do_rage_attack() -> void:
+    var slam_count := 3
+    var slam_delay := 0.4
+
+    for i in slam_count:
+        timer.timeout.connect(_quick_slam)
+
+func _quick_slam() -> void:
+    global_position = _slam_target  // Instant teleport
+    CameraShake.shake(8.0, 4.0)
+    // Half damage (15) but rapid succession
+```
+
+3 quick slams in rapid succession. Intense!
+
+### Visual Features
+
+```gdscript
+func _draw() -> void:
+    _draw_ellipse(...)    // Main body (phase-colored)
+    _draw_crown()         // Golden crown
+    _draw_eyes()          // Track player position!
+    _draw_slam_telegraph()  // Shadow indicator during telegraph
+```
+
+Eyes track player position - nice touch!
+
+### Defeat Rewards
+
+```gdscript
+func _defeat() -> void:
+    // Guaranteed fusion reactor
+    game_controller._spawn_fusion_reactor(global_position)
+
+    // 100 XP in 10 small gems (for satisfying pickup)
+    for i in 10:
+        game_controller._spawn_gem(global_position + offset, 10)
+```
+
+### MediumSlime Helper Class
+
+```gdscript
+class MediumSlime extends EnemyBase:
+    max_hp = 100
+    speed = 80.0
+    damage_to_player = 15
+    xp_value = 25
+    scale = Vector2(1.5, 1.5)
+```
+
+Inline class for split attack.
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Boss count | 1 | 24 |
+| Phases | 3 | 2-3 |
+| Attack variety | 4 types | 3-5 per boss |
+| Visual feedback | ✅ Excellent | ✅ Similar |
+| Add spawning | ✅ Yes | ✅ Yes |
+| Rage mode | ✅ Phase 3 | ✅ Common |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Phase system | ✅ Working | Color changes |
+| Attack variety | ✅ Excellent | 4 distinct attacks |
+| Visual polish | ✅ Great | Eyes track player |
+| Difficulty scaling | ✅ Working | Rage mode in P3 |
+| Rewards | ✅ Good | Fusion reactor + gems |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT FIRST BOSS
+
+---
+
+## Summary: This Session's Findings
+
+Added **15 appendices** this session (CT through DH):
+
+| Appendix | System | Rating | Notes |
+|----------|--------|--------|-------|
+| CT | Game State/Progression | ⭐⭐⭐⭐ | Combo system is GoPit advantage |
+| CU | Biome/Stage | ⭐⭐⭐ | Needs level select |
+| CV | Character Passives | ⭐⭐⭐⭐ | Well implemented |
+| CW | Upgrade System | ⭐⭐⭐⭐⭐ | Excellent alignment with BallxPit |
+| CX | Ball Spawner | ⭐⭐⭐⭐ | P0 gap confirmed |
+| CY | Player Movement | ⭐⭐⭐⭐ | Solid |
+| CZ | Gem/Magnetism | ⭐⭐⭐⭐⭐ | Polished |
+| DA | Camera Shake | ⭐⭐⭐⭐ | Simple but effective |
+| DB | Boss Framework | ⭐⭐⭐⭐ | Excellent, needs content |
+| DC | Enemy Base | ⭐⭐⭐⭐⭐ | Comprehensive |
+| DD | Baby Ball | ⭐⭐⭐⭐ | Good Tactician synergy |
+| DE | Meta Progression | ⭐⭐⭐ | Needs expansion |
+| DF | Visual Effects | ⭐⭐⭐⭐⭐ | Excellent polish |
+| DG | Game Controller | ⭐⭐⭐⭐⭐ | Great orchestration |
+| DH | Slime King | ⭐⭐⭐⭐⭐ | Excellent first boss |
+
+### Key Discoveries
+
+1. **GoPit Advantages**:
+   - Combo system (unique)
+   - Procedural audio
+   - Endless mode
+   - Touch-first design
+
+2. **Strong Alignments**:
+   - Upgrade card system
+   - Boss phase system
+   - Status effects
+   - Visual feedback
+
+3. **Critical Gap (P0)**:
+   - Ball slot system (1 type vs 4-5 simultaneous)
+
+**Total: 118 appendices (A through DH), ~10,500 lines**
+
