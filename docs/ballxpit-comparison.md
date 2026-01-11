@@ -6874,11 +6874,83 @@ Most comparisons show BallxPit ahead. **Endless mode is an area where GoPit lead
 
 ---
 
+## Appendix BZ: Stats System Comparison
+
+Research source:
+- [Steam: How do the stats actually work?](https://steamcommunity.com/app/2062430/discussions/0/687489618510307449/)
+
+### BallxPit Stats System
+
+| Stat | Function | Notes |
+|------|----------|-------|
+| **HP** | Hit points | Survivability |
+| **Base Damage** | All ball types at level 1 | Range-based (e.g., 25-44) |
+| **Baby Ball Count** | Max simultaneous baby balls | Excludes Brood Mother spawns |
+| **Baby Ball Damage** | Baby ball multiplier | Separate from base damage |
+| **Ball Speed** | Projectile velocity | Tiles/second multiplier |
+| **Move Speed** | Player movement | Tiles/second multiplier |
+| **Fire Rate** | Balls per second | Queue release rate |
+| **Crit Chance** | % of crits | Applies to AOE, most passives can't crit |
+| **AOE Power** | AOE damage mult | % multiplier (4.13 = 413%) |
+| **Status Power** | Status effect mult | % multiplier |
+| **Passive Power** | Passive damage mult | % multiplier |
+
+### GoPit Stats System
+
+| Stat | Function | Implementation |
+|------|----------|----------------|
+| **HP** | Hit points | `player_health` |
+| **Leadership** | Baby ball spawn rate | `leadership`, `character_leadership_mult` |
+| **Intelligence** | AOE/special damage | `character_intelligence_mult` |
+| **Strength** | Base damage | `character_damage_mult` |
+| **Dexterity** | Crit multiplier | `character_crit_mult` |
+| **Speed** | Movement/fire rate | `character_speed_mult` |
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Core stats | 6 | 11+ |
+| Damage types separated | ⚠️ Basic | ✅ AOE/Status/Passive |
+| Crit system | ✅ Has | ✅ Has |
+| Range-based damage | ❌ Fixed | ✅ Min-Max range |
+| Baby ball count stat | ❌ Missing | ✅ Separate |
+| Fire rate stat | ⚠️ Basic | ✅ Detailed |
+
+### Key Differences
+
+1. **Damage categorization**: BallxPit separates AOE, Status, and Passive power. GoPit uses single multiplier.
+
+2. **Range-based damage**: BallxPit uses damage ranges (25-44). GoPit uses fixed values.
+
+3. **Baby ball stats**: BallxPit has separate count and damage stats. GoPit only has rate-affecting leadership.
+
+### GoPit Current Implementation
+
+```gdscript
+# From game_manager.gd
+var character_damage_mult: float = 1.0      # Strength
+var character_crit_mult: float = 1.0        # Dexterity
+var character_leadership_mult: float = 1.0  # Leadership
+var character_intelligence_mult: float = 1.0 # Intelligence
+var character_speed_mult: float = 1.0       # Speed
+```
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Separate damage types | AOE/Status/Passive multipliers |
+| **P2** | Add damage ranges | Min-max instead of fixed |
+| **P3** | Add baby ball count stat | Separate from spawn rate |
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **83 appendices** (A through BY)
+- **84 appendices** (A through BZ)
 - **82 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
