@@ -481,6 +481,27 @@ func _apply_evolved_effect(enemy: Node2D, base_damage: int) -> void:
 			# Alternating burn/freeze
 			_do_void_effect(enemy)
 
+		# New evolved ball effects
+		FusionRegistry.EvolvedBallType.GLACIER:
+			# Heavy ice - pierce and slow
+			_do_glacier(enemy)
+
+		FusionRegistry.EvolvedBallType.STORM:
+			# Chain lightning with poison spread
+			_do_storm(enemy)
+
+		FusionRegistry.EvolvedBallType.PLASMA:
+			# Chain lightning with bleed
+			_do_plasma(enemy)
+
+		FusionRegistry.EvolvedBallType.CLEAVER:
+			# Heavy bleed + knockback
+			_do_cleaver(enemy)
+
+		FusionRegistry.EvolvedBallType.FROSTBITE:
+			# Freeze that causes bleed when thawed
+			_do_frostbite(enemy)
+
 
 func _do_explosion(pos: Vector2, base_damage: int) -> void:
 	"""BOMB effect - AoE explosion damage"""
@@ -658,6 +679,137 @@ func _do_void_effect(enemy: Node2D) -> void:
 	enemy.modulate = void_color
 	var tween := enemy.create_tween()
 	tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+
+
+# ===== New Evolved Ball Effects =====
+
+func _do_glacier(enemy: Node2D) -> void:
+	"""GLACIER effect - Apply freeze and increase pierce"""
+	# Apply freeze status
+	if enemy.has_method("apply_status_effect"):
+		var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+		enemy.apply_status_effect(freeze)
+
+	# Glacier balls pierce through enemies
+	pierce_count = max(pierce_count, 3)
+
+	# Visual ice effect
+	enemy.modulate = Color(0.5, 0.7, 0.9)
+	var tween := enemy.create_tween()
+	tween.tween_property(enemy, "modulate", Color.WHITE, 0.4)
+
+
+func _do_storm(enemy: Node2D) -> void:
+	"""STORM effect - Chain lightning that spreads poison"""
+	var chain_range := 100.0
+	var chain_count := 4
+	var chains_done := 0
+
+	# Apply poison to hit enemy
+	if enemy.has_method("apply_status_effect"):
+		var poison = StatusEffect.new(StatusEffect.Type.POISON)
+		enemy.apply_status_effect(poison)
+
+	# Find and chain to nearby enemies
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
+	if not enemies_container:
+		return
+
+	for child in enemies_container.get_children():
+		if chains_done >= chain_count:
+			break
+		if child is EnemyBase and child != enemy:
+			var dist: float = child.global_position.distance_to(enemy.global_position)
+			if dist < chain_range:
+				# Chain damage + poison
+				if child.has_method("take_damage"):
+					child.take_damage(int(damage * 0.5))
+				if child.has_method("apply_status_effect"):
+					var poison = StatusEffect.new(StatusEffect.Type.POISON)
+					child.apply_status_effect(poison)
+				chains_done += 1
+
+
+func _do_plasma(enemy: Node2D) -> void:
+	"""PLASMA effect - Chain lightning that applies bleed"""
+	var chain_range := 90.0
+	var chain_count := 3
+	var bleed_stacks := 2
+	var chains_done := 0
+
+	# Apply bleed stacks to hit enemy
+	if enemy.has_method("apply_status_effect"):
+		for i in bleed_stacks:
+			var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+			enemy.apply_status_effect(bleed)
+
+	# Find and chain to nearby enemies
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
+	if not enemies_container:
+		return
+
+	for child in enemies_container.get_children():
+		if chains_done >= chain_count:
+			break
+		if child is EnemyBase and child != enemy:
+			var dist: float = child.global_position.distance_to(enemy.global_position)
+			if dist < chain_range:
+				# Chain damage + bleed
+				if child.has_method("take_damage"):
+					child.take_damage(int(damage * 0.4))
+				if child.has_method("apply_status_effect"):
+					var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+					child.apply_status_effect(bleed)
+				chains_done += 1
+
+	# Visual plasma arc effect
+	enemy.modulate = Color(1.0, 0.2, 0.5)
+	var tween := enemy.create_tween()
+	tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
+
+
+func _do_cleaver(enemy: Node2D) -> void:
+	"""CLEAVER effect - Heavy bleed stacks + knockback"""
+	var bleed_stacks := 5
+	var knockback_force := 60.0
+
+	# Apply multiple bleed stacks
+	if enemy.has_method("apply_status_effect"):
+		for i in bleed_stacks:
+			var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+			enemy.apply_status_effect(bleed)
+
+	# Knockback
+	if enemy is EnemyBase:
+		var knockback_dir := (enemy.global_position - global_position).normalized()
+		enemy.global_position += knockback_dir * knockback_force
+
+	# Visual cleaver effect
+	enemy.modulate = Color(0.5, 0.1, 0.1)
+	var tween := enemy.create_tween()
+	tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+
+
+func _do_frostbite(enemy: Node2D) -> void:
+	"""FROSTBITE effect - Freeze enemy, apply bleed when freeze ends"""
+	var thaw_bleed_stacks := 3
+
+	# Apply freeze status
+	if enemy.has_method("apply_status_effect"):
+		var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+		enemy.apply_status_effect(freeze)
+
+	# Apply bleed immediately (represents frostbite damage)
+	# In BallxPit, bleed triggers when freeze wears off, but we apply immediately for simplicity
+	if enemy.has_method("apply_status_effect"):
+		for i in thaw_bleed_stacks:
+			var bleed = StatusEffect.new(StatusEffect.Type.BLEED)
+			enemy.apply_status_effect(bleed)
+
+	# Visual frostbite effect
+	enemy.modulate = Color(0.6, 0.2, 0.4)
+	var tween := enemy.create_tween()
+	tween.tween_property(enemy, "modulate", Color.WHITE, 0.4)
 
 
 func _apply_fused_effects(enemy: Node2D, base_damage: int) -> void:

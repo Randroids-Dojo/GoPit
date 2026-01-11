@@ -13,7 +13,13 @@ enum EvolvedBallType {
 	BLIZZARD,  # Freeze + Lightning
 	VIRUS,     # Poison + Bleed
 	MAGMA,     # Burn + Poison
-	VOID       # Burn + Freeze
+	VOID,      # Burn + Freeze
+	# New evolutions (added to reach 10 total)
+	GLACIER,   # Freeze + Iron - Heavy ice shards that pierce
+	STORM,     # Lightning + Poison - Chains spread poison
+	PLASMA,    # Lightning + Bleed - Chains cause bleed
+	CLEAVER,   # Bleed + Iron - Massive bleed on heavy hits
+	FROSTBITE  # Freeze + Bleed - Frozen enemies bleed when thawed
 }
 
 # Recipe definitions: sorted [BallType, BallType] -> EvolvedBallType
@@ -23,7 +29,13 @@ const EVOLUTION_RECIPES := {
 	"FREEZE_LIGHTNING": EvolvedBallType.BLIZZARD,
 	"BLEED_POISON": EvolvedBallType.VIRUS,  # Alphabetically: BLEED < POISON
 	"BURN_POISON": EvolvedBallType.MAGMA,
-	"BURN_FREEZE": EvolvedBallType.VOID
+	"BURN_FREEZE": EvolvedBallType.VOID,
+	# New recipes (5 more to reach 10 total)
+	"FREEZE_IRON": EvolvedBallType.GLACIER,
+	"LIGHTNING_POISON": EvolvedBallType.STORM,
+	"BLEED_LIGHTNING": EvolvedBallType.PLASMA,
+	"BLEED_IRON": EvolvedBallType.CLEAVER,
+	"BLEED_FREEZE": EvolvedBallType.FROSTBITE
 }
 
 # Evolved ball stats and effects
@@ -76,6 +88,57 @@ const EVOLVED_BALL_DATA := {
 		"color": Color(0.3, 0.0, 0.5),  # Deep purple
 		"effect": "void",
 		"alternating_effects": ["burn", "freeze"]
+	},
+	# New evolved balls (5 more to reach 10 total)
+	EvolvedBallType.GLACIER: {
+		"name": "Glacier",
+		"description": "Heavy ice shards that pierce and slow",
+		"base_damage": 22,
+		"base_speed": 600.0,  # Slower but hits harder
+		"color": Color(0.5, 0.7, 0.9),  # Steel blue
+		"effect": "glacier",
+		"pierce_count": 3,
+		"slow_duration": 2.5
+	},
+	EvolvedBallType.STORM: {
+		"name": "Storm",
+		"description": "Lightning chains spread poison to all hit",
+		"base_damage": 14,
+		"base_speed": 900.0,
+		"color": Color(0.4, 0.8, 0.3),  # Electric green
+		"effect": "storm",
+		"chain_count": 4,
+		"poison_duration": 3.0
+	},
+	EvolvedBallType.PLASMA: {
+		"name": "Plasma",
+		"description": "Chains to enemies and applies bleed stacks",
+		"base_damage": 13,
+		"base_speed": 950.0,
+		"color": Color(1.0, 0.2, 0.5),  # Hot pink
+		"effect": "plasma",
+		"chain_count": 3,
+		"bleed_stacks": 2
+	},
+	EvolvedBallType.CLEAVER: {
+		"name": "Cleaver",
+		"description": "Heavy hits that cause massive bleed",
+		"base_damage": 25,
+		"base_speed": 550.0,  # Slow but devastating
+		"color": Color(0.5, 0.1, 0.1),  # Dark red
+		"effect": "cleaver",
+		"bleed_stacks": 5,
+		"knockback": 60.0
+	},
+	EvolvedBallType.FROSTBITE: {
+		"name": "Frostbite",
+		"description": "Freezes enemies; they bleed when thawed",
+		"base_damage": 15,
+		"base_speed": 800.0,
+		"color": Color(0.6, 0.2, 0.4),  # Frozen purple
+		"effect": "frostbite",
+		"freeze_duration": 1.5,
+		"thaw_bleed_stacks": 3
 	}
 }
 
