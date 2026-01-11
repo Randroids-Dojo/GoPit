@@ -983,19 +983,61 @@ rate = base_interval / ((1.0 + leadership_bonus * char_mult) * speed_mult)
 | Baby balls from ball hits | No | Yes (Brood Mother) | Gap |
 | Targeting | Nearest enemy | Variable | Similar |
 
+### Critical Gap: Baby Ball Trait Inheritance (P1)
+
+**BallxPit:** ALL baby balls inherit traits from parent ball type:
+- Ball type (Fire/Ice/Lightning/etc.)
+- Status effects (burn, freeze, chain lightning)
+- Visual appearance (color, particle trails)
+- Evolved/fused effects (if parent is evolved/fused)
+
+**Examples:**
+- Brood Mother + Laser = baby balls shoot beams
+- Brood Mother + Fire = baby balls apply burn
+- Spider Queen spawns egg sacs on 25% of hits
+
+**GoPit Code Analysis:**
+
+From `baby_ball_spawner.gd` lines 68-78:
+```gdscript
+var ball := ball_scene.instantiate()
+ball.is_baby_ball = true  # Only this flag is set
+ball.damage = int(base_damage * baby_ball_damage_multiplier)
+# NO ball_type, evolved_type, or fused_effects inheritance
+```
+
+From `ball.gd` lines 91-92:
+```gdscript
+# No trail for normal balls or baby balls
+if ball_type == BallType.NORMAL or is_baby_ball:
+    return  # Explicitly skips particle trails
+```
+
+**GoPit Baby Balls Are Always Generic:**
+- Always BallType.NORMAL (blue)
+- No status effects applied
+- No particle trails
+- No evolved/fused effects
+- Only inherit damage (at 50%)
+
 ### Gaps to Address
 
-1. **Baby Ball Count Cap** - BallxPit caps active baby balls based on Leadership
-2. **Brood Mother Ball Type** - Add a ball type that spawns babies on hit
-3. **Leadership Damage Scaling** - Baby ball damage should scale with Leadership
-4. **Ball Inheritance** - Brood Mother babies should inherit effects
+| Gap | Priority | Bead |
+|-----|----------|------|
+| Baby ball trait inheritance | **P1** | GoPit-r1r |
+| Baby ball count cap | P2 | - |
+| Brood Mother ball type | P2 | - |
+| Leadership damage scaling | P2 | - |
+| Egg sac drop mechanic | P3 | - |
 
 ### Recommendations
 
-1. [ ] **Add baby ball count limit** - Cap based on Leadership stat
-2. [ ] **Add Brood Mother ball type** - Spawns babies on enemy hit
-3. [ ] **Scale baby damage with Leadership** - Not just spawn rate
-4. [ ] **Add egg sac drop mechanic** - Like Spider Queen evolution
+1. [ ] **P1: Add trait inheritance** - Baby balls must copy ball_type, evolved_type, fused_effects from parent
+2. [ ] **P1: Enable particle trails** - Remove `is_baby_ball` skip in `ball.gd`
+3. [ ] **P2: Add baby ball count limit** - Cap based on Leadership stat
+4. [ ] **P2: Add Brood Mother ball type** - Spawns babies on enemy hit
+5. [ ] **P2: Scale baby damage with Leadership** - Not just spawn rate
+6. [ ] **P3: Add egg sac drop mechanic** - Like Spider Queen evolution
 
 ---
 
@@ -3369,25 +3411,41 @@ func execute() -> void:
 
 ### BallxPit Comparison
 
-**Unknown if BallxPit has ultimates.** Many similar games have:
-- Screen-clear abilities (common)
-- Character-specific ultimates (varies)
-- Item-based bombs (common)
+**CONFIRMED: BallxPit does NOT have ultimate abilities.**
+
+Research indicates BallxPit is entirely gameplay-driven through balls and evolutions:
+- No tap-to-activate special abilities
+- No charge meter for screen-clear
+- No ultimate button UI
+
+**Screen-clearing in BallxPit is achieved via:**
+1. **Bomb evolution** (Burn + Iron) - 150-300 AoE damage per hit
+2. **Nuclear Bomb** (Bomb + Poison) - 300-500 AoE + radiation stacking
+3. **High-DPS builds** - Machine gun effect via Empty Nester character
+
+Sources:
+- [GAM3S.GG Special Balls Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-all-special-balls/)
+- [BallxPit.org Combos Guide](https://ballxpit.org/guides/combos-synergies/)
 
 ### Assessment
 
-**GoPit's ultimate is solid:**
+**GoPit's ultimate is an ORIGINAL feature (not in BallxPit):**
 - Clear charging feedback (ring fills)
 - Satisfying activation (flash + shake)
 - Powerful effect (clear screen)
 - Strategic save-or-use decisions
 
-**Potential enhancements:**
+**Design Decision Required:**
+1. **Keep ultimate** - Adds strategic depth, satisfying "panic button"
+2. **Remove ultimate** - More faithful to BallxPit, rely on evolutions
+3. **Hybrid** - Keep ultimate but require specific balls/evolutions to unlock
+
+**Potential enhancements if keeping:**
 - Character-specific ultimates (Pyro = fire explosion, Frost = freeze all)
 - Partial charge use (50% for smaller effect)
-- Combo with ball slots (all balls fire at once?)
+- Evolved balls contribute more charge
 
-**Priority:** P3 (optional polish) - Current system works well.
+**Priority:** P4 (design decision) - This is an intentional deviation from BallxPit.
 
 
 ## Appendix AH: Pause Menu and Settings (NEW)
