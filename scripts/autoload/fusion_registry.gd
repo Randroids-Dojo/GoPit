@@ -365,11 +365,11 @@ func get_all_fused_ids() -> Array[String]:
 # ===== FISSION (Random Upgrades) =====
 
 func apply_fission() -> Dictionary:
-	"""Apply fission effect - random upgrades or XP if all maxed"""
+	"""Apply fission effect - random upgrades or Pit Coins if all maxed"""
 	var result := {
 		"type": "fission",
 		"upgrades": [],
-		"xp_bonus": 0
+		"pit_coins": 0
 	}
 
 	# Check what can be upgraded
@@ -377,10 +377,11 @@ func apply_fission() -> Dictionary:
 	var unowned := BallRegistry.get_unowned_ball_types()
 
 	if upgradeable.size() == 0 and unowned.size() == 0:
-		# All maxed - give XP bonus
-		var xp_bonus := 100 + GameManager.current_wave * 10
-		GameManager.add_xp(xp_bonus)
-		result["xp_bonus"] = xp_bonus
+		# All maxed - give Pit Coins (meta currency)
+		var coin_bonus := 50 + GameManager.current_wave * 5
+		MetaManager.pit_coins += coin_bonus
+		MetaManager.coins_changed.emit(MetaManager.pit_coins)
+		result["pit_coins"] = coin_bonus
 		return result
 
 	# Random number of upgrades (1-5, matching BallxPit)

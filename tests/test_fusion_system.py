@@ -317,8 +317,8 @@ async def test_void_has_alternating_effects(game):
 # ============================================================================
 
 @pytest.mark.asyncio
-async def test_fission_returns_upgrades_or_xp(game):
-    """Fission should return upgrades or XP bonus."""
+async def test_fission_returns_upgrades_or_coins(game):
+    """Fission should return upgrades or Pit Coins bonus."""
     result = await game.call(
         "/root/FusionRegistry",
         "apply_fission"
@@ -326,7 +326,7 @@ async def test_fission_returns_upgrades_or_xp(game):
     assert "type" in result, "Fission result should have type"
     assert result["type"] == "fission", "Result type should be fission"
     assert "upgrades" in result, "Result should have upgrades array"
-    assert "xp_bonus" in result, "Result should have xp_bonus"
+    assert "pit_coins" in result, "Result should have pit_coins"
 
 
 @pytest.mark.asyncio
