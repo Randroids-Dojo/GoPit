@@ -193,14 +193,20 @@ func _die() -> void:
 
 func _spawn_health_gem() -> void:
 	# Spawn a healing gem at death location
-	var gem_scene := preload("res://scenes/entities/gem.tscn")
-	var gem := gem_scene.instantiate()
+	var gem: Node
+	if PoolManager:
+		gem = PoolManager.get_gem()
+	else:
+		var gem_scene := preload("res://scenes/entities/gem.tscn")
+		gem = gem_scene.instantiate()
 	gem.global_position = global_position
 	gem.xp_value = 0  # No XP, just healing
 	gem.is_health_gem = true  # Mark as health gem for special effect
 	var gems_container := get_tree().get_first_node_in_group("gems_container")
 	if gems_container:
 		gems_container.add_child(gem)
+		# Re-acquire player reference after being added to tree
+		gem._player = get_tree().get_first_node_in_group("player")
 
 
 # === WARNING STATE ===

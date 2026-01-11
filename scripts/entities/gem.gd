@@ -68,7 +68,7 @@ func _process(delta: float) -> void:
 
 	# Despawn after timeout or if off screen
 	if _time > despawn_time or position.y > 1400:
-		queue_free()
+		_release_to_pool()
 
 
 func _draw() -> void:
@@ -110,7 +110,34 @@ func _collect() -> void:
 	if is_health_gem:
 		GameManager.heal(HEALTH_GEM_HEAL)
 	SoundManager.play(SoundManager.SoundType.GEM_COLLECT)
-	queue_free()
+	_release_to_pool()
+
+
+func _release_to_pool() -> void:
+	"""Return to pool or free"""
+	if has_meta("pooled") and PoolManager:
+		reset()
+		PoolManager.release_gem(self)
+	else:
+		queue_free()
+
+
+func reset() -> void:
+	"""Reset gem state for object pool reuse"""
+	# Reset time and state
+	_time = 0.0
+	_being_attracted = false
+	_player = null
+
+	# Reset properties to defaults
+	xp_value = 10
+	gem_color = Color(0.2, 0.9, 0.5)
+	is_health_gem = false
+
+	# Reset position
+	position = Vector2.ZERO
+
+	queue_redraw()
 
 
 func get_xp_value() -> int:

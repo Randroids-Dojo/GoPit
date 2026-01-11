@@ -211,11 +211,20 @@ func _spawn_gem(pos: Vector2, xp_value: int) -> void:
 	if not gems_container:
 		return
 
-	var gem := gem_scene.instantiate()
+	# Get gem from pool if available
+	var gem: Node
+	if PoolManager:
+		gem = PoolManager.get_gem()
+	else:
+		gem = gem_scene.instantiate()
 	gem.position = pos
 	gem.xp_value = xp_value
-	gem.collected.connect(_on_gem_collected)
+	# Reconnect signal (may have been disconnected on pool release)
+	if not gem.collected.is_connected(_on_gem_collected):
+		gem.collected.connect(_on_gem_collected)
 	gems_container.add_child(gem)
+	# Re-acquire player reference after being added to tree
+	gem._player = get_tree().get_first_node_in_group("player")
 
 
 func _on_gem_collected(gem: Node2D) -> void:

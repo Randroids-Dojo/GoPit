@@ -10,21 +10,29 @@ var _ball_scene: PackedScene
 var _damage_pool: Array[Label] = []
 var _damage_scene: PackedScene
 
+# Pool for gems
+var _gem_pool: Array[Node] = []
+var _gem_scene: PackedScene
+
 # Configuration
 const BALL_POOL_INITIAL_SIZE := 20
 const BALL_POOL_MAX_SIZE := 50
 const DAMAGE_POOL_INITIAL_SIZE := 30
 const DAMAGE_POOL_MAX_SIZE := 100
+const GEM_POOL_INITIAL_SIZE := 30
+const GEM_POOL_MAX_SIZE := 100
 
 
 func _ready() -> void:
 	# Preload scenes
 	_ball_scene = load("res://scenes/entities/ball.tscn")
 	_damage_scene = load("res://scenes/effects/damage_number.tscn")
+	_gem_scene = load("res://scenes/entities/gem.tscn")
 
 	# Pre-warm pools
 	_prewarm_ball_pool()
 	_prewarm_damage_pool()
+	_prewarm_gem_pool()
 
 
 func _prewarm_ball_pool() -> void:
@@ -149,6 +157,64 @@ func _deactivate_damage(label: Label) -> void:
 
 
 # ============================================================================
+# Gem Pool Methods
+# ============================================================================
+
+func _prewarm_gem_pool() -> void:
+	for i in range(GEM_POOL_INITIAL_SIZE):
+		var gem := _gem_scene.instantiate()
+		gem.set_meta("pooled", true)
+		_deactivate_gem(gem)
+		_gem_pool.append(gem)
+
+
+func get_gem() -> Node:
+	var gem: Node
+
+	if _gem_pool.size() > 0:
+		gem = _gem_pool.pop_back()
+	else:
+		# Pool exhausted, create new instance
+		gem = _gem_scene.instantiate()
+		gem.set_meta("pooled", true)
+
+	_activate_gem(gem)
+	return gem
+
+
+func release_gem(gem: Node) -> void:
+	if not is_instance_valid(gem):
+		return
+
+	# Don't pool non-pooled gems
+	if not gem.has_meta("pooled"):
+		gem.queue_free()
+		return
+
+	# Enforce max pool size
+	if _gem_pool.size() >= GEM_POOL_MAX_SIZE:
+		gem.queue_free()
+		return
+
+	_deactivate_gem(gem)
+	_gem_pool.append(gem)
+
+
+func _activate_gem(gem: Node) -> void:
+	gem.set_process(true)
+	gem.visible = true
+
+
+func _deactivate_gem(gem: Node) -> void:
+	gem.set_process(false)
+	gem.visible = false
+
+	# Remove from parent if attached
+	if gem.get_parent():
+		gem.get_parent().remove_child(gem)
+
+
+# ============================================================================
 # Debug / Stats
 # ============================================================================
 
@@ -156,4 +222,5 @@ func get_pool_stats() -> Dictionary:
 	return {
 		"ball_pool_available": _ball_pool.size(),
 		"damage_pool_available": _damage_pool.size(),
+		"gem_pool_available": _gem_pool.size(),
 	}
