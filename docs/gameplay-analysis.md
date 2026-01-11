@@ -9,7 +9,7 @@
 Track progress with [x] marks:
 
 - [x] Ball damage per level (L1=10, L2=?, L3=?)
-- [ ] Ball speed per level
+- [x] Ball speed per level
 - [ ] Fire cooldown / rate
 - [ ] Bounce damage scaling (+X% per bounce?)
 - [ ] Enemy base HP (slime, bat, crab)
@@ -106,3 +106,77 @@ Track progress with [x] marks:
 2. **Align to BallxPit** - Would require character stat system rework
 
 **Recommendation**: Keep current system. The fixed-damage-per-type approach is simpler and more transparent to players. Consider adding character Strength stat as a **multiplier** rather than base, preserving ball type differentiation.
+
+---
+
+### 2. Ball Speed Per Level
+**Iteration**: 2 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Steam Discussion: How do stats work?](https://steamcommunity.com/app/2062430/discussions/0/687489618510307449/)
+- [Steam Discussion: Speed scaling](https://steamcommunity.com/app/2062430/discussions/0/624436409752945056/)
+
+**Key Findings**:
+- Ball speed is a **multiplier** to a base "normal" speed (arbitrary developer-defined)
+- Different ball types have different speeds based on traits:
+  - Heavy lead ball moves **slower** but deals 2x damage
+  - Other balls have fire/ice/poison/electric effects with standard speed
+- Speed unit is "possibly tiles per second"
+- Fire rate (balls per second) is separate from ball movement speed
+- Game speed settings also affect overall projectile speed
+
+**No explicit numeric values documented** - speed system appears to be relative/multiplier-based.
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_ball_speed.py`
+
+**Base Speed by Ball Type** (pixels/second):
+| Ball Type | Base Speed | Class |
+|-----------|------------|-------|
+| BASIC | 800 | Standard |
+| BURN | 800 | Standard |
+| FREEZE | 800 | Standard |
+| POISON | 800 | Standard |
+| BLEED | 800 | Standard |
+| LIGHTNING | 900 | Fast (+12.5%) |
+| IRON | 600 | Slow (-25%) |
+
+**Speed with Level Multipliers**:
+| Ball Type | L1 | L2 | L3 |
+|-----------|-----|------|------|
+| BASIC | 800 | 1200 | 1600 |
+| BURN | 800 | 1200 | 1600 |
+| FREEZE | 800 | 1200 | 1600 |
+| POISON | 800 | 1200 | 1600 |
+| BLEED | 800 | 1200 | 1600 |
+| LIGHTNING | 900 | 1350 | 1800 |
+| IRON | 600 | 900 | 1200 |
+
+**Design Philosophy**:
+- Most balls share standard 800 px/s base
+- Lightning: 12.5% faster (hit & run playstyle)
+- Iron: 25% slower (high damage trade-off)
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Speed System | Multiplier-based | Fixed px/s values | Both use relative approach |
+| Heavy Ball | Slower, 2x damage | 25% slower (-200 px/s) | **Aligned** |
+| Speed Variance | Traits determine speed | 2 variants (fast/slow) | GoPit simpler |
+| Level Scaling | Unknown | L2=1.5x, L3=2.0x | Same as damage |
+
+#### Alignment Recommendation
+
+**Priority**: P3 (Low)
+
+**Current Difference**: GoPit uses explicit pixel-per-second values while BallxPit uses multiplier-based relative speeds. Both implement the same concept (heavy = slow, some = fast).
+
+**Options**:
+1. **Keep current** - Clear, consistent, works well
+2. **Add more speed variants** - Could add "fast" effect balls like Haste
+
+**Recommendation**: Keep current system. The Iron ball's 25% slower speed with high damage mirrors BallxPit's heavy ball concept. Lightning as the "fast" ball provides variety. Consider adding more speed variants when introducing new ball types.
