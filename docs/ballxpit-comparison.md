@@ -12210,3 +12210,277 @@ pit_coins: int  // Earned from runs
 - **Lines**: ~12,500+
 - **Beads closed this session**: 6
 
+
+---
+
+## Appendix DZ: Ball Return & Catching Mechanic (FUNDAMENTAL DIFFERENCE)
+
+### The Core Difference
+
+**Sources**: [Steam Discussions](https://steamcommunity.com/app/2062430/discussions/0/624436409752895957/), [BallxPit Tips](https://ballxpit.org/guides/tips-tricks/)
+
+This is one of the MOST fundamental differences between the games.
+
+#### BallxPit Ball Economy
+
+| Aspect | Details |
+|--------|---------|
+| **Ball persistence** | Balls exist until caught OR hit bottom of screen |
+| **Catching** | Touch ball with character = instant return |
+| **Waiting** | Let ball bounce naturally = 2-3 seconds |
+| **DPS impact** | Manual catching = 30-40% more shots/minute |
+| **Fire rate** | Can only fire balls you HAVE |
+| **Baby balls** | Also part of ball economy |
+
+**Quote**: "Catching balls manually resets them instantly, while waiting for the bounce takes 2-3 seconds. More shots per second = more DPS."
+
+#### GoPit Current System
+
+```gdscript
+// ball.gd:188-192
+if collider.collision_layer & 1:  // walls layer
+    _bounce_count += 1
+    if _bounce_count > max_bounces:  // default: 10
+        despawn()  // Ball disappears
+        return
+```
+
+| Aspect | Details |
+|--------|---------|
+| **Ball persistence** | Despawns after `max_bounces` (10) |
+| **Catching** | None - no catching mechanic |
+| **Fire rate** | Fixed cooldown timer (0.5s) |
+| **Ball creation** | New balls created from nothing |
+| **Ball limit** | `max_balls` enforced by despawning oldest |
+
+### Impact on Gameplay
+
+| BallxPit | GoPit |
+|----------|-------|
+| Skill-based DPS optimization | Timer-based firing |
+| Active catching rewards skill | Passive waiting |
+| Ball economy creates strategy | Unlimited ball creation |
+| "Stand close to enemies" meta | Distance doesn't affect timing |
+| Fire rate upgrades matter MORE | Fire rate is simpler |
+
+### Recommendation (GoPit-ay9)
+
+To align with BallxPit:
+1. Remove `max_bounces` despawn
+2. Ball despawns when hitting bottom wall
+3. Add catching hitbox on player
+4. Catching = ball returns to inventory
+5. Fire only available balls in inventory
+6. Fire rate = how fast you can fire available balls
+
+**Priority**: P1 - Fundamental gameplay change
+
+---
+
+## Appendix EA: Fission/Fusion/Evolution Comparison
+
+### GoPit Current Implementation (WELL ALIGNED!)
+
+**File**: `scripts/autoload/fusion_registry.gd`
+
+GoPit already has all three upgrade types when collecting a Fusion Reactor:
+
+| Type | GoPit | BallxPit |
+|------|-------|----------|
+| **Fission** | 1-3 random upgrades | Up to 5 upgrades |
+| **Fusion** | Any 2 L3 → combined | Any 2 L3 → combined |
+| **Evolution** | 5 specific recipes | 42+ recipes |
+
+### Evolution Recipe Comparison
+
+**GoPit Recipes** (5 total):
+```gdscript
+"BURN_IRON": BOMB,        // Explodes on hit
+"FREEZE_LIGHTNING": BLIZZARD,  // Chains + freezes
+"BLEED_POISON": VIRUS,    // Spreading DoT + lifesteal
+"BURN_POISON": MAGMA,     // Leaves burning pools
+"BURN_FREEZE": VOID       // Alternates effects
+```
+
+**BallxPit Recipes** (42+ total):
+- Black Hole, Holy Laser, Mosquito King (top tier)
+- 3-way fusion: Vampire Lord + Mosquito King + Spider Queen
+- Many more combinations
+
+### Gap Analysis
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Fission mechanic | ✅ Aligned | 1-3 vs 5 upgrades |
+| Fusion mechanic | ✅ Aligned | Any 2 L3 balls |
+| Evolution mechanic | ⚠️ Content gap | 5 vs 42+ recipes |
+| Priority order | ✅ Aligned | Evo > Fusion > Fission |
+| UI flow | ✅ Aligned | Tab-based selection |
+
+**Priority**: P2 - Add more evolution recipes (content, not architecture)
+
+---
+
+## Appendix EB: Autofire Comparison
+
+### BallxPit Autofire
+
+**Sources**: [ScreenRant Guide](https://screenrant.com/ball-x-pit-should-you-use-autofire/), [Gamerblurb Guide](https://gamerblurb.com/articles/ball-x-pit-autofire-guide)
+
+| Aspect | Details |
+|--------|---------|
+| **Toggle** | F key or menu setting |
+| **Default** | OFF (player choice) |
+| **Behavior** | Continuously fires toward aim direction |
+| **Recommendation** | Use for wave clear, disable for bosses |
+| **Fire rate dependency** | Affected by ball catching speed |
+
+**Key insight**: Autofire still requires ball catching for optimal DPS.
+
+### GoPit Autofire
+
+**File**: `scripts/input/fire_button.gd`
+
+| Aspect | Details |
+|--------|---------|
+| **Toggle** | "AUTO" button in HUD |
+| **Default** | OFF |
+| **Behavior** | Fixed interval firing |
+| **Fire rate** | Cooldown-based, not ball-economy-based |
+
+### Gap Analysis
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Toggle exists | ✅ Aligned | Button in HUD |
+| Default OFF | ✅ Aligned | Player chooses |
+| Ball economy interaction | ❌ Gap | GoPit has fixed cooldown |
+
+---
+
+## Appendix EC: Baby Ball Mechanics Comparison
+
+### BallxPit Baby Balls
+
+**Sources**: [Steam Discussions](https://steamcommunity.com/app/2062430/discussions/0/624436409752831730/)
+
+| Aspect | Details |
+|--------|---------|
+| **Spawn source** | Leadership stat |
+| **Count** | Based on Leadership value |
+| **Ball economy** | Part of catchable ball pool |
+| **Damage** | Scaled by Leadership |
+| **Late game** | "Flooding screen with hundreds of small balls" |
+| **Empty Nester** | No baby balls, special mechanics instead |
+
+### GoPit Baby Balls
+
+**File**: `scripts/entities/baby_ball_spawner.gd`
+
+| Aspect | Details |
+|--------|---------|
+| **Spawn source** | Timer + Leadership multiplier |
+| **Count** | Based on `leadership` value |
+| **Ball economy** | NOT part of catchable pool |
+| **Damage** | Fixed base damage |
+| **Tactician bonus** | +2 starting, +30% spawn rate |
+
+### Gap Analysis
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Leadership affects count | ✅ Aligned | Multiplier exists |
+| Baby balls catchable | ❌ Gap | Not part of ball economy |
+| Late-game scaling | ⚠️ Partial | Less dramatic than BallxPit |
+
+---
+
+## Appendix ED: Boss Weak Points (MISSING IN GOPIT)
+
+### BallxPit Boss Weak Points
+
+**Sources**: [Deltia's Gaming](https://deltiasgaming.com/ball-x-pit-skeleton-king-boss-guide/), [Steam Discussions](https://steamcommunity.com/app/2062430/discussions/0/624436409752659829/)
+
+**Skeleton King Example**:
+- Only crown takes damage
+- Arms block direct shots
+- Requires bouncing off back wall OR pierce balls
+- Quote: "The skeleton king is the hardest boss mechanically, having only his crown vulnerable"
+
+**Strategies**:
+1. Pierce balls go through arms
+2. Wall bounce to hit crown from behind
+3. Ghost/Wind attacks bypass armor
+4. Baby ball swarms trivialize aiming
+
+### GoPit Boss System
+
+**File**: `scripts/entities/enemies/boss_base.gd`
+
+| Aspect | Status |
+|--------|--------|
+| Boss phases | ✅ Implemented (3 phases) |
+| HP scaling | ✅ Implemented |
+| Attack patterns | ✅ Slam, Summon, Split, Rage |
+| **Weak points** | ❌ MISSING |
+| Precision targeting | ❌ Not required |
+
+### Gap Analysis
+
+GoPit Slime King has phases and attacks, but **any hit does full damage**.
+
+**Recommendation (GoPit-9ss)**:
+- Add `weak_point` Area2D to boss
+- Only weak point collisions deal damage (or 2x damage)
+- Arms/body take reduced/no damage
+- Rewards skilled play and strategic ball choices
+
+---
+
+## Appendix EE: Session 5 Research Summary
+
+### Research Completed: January 11, 2026
+
+### Key Findings
+
+1. **Ball Return/Catching is FUNDAMENTAL** (DZ)
+   - BallxPit: Catch balls = instant return = 30-40% more DPS
+   - GoPit: Fixed cooldown, balls despawn after bounces
+   - This is #1 gameplay difference
+
+2. **Fission/Fusion/Evolution is WELL ALIGNED** (EA)
+   - GoPit already has all 3 upgrade types
+   - Only gap: 5 recipes vs 42+ (content issue)
+
+3. **Autofire mechanics differ slightly** (EB)
+   - Both have toggle, default OFF
+   - BallxPit autofire still needs catching for optimal DPS
+   - GoPit autofire is simpler (fixed cooldown)
+
+4. **Baby balls integrated differently** (EC)
+   - BallxPit: Part of catchable ball economy
+   - GoPit: Separate spawn system (not catchable)
+
+5. **Boss weak points MISSING** (ED)
+   - BallxPit: Skeleton King crown only
+   - GoPit: Any hit works equally
+
+### Updated Priority Matrix
+
+| Priority | Gap | Impact |
+|----------|-----|--------|
+| **P0** | Ball catching/return mechanic | Fundamental gameplay |
+| P0 | Unique character mechanics | Variety |
+| P1 | Boss weak points | Skill expression |
+| P1 | Level select UI | Progression |
+| P2 | More evolution recipes | Content |
+| P2 | Baby balls in catch economy | Consistency |
+
+### Sources Used This Session
+
+- [Steam Discussions - Fire Rate](https://steamcommunity.com/app/2062430/discussions/0/624436409752895957/)
+- [BallxPit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+- [ScreenRant Autofire Guide](https://screenrant.com/ball-x-pit-should-you-use-autofire/)
+- [Deltia's Skeleton King Guide](https://deltiasgaming.com/ball-x-pit-skeleton-king-boss-guide/)
+- [Steam Empty Nester Discussion](https://steamcommunity.com/app/2062430/discussions/0/624436409752831730/)
+
