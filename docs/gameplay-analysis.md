@@ -19,10 +19,10 @@ Track progress with [x] marks:
 - [x] XP to level up curve (100, 150, 200...?)
 - [x] Crit damage multiplier
 - [x] Crit chance mechanics
-- [ ] Status effect: Burn damage/duration
-- [ ] Status effect: Freeze slow %/duration
-- [ ] Status effect: Poison damage/duration
-- [ ] Status effect: Bleed damage/duration
+- [x] Status effect: Burn damage/duration
+- [x] Status effect: Freeze slow %/duration
+- [x] Status effect: Poison damage/duration
+- [x] Status effect: Bleed damage/duration
 - [ ] Boss HP (Slime King)
 - [ ] Boss weak point damage multiplier
 - [ ] Baby ball damage (% of parent)
@@ -629,3 +629,88 @@ Formula: `100 + (level - 1) * 50`
 3. **Add Dexterity stat** - Would require character stat rework
 
 **Recommendation**: Keep current crit system. Consider adding an **execute mechanic** as a future character passive (e.g., crit on low-HP enemies = instant kill). This would add strategic depth without system overhaul.
+
+---
+
+### 9. Status Effects (Burn, Freeze, Poison, Bleed)
+**Iteration**: 9 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Ball x Pit Advanced Mechanics](https://ballxpit.org/guides/advanced-mechanics/)
+
+**Key Findings**:
+- **Burn**: Max 5 stacks
+- **Bleed**: Max 24 stacks (Hemorrhage: 12+ stacks = 20% current HP nuke)
+- **Poison**: Max 8 stacks
+- **Frostburn**: 20s duration, max 4 stacks, +25% damage taken
+- **Disease**: 6s duration, max 8 stacks
+- Stack caps limit total DoT; once capped, switch targets
+- Leech applies 2 bleed stacks per second
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_status_effects.py`
+
+**Status Effect Values**:
+| Effect | Duration | DPS | Max Stacks | Special |
+|--------|----------|-----|------------|---------|
+| Burn | 3.0s | 5.0 | 1 | Refreshes duration |
+| Freeze | 2.0s | 0 | 1 | 50% slow |
+| Poison | 5.0s | 3.0 | 1 | Longer duration |
+| Bleed | ∞ | 2.0/stack | 5 | Permanent, stacking |
+
+**Detailed Breakdown**:
+
+**BURN**:
+- Duration: 3.0s (×Intelligence mult)
+- Damage: 2.5 per 0.5s = 5.0 DPS
+- Total: 15 damage over full duration
+- Behavior: Refreshes duration on reapplication
+
+**FREEZE**:
+- Duration: 2.0s (×Intelligence, ×Shatter bonus)
+- Slow: 50% movement speed reduction
+- No damage (crowd control only)
+- Shatter passive: +30% duration
+
+**POISON**:
+- Duration: 5.0s (×Intelligence mult)
+- Damage: 1.5 per 0.5s = 3.0 DPS
+- Total: 15 damage over full duration
+- Trade-off: Lower DPS, longer duration than Burn
+
+**BLEED**:
+- Duration: Permanent (until enemy dies)
+- Damage: 1.0 per 0.5s per stack = 2.0 DPS per stack
+- Max Stacks: 5 (up to 10 DPS total)
+- Most powerful sustained DoT
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Burn Stacks | 5 | 1 (refresh) | BallxPit more complex |
+| Bleed Stacks | 24 | 5 | **Significant gap** |
+| Bleed Nuke | 12+ = 20% HP | None | BallxPit unique |
+| Freeze Effect | +25% damage taken | 50% slow | **Different purpose** |
+| Poison Stacks | 8 | 1 (refresh) | BallxPit more complex |
+
+#### Alignment Recommendation
+
+**Priority**: P2 (Medium)
+
+**Key Differences**:
+1. GoPit status effects are simpler (1-5 stacks vs 4-24)
+2. GoPit Freeze is pure slow; BallxPit adds damage amp
+3. BallxPit's Hemorrhage (20% HP nuke) is powerful mechanic
+4. GoPit Bleed is permanent but lower stacks
+
+**Options**:
+1. **Keep current** - Simpler system, good for mobile
+2. **Add Freeze damage amp** - +25% damage taken while frozen
+3. **Increase Bleed stacks** - Up to 10-15 for scaling
+4. **Add Hemorrhage mechanic** - 10+ bleed stacks = HP% burst
+
+**Recommendation**: Keep streamlined status system for mobile. Consider adding **Freeze damage amp (+25%)** for Shatter synergy. For a future "Bleeder" character, implement Hemorrhage-style mechanic (high bleed stacks = burst damage).
