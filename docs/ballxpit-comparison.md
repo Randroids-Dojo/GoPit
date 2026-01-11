@@ -4372,3 +4372,101 @@ earned := wave * 10 + level * 25
 4. [ ] **Limited stats** - Only coins, runs, best wave
 5. [ ] **No achievements** - No milestone rewards
 
+
+---
+
+## Appendix AU: HUD Implementation (NEW)
+
+### HUD Elements
+
+| Element | Display | Location |
+|---------|---------|----------|
+| HP Bar | Current/Max HP | Top left |
+| Wave Label | "Stage Wave/Total" | Top center |
+| Mute Button | Speaker icon toggle | Top right |
+| Pause Button | Pause icon | Top right |
+| XP Bar | Progress to next level | Below top bar |
+| Level Label | "Lv.X" | Next to XP bar |
+| Combo Label | "Xx COMBO!" | Center (appears on combo) |
+
+### Combo System Display
+
+- Shows at 2+ combo
+- Color coding:
+  - White: Normal (< 1.5x)
+  - Yellow: 1.5x-2.0x multiplier
+  - Red: 2.0x+ multiplier
+- Pop animation on increment
+
+### Wave Display Format
+
+```gdscript
+"%s %d/%d" % [stage_name, wave_in_stage, waves_before_boss]
+# Example: "The Pit 3/10"
+```
+
+---
+
+## Appendix AV: Game Controller Flow (NEW)
+
+### Main Scene Wiring
+
+**Input Chain:**
+```
+Move Joystick → Player.set_movement_input()
+Aim Joystick → BallSpawner.set_aim_direction() + AimLine.show_line()
+Fire Button → BallSpawner.fire()
+Auto Toggle → FireButton.set_autofire()
+Ultimate Button → UltimateBlast.execute()
+```
+
+**Event Flow on Enemy Death:**
+```
+Enemy.died →
+  ├── _spawn_gem(position, xp_value)
+  ├── _maybe_spawn_fusion_reactor(position) [2%+ chance]
+  ├── _check_wave_progress()
+  ├── GameManager.record_enemy_kill()
+  └── GameManager.add_ultimate_charge()
+```
+
+### Wave Progression
+
+```gdscript
+enemies_per_wave = 5  # Fixed count
+enemies_killed_this_wave += 1
+if enemies_killed_this_wave >= enemies_per_wave:
+    _advance_wave()  # +1 wave, decrease spawn interval by 0.1s
+```
+
+### Boss Spawn Trigger
+
+```gdscript
+StageManager.boss_wave_reached.connect(_on_boss_wave_reached)
+# When wave_in_stage >= waves_before_boss:
+#   - Stop enemy spawning
+#   - Stop baby ball spawner
+#   - Spawn boss
+```
+
+### Fusion Reactor Drop Chance
+
+```gdscript
+var chance := 0.02 + GameManager.current_wave * 0.001
+# Wave 1: 2.1%
+# Wave 10: 3.0%
+# Wave 50: 7.0%
+```
+
+### Auto-Pause on Focus Loss
+
+```gdscript
+if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+    if GameManager.current_state == GameManager.GameState.PLAYING:
+        pause_overlay.show_pause()
+```
+
+### Ball Cleanup
+
+Balls despawning if `y < -50` or `y > viewport_height + 50`
+
