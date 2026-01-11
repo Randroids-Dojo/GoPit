@@ -8373,13 +8373,111 @@ func create_fused_ball_data(ball_a, ball_b) -> Dictionary:
 
 ---
 
+## Appendix CP: Status Effect System
+
+### BallxPit Status Effects
+
+- Burn (DoT)
+- Freeze (slow/stun)
+- Poison (DoT, stacking)
+- Bleed (stacking DoT)
+- Lightning chain (splash)
+- Various boss-specific effects
+
+### GoPit Status Effect System
+
+**Implementation (status_effect.gd):**
+```gdscript
+enum Type { BURN, FREEZE, POISON, BLEED }
+
+func _configure() -> void:
+    var int_mult: float = GameManager.character_intelligence_mult
+
+    match type:
+        Type.BURN:
+            duration = 3.0 * int_mult
+            damage_per_tick = 2.5  // 5 DPS
+            max_stacks = 1  // Refreshes duration
+
+        Type.FREEZE:
+            duration = 2.0 * int_mult * GameManager.get_freeze_duration_bonus()
+            slow_multiplier = 0.5  // 50% slow
+            max_stacks = 1
+
+        Type.POISON:
+            duration = 5.0 * int_mult
+            damage_per_tick = 1.5  // 3 DPS
+            max_stacks = 1
+
+        Type.BLEED:
+            duration = INF  // Permanent!
+            damage_per_tick = 1.0  // 2 DPS per stack
+            max_stacks = 5
+```
+
+**Features:**
+- ✅ 4 status effect types
+- ✅ Intelligence multiplier for duration
+- ✅ Character passive integration (Freeze duration bonus)
+- ✅ Bleed stacking (up to 5x)
+- ✅ Visual color tinting
+- ✅ Per-type audio (sound_manager integration)
+
+### Effect Details
+
+| Effect | Duration | DPS | Stacks | Special |
+|--------|----------|-----|--------|---------|
+| Burn | 3s | 5 | No (refresh) | - |
+| Freeze | 2s | 0 | No | 50% slow |
+| Poison | 5s | 3 | No | Longest duration |
+| Bleed | Infinite | 2/stack | 5 max | Permanent! |
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Burn | ✅ DoT | ✅ |
+| Freeze | ✅ Slow | ✅ |
+| Poison | ✅ DoT | ✅ |
+| Bleed | ✅ Stacking | ✅ |
+| Lightning chain | ⚠️ Ball effect | ✅ Status |
+| Stat scaling | ✅ Intelligence | ✅ |
+| Stacking limits | ✅ | ✅ |
+| Visual feedback | ✅ Color tint | ✅ |
+
+### What GoPit Does Well
+
+- ✅ Clean effect class with RefCounted
+- ✅ Stat scaling with character intelligence
+- ✅ Permanent bleed with stack cap
+- ✅ Color-coded visual feedback
+- ✅ Audio per effect type
+
+### Gaps
+
+1. **Lightning**: GoPit has lightning as ball effect, not status
+2. **Status immunity**: No boss immunity system
+3. **Cleanse**: No way to remove effects from player
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add boss immunity phases | Resist certain effects |
+| **P3** | Add player effects | Slow, burn from enemies |
+| **P3** | Add cleanse ability | Remove player debuffs |
+
+**GoPit has solid status effect implementation - matches BallxPit core mechanics!**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **99 appendices** (A through CO)
+- **100 appendices** (A through CP)
 - **91 open beads** tracking all gaps
-- **8,600+ lines** of comparison
+- **8,800+ lines** of comparison
 
 ### The #1 Fundamental Difference
 
