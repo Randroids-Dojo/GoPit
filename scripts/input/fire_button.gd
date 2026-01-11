@@ -18,12 +18,22 @@ var is_ready: bool = true
 var cooldown_timer: float = 0.0
 var autofire_enabled: bool = true  # Default ON for smoother gameplay
 var _shake_tween: Tween
+var _ball_spawner: Node2D = null
+var _balls_available: bool = true  # Ball return mechanic
 
 
 func _ready() -> void:
 	add_to_group("fire_button")
 	custom_minimum_size = Vector2(button_radius * 2, button_radius * 2)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	# Connect to ball spawner for ball return mechanic
+	call_deferred("_connect_to_ball_spawner")
+
+
+func _connect_to_ball_spawner() -> void:
+	_ball_spawner = get_tree().get_first_node_in_group("ball_spawner")
+	if _ball_spawner and _ball_spawner.has_signal("balls_available_changed"):
+		_ball_spawner.balls_available_changed.connect(_on_balls_available_changed)
 
 
 func _process(delta: float) -> void:
@@ -35,8 +45,8 @@ func _process(delta: float) -> void:
 			cooldown_finished.emit()
 		queue_redraw()
 
-	# Autofire: automatically fire when ready
-	if autofire_enabled and is_ready and GameManager.current_state == GameManager.GameState.PLAYING:
+	# Autofire: automatically fire when ready and balls available
+	if autofire_enabled and can_fire() and GameManager.current_state == GameManager.GameState.PLAYING:
 		_try_fire()
 
 
@@ -82,14 +92,14 @@ func _draw_arc_filled(center: Vector2, radius: float, start_angle: float, end_an
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if is_ready:
+			if can_fire():
 				_try_fire()
 			else:
 				_on_blocked()
 
 	elif event is InputEventScreenTouch:
 		if event.pressed:
-			if is_ready:
+			if can_fire():
 				_try_fire()
 			else:
 				_on_blocked()
@@ -133,7 +143,12 @@ func _flash_red() -> void:
 
 
 func can_fire() -> bool:
-	return is_ready
+	return is_ready and _balls_available
+
+
+func _on_balls_available_changed(available: bool) -> void:
+	_balls_available = available
+	queue_redraw()
 
 
 func get_cooldown_progress() -> float:

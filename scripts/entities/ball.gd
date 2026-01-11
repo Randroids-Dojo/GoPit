@@ -6,6 +6,7 @@ const StatusEffect := preload("res://scripts/effects/status_effect.gd")
 signal hit_enemy(enemy: Node2D)
 signal hit_gem(gem: Node2D)
 signal despawned
+signal returned  # Emitted when ball returns to player (bottom of screen)
 
 enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON }
 
@@ -27,6 +28,9 @@ var registry_type: int = -1  # BallRegistry.BallType if set from registry
 var _trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 8
 var _particle_trail: GPUParticles2D = null
+
+# Ball return mechanic - balls return when crossing bottom of screen
+const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position
 
 # Trail particle scenes per ball type (preloaded for performance)
 const TRAIL_SCENE_FIRE: PackedScene = preload("res://scenes/effects/fire_trail.tscn")
@@ -188,6 +192,11 @@ func _physics_process(delta: float) -> void:
 			_trail_points.remove_at(0)
 		queue_redraw()
 
+	# Check if ball has crossed the bottom threshold (return mechanic)
+	if global_position.y > RETURN_Y_THRESHOLD:
+		return_to_player()
+		return
+
 	var collision := move_and_collide(velocity * delta)
 	if collision:
 		var collider := collision.get_collider()
@@ -195,9 +204,7 @@ func _physics_process(delta: float) -> void:
 		# Bounce off walls
 		if collider.collision_layer & 1:  # walls layer
 			_bounce_count += 1
-			if _bounce_count > max_bounces:
-				despawn()
-				return
+			# Removed despawn on max_bounces - balls now return at bottom of screen
 			direction = direction.bounce(collision.get_normal())
 			SoundManager.play(SoundManager.SoundType.HIT_WALL)
 
@@ -277,6 +284,17 @@ func set_direction(dir: Vector2) -> void:
 
 func despawn() -> void:
 	despawned.emit()
+	# Return to pool if pooled, otherwise free
+	if has_meta("pooled") and PoolManager:
+		reset()
+		PoolManager.release_ball(self)
+	else:
+		queue_free()
+
+
+func return_to_player() -> void:
+	"""Ball has reached bottom of screen - return to player for reuse"""
+	returned.emit()
 	# Return to pool if pooled, otherwise free
 	if has_meta("pooled") and PoolManager:
 		reset()
