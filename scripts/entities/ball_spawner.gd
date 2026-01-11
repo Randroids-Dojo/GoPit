@@ -1,8 +1,11 @@
 extends Node2D
 ## Spawns balls in the aimed direction when fire is triggered
 ## Now integrates with BallRegistry for ball types and levels
+## Ball Return Mechanic: Balls return when reaching bottom of screen
 
 signal ball_spawned(ball: Node2D)
+signal ball_returned  # Emitted when a ball returns to player
+signal balls_available_changed(available: bool)  # For fire button UI
 
 @export var ball_scene: PackedScene
 @export var spawn_offset: float = 30.0
@@ -23,6 +26,10 @@ var ball_type: int = 0  # Legacy: 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
 var _damage_bonus: int = 0
 var _speed_bonus: float = 0.0
 
+# Ball Return Mechanic - track balls in flight
+var balls_in_flight: int = 0
+var _previous_available: bool = true
+
 
 func _ready() -> void:
 	add_to_group("ball_spawner")
@@ -35,8 +42,26 @@ func set_aim_direction(direction: Vector2) -> void:
 		current_aim_direction = direction.normalized()
 
 
+func set_aim_direction_xy(x: float, y: float) -> void:
+	"""Set aim direction using separate x, y components (for automation tests)"""
+	set_aim_direction(Vector2(x, y))
+
+
+func can_fire() -> bool:
+	"""Check if player has balls available to fire (return mechanic)"""
+	return balls_in_flight < max_balls
+
+
+func get_balls_in_flight() -> int:
+	return balls_in_flight
+
+
 func fire() -> void:
 	if current_aim_direction == Vector2.ZERO:
+		return
+
+	# Check ball availability (return mechanic)
+	if not can_fire():
 		return
 
 	# Get all active ball types from slots
@@ -138,6 +163,12 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	else:
 		get_parent().add_child(ball)
 
+	# Track ball return (connect to returned signal)
+	ball.returned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.despawned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	balls_in_flight += 1
+	_check_availability_changed()
+
 	ball_spawned.emit(ball)
 
 
@@ -154,6 +185,21 @@ func _registry_to_ball_type(registry_type: int) -> int:
 		5: return 3  # LIGHTNING -> LIGHTNING
 		6: return 6  # IRON -> IRON
 	return 0
+
+
+func _on_ball_returned(_ball: Node) -> void:
+	"""Called when a ball returns to player (reaches bottom of screen)"""
+	balls_in_flight = maxi(0, balls_in_flight - 1)
+	ball_returned.emit()
+	_check_availability_changed()
+
+
+func _check_availability_changed() -> void:
+	"""Emit signal if ball availability changed"""
+	var now_available := can_fire()
+	if now_available != _previous_available:
+		_previous_available = now_available
+		balls_available_changed.emit(now_available)
 
 
 func increase_damage(amount: int) -> void:
