@@ -4556,3 +4556,145 @@ GoPit's procedural audio is actually a **differentiator** - zero audio file depe
 2. [ ] **No boss music** - No special track for boss fights
 3. [ ] **Limited variety** - Single pattern loops
 
+
+---
+
+## Appendix AX: Visual Feedback Systems (NEW)
+
+### Damage Feedback
+
+**Damage Vignette (`damage_vignette.gd`):**
+- Red overlay flash on player damage
+- Flash duration: 0.15s
+- Max alpha: 0.4
+- Low HP warning at ≤30% health (pulsing)
+
+**Damage Numbers (`damage_number.gd`):**
+- Float up 60px over 0.6s
+- Fade out with 0.2s delay
+- Random horizontal spread ±10px
+- White for damage, green for XP
+
+### Danger Indicators
+
+**Danger Indicator (`danger_indicator.gd`):**
+- Red pulsing bar at screen bottom
+- Tracks number of enemies in danger zone
+- Pulse: 0.5 → 0.2 alpha over 0.3s loops
+- Fades out when danger clears
+
+### Ultimate Blast
+
+**Ultimate Blast (`ultimate_blast.gd`):**
+- White flash (0.8 alpha, 0.5s fade)
+- Camera shake (intensity 25, decay 4)
+- Kills all enemies (9999 damage)
+- Duration: 0.6s total
+
+### Particle Effects
+
+**Hit Particles (`hit_particles.gd`):**
+- GPU particles (one-shot)
+- Auto-cleanup on completion
+
+### Screen Shake
+
+**Camera Shake (`camera_shake.gd`):**
+- Random offset within intensity bounds
+- Exponential decay (lerp to 0)
+- Threshold: 0.1 to stop
+
+### Visual Effects Summary
+
+| Effect | Trigger | Duration |
+|--------|---------|----------|
+| Damage flash | Player hit | 0.15s |
+| Low HP pulse | HP ≤ 30% | Continuous |
+| Danger indicator | Enemy near | While active |
+| Ultimate flash | Ultimate used | 0.5s |
+| Damage numbers | Any damage/XP | 0.6s |
+| Hit particles | Ball hits enemy | ~0.3s |
+| Camera shake | Various | Variable |
+
+### Missing Effects (vs BallxPit)
+
+1. [ ] **No hit flash on enemies** - Brief white overlay (GoPit-4nsz)
+2. [ ] **No ball type trails** - Particle trails per ball type (GoPit-2nle)
+3. [ ] **No boss phase VFX** - Transition effects (GoPit-906t)
+4. [ ] **No evolution flash** - Full-screen effect for evolutions
+5. [ ] **Screen shake toggle missing** - Accessibility option (GoPit-671)
+
+
+---
+
+## Appendix AY: Status Effect Implementation (NEW)
+
+### Status Effect Types
+
+| Type | Duration | DPS | Tick | Max Stacks | Special |
+|------|----------|-----|------|------------|---------|
+| Burn | 3.0s × INT | 5.0 | 0.5s | 1 | Refreshes on reapply |
+| Freeze | 2.0s × INT × bonus | 0 | - | 1 | 50% slow |
+| Poison | 5.0s × INT | 3.0 | 0.5s | 1 | - |
+| Bleed | ∞ | 2.0/stack | 0.5s | 5 | Permanent, stacks |
+
+**Note:** Duration scales with character Intelligence stat
+
+### Effect Colors
+
+| Type | Color (RGB multiplier) |
+|------|------------------------|
+| Burn | (1.5, 0.6, 0.2) Orange |
+| Freeze | (0.5, 0.8, 1.3) Ice Blue |
+| Poison | (0.4, 1.2, 0.4) Green |
+| Bleed | (1.3, 0.3, 0.3) Red |
+
+### Implementation Details
+
+**Damage Calculation:**
+```gdscript
+# Bleed damage per tick:
+damage = damage_per_tick * stacks  # 1.0 * stacks per 0.5s
+
+# Other effects:
+damage = damage_per_tick  # Fixed per tick
+```
+
+**Freeze Slow:**
+```gdscript
+slow_multiplier = 0.5  # Enemy speed × 0.5
+```
+
+### BallxPit Comparison Gaps
+
+1. [ ] **Freeze missing +25% damage amp** (GoPit-efld)
+   - BallxPit: Frozen enemies take 25% more damage
+   - GoPit: Only slows, no damage amplification
+
+2. [ ] **Bleed missing on-hit damage** (GoPit-69fj)
+   - BallxPit: Each hit on bleeding enemy deals extra damage
+   - GoPit: Only DoT (damage over time)
+
+3. [ ] **Burn doesn't stack** (GoPit-ete)
+   - BallxPit: 3 stacks max
+   - GoPit: 1 stack, refreshes duration
+
+4. [ ] **Poison doesn't stack** (GoPit-m84)
+   - BallxPit: 5 stacks max
+   - GoPit: 1 stack
+
+5. [ ] **Bleed max stacks too low** (GoPit-vfvv)
+   - BallxPit: 8 stacks
+   - GoPit: 5 stacks
+
+### Status Effect Proc Sources
+
+| Ball Type | Effect | Chance |
+|-----------|--------|--------|
+| Burn | BURN | 100% |
+| Freeze | FREEZE | 100% |
+| Poison | POISON | 100% |
+| Bleed | BLEED | 100% |
+| Iron | None | - |
+| Lightning | None | - |
+
