@@ -7035,11 +7035,97 @@ Research sources:
 
 ---
 
+## Appendix CB: Biome and Environment Systems
+
+Research sources:
+- [Character Unlock Guide](https://ballxpit.org/guides/character-unlock-guide/)
+- [New Game Plus Guide](https://ballxpit.org/guides/new-game-plus/)
+
+### BallxPit Biome System
+
+**8 Unique Biomes:**
+
+| Biome | Features | Unlockable |
+|-------|----------|------------|
+| Bone x Yard | Base biome | Cozy Home Blueprint |
+| Snowy x Shores | Ice/freeze effects | Veteran's Hut Blueprint |
+| Liminal x Desert | Sand hazards | Mausoleum Blueprint |
+| Fungal x Forest | Poison/spore effects | Iron Fortress Blueprint |
+| Desert (Biome 8) | Final boss | Final character unlock |
+| + 3 more | Various | Various blueprints |
+
+**Each biome has:**
+- Unique visual theme
+- Biome-specific enemy variants
+- Environment hazards
+- Unlockable blueprints (buildings for base)
+- Specific boss encounters
+
+### GoPit Biome System
+
+**4 Biomes (cosmetic only):**
+
+| Biome | Implementation |
+|-------|----------------|
+| The Pit | `background_color = 0.1, 0.1, 0.18` |
+| Burning Sands | `background_color = 0.2, 0.1, 0.05` |
+| Frozen Depths | `background_color = 0.05, 0.15, 0.2` |
+| Final Descent | `background_color = 0.15, 0.05, 0.15` |
+
+**GoPit biome.gd:**
+```gdscript
+@export var biome_name: String = "Unknown"
+@export var background_color: Color
+@export var wall_color: Color
+@export var waves_before_boss: int = 10
+
+## Future: enemy variants, hazards, music
+# @export var hazard_scenes: Array[PackedScene]
+# @export var enemy_variants: Dictionary
+# @export var music_track: AudioStream
+```
+
+**Key observation:** Hazards, enemy variants, and music are commented out as "Future".
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Number of biomes | 4 | 8 |
+| Visual theming | ✅ Colors | ✅ Full art |
+| Enemy variants | ❌ None | ✅ Per-biome |
+| Environment hazards | ❌ None | ✅ Per-biome |
+| Biome-specific music | ❌ None | ✅ Per-biome |
+| Unlockable content | ❌ None | ✅ Blueprints |
+| Boss variety | 1 type | 3 per biome |
+
+### Environment Hazards (BallxPit has, GoPit missing)
+
+BallxPit environment effects by biome:
+- **Ice biomes**: Slippery surfaces, freeze zones
+- **Fire biomes**: Burning ground, heat damage
+- **Poison biomes**: Toxic clouds, spore damage
+- **Desert**: Sand traps, visibility reduction
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 4 more biomes | Match BallxPit's 8 |
+| **P2** | Implement hazard_scenes | Add biome hazards |
+| **P2** | Add enemy variants | Biome-themed enemies |
+| **P2** | Add biome music | Unique tracks per biome |
+| **P3** | Add biome unlockables | Blueprints or rewards |
+
+**GoPit has biome infrastructure - needs content.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **85 appendices** (A through CA)
+- **86 appendices** (A through CB)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
