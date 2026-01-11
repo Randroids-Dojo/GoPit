@@ -4109,3 +4109,96 @@ These timings create GoPit's gameplay feel:
 - Warning time could decrease in later waves
 
 **Priority:** P4 (fine-tuning) - Current values are reasonable.
+
+
+## Appendix AP: Stage/Biome System Implementation (NEW)
+
+### GoPit's Current Biome Structure
+
+**Biome Resource (`resources/biomes/biome.gd`):**
+```gdscript
+@export var biome_name: String
+@export var background_color: Color
+@export var wall_color: Color
+@export var waves_before_boss: int = 10
+# COMMENTED OUT / Future:
+# @export var hazard_scenes: Array[PackedScene]
+# @export var enemy_variants: Dictionary
+# @export var music_track: AudioStream
+```
+
+**Current Stages (4 total):**
+
+| Stage | Name | Waves | Background | Wall Color |
+|-------|------|-------|------------|------------|
+| 1 | The Pit | 10 | Dark purple | Purple-gray |
+| 2 | Frozen Depths | 10 | Blue-gray | Ice blue |
+| 3 | Burning Sands | 10 | (check) | (check) |
+| 4 | Final Descent | 10 | (check) | (check) |
+
+**Stage Manager Logic:**
+- Tracks `current_stage` and `wave_in_stage`
+- Emits `boss_wave_reached` when `wave_in_stage >= waves_before_boss`
+- `complete_stage()` advances to next stage
+- Emits `game_won` when all stages complete
+
+### BallxPit Stage System (Inferred)
+
+- **8 stages** (vs GoPit's 4)
+- Variable waves per stage (easier stages have fewer)
+- Stage-specific enemy variants
+- Environmental hazards per biome
+- Stage unlock requirements
+
+### Key Gaps
+
+1. [ ] **No hazard system** - `hazard_scenes` is commented out
+2. [ ] **No enemy variants** - `enemy_variants` is commented out  
+3. [ ] **No stage music** - `music_track` is commented out
+4. [ ] **Fixed 10 waves per stage** - Should vary (5-7 for early, 10-12 for late)
+5. [ ] **Only 4 stages** - Need 4 more to match BallxPit's 8
+6. [ ] **No unlock requirements** - All stages available immediately
+
+---
+
+## Appendix AQ: Character Stat System Implementation (NEW)
+
+### GoPit's Character Resource
+
+**Stats (all multipliers relative to 1.0 baseline):**
+
+| Stat | Display | Range | Effect |
+|------|---------|-------|--------|
+| Endurance | HP | 0.5-2.0 | HP multiplier |
+| Strength | DMG | 0.5-2.0 | Damage multiplier |
+| Leadership | TEAM | 0.5-2.0 | Baby ball spawn rate |
+| Speed | SPD | 0.5-2.0 | Movement speed |
+| Dexterity | CRIT | 0.5-2.0 | Crit chance multiplier |
+| Intelligence | INT | 0.5-2.0 | Effect duration multiplier |
+
+**Current Characters (6):**
+
+| Character | END | STR | LEAD | SPD | DEX | INT | Starting Ball | Passive |
+|-----------|-----|-----|------|-----|-----|-----|---------------|---------|
+| Rookie | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | Iron | +10% XP |
+| Pyro | 0.8 | 1.4 | 0.9 | 1.0 | 1.0 | 0.9 | Burn | +20% fire, burning enemies +25% damage taken |
+| Frost Mage | ? | ? | ? | ? | ? | ? | Freeze | ? |
+| Tactician | ? | ? | ? | ? | ? | ? | ? | ? |
+| Gambler | ? | ? | ? | ? | ? | ? | ? | ? |
+| Vampire | ? | ? | ? | ? | ? | ? | ? | ? |
+
+### BallxPit Character Differences
+
+BallxPit characters have **unique firing mechanics**, not just stat modifiers:
+- The Repentant: Bounce damage specialist
+- The Shade: Reverse firing direction
+- The Itchy Finger: 2x fire rate
+- The Shieldbearer: Catch bonus damage
+
+### Key Gaps
+
+1. [ ] **Passives are stat-based only** - No unique mechanics
+2. [ ] **No firing mechanic variations** - All characters fire the same way
+3. [ ] **Unlock system not functional** - `unlock_requirement` field exists but unused (GoPit-98r)
+4. [ ] **Only 6 characters** - BallxPit has 10+
+
