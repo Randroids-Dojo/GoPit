@@ -1055,11 +1055,23 @@ Research sources:
 - This creates exponential damage for ricochet shots
 - The Repentant character specializes in this mechanic
 
-**Ball Catching:**
-- Players can manually catch balls
-- Catching = instant re-fire (saves 2-3 seconds)
-- Shieldbearer: +100% damage to caught balls
-- Active play rewards: more catches = more DPS
+**Ball Catching (CRITICAL MECHANIC):**
+
+Research: [Ball x Pit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+
+- Players can manually catch balls with their hitbox
+- **Catching = instant reset** vs 2-3 seconds waiting for bounce at bottom
+- **"Ball X Pit is NOT an idle game!"** - active catching is core gameplay
+- **30-40% more shots per minute** from active catching
+- **Can double DPS** with proper catching technique
+- Shieldbearer character: +100% damage to caught balls
+- Bottled Tornado passive: synergizes with catch mechanic
+- **Mini-boss strategy**: Attack up close, catch immediately after
+
+**DPS Math:**
+- 10 minute run with passive play: ~200 balls fired
+- 10 minute run with active catching: ~280-320 balls fired
+- Over full run: 60-90 seconds of damage time saved
 
 **Ball Return:**
 - Balls return to player after hitting back wall
@@ -5109,5 +5121,302 @@ boss.boss_defeated.connect(_on_boss_defeated)
 
 ### Documentation Complete
 
-All game systems have been analyzed and documented in **65 appendices** totaling **5,100+ lines** of comparison documentation.
+All game systems have been analyzed and documented in **66 appendices** totaling **5,200+ lines** of comparison documentation.
+
+---
+
+## Appendix BG: Autofire Mechanics Deep Comparison (NEW)
+
+Research sources:
+- [ScreenRant - Should You Use Autofire?](https://screenrant.com/ball-x-pit-should-you-use-autofire/)
+- [Deltia's Gaming - Autofire Guide](https://deltiasgaming.com/ball-x-pit-autofire-guide/)
+- [Spot Monster - Autofire Guide](https://spot.monster/games/game-guides/ball-x-pit-autofire-guide-2/)
+
+### Critical Architecture Difference
+
+**BallxPit autofire is fundamentally tied to the ball-return system:**
+
+```
+BALLXPIT FIRING CYCLE:
+┌──────────────────────────────────────────────────────┐
+│  1. Ball fired → bounces → hits bottom OR caught    │
+│  2. Ball returns to player (appears in queue)       │
+│  3. WITH AUTOFIRE: fires immediately when available │
+│  4. WITHOUT AUTOFIRE: waits for player input        │
+│  5. Repeat                                          │
+└──────────────────────────────────────────────────────┘
+
+Fire Rate = How quickly balls return + autofire setting
+```
+
+**GoPit autofire uses a simple cooldown timer:**
+
+```
+GOPIT FIRING CYCLE:
+┌──────────────────────────────────────────────────────┐
+│  1. Ball fired → bounces → despawns after max_bounces│
+│  2. Cooldown timer starts (0.5s default)            │
+│  3. WITH AUTOFIRE: fires immediately when cooldown  │
+│  4. WITHOUT AUTOFIRE: waits for button press        │
+│  5. Repeat                                          │
+└──────────────────────────────────────────────────────┘
+
+Fire Rate = Cooldown timer (fixed, no ball dependency)
+```
+
+### BallxPit Autofire Behavior
+
+**Toggle Controls:**
+- Default: F key or Mouse Scroll
+- Remappable in settings
+
+**When Autofire is ON:**
+- Balls fire automatically "as soon as they're collected/returned"
+- Both regular and special balls fire in queue order
+- Player focuses on movement and dodge
+- "Constant damage to enemies"
+
+**When Autofire is OFF:**
+- Game displays "current ball queue"
+- Player chooses when to fire
+- Better for precise shots at concentrated enemies
+- Essential for certain characters (Empty Nester, Makeshift Sisyphus)
+
+**Strategic Implications:**
+- Autofire ON: "waiting for ball return" = can't spam fire
+- Having balls "ready" for crucial moments requires autofire OFF
+- Toggle mid-combat is expected gameplay
+
+### GoPit Autofire Behavior
+
+**Location:** `scripts/input/fire_button.gd`
+
+```gdscript
+var autofire_enabled: bool = false  # OFF by default
+
+func _process(delta: float) -> void:
+    # Autofire: automatically fire when ready
+    if autofire_enabled and is_ready and GameManager.current_state == GameManager.GameState.PLAYING:
+        _try_fire()
+```
+
+**Toggle Controls:**
+- Button in HUD (visual toggle)
+- No keyboard shortcut
+
+**When Autofire is ON:**
+- Fires every `cooldown_duration` seconds (0.5s default)
+- No ball availability check - cooldown only
+- Character speed multiplier affects cooldown
+
+**When Autofire is OFF:**
+- Manual button press required
+- Same cooldown applies
+
+### Comparison Table
+
+| Feature | GoPit | BallxPit | Impact |
+|---------|-------|----------|--------|
+| **Fire gating** | Cooldown timer | Ball availability | **CRITICAL** |
+| **Autofire default** | OFF | ON (primary mode) | Different feel |
+| **Toggle key** | None (button only) | F / Scroll | Accessibility |
+| **Ball queue display** | No | Yes (when manual) | Missing |
+| **Strategy** | Always can fire | Wait for returns | Different |
+| **Catching effect** | N/A | Faster fire rate | Missing mechanic |
+
+### Gameplay Impact
+
+**BallxPit feels:**
+- Strategic (manage ball availability)
+- Rewarding (catching = faster DPS)
+- Tense (balls out = vulnerable window)
+- Thoughtful (save balls for precise shots)
+
+**GoPit feels:**
+- Consistent (always same fire rate)
+- Simple (no ball management)
+- Less dynamic (no catch reward)
+- Less tension (always ready to fire)
+
+### Characters Affected by Autofire
+
+**BallxPit:**
+- **Empty Nester**: Must turn autofire OFF (fewer balls, precision needed)
+- **Makeshift Sisyphus**: Autofire OFF recommended (limited ball count)
+- Most characters: Autofire ON works fine
+
+**GoPit:**
+- No character-specific autofire considerations
+- All characters use same fire rate mechanics
+
+### Recommendations
+
+| Priority | Change | Reason |
+|----------|--------|--------|
+| **P1** | Implement ball-return system | Foundation for autofire fix |
+| **P2** | Change autofire default to ON | Match BallxPit |
+| **P2** | Add keyboard toggle (F key) | Match controls |
+| **P2** | Add ball queue UI when manual | Show pending balls |
+| **P3** | Add character-specific autofire notes | For Empty Nester-style chars |
+
+### Related Beads
+
+- **GoPit-ay9**: Ball return mechanic (P1) - Prerequisite for proper autofire
+- **GoPit-7n5**: Autofire default ON (P2)
+- **GoPit-6zk**: Ball slot system (P0) - Affects ball availability
+
+---
+
+## Appendix BH: Level Select and Stage Progression System (NEW)
+
+Research sources:
+- [GameRant - All Characters & Stage List](https://gamerant.com/ball-x-pit-all-characters-stage-list-unlocks/)
+- [Ball x Pit Beginner Guide](https://ballxpit.space/ball-x-pit-beginner-guide)
+- [Wikipedia - Ball x Pit](https://en.wikipedia.org/wiki/Ball_x_Pit)
+
+### BallxPit Stage System
+
+**8 Themed Stages:**
+| # | Stage Name | Theme |
+|---|-----------|-------|
+| 1 | The Bone x Yard | Skeleton/undead (default) |
+| 2 | The Snowy x Shores | Ice/cold |
+| 3 | The Liminal x Desert | Desert/sand |
+| 4 | The Fungal x Forest | Mushroom/organic |
+| 5 | The Gory x Grasslands | Nature/green |
+| 6 | The Smoldering x Depths | Fire/lava |
+| 7 | The Heavenly x Gates | Sky/celestial |
+| 8 | The Vast x Void | Space/final |
+
+**Unlock Mechanism - Elevator System:**
+```
+STAGE UNLOCK FLOW:
+┌───────────────────────────────────────────────────────────┐
+│  1. Complete any stage with a character → earn 1 gear     │
+│  2. Different character = different gear                  │
+│  3. Gears upgrade elevator to unlock new stages           │
+│  4. Stage 2 needs ~2 gears, Stage 8 needs ~5+ gears       │
+│  5. 16 characters × 8 stages = 128 possible gear unlocks  │
+└───────────────────────────────────────────────────────────┘
+```
+
+**Level Select Screen Features:**
+- Stage preview with biome visuals
+- Lock indicators for unavailable stages
+- Gear progress display
+- Character completion tracking per stage
+- Choose starting stage before run
+
+### GoPit Current Stage System
+
+**4 Biomes (from stage_manager.gd):**
+| # | Biome Resource | Name |
+|---|---------------|------|
+| 1 | the_pit.tres | The Pit (Caverns) |
+| 2 | frozen_depths.tres | Frozen Depths |
+| 3 | burning_sands.tres | Burning Sands |
+| 4 | final_descent.tres | Final Descent |
+
+**Current Implementation:**
+```gdscript
+# stage_manager.gd - Linear progression only
+func _load_stages() -> void:
+    stages = [
+        preload("res://resources/biomes/the_pit.tres"),
+        preload("res://resources/biomes/frozen_depths.tres"),
+        preload("res://resources/biomes/burning_sands.tres"),
+        preload("res://resources/biomes/final_descent.tres"),
+    ]
+
+func complete_stage() -> void:
+    current_stage += 1  # Linear advance only
+    if current_stage >= stages.size():
+        game_won.emit()
+```
+
+**What GoPit is Missing:**
+1. **No level select screen** - Goes straight to character select
+2. **No stage unlock system** - All stages linear in single run
+3. **No gear/currency for stage progression**
+4. **No replay incentive** - No tracking of character×stage completions
+5. **No choose-your-starting-stage** option
+
+### Critical Difference: Meta-Progression
+
+**BallxPit City Builder (New Ballbylon):**
+- 70+ unique buildings
+- Build character houses to unlock characters
+- Buildings grant permanent stat boosts
+- Separate progression loop from combat
+- Visual base that grows over time
+- Blueprints earned by completing runs
+
+**GoPit Meta Shop:**
+```gdscript
+# meta_shop.gd - Simple upgrade menu
+var upgrade_categories := [
+    "Max Health",
+    "Move Speed",
+    "Fire Rate",
+    "Ball Damage",
+    "XP Multiplier"
+]
+```
+- Menu-based upgrades only
+- No visual base building
+- No character unlock buildings
+- Less engaging progression feel
+
+### Comparison Table
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Total stages** | 4 | 8 | **-4 stages** |
+| **Stage selection** | None (linear) | Full level select | **MISSING** |
+| **Unlock system** | None | Gear + elevator | **MISSING** |
+| **Character×stage tracking** | None | Full matrix | **MISSING** |
+| **Meta-progression style** | Menu upgrades | City builder | **Major gap** |
+| **Replay incentive** | Low | High (completion %) | **MISSING** |
+| **Starting stage choice** | Always stage 1 | Any unlocked | **MISSING** |
+
+### Recommendations
+
+| Priority | Feature | Description |
+|----------|---------|-------------|
+| **P2** | Add level select screen | Show all stages, locked/unlocked |
+| **P2** | Implement gear currency | Earned per character×stage completion |
+| **P2** | Stage unlock progression | Require gears to access later stages |
+| **P2** | Add 4 more stages | Match BallxPit's 8 stages |
+| **P3** | Character completion tracking | Track which chars beat which stages |
+| **P3** | Consider city builder | Major feature but high effort |
+
+### Implementation Notes
+
+**Level Select Screen would need:**
+```
+UI Elements:
+- Stage cards/buttons (8 total)
+- Gear count display
+- Progress percentage
+- Lock overlays for unavailable stages
+- Character completion icons per stage
+
+Flow Change:
+Main Menu → Character Select → Level Select → Game
+(instead of)
+Main Menu → Character Select → Game (always stage 1)
+```
+
+**Minimum Viable Level Select:**
+1. Show all stages as buttons
+2. Gray out locked stages
+3. Display gear count
+4. Track highest stage reached per character
+5. Allow selecting any unlocked stage as starting point
+
+### Related Beads
+
+- **GoPit-26ll**: Add 4 more stages (P2)
+- **GoPit-kohr**: Implement meta-progression city builder (P3)
+- Needs new bead: Level select screen implementation
 
