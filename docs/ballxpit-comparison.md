@@ -13998,15 +13998,15 @@ Each character has a **unique firing mechanic** beyond just stat modifiers.
 | # | Character | Starting Ball | Unique Mechanic |
 |---|-----------|---------------|-----------------|
 | 1 | The Warrior | Bleed | No special ability (balanced stats) |
-| 2 | The Itchy Finger | Burn | **2x fire rate**, full speed while shooting |
+| 2 | The Itchy Finger | Burn | **2x fire rate**, full speed while shooting, **CANNOT toggle autofire off** |
 | 3 | The Repentant | Freeze | **+5% damage/bounce**, balls return via back wall |
 | 4 | The Cohabitants | Brood Mother | **Fire double balls** in mirrored direction, 50% damage each |
 | 5 | The Shade | Dark | **Fire from behind enemies**, 10% base crit rate |
 | 6 | The Embedded | Poison | **Pierce all enemies** until hitting wall |
-| 7 | The Empty Nester | Ghost | **No baby balls** but fires multiple special balls at once |
+| 7 | The Empty Nester | Ghost | **No baby balls** but fires multiple special balls at once (benefits from manual aim) |
 | 8 | The Shieldbearer | Iron | **Shield bounces balls** toward enemies |
 | 9 | The Spendthrift | Vampire | **Fire all equipped balls** simultaneously in arc |
-| 10 | The Makeshift Sisyphus | Earthquake | **4x AoE/status multiplier**, trades direct damage |
+| 10 | The Makeshift Sisyphus | Earthquake | **4x AoE/status multiplier**, no baby balls (benefits from manual aim) |
 | 11 | The Radical | Wind | **AI controls everything** - movement, aiming, upgrades |
 | 12 | The Flagellant | Egg Sac | Balls bounce normally off bottom screen boundary |
 | 13 | The Cogitator | Laser (V) | +2 seconds to harvest timer (meta mechanic) |
