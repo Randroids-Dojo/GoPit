@@ -2935,3 +2935,179 @@ BallxPit has similar juice elements:
 - Red crit numbers with "CRIT!" prefix
 - Hit stop on boss kills (50ms)
 - Bounce damage indicator (if bounce damage added)
+
+
+## Appendix AB: Enemy Spawning and Wave Structure (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/entities/enemies/enemy_spawner.gd`
+
+**Spawn Pattern:**
+- Timer-based (variable interval with random variance)
+- Random X position along top of screen
+- Enemy type based on wave number:
+  - Wave 1: Slimes only
+  - Wave 2-3: 70% Slimes, 30% Bats
+  - Wave 4+: 50% Slimes, 30% Bats, 20% Crabs
+- Burst spawn chance (10-30% depending on difficulty)
+
+**Wave Structure:**
+- 10 waves per stage (configurable per biome)
+- 5 enemies killed = wave complete
+- Boss at end of each stage
+- 4 total stages
+
+**Code summary:**
+```gdscript
+# enemy_spawner.gd
+func spawn_enemy() -> EnemyBase:
+    var spawn_x := randf_range(spawn_margin, _screen_width - spawn_margin)
+    enemy.global_position = Vector2(spawn_x, spawn_y_offset)
+    # Pure random X, always from top
+```
+
+### BallxPit Expected Behavior
+
+**Based on typical bullet-heaven conventions:**
+
+1. **Formation Spawns:**
+   - Lines of enemies (horizontal, diagonal)
+   - Clusters (tight groups)
+   - Waves (curved patterns)
+   - Circles around player
+
+2. **Spawn Origins:**
+   - Top, bottom, left, right
+   - Corners
+   - Encirclement (all sides)
+
+3. **Wave Choreography:**
+   - Specific enemy compositions per wave
+   - Boss telegraphs and minion spawns
+   - Rest periods between intense waves
+
+4. **Scaling:**
+   - Enemy speed increases with level/iteration
+   - Health scaling
+   - Spawn rate increases
+
+### GAP ANALYSIS
+
+| Aspect | GoPit | BallxPit (Expected) | Impact |
+|--------|-------|---------------------|--------|
+| **Spawn origin** | Top only | All directions | **HIGH** |
+| **Patterns** | Random X | Formations/choreographed | **HIGH** |
+| **Wave design** | Generic | Hand-crafted | **MEDIUM** |
+| **Enemy density** | Burst chance | Controlled waves | **MEDIUM** |
+| **Spawn variety** | Timer-driven | Event-driven | **MEDIUM** |
+
+### Why This Matters
+
+1. **Visual interest** - Formations look better than random spawns
+2. **Strategic depth** - Knowing spawn patterns enables positioning
+3. **Difficulty curves** - Hand-crafted waves allow better pacing
+4. **Memorability** - "That wave with the diagonal slimes" moments
+
+### Recommendations
+
+**P2 Priority** (after core mechanics):
+
+1. **Add spawn origins** - Enable left/right/bottom spawns
+2. **Add formation system** - Define enemy patterns (line, V, circle)
+3. **Wave designer** - JSON/resource-based wave definitions
+4. **Directional spawns** - Enemies can enter from any edge
+
+**Proposed Wave Structure:**
+```gdscript
+class WaveDefinition:
+    var enemy_groups: Array[EnemyGroup]
+    var spawn_delay: float
+    var spawn_direction: String  # "top", "left", "all", etc.
+
+class EnemyGroup:
+    var enemy_type: PackedScene
+    var count: int
+    var formation: String  # "line", "cluster", "v_shape"
+    var spawn_offset: float
+```
+
+
+## Appendix AC: XP Economy and Leveling Curve (NEW)
+
+### GoPit Current Implementation
+
+**XP Sources:**
+| Enemy | Base XP | Scaling |
+|-------|---------|---------|
+| Slime | 10 | +5% per wave |
+| Bat | 12 (1.2x) | +5% per wave |
+| Crab | 13 (1.3x) | +5% per wave |
+| Slime King | 100 | Fixed |
+| Slime Minion | 25 | Fixed |
+
+**XP Multipliers:**
+- Combo 3-4: 1.5x XP
+- Combo 5+: 2.0x XP
+- Character XP bonus (Tactician): 1.x multiplier
+
+**Level Requirements (Linear):**
+```
+Level 2: 100 XP
+Level 3: 150 XP  (+50)
+Level 4: 200 XP  (+50)
+Level 5: 250 XP  (+50)
+...
+Formula: 100 + (level - 1) * 50
+```
+
+**Code:** `game_manager.gd:419-420`
+```gdscript
+func _calculate_xp_requirement(level: int) -> int:
+    return 100 + (level - 1) * 50
+```
+
+### BallxPit Expected Behavior
+
+**Typical roguelike XP curves:**
+1. **Exponential** - Each level requires significantly more
+2. **Polynomial** - Grows faster than linear but not exponential
+3. **Soft cap** - Plateaus at high levels
+
+**Example curves:**
+```
+Linear (GoPit):    100, 150, 200, 250, 300...
+Polynomial:        100, 160, 230, 310, 400...
+Exponential:       100, 150, 225, 340, 510...
+```
+
+### Analysis
+
+**GoPit's linear curve:**
+- **Pros:** Predictable, easy to balance
+- **Cons:** Later levels feel same as early levels
+
+**Potential issues:**
+- Level 20 = 1,050 XP needed (easily farmable)
+- No "power spike" moments from fast early levels
+- Late game may feel too easy to level up
+
+### Recommendations
+
+**P3 Priority** (balance tuning):
+
+1. **Consider polynomial curve:**
+```gdscript
+func _calculate_xp_requirement(level: int) -> int:
+    return int(80 * pow(level, 1.3))
+# Gives: 80, 197, 344, 514, 705, 917...
+```
+
+2. **Or soft-cap curve:**
+```gdscript
+func _calculate_xp_requirement(level: int) -> int:
+    return 100 + (level - 1) * 50 + int(pow(level, 1.5) * 5)
+# Adds acceleration factor
+```
+
+**Note:** This is balance tuning, not a fundamental gap. GoPit's linear curve is functional, just may feel "flat" compared to games with more dynamic progression.
