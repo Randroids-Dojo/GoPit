@@ -114,13 +114,17 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 
 | Priority | Gap | Bead | Impact | Status |
 |----------|-----|------|--------|--------|
-| **P1** | Bounce damage scaling (+5%/bounce) | GoPit-gdj | Changes core gameplay | ⚠️ Verify impl |
-| **P1** | Fission as level-up card | GoPit-hfi | Missing upgrade path | ⚠️ Verify impl |
+| **P1** | Bounce damage scaling (+5%/bounce) | GoPit-gdj | Changes core gameplay | ❌ NOT IMPL |
+| **P1** | Fission as level-up card | GoPit-hfi | Missing upgrade path | ❌ NOT IMPL |
 | **P2** | Unique character mechanics | GoPit-oyz | Characters feel same | Open |
 | **P2** | Boss weak points | GoPit-9ss | No precision play | Open |
 | **P2** | Autofire default ON | GoPit-7n5 | Different feel | Open |
 
-> **Note**: Beads GoPit-gdj and GoPit-hfi show as closed, but code verification needed. Check `ball.gd` for bounce damage and `level_up_overlay.gd` for fission card.
+> **Code Verification (Iteration 141)**: Both P1 gaps confirmed NOT implemented despite beads showing closed:
+> - `ball.gd:189-193` tracks `_bounce_count` but ONLY for max_bounces limit - no damage scaling
+> - `level_up_overlay.gd` CardType enum has PASSIVE/NEW_BALL/LEVEL_UP_BALL - no FISSION type
+> - Fission exists only in `fusion_overlay.gd` (Fusion Reactor), not as level-up card
+> - **Beads need reopening**: GoPit-gdj, GoPit-hfi
 
 ### Key Findings from Research
 
@@ -152,9 +156,9 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 
 ### All Open Beads
 
-**P1 - Critical:**
-- GoPit-gdj: Add bounce damage scaling
-- GoPit-hfi: Add Fission as level-up card
+**P1 - Critical (Needs Reopening):**
+- GoPit-gdj: Add bounce damage scaling (**Bead closed but NOT implemented** - reopening required)
+- GoPit-hfi: Add Fission as level-up card (**Bead closed but NOT implemented** - reopening required)
 - GoPit-68o: EPIC - This comparison analysis
 
 **P2 - High:**
