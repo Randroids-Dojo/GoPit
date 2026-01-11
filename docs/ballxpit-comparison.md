@@ -1,8 +1,8 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 2.2
+> **Document Version**: 2.4
 > **Last Updated**: January 10, 2026
-> **Status**: In Progress - Continuous Analysis (21 Appendices)
+> **Status**: In Progress - Continuous Analysis (23 Appendices)
 > **Related Epic**: GoPit-68o
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
@@ -55,6 +55,8 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 - S: [Difficulty and Speed Scaling](#appendix-s-difficulty-and-speed-scaling-new) ⭐ NEW
 - T: [Enemy Placement and Patterns](#appendix-t-enemy-placement-and-patterns-new) ⭐ NEW
 - U: [Input and Controls](#appendix-u-input-and-controls-comparison-new) ⭐ NEW
+- V: [Achievements and Progression](#appendix-v-achievements-and-progression-system-new) ⭐ NEW
+- W: [Audio and Sound Design](#appendix-w-audio-and-sound-design-new) ⭐ NEW
 
 ---
 
@@ -2272,6 +2274,161 @@ Research sources:
 1. [ ] **Add speed control** - 3 speeds accessible via button
 2. [ ] **Add controller support** - Gamepad for PC builds
 3. [ ] **Consider aim sensitivity slider** - Settings menu option
+
+---
+
+## Appendix V: Achievements and Progression System (NEW)
+
+Research sources:
+- [BallxPit Achievements Guide](https://ballxpit.org/achievements/)
+- [TheGamer Achievement/Trophy Guide](https://www.thegamer.com/ball-x-pit-achievement-trophy-guide/)
+- [TrueAchievements](https://www.trueachievements.com/game/BALL-x-PIT/achievements)
+
+### BallxPit Achievement System
+
+**Total Achievements: 51-63** (platform varies)
+- 35 are secret achievements
+- 30-35 hours for 100% completion
+
+**Achievement Categories:**
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| Evolution | 10 | Create Bomb, Blizzard, Black Hole, Nosferatu |
+| Biome | 9 | Complete each of 8 biomes + all bosses |
+| Character | 5 | Win with specific characters |
+| Progression | 20 | Build 10/50 buildings, 10/50/100 runs, gold milestones |
+| Challenge | 7 | Flawless Victory, Fast+3, NG+, 100 balls |
+
+**Difficulty Tiers:**
+- **Easy**: First evolution, first boss
+- **Hard**: Black Hole, Nuclear Bomb, late-game progression
+- **Very Hard**: Nosferatu (3-way fusion), Flawless Victory, Plus Ultra
+
+**Unlock Rewards:**
+- 15+ characters unlocked via achievements
+- 70+ buildings unlocked
+- Encyclopedia completion tracking
+
+### GoPit Progression System
+
+From `scripts/autoload/meta_manager.gd`:
+
+**Current Tracking:**
+```gdscript
+var pit_coins: int = 0
+var total_runs: int = 0
+var best_wave: int = 0
+var unlocked_upgrades: Dictionary = {}
+```
+
+**Permanent Upgrades (3 types):**
+- HP: +10 per level
+- Damage: +2 per level
+- Fire Rate: -0.05s per level
+
+**No Achievement System Implemented**
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Achievement system | None | 51-63 achievements | P3 |
+| Character unlocks | All available | Progress-gated | P3 |
+| Encyclopedia | None | Completion tracking | P4 |
+| Run milestones | Track only | Rewarded | P3 |
+| Evolution achievements | None | 10 types | P3 |
+| Difficulty achievements | None | Fast+3, NG+ | P4 |
+
+### Recommendations
+
+1. [ ] **Add basic achievement system** - Track first kill, first boss, first evolution
+2. [ ] **Add character unlock gates** - Require achievements to unlock
+3. [ ] **Add run milestone rewards** - 10, 50, 100 runs = bonus coins
+4. [ ] **Track evolution discoveries** - Encyclopedia-style log
+
+---
+
+## Appendix W: Audio and Sound Design (NEW)
+
+Research sources:
+- [Kenny Sun - The Sound Design of BALL x PIT](https://kennysun.com/game-dev/the-sound-design-of-ball-x-pit/)
+- [BALL x PIT Soundtrack - Steam](https://store.steampowered.com/app/4091070/BALL_x_PIT_Soundtrack/)
+- [Amos Roddy - BALL x PIT OST](https://amosroddy.bandcamp.com/album/ball-x-pit-original-soundtrack)
+
+### BallxPit Audio Design Philosophy
+
+**Key Principles (from Kenny Sun's blog):**
+
+1. **Textural Landscape** - Each run should have unique sonic feel based on equipment/environment
+2. **Variety** - 6 variations per sound effect, unique sounds per ball/environment
+3. **Mix Management** - Keep audio readable in chaotic gameplay (100+ balls)
+
+**Technical Solutions:**
+- Sounds kept "quick and snappy with very short tails"
+- Sped up 2-3x, high/low end removed, mono (distant feel)
+- Heavy sidechain compression: important sounds (bosses, special balls) compress less important ones
+- Instance limiting: 2-4 max per sound, 40-100ms cooldown
+- Dynamic EQ and panning based on screen position
+
+**Soundtrack:**
+- 22 tracks by Amos Roddy
+- Dynamic intensity based on gameplay state
+- Available on Steam, Spotify, Bandcamp
+
+### GoPit Audio System
+
+From `scripts/autoload/sound_manager.gd`:
+
+**Sound Types (22):**
+- Core: FIRE, HIT_WALL, HIT_ENEMY, ENEMY_DEATH, GEM_COLLECT
+- Ball Types: FIRE_BALL, ICE_BALL, LIGHTNING_BALL, POISON_BALL, BLEED_BALL, IRON_BALL
+- Status Effects: BURN_APPLY, FREEZE_APPLY, POISON_APPLY, BLEED_APPLY
+- UI: LEVEL_UP, GAME_OVER, WAVE_COMPLETE, BLOCKED
+- Fusion: FUSION_REACTOR, EVOLUTION, FISSION
+- Ultimate: ULTIMATE
+
+**Technical Implementation:**
+- Procedural audio generation (no audio files)
+- 8 polyphonic audio players
+- Per-sound pitch/volume variance
+- Separate buses: Master, SFX, Music
+- Persistence of volume settings
+
+**Procedural Sound Generation:**
+```gdscript
+// Examples of procedural sounds:
+_generate_fire_whoosh()      // Noise + warm modulation + crackle
+_generate_ice_chime()        // High frequencies + shimmer
+_generate_electric_zap()     // Square wave + high-freq modulation
+_generate_metallic_clang()   // Multiple harmonics + detuning
+```
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Sound variations | 1 per type | 6 per type | P3 |
+| Instance limiting | 8 max global | 2-4 per sound | P3 |
+| Sidechain compression | None | Heavy use | P3 |
+| Positional audio | None | Screen-based EQ | P4 |
+| Professional soundtrack | Procedural only | 22-track OST | P4 |
+| Environment sounds | None | Per-biome | P3 |
+
+### GoPit Strengths
+
+- **Zero file size** - All sounds generated procedurally
+- **Infinite variations** - Pitch/volume variance on each play
+- **Fast iteration** - Change sounds in code, no asset pipeline
+- **Ball-type-specific sounds** - Unique sound per ball type
+- **Status effect audio** - Audio feedback on effect application
+
+### Recommendations
+
+1. [ ] **Add sound variations** - 3-6 variations per sound type
+2. [ ] **Add instance limiting per sound** - Max 4 concurrent fire sounds, etc.
+3. [ ] **Add biome-specific ambience** - Background loop per stage
+4. [ ] **Consider professional soundtrack** - Replace procedural music
 
 ---
 
