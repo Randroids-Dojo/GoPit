@@ -9,6 +9,7 @@ signal took_damage(enemy: EnemyBase, amount: int)
 signal entered_danger_zone
 signal left_danger_zone
 signal status_effect_applied(enemy: EnemyBase, effect_type: int)
+signal hemorrhage_triggered(enemy: EnemyBase, damage: int)
 
 enum State { DESCENDING, WARNING, ATTACKING, DEAD }
 
@@ -17,6 +18,10 @@ const ATTACK_RANGE_Y: float = 950.0  # When to start warning (before danger zone
 const WARNING_DURATION: float = 1.0  # Seconds to show warning
 const ATTACK_SPEED: float = 600.0  # Speed when lunging at player
 const ATTACK_SELF_DAMAGE: int = 3  # HP lost per attack attempt
+
+# Hemorrhage: Triggers at 12+ bleed stacks, deals 20% of current HP
+const HEMORRHAGE_THRESHOLD: int = 12  # Bleed stacks required to trigger
+const HEMORRHAGE_DAMAGE_PERCENT: float = 0.20  # Damage as percent of current HP
 
 var in_danger_zone: bool = false
 var current_state: State = State.DESCENDING
@@ -390,6 +395,9 @@ func apply_status_effect(effect: StatusEffect) -> void:
 		if effect.max_stacks > 1:
 			existing.add_stack()
 			existing.refresh()
+			# Check for hemorrhage trigger on bleed stack
+			if effect_type == StatusEffect.Type.BLEED:
+				_check_hemorrhage(existing)
 		else:
 			existing.refresh()
 	else:
@@ -406,6 +414,57 @@ func apply_status_effect(effect: StatusEffect) -> void:
 	_update_speed_from_effects()
 	# Update visuals
 	_update_effect_visuals()
+
+
+func _check_hemorrhage(bleed_effect: StatusEffect) -> void:
+	"""Check if bleed stacks trigger hemorrhage (20% current HP damage at 12+ stacks)"""
+	if bleed_effect.stacks >= HEMORRHAGE_THRESHOLD:
+		_trigger_hemorrhage()
+
+
+func _trigger_hemorrhage() -> void:
+	"""Execute hemorrhage effect - deal 20% of current HP as damage"""
+	if hp <= 0:
+		return
+
+	# Calculate hemorrhage damage (20% of current HP, minimum 1)
+	var hemorrhage_damage := maxi(1, int(hp * HEMORRHAGE_DAMAGE_PERCENT))
+
+	# Apply damage directly (bypasses on-hit effects to prevent loops)
+	hp -= hemorrhage_damage
+	GameManager.record_damage_dealt(hemorrhage_damage)
+
+	# Visual feedback
+	_show_hemorrhage_effect(hemorrhage_damage)
+
+	# Emit signal for external systems
+	hemorrhage_triggered.emit(self, hemorrhage_damage)
+
+
+func _show_hemorrhage_effect(damage: int) -> void:
+	"""Visual and audio feedback for hemorrhage trigger"""
+	# Big screen shake for dramatic effect
+	CameraShake.shake(10.0, 5.0)
+
+	# Play sound (use a distinctive sound)
+	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
+
+	# Spawn large damage number with distinct color (dark red for hemorrhage)
+	var scene_root := get_tree().current_scene
+	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+	DamageNumber.spawn(
+		scene_root,
+		global_position + Vector2(0, -30),
+		damage,
+		Color(0.6, 0.0, 0.1)  # Dark blood red
+	)
+
+	# Flash enemy dark red
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(self, "modulate", Color(0.8, 0.1, 0.1), 0.1)
+	_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 
 
 func _process_status_effects(delta: float) -> void:
@@ -625,3 +684,15 @@ func clear_status_effects() -> void:
 	_active_effects.clear()
 	_update_speed_from_effects()
 	_update_effect_visuals()
+
+
+func get_bleed_stacks() -> int:
+	"""Get current bleed stack count (for testing/UI)"""
+	if _active_effects.has(StatusEffect.Type.BLEED):
+		return _active_effects[StatusEffect.Type.BLEED].stacks
+	return 0
+
+
+func get_hemorrhage_threshold() -> int:
+	"""Get the bleed stack threshold for hemorrhage (for testing/UI)"""
+	return HEMORRHAGE_THRESHOLD
