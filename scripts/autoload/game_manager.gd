@@ -24,11 +24,17 @@ signal leadership_changed(new_value: float)
 signal ultimate_ready
 signal ultimate_used
 signal ultimate_charge_changed(current: float, max_val: float)
+signal invincibility_changed(is_invincible: bool)
 
 # Combo system
 var combo_count: int = 0
 var combo_timer: float = 0.0
 var combo_timeout: float = 2.0  # Seconds before combo resets
+
+# Invincibility frames (i-frames) system
+const INVINCIBILITY_DURATION: float = 0.5  # Seconds of invincibility after damage
+var is_invincible: bool = false
+var invincibility_timer: float = 0.0
 
 var current_state: GameState = GameState.MENU:
 	set(value):
@@ -94,6 +100,12 @@ func _process(delta: float) -> void:
 			combo_timer -= delta
 			if combo_timer <= 0:
 				_reset_combo()
+		# Update invincibility timer
+		if is_invincible:
+			invincibility_timer -= delta
+			if invincibility_timer <= 0:
+				is_invincible = false
+				invincibility_changed.emit(false)
 
 
 func record_enemy_kill() -> void:
@@ -263,6 +275,10 @@ func add_xp(amount: int) -> void:
 
 
 func take_damage(amount: int) -> void:
+	# Check invincibility frames
+	if is_invincible:
+		return  # Ignore damage during i-frames
+
 	player_hp = max(0, player_hp - amount)
 	SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
 	player_damaged.emit(amount)
@@ -271,6 +287,12 @@ func take_damage(amount: int) -> void:
 	_reset_combo()
 	# Big screen shake on player damage
 	CameraShake.shake(15.0, 3.0)
+
+	# Start invincibility period
+	is_invincible = true
+	invincibility_timer = INVINCIBILITY_DURATION
+	invincibility_changed.emit(true)
+
 	if player_hp <= 0:
 		end_game()
 
