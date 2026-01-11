@@ -4202,3 +4202,50 @@ BallxPit characters have **unique firing mechanics**, not just stat modifiers:
 3. [ ] **Unlock system not functional** - `unlock_requirement` field exists but unused (GoPit-98r)
 4. [ ] **Only 6 characters** - BallxPit has 10+
 
+
+---
+
+## Appendix AR: Enemy System Implementation (NEW)
+
+### GoPit's Current Enemy Types
+
+| Enemy | HP Mult | Speed Mult | XP Mult | Movement Pattern |
+|-------|---------|------------|---------|------------------|
+| Slime | 1.0x | 1.0x | 1.0x | Straight down |
+| Crab | 1.5x | 0.6x | 1.3x | Side-to-side, slow descent |
+| Bat | 1.0x | 1.3x | 1.2x | Zigzag pattern |
+
+**Total: 3 enemy types** (vs BallxPit's 5-6)
+
+### Enemy Spawner Logic
+
+**Wave-Based Variety Introduction:**
+```
+Wave 1: 100% Slime
+Wave 2-3: 70% Slime, 30% Bat
+Wave 4+: 50% Slime, 30% Bat, 20% Crab
+```
+
+**Spawn Timing:**
+- Base interval: 2.0 seconds
+- Variance: ±0.5 seconds
+- Burst chance: 10% (scales to 30%)
+- Burst count: 2-3 enemies
+
+### Missing Features
+
+1. [ ] **Only 3 enemy types** - Need Golem, Swarm, Archer, Bomber (GoPit-h0n9)
+2. [ ] **No spawn formations** - All random X position (GoPit-oasd)
+3. [ ] **No stage-specific variants** - Ice Slime, Fire Crab, etc. (GoPit-qxg)
+4. [ ] **No enemy-specific attacks** - All just approach player
+5. [ ] **Hardcoded viewport width** - `720.0` in crab.gd
+
+### BallxPit Enemy Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Enemy types | 3 | 5-6 |
+| Spawn formations | No | Lines, V-shapes, clusters |
+| Stage variants | No | Ice/fire/poison variants |
+| Unique attacks | No | Ranged, charge, etc. |
+
