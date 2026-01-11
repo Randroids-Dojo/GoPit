@@ -37,10 +37,9 @@ const PASSIVE_CATEGORIES := {
 func _ready() -> void:
 	_create_slots()
 	_update_display()
-	# Connect to game signals for updates
+	# Connect to FusionRegistry for automatic updates
 	if FusionRegistry:
-		# No signal for passive changes yet, so we'll poll or use a timer
-		pass
+		FusionRegistry.passive_slots_changed.connect(refresh)
 
 
 func _create_slots() -> void:
@@ -101,8 +100,8 @@ func _update_display() -> void:
 	if not FusionRegistry:
 		return
 
-	# Get top 4 passives by stack count (simulating "equipped" passives)
-	var equipped_passives := _get_top_passives(MAX_SLOTS)
+	# Get equipped passives directly from slot system
+	var equipped_passives := FusionRegistry.get_equipped_passives()
 
 	for i in MAX_SLOTS:
 		var slot: PanelContainer = _slots[i]
@@ -111,22 +110,28 @@ func _update_display() -> void:
 		var level_label: Label = vbox.get_node("LevelLabel")
 		var style: StyleBoxFlat = slot.get_theme_stylebox("panel")
 
-		if i < equipped_passives.size():
-			var passive_data: Dictionary = equipped_passives[i]
+		# Find passive in slot i (if any)
+		var passive_data: Dictionary = {}
+		for eq in equipped_passives:
+			if eq["slot"] == i:
+				passive_data = eq
+				break
+
+		if not passive_data.is_empty():
 			var passive_type: int = passive_data["type"]
-			var stacks: int = passive_data["stacks"]
+			var level: int = passive_data["level"]
 
 			# Get passive info
-			var name: String = FusionRegistry.get_passive_name(passive_type)
+			var passive_name: String = FusionRegistry.get_passive_name(passive_type)
 			var category: String = PASSIVE_CATEGORIES.get(passive_type, "utility")
 			var color: Color = CATEGORY_COLORS.get(category, Color.WHITE)
 
 			# Update icon (first 2 letters of name)
-			icon_label.text = name.substr(0, 2).to_upper()
+			icon_label.text = passive_name.substr(0, 2).to_upper()
 			icon_label.add_theme_color_override("font_color", color)
 
 			# Update level
-			level_label.text = "L%d" % stacks
+			level_label.text = "L%d" % level
 			level_label.visible = true
 
 			# Update border color to match category
@@ -137,28 +142,6 @@ func _update_display() -> void:
 			icon_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 			level_label.visible = false
 			style.border_color = Color(0.3, 0.3, 0.35, 0.6)
-
-
-func _get_top_passives(count: int) -> Array[Dictionary]:
-	"""Get top N passives by stack count"""
-	var all_passives: Array[Dictionary] = []
-
-	for passive_type in FusionRegistry.PassiveType.values():
-		var stacks := FusionRegistry.get_passive_stacks(passive_type)
-		if stacks > 0:
-			all_passives.append({
-				"type": passive_type,
-				"stacks": stacks
-			})
-
-	# Sort by stacks (highest first)
-	all_passives.sort_custom(func(a, b): return a["stacks"] > b["stacks"])
-
-	# Return top N
-	var result: Array[Dictionary] = []
-	for i in mini(count, all_passives.size()):
-		result.append(all_passives[i])
-	return result
 
 
 func refresh() -> void:
