@@ -13269,3 +13269,279 @@ Sources:
 - [ ] Tutorial and onboarding
 - [ ] Monetization (if any)
 - [ ] Audio/music system details
+
+---
+
+## Appendix ES: Cosmetics & Customization Comparison
+
+### BallxPit Customization
+
+**Philosophy:** Focus on functional unlockables rather than pure cosmetics.
+
+**Unlockable Content:**
+- 60+ ball types (combinable for hundreds of effects)
+- 42 evolved balls
+- 16 characters (each with unique mechanics)
+- 70+ buildings
+- Modding support for custom skins, sounds, interface
+
+**Character Unlocks:**
+- Characters require housing blueprints found in specific biomes
+- Boss drops blueprints (rarely from regular enemies)
+- Each character fundamentally changes gameplay
+
+**Modding Support:**
+- Categories: houses, sounds, characters, interface, missions, maps, animations, items
+- Active modding community at vgtimes.com/games/ball-x-pit/files/mods-skins/
+
+**Upcoming Content (2026):**
+- 3 free content updates announced:
+  - Regal Update
+  - Shadow Update
+  - Naturalist Update
+- Each adds: new balls, evolutions, buildings, characters
+
+### GoPit Customization
+
+**Current State:**
+- No cosmetic customization
+- 7 ball types (all unlocked by default)
+- 6 characters (stat multipliers only)
+- No modding support
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Ball types | 60+ | 7 | CRITICAL |
+| Characters | 16 unique | 6 stat-only | MAJOR |
+| Visual customization | Mods | None | SIGNIFICANT |
+| Post-launch content | 3 updates | None | N/A |
+
+---
+
+## Appendix ET: Achievements & Progression Comparison
+
+### BallxPit Achievements
+
+**Achievement Count:** 50-69 achievements (varies by source)
+- Steam: 63 achievements worth 1,000 gamerscore
+- 30-35 hours to 100% completion
+
+**Achievement Categories:**
+1. **Building achievements** - Construct and upgrade base buildings
+2. **Evolution achievements** - Unlock and use evolved balls
+3. **Character achievements** - Complete all levels with each character
+4. **Farming/grinding** - Resource collection milestones
+
+**Tips for Completion:**
+- Matchmaker building: Complete levels with 2 characters = counts for both
+- Significantly reduces grind time
+
+**No Daily Challenges:**
+- Game focuses on achievements tied to progression
+- No daily/weekly mission system found in research
+
+### GoPit Achievements
+
+**Current State:**
+- No achievement system
+- No trophies/unlockables
+- Only high score tracking (wave, level, victories)
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Achievements | 50-69 | 0 | CRITICAL |
+| Trophy integration | Yes | No | MAJOR |
+| Completion time | 30-35 hours | N/A | N/A |
+| Progress tracking | Extensive | High scores only | MAJOR |
+
+Sources:
+- [Steam Achievements](https://steamcommunity.com/stats/2062430/achievements)
+- [TrueAchievements Guide](https://www.trueachievements.com/game/BALL-x-PIT/achievements)
+
+---
+
+## Appendix EU: Tutorial & Onboarding Comparison
+
+### BallxPit Onboarding
+
+**Discovery-Based Learning:**
+- Evolution system encourages experimentation
+- Game doesn't explicitly tell you which combinations work
+- Tips revealed through gameplay and community guides
+
+**Recommended Starter Path:**
+1. Start with The Warrior (balanced) or The Shieldbearer (tanky)
+2. Rush Bomb evolution (Burn + Iron) every early run
+3. Clear entire biome before fighting boss
+4. Build Bag Maker first (extra ball slot)
+
+**In-Game Guidance:**
+- Enemy telegraphing teaches dodge timing
+- Progressive difficulty introduces mechanics gradually
+- Building system unlocks over time
+
+**Community Resources:**
+- Extensive wiki with all combinations
+- Beginner guides recommend specific strategies
+- Crafting planners and collection managers available
+
+### GoPit Tutorial
+
+**Current Implementation:**
+```gdscript
+enum TutorialStep { MOVE, AIM, FIRE, HIT, COMPLETE }
+# Step 1: "Drag LEFT joystick to MOVE"
+# Step 2: "Drag RIGHT joystick to AIM"
+# Step 3: "Tap FIRE to shoot!"
+# Step 4: "Hit enemies before they reach you!"
+```
+
+**Features:**
+- 4-step linear tutorial
+- Highlight ring over UI elements
+- Saves completion state
+- **Currently disabled due to input blocking bug**
+
+**Missing:**
+- No evolution/fusion tutorial
+- No building/meta tutorial
+- No advanced mechanics introduction
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Basic tutorial | Discovery-based | 4-step (disabled) | SIGNIFICANT |
+| Evolution guidance | In-game hints | None | MAJOR |
+| Community tools | Planners, wikis | None | N/A |
+| Progressive unlock | Extensive | Minimal | MAJOR |
+
+---
+
+## Appendix EV: Audio & Music System Comparison
+
+### BallxPit Audio
+
+**Composer:** Amos Roddy
+- Known for: Citizen Sleeper, The Wild at Heart
+- Style: Experimental dark synth
+
+**Soundtrack Details:**
+- 22 tracks
+- 1 hour 6 minutes total
+- Available on: Spotify, Apple Music, Bandcamp, Steam
+
+**Track Examples:**
+- "Ballbylon Has Fallen"
+- "Bone x Yard"
+- "The Skeleton King"
+- "Snowy x Shores"
+- "The Yeti Queen"
+- "Liminal x Desert"
+- "The Twisted Serpent"
+
+**Sound Design:**
+- Professional quality (elevated from previous projects)
+- Amos Roddy contributed sound design in addition to music
+- Not relying on free resources like freesound.org
+
+### GoPit Audio
+
+**Sound Manager (22 types, procedurally generated):**
+```gdscript
+enum SoundType {
+    FIRE, HIT_WALL, HIT_ENEMY, ENEMY_DEATH, GEM_COLLECT,
+    PLAYER_DAMAGE, LEVEL_UP, GAME_OVER, WAVE_COMPLETE, BLOCKED,
+    // Ball types: FIRE_BALL, ICE_BALL, LIGHTNING_BALL, POISON_BALL, BLEED_BALL, IRON_BALL
+    // Status effects: BURN_APPLY, FREEZE_APPLY, POISON_APPLY, BLEED_APPLY
+    // Fusion: FUSION_REACTOR, EVOLUTION, FISSION
+    ULTIMATE
+}
+```
+
+**Music Manager (procedural):**
+- 120 BPM beat-based system
+- Bass (8-note pattern)
+- Drums (kick, snare, hihat)
+- Melody (minor pentatonic, intensity-based)
+- Dynamic intensity scaling (1.0-5.0)
+
+**Audio Settings:**
+- Master, SFX, Music volume controls
+- Mute toggle
+- Persistent settings
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Music | Professional (22 tracks) | Procedural | SIGNIFICANT |
+| Sound effects | Professional | Procedural | SIGNIFICANT |
+| Biome-specific | Yes (named tracks) | No | MAJOR |
+| Audio quality | Studio | Functional | SIGNIFICANT |
+
+**Note:** GoPit's procedural approach is functional and allows dynamic gameplay feedback, but lacks the polish and emotional depth of a composed soundtrack.
+
+Sources:
+- [BALL x PIT Soundtrack - Bandcamp](https://amosroddy.bandcamp.com/album/ball-x-pit-original-soundtrack)
+- [Sound Design of BALL x PIT](https://kennysun.com/game-dev/the-sound-design-of-ball-x-pit/)
+
+---
+
+## Appendix EW: Session 8 Research Summary
+
+### Areas Researched This Session
+
+| Area | Appendix | Key Finding |
+|------|----------|-------------|
+| Cosmetics | ES | BallxPit: functional unlocks, modding; GoPit: none |
+| Achievements | ET | BallxPit: 50-69 achievements; GoPit: 0 |
+| Tutorial | EU | GoPit has 4-step tutorial (disabled); BallxPit: discovery-based |
+| Audio | EV | Professional vs procedural; significant gap |
+
+### Updated Critical Gaps Summary
+
+| Priority | Gap | BallxPit | GoPit | Effort |
+|----------|-----|----------|-------|--------|
+| P0 | Ball return | Catch = instant refire | Fixed cooldown | High |
+| P0 | Enemy variety | 85+ | 3 | Very High |
+| P1 | Achievements | 50-69 | 0 | Medium |
+| P1 | Passive system | 61 | 16 | High |
+| P1 | Ball types | 60 | 7 | High |
+| P1 | Building meta | 70+ | 0 | Very High |
+| P2 | Accessibility | 6 features | 0 | Medium |
+| P2 | Composed music | 22 tracks | Procedural | Very High |
+| P2 | Enemy telegraphing | 0.5-1s | None | Medium |
+
+### Comparison Document Statistics
+
+- **Total appendices:** 153 (A through EW)
+- **Total lines:** ~15,000
+- **Sessions documented:** 8
+- **Research areas covered:** 25+
+
+### Research Complete
+
+All major gameplay systems have been analyzed:
+- [x] Core mechanics (shooting, ball physics)
+- [x] Ball types and evolution
+- [x] Character system
+- [x] Enemy system
+- [x] Progression (XP, leveling)
+- [x] Meta-progression (buildings, currencies)
+- [x] UI/UX and accessibility
+- [x] Audio/music
+- [x] Tutorial/onboarding
+- [x] Save system
+- [x] Achievements
+
+### Next Steps
+
+Research phase substantially complete. Recommended actions:
+1. Review all appendices to create prioritized implementation roadmap
+2. Create beads issues for missing critical features
+3. Begin implementation starting with P0 gaps
