@@ -27,6 +27,18 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 - [Dexerto - All Characters](https://www.dexerto.com/wikis/ball-x-pit/all-characters-how-to-unlock-them-2/)
 - [BallxPit.org Boss Battle Guide](https://ballxpit.org/guides/boss-battle-guide/)
 
+### BallxPit 2026 Roadmap (Active Development)
+
+BallxPit crossed **1 million sales** and announced 3 free content updates for 2026:
+
+| Update | Release | Content |
+|--------|---------|---------|
+| **Regal** | January 2026 | New "high society" characters, balls, evolutions |
+| **Shadow** | April 2026 | TBD - new characters, buildings, balls |
+| **Naturalist** | July 2026 | TBD - new characters, buildings, balls |
+
+**Note**: Content numbers in this document (16 characters, 60 balls, etc.) reflect October 2025 release. Post-update totals will be higher.
+
 ---
 
 ## Table of Contents
