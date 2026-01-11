@@ -1539,11 +1539,21 @@ Research sources:
 
 ### What's Missing
 
-1. **Weak Points** - No targeted damage mechanic
-2. **Armor Phases** - No invulnerability windows
-3. **Boss Variety** - Only 1 boss implemented
-4. **Environmental Integration** - No stage-specific hazards
-5. **Precision Requirement** - Any hit does same damage
+**Structural:**
+1. **Mini-boss system** - BallxPit has 2 mini-bosses + 1 final boss per stage
+2. **Boss count** - BallxPit has 8 unique main bosses
+3. **Speed controls** - BallxPit allows slowing game to 1x for boss observation
+
+**Mechanical:**
+4. **Weak Points** - No targeted damage mechanic (BallxPit: 2x damage to weak spots)
+5. **Armor Phases** - No invulnerability windows (Lord of Owls only hittable when grounded)
+6. **Environmental Integration** - No stage-specific hazards (ice walls in Ice boss fight)
+7. **Attack Pattern Variety** - Skeleton King has 5 distinct attack patterns
+
+**Strategic:**
+8. **Precision Requirement** - Any hit does same damage
+9. **Observation Phase** - BallxPit recommends 30s observation before attacking
+10. **Positioning Rewards** - Trapping balls behind boss for repeated bounces
 
 ### Regular Enemies Comparison
 
@@ -1623,6 +1633,30 @@ Research sources:
 | Leadership | +20% Baby Ball rate | 5 |
 
 **No passive evolutions currently.**
+
+### Notable BallxPit Passives (Missing from GoPit)
+
+**Gameplay-Changing Passives:**
+| Passive | Effect | Why It Matters |
+|---------|--------|----------------|
+| **Fleet Feet** | Full speed while shooting | Removes shooting slowdown penalty |
+| **Eye of the Beholder** | 10% dodge chance | Adds RNG survival layer |
+| **Archer's Effigy** | Spawns stone archer ally | Adds AI companions |
+| **Stone Effigy** | Spawns blocking ally | Changes arena dynamics |
+| **Crown of Thorns** | Destroys 2 enemies on melee hit | Rewards aggressive positioning |
+| **Bottled Tornado** | Baby balls on special catch | Synergizes with catching mechanic |
+| **Ethereal Cloak** | Balls pierce until wall | Fundamentally changes ball behavior |
+| **Hourglass** | 150% damage but decays | High-risk/reward bouncing |
+
+**Ball-Type Synergies:**
+| Passive | Requires | Effect |
+|---------|----------|--------|
+| Cursed Elixir | Poison ball | Zombify enemies |
+| Frozen Spike | Freeze ball | Chain freeze damage |
+| Midnight Oil | Burn ball | Fire on fire stacking |
+| Voodoo Doll | Curse ball | Instant kill chance |
+
+These show BallxPit's design philosophy: passives SYNERGIZE with ball types, creating build paths.
 
 ### Gap Analysis
 
