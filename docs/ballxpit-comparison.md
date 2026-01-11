@@ -11717,3 +11717,496 @@ func _update_stats() -> void:
 
 **Total: 132 appendices (A through DV), ~12,100 lines**
 
+
+---
+
+## Appendix DS: Bounce Damage Deep Analysis (RESEARCH UPDATE)
+
+### CRITICAL CORRECTION: Bounce Damage is NOT Universal
+
+Previous analysis incorrectly identified "+5% damage per bounce" as a core BallxPit mechanic. **This is WRONG.**
+
+**The +5% bounce damage is The Repentant's UNIQUE CHARACTER ABILITY**, not a universal game mechanic.
+
+### The Repentant's Bounce Mechanic
+
+**Sources**: [BallxPit Wiki](https://ballxpit.org/characters/the-repentant/), [Gamepad Squire Guide](https://gamepadsquire.com/blog/ball-x-pit-ultimate-guide-repentant-evolutions-strategies)
+
+| Aspect | Details |
+|--------|---------|
+| **Passive** | +5% damage per bounce, balls return after hitting back wall |
+| **Formula** | `Effective damage = Base × (1 + 0.05 × bounces) × 2 (return)` |
+| **Theoretical max** | 35-40 bounces = 1.75x-2.0x multiplier |
+| **Target bounces** | Early: 5-15, Mid: 15-25, Late: 25-40 |
+| **Return mechanic** | Second hit on enemies = ~50% of total DPS |
+
+### GoPit Current Implementation
+
+```gdscript
+// ball.gd:188-194
+if collider.collision_layer & 1:  // walls layer
+    _bounce_count += 1
+    if _bounce_count > max_bounces:
+        despawn()
+        return
+    direction = direction.bounce(collision.get_normal())
+    
+// ball.gd:198 - damage is FIXED, no bounce scaling
+var actual_damage := damage  // No bounce multiplier!
+```
+
+**Status**: GoPit has NO bounce damage scaling for any character.
+
+### Recommendation
+
+If adding a Repentant-style character:
+- Add bounce_damage_bonus to character resource
+- Modify ball.gd damage calculation: `actual_damage *= (1 + bounce_bonus * _bounce_count)`
+- Consider whether to add ball return mechanic
+
+---
+
+## Appendix DT: Character Unique Mechanics Comparison (CRITICAL GAP)
+
+### The Fundamental Difference
+
+**BallxPit**: Characters have UNIQUE MECHANICS that fundamentally change gameplay
+**GoPit**: Characters have STAT MULTIPLIERS that modify numbers
+
+This is the single biggest gameplay gap between the two games.
+
+### BallxPit Character Mechanics (16 Characters)
+
+| Character | Unique Mechanic | Gameplay Change |
+|-----------|-----------------|-----------------|
+| **The Warrior** | None (baseline) | Standard gameplay |
+| **The Repentant** | +5% dmg/bounce, balls return from back wall | Positioning/bounce strategy |
+| **The Shieldbearer** | Shield reflects balls, +100% dmg/reflection | Defensive reflection play |
+| **The Physicist** | Balls affected by gravity | Curved shot trajectories |
+| **The Juggler** | Balls launch upward in arc, bounce after landing | Overhead attack angles |
+| **The Cohabitants** | Mirrored fire (half damage each) | Double shot coverage |
+| **The Flagellant** | Balls bounce off bottom edge | Extended ball lifespan |
+| **The Shade** | 10% base crit, instant-kill weakened enemies | Execute/precision play |
+| **The Embedded** | Balls always pierce, apply poison | Penetrating DoT attacks |
+| **The Itchy Finger** | 2x fire rate, full movement while shooting | Aggressive mobile play |
+| **The Empty Nester** | No baby balls, burst special balls | Burst damage focus |
+| **The Spendthrift** | All balls fire in wide arc simultaneously | Volley-based attacks |
+| **The Tactician** | TURN-BASED combat | Completely different genre! |
+| **The Cogitator** | Auto-chooses all upgrades | Passive decision-making |
+| **The Radical** | Fully AI-controlled gameplay | Idle game mode |
+| **The Makeshift Sisyphus** | No direct damage, 4x AoE/status damage | Status effect specialist |
+
+### GoPit Character Passives (6 Characters)
+
+| Character | Passive | Effect Type |
+|-----------|---------|-------------|
+| **Rookie** | Quick Learner | +10% XP gain |
+| **Frost Mage** | Shatter | +50% dmg to frozen, +30% freeze duration |
+| **Gambler** | Jackpot | 3x crit dmg, +15% crit chance |
+| **Pyro** | Inferno | +20% fire dmg, +25% dmg to burning |
+| **Tactician** | Squad Leader | +2 baby balls, +30% spawn rate |
+| **Vampire** | Lifesteal | 5% lifesteal, 20% health gem on kill |
+
+### Gap Analysis
+
+| Aspect | GoPit | BallxPit | Gap |
+|--------|-------|----------|-----|
+| **Character count** | 6 | 16+ | -10 |
+| **Firing mechanics** | All identical | 8+ unique | **CRITICAL** |
+| **Movement mechanics** | All identical | 3+ unique | **HIGH** |
+| **Genre variants** | None | Turn-based, idle | **UNIQUE** |
+| **Ball physics** | All identical | Gravity, arc, reflect | **HIGH** |
+
+### Key Insight
+
+GoPit characters are "skins with buffs" - they modify HOW MUCH damage you do.
+BallxPit characters are "different games" - they change HOW you play entirely.
+
+### Recommendations for Alignment
+
+**Priority 1 - Add one unique mechanic character:**
+- The Repentant (bounce damage) - easiest, uses existing bounce tracking
+- The Shieldbearer (reflection) - would need new shield mechanic
+- The Cohabitants (mirrored fire) - relatively simple implementation
+
+**Priority 2 - Convert existing characters:**
+- Tactician → Actually implement turn-based or spawn more baby balls on fire
+- Pyro → Balls leave fire trail that damages enemies
+- Frost Mage → Balls slow on impact, create ice patches
+
+---
+
+## Appendix DU: Session 4 Research Findings Summary
+
+### Session Date: January 11, 2026
+
+### Beads Created for Tracking
+
+| ID | Title | Priority | Status |
+|----|-------|----------|--------|
+| GoPit-4p03 | Analyze BallxPit bounce damage scaling | P1 | Completed |
+| GoPit-944w | Analyze BallxPit character unique mechanics | P2 | Completed |
+| GoPit-39p7 | Analyze BallxPit enemy spawn patterns | P1 | Pending |
+| GoPit-30gc | Analyze BallxPit level speed and difficulty | P1 | Pending |
+| GoPit-76ji | Analyze BallxPit level select system | P2 | Pending |
+| GoPit-44p4 | Analyze BallxPit run structure | P2 | Pending |
+
+### Critical Corrections Made
+
+1. **Bounce Damage**: Previously listed as "P0 Critical Gap - universal mechanic"
+   - **Correction**: It's The Repentant's unique ability, not universal
+   - **Impact**: Lower priority than thought, but still valuable for character variety
+
+2. **Character Mechanics**: Previously assessed as "stat differences only"
+   - **Correction**: BallxPit has 16 characters with COMPLETELY different mechanics
+   - **Impact**: This is now the #1 gap - our characters don't play differently
+
+### Updated Priority Matrix
+
+| Priority | Gap | Revised Assessment |
+|----------|-----|-------------------|
+| ~~P0~~ P2 | Bounce damage scaling | Only needed if adding Repentant character |
+| **P0 NEW** | Unique character mechanics | Core gameplay variety missing |
+| P1 | Fission as level-up card | Still valid |
+| P2 | Boss weak points | Still valid |
+| P2 | Level select system | Still valid |
+
+### Sources Used
+
+- [BallxPit Characters Wiki](https://ballxpit.org/characters/)
+- [The Repentant Guide](https://ballxpit.org/characters/the-repentant/)
+- [Gamepad Squire Build Guide](https://gamepadsquire.com/blog/ball-x-pit-ultimate-guide-repentant-evolutions-strategies)
+- [GAM3S.GG Character Tier List](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-character-tier-list/)
+
+
+---
+
+## Appendix DV: Enemy Types and Spawn Patterns (RESEARCH)
+
+### Enemy Variety Comparison
+
+**Sources**: [Dayngls Encyclopedia](https://daynglsgameguides.com/2025/10/15/ball-x-pit-all-encyclopedia-entries/), [BallxPit Tips](https://ballxpit.org/guides/tips-tricks/)
+
+#### BallxPit Enemy Count by Region (80+ types)
+
+| Region | Enemy Types | Examples |
+|--------|-------------|----------|
+| **Skeleton Realm** | 10 | Skeleton Warrior, Skeletal Brute, Skeletal Beast, Skeleton King (boss) |
+| **Ice Region** | 10 | Icebound Warrior, Icebound Brute, Icebound Queen (boss) |
+| **Desert Area** | 13 | Lizard, Slizard, Worm, Sandwalker, Twisted Serpent |
+| **Forest/Mushroom** | 12 | Shroom Fighter, Boomshroom, Cordyceps Queen (boss) |
+| **Beast/Goblin** | 8 | Warg, Warg Rider, Goblin Warlord, Sabertooth |
+| **Dragon/Fire** | 9 | Dragonling, Grub Cluster, Dragon Prince (boss) |
+| **Celestial/Angel** | 13 | Angelspawn, Cupid, Lord of Owls (boss) |
+| **Moon Realm** | 10 | Moonling, Voidling, The Moon (boss) |
+| **TOTAL** | **~85** | 8 unique regions, 8 bosses |
+
+#### GoPit Enemy Types (3 types)
+
+| Type | Behavior | Introduced |
+|------|----------|------------|
+| **Slime** | Basic, moves down | Wave 1 |
+| **Bat** | Fast zigzag movement | Wave 2 (30% chance) |
+| **Crab** | Tank, side movement | Wave 4 (20% chance) |
+
+### Spawn Pattern Comparison
+
+#### BallxPit Patterns
+- Enemies descend from top of screen
+- Speed settings: 1 (Slow), 2 (Normal), 3 (Fast)
+- Boss appears every 10 waves (10, 20, 30, 40, 50)
+- Mid-boss and late-boss per stage
+- Enemy telegraphs: 0.5-1s warning before attacks
+- Split enemies: Grub Cluster, Moonling Geode split into smaller enemies
+- Area-specific enemy lineups (e.g., BONE x YARD = skeletons only)
+
+#### GoPit Patterns
+```gdscript
+// enemy_spawner.gd:77-94
+Wave 1: Only slimes
+Wave 2-3: 30% bats, 70% slimes  
+Wave 4+: 50% slimes, 30% bats, 20% crabs
+
+// Burst spawns (10-30% chance):
+burst_count_min: 2
+burst_count_max: 3
+```
+
+### Wave Structure Comparison
+
+| Aspect | GoPit | BallxPit | Gap |
+|--------|-------|----------|-----|
+| **Enemy types** | 3 | 85+ | **MASSIVE** |
+| **Bosses** | 1 | 8+ | **HIGH** |
+| **Regions/Biomes** | 4 | 8 | Medium |
+| **Boss frequency** | Every 10 waves | Every 10 waves | Aligned |
+| **Speed settings** | None | 3 levels | Missing |
+| **Split enemies** | No | Yes (2 types) | Missing |
+| **Enemy telegraphs** | No | 0.5-1s warning | Missing |
+
+### Difficulty Progression
+
+#### BallxPit Difficulty Curve
+- Waves 1-5: Focus 80% dodging, 20% aiming
+- Waves 10+: Shift to 60% dodging, 40% aiming
+- Wave 10: Need 1-2 evolutions minimum
+- Wave 20: Need passive evolutions
+- Wave 30+: Need all 8 passive evolutions
+
+#### GoPit Difficulty Curve
+```gdscript
+// wave_changed signal triggers spawn_interval adjustment
+// Spawn interval decreases over waves (faster spawns)
+// No evolution requirements documented
+```
+
+### Key Recommendations
+
+1. **Content Priority** (not architecture):
+   - Architecture supports enemy variety ✅
+   - Need to add more enemy types
+   - Consider area-specific enemy pools
+
+2. **Speed System**:
+   - Add player-selectable speed (1x, 2x, 3x)
+   - Affects spawn rate and enemy movement
+
+3. **Split Enemies**:
+   - Add enemies that split on death
+   - Creates emergent difficulty
+
+4. **Telegraph System**:
+   - Add visual warning before enemy attacks
+   - Gives player reaction time
+
+
+---
+
+## Appendix DW: Level Select and Run Structure (RESEARCH)
+
+### Stage/Level Unlock System
+
+**Sources**: [GameRant Stage Guide](https://gamerant.com/ball-x-pit-all-characters-stage-list-unlocks/), [Deltia's Gaming](https://deltiasgaming.com/ball-x-pit-how-to-unlock-all-levels/)
+
+#### BallxPit Stage System (8 Stages)
+
+| Stage | Name | Gear Cost | Notes |
+|-------|------|-----------|-------|
+| 1 | **The Bone x Yard** | Free | Starter stage |
+| 2 | **The Snowy x Shores** | 2 gears | |
+| 3 | **The Liminal x Desert** | 2 gears | |
+| 4 | **The Fungal x Forest** | 2 gears | |
+| 5 | **The Gory x Grasslands** | 3 gears | |
+| 6 | **The Smoldering x Depths** | 4 gears | |
+| 7 | **The Heavenly x Gates** | 4 gears | |
+| 8 | **The Vast x Void** | 5 gears | Final stage |
+
+**Gear Acquisition**: 1 gear per stage completion with NEW character
+**Matchmaker**: Can bring 2 characters → earn 2 gears if both are new
+
+#### GoPit Stage System (4 Stages)
+
+| Stage | Name | Unlock | Notes |
+|-------|------|--------|-------|
+| 1 | The Pit | Free | Starter |
+| 2 | Frozen Depths | Auto | No unlock system |
+| 3 | Burning Sands | Auto | Sequential only |
+| 4 | Final Descent | Auto | |
+
+**Key Difference**: GoPit has no level select UI, no gear system, auto-progression only
+
+### Run Structure Comparison
+
+#### BallxPit Run Structure
+
+| Aspect | Details |
+|--------|---------|
+| **Waves per stage** | ~50 (boss every 10 waves) |
+| **Bosses per stage** | 3 (mid, late, final) |
+| **Boss timing** | Wave 10, 20, 30/40, final |
+| **Stage completion** | Defeat all 3 bosses |
+| **Run time** | ~15 min on medium |
+| **Run structure** | FINITE (one stage per run) |
+
+#### GoPit Run Structure
+
+```gdscript
+// stage_manager.gd
+waves_before_boss = 10  // From biome.tres
+current_stage = 0..3    // Auto-increments on boss defeat
+```
+
+| Aspect | Details |
+|--------|---------|
+| **Waves per stage** | 10 (configurable) |
+| **Bosses per stage** | 1 |
+| **Boss timing** | Wave 10 |
+| **Stage completion** | Defeat 1 boss |
+| **Run structure** | CONTINUOUS (all stages in one run) |
+| **Post-victory** | Endless mode available |
+
+### Progression System Comparison
+
+#### BallxPit "New Ballbylon" Base
+
+- Buildings unlock characters
+- Resource nodes provide upgrades
+- Elevator requires gears to descend
+- Encourages multi-character play
+
+#### GoPit Meta System
+
+```gdscript
+// meta_manager.gd
+pit_coins: int  // Earned from runs
+// No base building
+// No gear system
+// Characters unlocked separately
+```
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| **Level select UI** | None | Full | P1 |
+| **Gear system** | None | Core mechanic | P2 |
+| **Base building** | None | New Ballbylon | P3 |
+| **Multi-character runs** | None | Matchmaker | P2 |
+| **Stage unlock** | Auto | Gear-gated | P2 |
+| **Run structure** | Continuous | One stage | Medium |
+
+### Recommendations
+
+1. **P1 - Level Select UI**:
+   - Add stage selection screen
+   - Show completion status per character
+   - Display gear requirements
+
+2. **P2 - Gear System**:
+   - Add gear currency
+   - Track character×stage completions
+   - Gate later stages behind gears
+
+3. **P2 - Matchmaker Mode**:
+   - Allow 2-character runs
+   - Bonus rewards for dual completion
+
+---
+
+## Appendix DX: Speed/Difficulty System (RESEARCH)
+
+### BallxPit Speed Settings
+
+**Source**: [BallxPit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+
+| Speed | Name | Use Case |
+|-------|------|----------|
+| **1** | Slow | Learning new enemies, difficult sections |
+| **2** | Normal | Waves 10-15, balanced gameplay |
+| **3** | Fast | Waves 1-10, farming easy enemies |
+
+**Player Control**: Can change speed anytime during run
+
+### GoPit Speed System
+
+**Status**: No speed selection system
+
+```gdscript
+// No speed multiplier for gameplay
+// spawn_interval decreases over waves (automatic difficulty)
+// No player control over game speed
+```
+
+### Difficulty Curve Comparison
+
+#### BallxPit Wave Difficulty
+
+| Wave Range | Recommendation |
+|------------|----------------|
+| 1-5 | 80% dodging, 20% aiming |
+| 5-10 | Speed 3 (Fast) |
+| 10-15 | Speed 2 (Normal) |
+| 15-20 | Need evolutions |
+| 20+ | Need passive evolutions |
+| 30+ | All 8 passives mandatory |
+
+#### GoPit Difficulty Scaling
+
+```gdscript
+// game_controller.gd - spawn interval scaling
+// Spawns get faster automatically
+// No documented requirement thresholds
+```
+
+### Recommendations
+
+1. **Add Speed Selection**:
+   - 3 speed settings (1x, 2x, 3x)
+   - Player-selectable during run
+   - Affects enemy spawn/movement speed
+
+2. **Document Difficulty Curve**:
+   - Add requirements per wave range
+   - Provide feedback on readiness
+
+
+---
+
+## Appendix DY: Session 4 Research Summary
+
+### Research Completed: January 11, 2026
+
+#### Critical Corrections Made
+
+| Previous Understanding | Correction |
+|------------------------|------------|
+| +5% bounce damage is universal | Only The Repentant's ability |
+| Characters differ by stats | BallxPit has 16 unique mechanics |
+| Fission is missing | GoPit has fission (unique advantage) |
+| Ball slot system missing | 5-slot system IS implemented |
+
+#### New Appendices Added (DS-DX)
+
+| Appendix | Topic | Key Finding |
+|----------|-------|-------------|
+| DS | Bounce Damage | The Repentant exclusive, not universal |
+| DT | Character Mechanics | 16 unique vs 6 stat-based |
+| DU | Session Summary | Priority corrections |
+| DV | Enemy Types | 85+ vs 3 (content gap) |
+| DW | Level/Unlock System | Gear-gated stages missing |
+| DX | Speed Settings | No player speed control |
+
+#### Updated Priority Matrix
+
+| Priority | Gap | Status |
+|----------|-----|--------|
+| ~~P0~~ | Bounce damage | Demoted - Repentant-only |
+| **P0 NEW** | Unique character mechanics | #1 gap now |
+| P1 | Level select UI | Missing entirely |
+| P1 | Fission as level-up card | Still valid |
+| P2 | Speed settings | Missing |
+| P2 | Gear system | Missing |
+| P2 | Enemy variety | 3 vs 85+ types |
+
+#### GoPit Unique Advantages Confirmed
+
+1. **Combo system** - Not in BallxPit
+2. **Fission option** - Alternative to fusion
+3. **Procedural audio** - 24 sounds, 0 bytes
+4. **5-slot simultaneous fire** - Implemented ✅
+5. **Endless mode** - Post-victory continuation
+
+#### Research Sources Used
+
+- [BallxPit.org Guides](https://ballxpit.org/guides/)
+- [Gamepad Squire Build Guides](https://gamepadsquire.com/blog/)
+- [GAM3S.GG Character Tier Lists](https://gam3s.gg/ball-x-pit/)
+- [Dayngls Encyclopedia](https://daynglsgameguides.com/)
+- [GameRant Stage Guide](https://gamerant.com/ball-x-pit-all-characters-stage-list-unlocks/)
+
+#### Total Documentation
+
+- **Appendices**: 131 (A through DY)
+- **Lines**: ~12,500+
+- **Beads closed this session**: 6
+
