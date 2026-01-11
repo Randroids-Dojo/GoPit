@@ -2041,34 +2041,73 @@ BallxPit solves this by:
 | Coin Magnet | +10% coins/level | 4 | 250 × 2.5^level |
 | Head Start | Start at level X | 3 | 500 × 3^level |
 
-### BallxPit Meta-Progression
+### BallxPit Meta-Progression: New Ballbylon
 
-**Base Building System:**
-- Buildings provide permanent bonuses
-- Blueprints drop from enemies
-- Resources needed: wheat, wood, stone, gold
-- Buildings unlock characters
+Research: [BallxPit.org Buildings Guide](https://ballxpit.org/guides/buildings-guide/)
 
-**Key Differences:**
-- BallxPit has visual base progression
-- Resource management layer
-- Buildings vs simple upgrades
-- Character unlocks tied to buildings
+**70+ Buildings across 6 Categories:**
+
+| Category | Count | Function |
+|----------|-------|----------|
+| **Production** | 4 | Generate wheat, wood, stone, gold |
+| **Character Unlock** | 16 | Each character has unique house |
+| **Stat Buildings** | 6 | Permanent D→S rank stat upgrades |
+| **Upgrade Buildings** | 4 | Game-changing mechanics |
+| **Buff Buildings** | 2 | Area-effect bonuses |
+| **Utility** | 2 | Market, Offline Farm |
+
+**Key Upgrade Buildings:**
+| Building | Effect | Game Impact |
+|----------|--------|-------------|
+| **Matchmaker** | 2-character runs | Massive synergy potential |
+| **Bag Maker** | Extra ball slot | More damage output |
+| **Antique Shop** | Guaranteed passive | Build consistency |
+| **Evolution Chamber** | Advanced fusions | Stronger evolved balls |
+| **Jeweler** | Higher starter ball level | Faster power spike |
+
+**Resource Loop:**
+1. Run pit → Earn blueprints + resources
+2. Build structures in New Ballbylon
+3. Bounce characters to harvest/construct
+4. Unlock new characters, stats, mechanics
+5. Stronger runs → Better rewards → Repeat
+
+**Gold Farming (Critical):**
+- 7 Gold Mines in U-formation = 1,500+ gold/harvest
+- Spa building = instant re-harvest for gold
+- 25K-35K gold/hour with optimal setup
+
+**Key Differences from GoPit:**
+- Visual city that grows over time
+- Resource management layer (4 currencies)
+- Buildings physically constructed by bouncing
+- Character unlocks tied to specific buildings
+- Buff buildings affect nearby structures
 
 ### Gap Analysis
 
-| Feature | GoPit | BallxPit |
-|---------|-------|----------|
-| Permanent upgrades | 5 types | Many buildings |
-| Visual progression | No base | Base grows |
-| Resource variety | 1 (coins) | 4+ resources |
-| Character unlock | Achievements | Buildings |
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Building count | 0 | 70+ | **CRITICAL** |
+| Permanent upgrades | 5 types | 6 stat ranks + buildings | Large |
+| Visual progression | No base | City grows over time | Medium |
+| Resource variety | 1 (coins) | 4 (wheat, wood, stone, gold) | Medium |
+| Character unlock | Achievements | Buildings | Medium |
+| 2-character runs | No | Matchmaker building | Large |
+| Extra ball slots | No | Bag Maker building | Large |
+| Offline progression | No | Offline Farm building | Low |
 
 ### Recommendations
 
-1. [ ] **Expand upgrade count** - 10-15 permanent upgrades
-2. [ ] **Add character unlock shop** - Buy unlocks with coins
-3. [ ] **Consider visual progression** - Simple base or trophy room
+**P2 (High Impact):**
+1. [ ] **Add 2-character mode** - Like Matchmaker building effect
+2. [ ] **Add extra ball slot upgrade** - Like Bag Maker
+3. [ ] **Expand upgrade count** - 10-15 permanent upgrades
+
+**P3 (Medium Impact):**
+4. [ ] **Add character unlock shop** - Buy unlocks with coins
+5. [ ] **Consider visual progression** - Trophy room or simple base
+6. [ ] **Add guaranteed passive start** - Like Antique Shop
 
 ---
 
@@ -5688,4 +5727,166 @@ Applies to ALL damage sources including DoTs
 | **P1** | Add Freeze damage amp | GoPit-efld |
 | **P2** | Add stack caps | Prevent infinite stacking |
 | **P2** | Add Hemorrhage | 12+ bleed = % HP damage |
+
+---
+
+## Appendix BL: Passive/Perk System Comparison (NEW)
+
+Research sources:
+- [GameRant - All Passives List](https://gamerant.com/ball-x-pit-all-passives-list/)
+- [Ball X Pit Wiki - Passives](https://ballpit.fandom.com/wiki/Passives)
+
+### BallxPit Passive System Overview
+
+**Scale:**
+- **51 Base Passives**
+- **8 Evolved Passives**
+- **59 Total Passives**
+- **4 passive slots** (alongside 4 ball slots)
+
+**How Passives Work:**
+```
+PASSIVE ACQUISITION:
+┌───────────────────────────────────────────────────────────┐
+│  1. Level up → offered passive choices                    │
+│  2. Select passive → goes into one of 4 slots             │
+│  3. Fission can upgrade passives to L2, L3                │
+│  4. Some passives can EVOLVE at Fusion Reactor            │
+│  5. Max 3 evolved passives per run                        │
+└───────────────────────────────────────────────────────────┘
+```
+
+### BallxPit Passive Categories
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| Offensive | 9 | War Horn, Dynamite, Silver Bullet |
+| Defensive | 5 | Breastplate, Crown of Thorns |
+| Mobility | 5 | Fleet Feet, Radiant Feather |
+| Summoned Allies | 5 | Turret, Archer's Effigy |
+| Status Effects | 5 | Frozen Spike, Voodoo Doll |
+| Other | 22 | Baby Rattle, Gemspring, etc. |
+
+### 8 Evolved Passives (Recipes)
+
+| Evolved Passive | Recipe | Effect |
+|-----------------|--------|--------|
+| **Soul Reaver** | Vampiric Sword + Everflowing Goblet | Lifesteal + overhealing |
+| **Wings of the Anointed** | Radiant Feather + Fleet Feet | +20% move, +40% ball speed |
+| **Deadeye's Cross** | 4 Hilted Daggers | 60% base crit |
+| **Cornucopia** | Baby Rattle + War Horn | Resource generation |
+| **Gracious Impaler** | Reacher's Spear + Deadeye's Amulet | Instant kill synergy |
+| **Phantom Regalia** | Ghostly Corset + Ethereal Cloak | +50% piercing |
+| **Odiferous Shell** | Wretched Onion + Breastplate | Defense + AoE |
+| **Tormenters Mask** | Spiked Collar + Crown of Thorns | Thorns damage |
+
+### GoPit: NO Passive System
+
+**GoPit has no separate passive slots:**
+- Characters have 1 built-in passive
+- No passive choices on level up
+- Fission only upgrades balls
+- No passive evolution
+
+### Comparison
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Passive slots** | 0 | 4 | **CRITICAL** |
+| **Base passives** | 0 | 51 | **CRITICAL** |
+| **Evolved passives** | 0 | 8 | **MISSING** |
+| **Fission upgrades** | Balls only | Balls + Passives | **MISSING** |
+
+### Notable BallxPit Passives
+
+- **War Horn**: +20% baby ball damage
+- **Bouncing Speed**: Balls start 70% speed, +20% per bounce (max 200%)
+- **Gem Baby Ball**: 25% chance to shoot baby ball on gem pickup
+- **Fire Synergy**: +10-20 fire damage to burning enemies
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Add 4 passive slots | Core system |
+| **P1** | Create 20+ base passives | Minimum viable |
+| **P2** | Add passive evolution | 4+ evolved passives |
+| **P2** | Fission upgrades passives | Match BallxPit |
+
+---
+
+## Appendix BM: Character System Comparison (NEW)
+
+Research sources:
+- [GameRant - All Characters](https://gamerant.com/ball-x-pit-all-characters-stage-list-unlocks/)
+- [Ball X Pit Wiki - Characters](https://ballpit.fandom.com/wiki/Characters)
+
+### BallxPit: 16 Characters
+
+| Character | Ability |
+|-----------|---------|
+| **The Warrior** | None (starter) |
+| **The Itchy Finger** | 2x fire rate, move while shooting |
+| **The Repentant** | +5% dmg/bounce, balls return |
+| **The Cohabitants** | Mirrored balls, half damage |
+| **The Cogitator** | Auto-chooses upgrades |
+| **The Embedded** | Balls pierce until walls |
+| **The Shade** | 10% crit, shoot from behind |
+| **The Shieldbearer** | Shield reflects, +100% dmg/reflect |
+| **The Spendthrift** | All balls at once, wide arc |
+| **The Juggler** | Lob balls, bounce on ground |
+| **The Empty Nester** | Multiple special balls, no babies |
+| **The Flagellant** | Balls bounce off bottom |
+| **The Makeshift Sisyphus** | 4x AOE/status, no direct dmg |
+| **The Physicist** | Gravity affects balls |
+| **The Tactician** | Turn-based combat |
+| **The Radical** | AI plays automatically |
+
+**Key: Many characters CHANGE FUNDAMENTAL GAMEPLAY**
+
+### GoPit: 6 Characters
+
+| Character | Passive | Starting Ball |
+|-----------|---------|---------------|
+| **Rookie** | +10% XP gain | Basic |
+| **Pyro** | +20% fire dmg, +25% burn amp | Burn |
+| **Frost Mage** | +50% frozen dmg, +30% duration | Freeze |
+| **Tactician** | +2 babies, +30% spawn | Basic |
+| **Vampire** | 5% lifesteal, 20% health gem | Basic |
+| **Gambler** | 3x crit, +15% crit chance | Bleed |
+
+**Key: All characters use SAME core mechanics**
+
+### Critical Difference
+
+**BallxPit gameplay-altering abilities:**
+- Turn-based mode (Tactician)
+- AI auto-play (Radical)
+- No baby balls (Empty Nester, Sisyphus)
+- Gravity physics (Physicist)
+- Shield reflection (Shieldbearer)
+
+**GoPit abilities are stat modifiers only:**
+- Damage multipliers
+- Crit bonuses
+- Healing effects
+- No fundamental gameplay changes
+
+### Comparison
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Characters** | 6 | 16 | **-10** |
+| **Gameplay-changing** | 0 | ~6 | **MISSING** |
+| **Starting ball types** | 4 | 15+ | **-11** |
+| **Unlock via building** | No | Yes | **MISSING** |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 10 characters | Match count |
+| **P2** | Add gameplay-altering chars | Not just stats |
+| **P3** | Turn-based character | Like Tactician |
+| **P3** | Auto-play character | Like Radical |
 
