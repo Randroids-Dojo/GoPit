@@ -11407,6 +11407,245 @@ func _on_restart_pressed() -> void:
 
 ---
 
+## Appendix DS: Meta Shop System
+
+**File**: `scripts/ui/meta_shop.gd` (201 lines)
+
+### Shop Architecture
+
+```gdscript
+const Upgrades := preload("res://scripts/data/permanent_upgrades.gd")
+
+var _upgrade_cards: Dictionary = {}  // upgrade_id -> card node
+
+func show_shop() -> void:
+    _refresh_all_cards()
+    _update_coin_display(MetaManager.pit_coins)
+    visible = true
+    get_tree().paused = true
+```
+
+### Card Creation
+
+```gdscript
+func _create_card(data: Upgrades.UpgradeData) -> PanelContainer:
+    // Icon and Name header
+    icon_label.text = data.icon  // Emoji
+    name_label.text = data.name
+
+    // Description
+    desc_label.text = data.description
+
+    // Level display: "Level 2/5" or "Level 5/5 (MAX)"
+    // Cost display: "400 coins" or "MAXED"
+    // Buy button: enabled/disabled based on can_afford
+```
+
+### Purchase Flow
+
+```gdscript
+func _on_buy_pressed(upgrade_id: String) -> void:
+    var current_level := MetaManager.get_upgrade_level(upgrade_id)
+    var cost := data.get_cost(current_level)
+
+    if MetaManager.purchase_upgrade(upgrade_id, cost):
+        SoundManager.play(SoundManager.SoundType.LEVEL_UP)
+    else:
+        SoundManager.play(SoundManager.SoundType.BLOCKED)
+```
+
+**Rating**: ⭐⭐⭐⭐ SOLID META SHOP
+
+---
+
+## Appendix DT: Permanent Upgrades Data
+
+**File**: `scripts/data/permanent_upgrades.gd` (114 lines)
+
+### Upgrade Data Structure
+
+```gdscript
+class UpgradeData:
+    var id: String
+    var name: String
+    var description: String
+    var icon: String          // Emoji
+    var base_cost: int
+    var cost_multiplier: float  // cost = base * (mult ^ level)
+    var max_level: int
+    var effect_per_level: String
+
+    func get_cost(current_level: int) -> int:
+        if current_level >= max_level:
+            return -1  // Maxed
+        return int(base_cost * pow(cost_multiplier, current_level))
+```
+
+### Available Upgrades
+
+| ID | Name | Icon | Base Cost | Multiplier | Max | Effect |
+|----|------|------|-----------|------------|-----|--------|
+| hp | Pit Armor | 🛡️ | 100 | 2.0x | 5 | +10 HP per level |
+| damage | Ball Power | 💥 | 150 | 2.0x | 5 | +1 damage per level |
+| fire_rate | Rapid Fire | ⚡ | 200 | 2.0x | 5 | -0.1s cooldown |
+| coin_bonus | Coin Magnet | 🪙 | 250 | 2.5x | 4 | +10% coins |
+| starting_level | Head Start | 🚀 | 500 | 3.0x | 3 | Start at level N |
+
+### Cost Progression Examples
+
+| Upgrade | L0→L1 | L1→L2 | L2→L3 | L3→L4 | L4→L5 |
+|---------|-------|-------|-------|-------|-------|
+| Pit Armor | 100 | 200 | 400 | 800 | 1600 |
+| Ball Power | 150 | 300 | 600 | 1200 | 2400 |
+| Head Start | 500 | 1500 | 4500 | - | - |
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Meta currency | ✅ Pit Coins | ✅ Similar |
+| Upgrade count | 5 | 8-12 |
+| Max levels | 3-5 | 5-10 |
+| Cost scaling | Exponential | Similar |
+
+**Rating**: ⭐⭐⭐ ADEQUATE - NEEDS MORE UPGRADES
+
+---
+
+## Appendix DU: Virtual Joystick Input
+
+**File**: `scripts/input/virtual_joystick.gd` (98 lines)
+
+### Joystick Properties
+
+```gdscript
+signal direction_changed(direction: Vector2)
+signal released
+
+@export var base_radius: float = 80.0
+@export var knob_radius: float = 30.0
+@export var dead_zone: float = 0.05  // 5% for responsive controls
+@export var base_color: Color = Color(0.3, 0.3, 0.4, 0.5)
+@export var knob_color: Color = Color(0.5, 0.7, 1.0, 0.8)
+```
+
+### Input Handling
+
+```gdscript
+func _gui_input(event: InputEvent) -> void:
+    // Mouse support
+    if event is InputEventMouseButton:
+        if event.button_index == MOUSE_BUTTON_LEFT:
+            if event.pressed: _start_drag(event.position)
+            else: _end_drag()
+
+    elif event is InputEventMouseMotion:
+        if is_dragging: _update_drag(event.position)
+
+    // Touch support
+    elif event is InputEventScreenTouch:
+        if event.pressed and not is_dragging:
+            touch_index = event.index
+            _start_drag(event.position)
+        elif event.index == touch_index:
+            _end_drag()
+
+    elif event is InputEventScreenDrag:
+        if event.index == touch_index and is_dragging:
+            _update_drag(event.position)
+```
+
+### Direction Calculation
+
+```gdscript
+func _update_drag(pos: Vector2) -> void:
+    var center := size / 2
+    var offset := pos - center
+    var distance := offset.length()
+
+    // Clamp to base radius
+    if distance > base_radius:
+        offset = offset.normalized() * base_radius
+
+    knob_position = offset
+
+    // Dead zone filtering
+    var normalized_distance := distance / base_radius
+    if normalized_distance > dead_zone:
+        current_direction = offset.normalized()
+    else:
+        current_direction = Vector2.ZERO
+
+    direction_changed.emit(current_direction)
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Touch support | ✅ Native | ❓ Unknown |
+| Mouse support | ✅ For testing | ❓ Unknown |
+| Dead zone | ✅ 5% | ✅ Similar |
+| Visual feedback | ✅ Knob follows | ✅ Similar |
+
+**Rating**: ⭐⭐⭐⭐ SOLID MOBILE INPUT
+
+---
+
+## Appendix DV: Stage Complete / Victory Flow
+
+**File**: `scripts/ui/stage_complete_overlay.gd` (106 lines)
+
+### Two Display Modes
+
+```gdscript
+var _is_victory: bool = false
+
+func show_stage_complete(stage: int) -> void:
+    _is_victory = false
+    title_label.text = "STAGE COMPLETE!"
+    stage_label.text = stage_name + " cleared!"
+    continue_button.text = "Continue"
+    stats_container.visible = false
+    endless_button.visible = false
+
+func show_victory() -> void:
+    _is_victory = true
+    title_label.text = "VICTORY!"
+    stage_label.text = "You conquered The Pit!"
+    continue_button.text = "Play Again"
+    stats_container.visible = true
+    _update_stats()
+    endless_button.visible = true  // Unique to GoPit!
+```
+
+### Endless Mode Option
+
+```gdscript
+func _on_endless_pressed() -> void:
+    visible = false
+    get_tree().paused = false
+
+    // Enable endless mode and continue playing
+    GameManager.enable_endless_mode()
+    StageManager.complete_stage()
+```
+
+This is a **GoPit unique feature** - after victory, players can continue in endless mode!
+
+### Stats Display
+
+```gdscript
+func _update_stats() -> void:
+    time_label.text = "Time: %d:%02d" % [minutes, seconds]
+    enemies_label.text = "Enemies: %d" % GameManager.stats["enemies_killed"]
+    level_label.text = "Level: %d" % GameManager.player_level
+```
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT - ENDLESS MODE IS UNIQUE ADVANTAGE
+
+---
+
 ## Summary: All Session Findings
 
 ### Session 2: Appendices CT-DH (15 appendices)
@@ -11443,6 +11682,10 @@ func _on_restart_pressed() -> void:
 | DP | HUD System | ⭐⭐⭐⭐ | Complete with combo display |
 | DQ | Character Select | ⭐⭐⭐⭐ | 6 characters with lock system |
 | DR | Game Over | ⭐⭐⭐⭐ | Stats + meta currency |
+| DS | Meta Shop | ⭐⭐⭐⭐ | Purchase permanent upgrades |
+| DT | Permanent Upgrades | ⭐⭐⭐ | 5 upgrades (needs more) |
+| DU | Virtual Joystick | ⭐⭐⭐⭐ | Touch + mouse support |
+| DV | Victory/Endless | ⭐⭐⭐⭐⭐ | Endless mode unique advantage |
 
 ### Key Discoveries
 
@@ -11472,5 +11715,5 @@ func _on_restart_pressed() -> void:
    - Level select UI (not implemented)
    - Meta progression depth
 
-**Total: 128 appendices (A through DR), ~11,700 lines**
+**Total: 132 appendices (A through DV), ~12,100 lines**
 
