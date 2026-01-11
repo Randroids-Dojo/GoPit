@@ -1143,4 +1143,245 @@ From `meta_manager.gd` (if exists) or `game_manager.gd`:
 
 ---
 
+## Appendix H: Stage/Biome System Comparison
+
+Research sources:
+- [GameRant - All Characters and Stage List](https://gamerant.com/ball-x-pit-all-characters-stage-list-unlocks/)
+- [Deltia's Gaming - How to Unlock All Levels](https://deltiasgaming.com/ball-x-pit-how-to-unlock-all-levels/)
+
+### BallxPit Stages (8 Total)
+
+| Stage | Unlock Requirement | Gears Needed |
+|-------|-------------------|--------------|
+| **The Bone x Yard** | Default | 0 |
+| **The Snowy x Shores** | Beat Bone Yard 2x | 2 |
+| **The Liminal x Desert** | Beat Snowy Shores 2x | 2 |
+| **The Fungal x Forest** | Beat earlier stages | 2 |
+| **The Gory x Grasslands** | Beat earlier stages | 3 |
+| **The Smoldering x Depths** | Beat earlier stages | 4 |
+| **The Heavenly x Gates** | Beat earlier stages | 4 |
+| **The Vast x Void** | Final stage | 5 |
+
+**Key Mechanics:**
+- Gears earned by completing stage with DIFFERENT characters
+- Encourages replaying with multiple characters
+- 8 unique environments with distinct themes
+
+### GoPit Stages (4 Total)
+
+| Stage | Background | Wall Color | Waves to Boss |
+|-------|------------|------------|---------------|
+| **The Pit** | Dark purple | Dark blue | 10 |
+| **Frozen Depths** | Dark blue | Icy blue | 10 |
+| **Burning Sands** | Orange/tan | Sandy | 10 |
+| **Final Descent** | Dark | Dark | 10 |
+
+**Current Implementation:**
+- All stages unlocked from start
+- No gear/unlock system
+- No unique mechanics per stage (only visual)
+- All stages have 10 waves to boss
+
+### Gap Analysis
+
+| Aspect | GoPit | BallxPit | Gap Level |
+|--------|-------|----------|-----------|
+| **Stage count** | 4 | 8 | Medium |
+| **Unlock system** | None | Gear-based | Large |
+| **Unique mechanics** | None | Per-stage hazards | Large |
+| **Waves per stage** | 10 fixed | Variable | Medium |
+| **Replay incentive** | None | Different characters | Large |
+
+### Stage Feature Comparison
+
+**BallxPit stages have:**
+- Unique enemy types per biome
+- Environmental hazards
+- Different visual themes
+- Specific bosses
+- Blueprint drops
+
+**GoPit stages have:**
+- Different background color
+- Different wall color
+- Same enemy types
+- Same mechanics
+- No unique features
+
+### Recommendations
+
+1. [ ] **Add 4 more stages** - Match BallxPit's 8 stages
+2. [ ] **Add unlock system** - Require completing with different characters
+3. [ ] **Add stage-specific enemies** - Ice enemies for Frozen, fire for Burning
+4. [ ] **Add environmental hazards** - Ice patches, fire vents, etc.
+5. [ ] **Variable waves per stage** - Earlier stages easier (5-7 waves)
+
+---
+
+## Appendix I: Control and Input Comparison
+
+### BallxPit Controls
+
+**Desktop (KB+M):**
+- Mouse to aim
+- Click to fire (or autofire F key)
+- WASD to move
+- Ball catching: click on returning balls
+
+**Mobile:**
+- Touch to aim and fire
+- Virtual joystick for movement
+- Autofire toggle
+
+### GoPit Controls
+
+From `game_controller.gd`:
+- Left joystick: Player movement
+- Right joystick: Aim direction
+- Fire button: Manual fire
+- Auto toggle: Autofire on/off
+- Ultimate button: Special ability
+
+**Control Scheme:**
+```
+[Move Joystick] [Game Area] [Aim Joystick]
+                [Fire] [Auto]
+```
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Notes |
+|---------|-------|----------|-------|
+| Dual joystick | Yes | Yes (mobile) | Good |
+| Autofire toggle | Yes | Yes | Good |
+| Ball catching | No | Yes | Gap |
+| Aim sensitivity | Fixed | Adjustable? | Unknown |
+
+### Recommendations
+
+1. [ ] **Add ball catching** - Tap on balls to catch and re-fire
+2. [ ] **Add aim sensitivity setting** - Player preference
+3. [ ] **Test control feel** - Compare responsiveness to BallxPit
+
+---
+
+## Appendix J: Enemy and Boss Comparison
+
+Research sources:
+- [BallxPit.org Boss Battle Guide](https://ballxpit.org/guides/boss-battle-guide/)
+- [Deltia's Gaming - Skeleton King Guide](https://deltiasgaming.com/ball-x-pit-skeleton-king-boss-guide/)
+- [TheGamer - All Bosses Ranked](https://www.thegamer.com/ball-x-pit-hardest-area-bosses-to-beat/)
+
+### BallxPit Bosses (8 Total)
+
+| Boss | Stage | Key Mechanics | Weak Point |
+|------|-------|---------------|------------|
+| **Skeleton King** | Bone x Yard | Arrow volleys, arm swipes | Crown/back of head (2x damage) |
+| **Ice Colossus** | Snowy x Shores | Ice armor phases, shield burst | Vulnerable during non-armor |
+| **Desert Titan** | Liminal x Desert | Underground dig, sandstorms | Dig emergence points |
+| **Fungal Hivemind** | Fungal x Forest | Add summoning, repositioning | Add control priority |
+| **Giant Blood Serpent** | Gory x Grasslands | Poison arrows, laser, adds | Add elimination first |
+| **Infernal Demon** | Smoldering x Depths | Burn DoT, enrage, phases | Fire-themed hazards |
+| **Celestial Guardian** | Heavenly x Gates | Flight phase, divebombs | Grounded phases only |
+| **Void Sovereign** | Vast x Void | Multi-head, homing fire | Individual heads → core |
+
+### Key Boss Mechanics in BallxPit
+
+**Skeleton King (Stage 1):**
+- Precision targeting required (crown weak point)
+- 2x damage to weak spot
+- Arrow volleys to dodge
+- Arm loss creates attack window
+
+**Boss Strategy Tips:**
+- Pierce balls bypass armor
+- Ghost/Wind effects trivialize some fights
+- DoT evolutions (Magma, Virus) for tanky bosses
+- Trap balls in crevices for sustained damage
+
+### GoPit Bosses (1 Total)
+
+**Slime King** (`slime_king.gd`):
+| Stat | Value |
+|------|-------|
+| HP | 500 |
+| XP | 100 |
+| Slam Damage | 30 |
+| Slam Radius | 120 |
+
+**Phase System:**
+- Phase 1 (100-66% HP): Slam, Summon
+- Phase 2 (66-33% HP): Slam, Summon, Split
+- Phase 3 (33-0% HP): Slam, Summon, Rage (faster attacks)
+
+**Attacks:**
+1. **Slam** - Jump to player position, AoE damage
+2. **Summon** - Spawn 2-3 regular slimes
+3. **Split** - Create 2 medium slimes (100 HP each)
+4. **Rage** - 3 rapid slams in succession
+
+**Mechanics:**
+- Telegraph before attacks (1s default, 0.7s in Phase 3)
+- Movement between attacks
+- Visual phase colors (green → yellow → red)
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Boss count** | 1 | 8 | Critical |
+| **Weak points** | No | Yes (2x damage) | Large |
+| **Phase complexity** | 3 phases | Multi-phase with unique attacks | Medium |
+| **Boss variety** | Slime only | Unique per stage | Critical |
+| **Invulnerability phases** | Brief (0.5s summon) | Full armor phases | Medium |
+
+### What Slime King Does Well
+
+- 3-phase system with different attacks
+- Telegraph before attacks
+- Visual feedback (color change per phase)
+- Add spawning (minions)
+- Rage mode in final phase
+
+### What's Missing
+
+1. **Weak Points** - No targeted damage mechanic
+2. **Armor Phases** - No invulnerability windows
+3. **Boss Variety** - Only 1 boss implemented
+4. **Environmental Integration** - No stage-specific hazards
+5. **Precision Requirement** - Any hit does same damage
+
+### Regular Enemies Comparison
+
+**GoPit Enemies (3 types):**
+| Enemy | HP (Wave 1) | Speed | XP | Behavior |
+|-------|-------------|-------|-----|----------|
+| Slime | 30 | 100 | 10 | Standard movement |
+| Bat | 20 | 120 | 15 | Fast, low HP |
+| Crab | 50 | 60 | 20 | Slow, tanky |
+
+**Enemy Spawning:**
+- Wave 1: Slime only
+- Wave 2-3: 70% Slime, 30% Bat
+- Wave 4+: 50% Slime, 30% Bat, 20% Crab
+
+**BallxPit likely has:**
+- Stage-specific enemies (ice, fire, etc.)
+- More enemy variety per stage
+- Enemy-specific behaviors
+
+### Recommendations
+
+**Priority 1 (Critical):**
+1. [ ] **Add more bosses** - One per stage (4 minimum)
+2. [ ] **Add weak point system** - Targeted damage bonus
+3. [ ] **Add stage-specific enemies** - Ice, fire, poison variants
+
+**Priority 2 (High):**
+4. [ ] **Add armor/invulnerability phases** - Strategic timing
+5. [ ] **Add environmental hazards** - Stage-specific obstacles
+6. [ ] **More enemy types** - 5-6 regular enemies
+
+---
+
 *Document maintained as part of BallxPit alignment effort (GoPit-68o)*
