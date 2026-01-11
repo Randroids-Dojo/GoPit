@@ -283,7 +283,7 @@ func _physics_process(_delta: float) -> void:
 | Feature | GoPit | BallxPit | Match |
 |---------|-------|----------|-------|
 | Free movement | Yes | Yes | Yes |
-| Movement speed | 300 base | Unknown | Unclear |
+| Movement speed | 300 base | Multiplier-based (no absolute value) | N/A |
 | Bounds system | Yes | Yes | Yes |
 | Aim = movement | Separate joysticks | Likely same | Partial |
 
@@ -678,7 +678,7 @@ Based on guides and character analysis:
 | Walk to collect | Yes | Yes | Yes |
 | Magnetism upgrade | Yes (+200/stack) | Yes | Yes |
 | Combo multiplier | Yes (up to 2x) | Yes | Yes |
-| Despawn timer | 10 seconds | Unknown | Unclear |
+| Despawn timer | 10 seconds | Not publicly documented | Likely similar |
 
 ### Recommendations
 
@@ -2527,16 +2527,17 @@ speed *= min(2.0, 1.0 + (wave - 1) * 0.05)  // +5% speed (cap 2x)
 - Each level has: 2 mini-bosses + 1 final boss = 3 boss fights per level
 - Guaranteed Fusion upgrade after mini-bosses 1 and 2
 
-**Boss Fights Confirmed:**
+**Boss Fights Confirmed (8 Total):**
 | Boss | Level | Mechanic |
 |------|-------|----------|
-| Skeleton King | Bone X Yard | Spawns adds, weak point on crown |
-| Shroom Swarm | Fungal Forest | Multi-enemy shared HP bar, formations |
-| Dragon Prince | Smoldering Depths | Low HP, fire attacks |
-| Twisted Serpent | Unknown | Multi-phase, layer destruction |
-| Lord of Owls | Unknown | Flying + enemy clusters |
-| Sabertooth | Unknown | Rectangular tiger monster |
-| Hydra Boss | Unknown | Multiple heads, final core phase |
+| Skeleton King | Bone x Yard | Spawns adds, weak point on crown (2x damage) |
+| Yeti Queen | Snowy x Shores | Ice armor phases, shield burst |
+| Twisted Serpent | Liminal x Desert | Multi-phase, layer destruction, poison lasers |
+| Shroom Swarm | Fungal x Forest | Multi-enemy shared HP bar, formations |
+| Sabertooth | Gory x Grasslands | Fast movement, covers distance quickly |
+| Dragon Prince | Smoldering x Depths | Low HP, fire attacks, vulnerable from sides |
+| Lord of Owls | Heavenly x Gates | Flying + enemy clusters, **HARDEST BOSS** |
+| The Moon | Vast x Void | **FINAL BOSS** |
 
 **Boss Patterns:**
 - Telegraphed attack patterns (spend 30s observing before attacking)
@@ -4718,10 +4719,11 @@ set_intensity(wave_number)  # Clamped 1.0-5.0
 
 | Feature | GoPit | BallxPit |
 |---------|-------|----------|
-| Audio type | Procedural | Pre-recorded (likely) |
-| Music style | Electronic/minimal | Unknown |
-| Adaptive intensity | Yes | Unknown |
-| File size | 0 bytes | Likely MB of audio |
+| Audio type | Procedural | Pre-recorded (22 tracks) |
+| Composer | N/A (procedural) | Amos Roddy |
+| Music style | Electronic/minimal | Electronic, ambient, experimental |
+| Adaptive intensity | Yes | Thematic (per-environment/boss) |
+| File size | 0 bytes | MB of 24-bit/48kHz audio |
 
 ### Unique Approach
 
