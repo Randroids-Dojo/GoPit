@@ -1,9 +1,12 @@
 extends Node
 ## CameraShake autoload - provides global screen shake functionality
 
+signal screen_shake_changed(enabled: bool)
+
 var _camera: Camera2D
 var shake_intensity: float = 0.0
 var shake_decay: float = 5.0
+var screen_shake_enabled: bool = true
 
 
 func _ready() -> void:
@@ -38,5 +41,27 @@ func _process(delta: float) -> void:
 
 
 func shake(intensity: float = 10.0, decay: float = 5.0) -> void:
+	if not screen_shake_enabled:
+		return
 	shake_intensity = maxf(shake_intensity, intensity)
 	shake_decay = decay
+
+
+func toggle_screen_shake() -> void:
+	screen_shake_enabled = not screen_shake_enabled
+	screen_shake_changed.emit(screen_shake_enabled)
+	# Reset any active shake when disabling
+	if not screen_shake_enabled:
+		shake_intensity = 0.0
+		if _camera:
+			_camera.offset = Vector2.ZERO
+
+
+func set_screen_shake(enabled: bool) -> void:
+	if screen_shake_enabled != enabled:
+		screen_shake_enabled = enabled
+		screen_shake_changed.emit(screen_shake_enabled)
+		if not screen_shake_enabled:
+			shake_intensity = 0.0
+			if _camera:
+				_camera.offset = Vector2.ZERO
