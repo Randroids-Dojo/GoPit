@@ -480,6 +480,8 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 func _chain_lightning(hit_enemy: Node2D) -> void:
 	var chain_range: float = 150.0
 	var chain_damage: int = int(damage * 0.5)
+	var max_chains: int = 3  # Chain to up to 3 enemies
+	var chains_done: int = 0
 
 	# Find nearby enemies
 	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
@@ -487,6 +489,8 @@ func _chain_lightning(hit_enemy: Node2D) -> void:
 		return
 
 	for child in enemies_container.get_children():
+		if chains_done >= max_chains:
+			break
 		if child is EnemyBase and child != hit_enemy:
 			var dist: float = child.global_position.distance_to(hit_enemy.global_position)
 			if dist < chain_range:
@@ -495,7 +499,7 @@ func _chain_lightning(hit_enemy: Node2D) -> void:
 					child.take_damage(chain_damage)
 				# Visual lightning arc
 				_draw_lightning_arc(hit_enemy.global_position, child.global_position)
-				break  # Only chain to one enemy
+				chains_done += 1
 
 
 func _draw_lightning_arc(from: Vector2, to: Vector2) -> void:
