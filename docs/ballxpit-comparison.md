@@ -6946,11 +6946,100 @@ var character_speed_mult: float = 1.0       # Speed
 
 ---
 
+## Appendix CA: Controls and Accessibility Comparison
+
+Research sources:
+- [Steam: Controls Discussion](https://steamcommunity.com/app/2062430/discussions/0/595162650440290352/)
+- [PlayStation Store](https://store.playstation.com/en-us/concept/10016190/)
+
+### BallxPit Control Requirements
+
+**Dual-axis control:**
+- 1 axis for movement
+- 1 axis for aiming
+- Both required simultaneously
+
+**Supported Inputs:**
+- Keyboard: WASD + mouse
+- Controller: Xbox, PlayStation, Switch
+- NO touch controls (PC/console game)
+- NO mouse-only mode
+
+### BallxPit Accessibility
+
+**PlayStation accessibility features:**
+- Controller remapping (advanced)
+- No button holds required
+- No rapid button presses required
+- No simultaneous presses required
+- No motion controls required
+- No touch controls required
+- Customizable vibration
+
+**Adaptive controller support:**
+- Xbox Adaptive Controller
+- Foot controllers
+- Eye tracking (Tobii) with third-party software
+- QuadStick
+- Hori Flex Controller
+
+### GoPit Control System
+
+**Touch-first design:**
+- Left virtual joystick: Movement
+- Right virtual joystick: Aim
+- Fire button: Manual shot
+- Autofire toggle: Continuous fire
+- Ultimate button: Special ability
+
+**Current inputs:**
+- Touch (primary)
+- Mouse (desktop testing)
+- NO keyboard controls
+- NO controller support
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| **Touch controls** | ✅ Primary | ❌ Not supported |
+| **Keyboard** | ❌ Not supported | ✅ WASD + mouse |
+| **Controller** | ❌ Not supported | ✅ Full support |
+| **Mobile-first** | ✅ Yes | ❌ PC/console |
+| **Accessibility options** | ⚠️ Basic | ✅ Extensive |
+| **Remapping** | ❌ No | ✅ Yes |
+
+### GoPit Advantages
+
+1. **Touch-native design** - Built for mobile from start
+2. **Virtual joysticks** - Familiar mobile control scheme
+3. **Fire button placement** - Optimized for thumb reach
+
+### GoPit Gaps
+
+1. **No keyboard fallback** - Can't play on desktop properly
+2. **No controller support** - Limits PC/console ports
+3. **No remapping** - Fixed control positions
+4. **No accessibility options** - No adaptations for motor impairments
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add keyboard controls | WASD + mouse for desktop |
+| **P2** | Add controller support | Xbox/PlayStation mapping |
+| **P3** | Add control remapping | Customize button positions |
+| **P3** | Add accessibility options | Button hold alternatives, etc. |
+
+**GoPit's touch-first design is a strength for mobile but limits platform expansion.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **84 appendices** (A through BZ)
+- **85 appendices** (A through CA)
 - **82 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
