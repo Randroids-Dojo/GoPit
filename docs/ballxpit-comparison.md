@@ -4,7 +4,7 @@
 > **Last Updated**: January 11, 2026
 > **Status**: Comprehensive Analysis Complete + Code Verification (167 Appendices, 14,111 lines)
 > **Related Epic**: GoPit-68o
-> **Iterations**: 153 Ralph Wiggum analysis passes
+> **Iterations**: 154 Ralph Wiggum analysis passes
 > **Verification Results**: 14 prematurely-closed beads reopened (see Critical Gaps section)
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
@@ -766,16 +766,16 @@ Based on guides and character analysis:
 |---------|-------|----------|-------|
 | Boss per stage | 1 | 2-3 | Gap |
 | Boss HP bar | Yes | Yes | Yes |
-| Multiple phases | No | Yes | Gap |
-| Add spawns | No | Yes | Gap |
-| Unique attacks | Basic | Complex | Gap |
+| Multiple phases | Yes (3 phases at 66%/33%) | Yes | Yes |
+| Add spawns | Yes (spawn_adds in boss_base) | Yes | Yes |
+| Unique attacks | Yes (slam/summon/split/rage) | Complex | Partial |
 
 ### Recommendations
 
-1. [ ] **Add boss phases** - Health-based phase transitions
-2. [ ] **Add minion spawning** - Small enemies during boss
-3. [ ] **Create more boss types** - Frost Wyrm, Sand Golem from GDD
-4. [ ] **Add attack patterns** - Bullet-hell style patterns
+1. [x] **Add boss phases** - Health-based phase transitions ✓ IMPLEMENTED (boss_base.gd:31, phases at 66%/33% HP)
+2. [x] **Add minion spawning** - Small enemies during boss ✓ IMPLEMENTED (boss_base.gd:316-329, slime_king uses spawn_adds)
+3. [ ] **Create more boss types** - Frost Wyrm, Sand Golem from GDD (only Slime King exists)
+4. [x] **Add attack patterns** - Bullet-hell style patterns ✓ IMPLEMENTED (slime_king has slam/summon/split/rage)
 
 ---
 
@@ -808,9 +808,8 @@ In GoPit, bounces are a limitation (max 10) not an opportunity. This inverts the
 ### Content Expansion (Priority 2)
 
 1. **Add more evolution recipes** - Currently 5, target 10-15
-2. **Add more boss types** - Only Slime King implemented
-3. **Add boss phases** - Health-based phase transitions
-4. **Add more characters** - With unique firing mechanics
+2. **Add more boss types** - Only Slime King implemented (phases & attacks work, need variety)
+3. **Add more characters** - With unique firing mechanics
 
 ### Gameplay Tuning (Priority 3)
 
