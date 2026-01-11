@@ -351,11 +351,16 @@ func get_damage_vs_burning() -> float:
 	return 1.0
 
 
+func get_damage_vs_bleeding() -> float:
+	## Returns damage multiplier vs bleeding enemies (base +15%)
+	return 1.15
+
+
 func get_damage_vs_frozen() -> float:
-	## Returns damage multiplier vs frozen enemies (Shatter: +50%)
+	## Returns damage multiplier vs frozen enemies (base +25%, Shatter: +50%)
 	if active_passive == Passive.SHATTER:
 		return 1.5
-	return 1.0
+	return 1.25  # Frozen enemies always take +25% more damage
 
 
 func get_freeze_duration_bonus() -> float:

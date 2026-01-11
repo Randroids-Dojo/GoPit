@@ -222,12 +222,15 @@ func _physics_process(delta: float) -> void:
 
 			# Check for status-based damage bonuses
 			if collider.has_method("has_status_effect"):
-				# Shatter: +50% damage vs frozen
+				# Shatter: +50% damage vs frozen (base +25%)
 				if collider.has_status_effect(StatusEffect.Type.FREEZE):
 					actual_damage = int(actual_damage * GameManager.get_damage_vs_frozen())
 				# Inferno: +25% damage vs burning
 				if collider.has_status_effect(StatusEffect.Type.BURN):
 					actual_damage = int(actual_damage * GameManager.get_damage_vs_burning())
+				# Bleed: +15% damage vs bleeding
+				if collider.has_status_effect(StatusEffect.Type.BLEED):
+					actual_damage = int(actual_damage * GameManager.get_damage_vs_bleeding())
 
 			# Apply evolved/fused/normal ball effects
 			if is_evolved:
