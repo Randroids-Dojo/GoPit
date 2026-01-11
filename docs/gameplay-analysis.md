@@ -17,8 +17,8 @@ Track progress with [x] marks:
 - [x] Enemy speed scaling per wave
 - [x] XP per gem (base value)
 - [x] XP to level up curve (100, 150, 200...?)
-- [ ] Crit damage multiplier
-- [ ] Crit chance mechanics
+- [x] Crit damage multiplier
+- [x] Crit chance mechanics
 - [ ] Status effect: Burn damage/duration
 - [ ] Status effect: Freeze slow %/duration
 - [ ] Status effect: Poison damage/duration
@@ -560,3 +560,72 @@ Formula: `100 + (level - 1) * 50`
 3. **Adjust curve** - Could make exponential for late-game challenge
 
 **Recommendation**: Keep current XP curve. Consider adding meta-progression XP bonuses (permanent upgrades that boost XP gain) as future content.
+
+---
+
+### 8. Crit Mechanics (Damage & Chance)
+**Iteration**: 8 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [How do stats work - Steam Discussion](https://steamcommunity.com/app/2062430/discussions/0/687489618510307449/)
+- [Ball x Pit Advanced Mechanics](https://ballxpit.org/guides/advanced-mechanics/)
+
+**Key Findings**:
+- **Dexterity stat** affects crit chance + firing rate
+- **+15% crit passive** (unlockable): ~30-40% DPS increase
+- **Shade character**: 10% base crit + execute mechanic (<20% HP instant kill)
+- **Dark ball**: 3.0x damage multiplier (self-destructs)
+- AOE can crit, passives may not
+- Crit builds: RNG-dependent, burst damage focus
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_crit_mechanics.py`
+
+**Crit Damage Multipliers**:
+| State | Multiplier |
+|-------|------------|
+| Default | 2.0x |
+| Jackpot (Gambler) | 3.0x |
+
+**Crit Chance Sources**:
+| Source | Amount |
+|--------|--------|
+| Base chance | 0% |
+| "Critical" upgrade | +10% per level |
+| Jackpot passive | +15% bonus |
+| Character multiplier | Varies |
+
+**DPS Impact by Crit Chance**:
+| Crit % | Default (2x) | Jackpot (3x) |
+|--------|--------------|--------------|
+| 0% | 1.00x | 1.00x |
+| 10% | 1.10x | 1.20x |
+| 15% | 1.15x | 1.30x |
+| 25% | 1.25x | 1.50x |
+| 50% | 1.50x | 2.00x |
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Default Crit Mult | Unknown | 2.0x | Industry standard |
+| Special Crit Mult | 3.0x (Dark ball) | 3.0x (Jackpot) | **Aligned** |
+| Crit Passive | +15% | +15% (Jackpot) | **Aligned** |
+| Crit Source | Dexterity stat | Upgrades | Different system |
+| Execute Mechanic | Shade: <20% HP kill | None | BallxPit unique |
+
+#### Alignment Recommendation
+
+**Priority**: P3 (Low)
+
+**Assessment**: GoPit's crit system closely matches BallxPit. The 2x/3x multipliers and +15% bonus crit are well-aligned.
+
+**Options**:
+1. **Keep current** - System is solid and aligned
+2. **Add execute mechanic** - Like Shade's <20% HP instant kill
+3. **Add Dexterity stat** - Would require character stat rework
+
+**Recommendation**: Keep current crit system. Consider adding an **execute mechanic** as a future character passive (e.g., crit on low-HP enemies = instant kill). This would add strategic depth without system overhaul.
