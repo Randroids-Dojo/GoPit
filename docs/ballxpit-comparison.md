@@ -201,22 +201,50 @@ Based on guides and documentation research:
    - Waves 10+: Shift to 60% dodging, 40% aiming
 7. **Positioning Tactics**: Aim balls into crevices for more bounces = more damage
 
+### CRITICAL: Ball Return System (FUNDAMENTAL DIFFERENCE)
+
+**BallxPit Ball Economy** ([Steam Discussions](https://steamcommunity.com/app/2062430/discussions/0/624436409752930018/), [Ball x Pit Tips](https://ballxpit.org/guides/tips-tricks/)):
+- Balls **persist and bounce** until hitting bottom of screen OR caught
+- **Cannot fire new balls** until existing balls return to player
+- **Catching balls** = instant return (vs 2-3s waiting for bottom bounce)
+- **Active catching = 30-40% more DPS** - skilled play rewarded
+- Fire rate = how quickly returned balls can be launched
+- Baby balls also must return before new ones fire
+
+**GoPit Current System:**
+- Balls despawn after `max_bounces` (10 bounces default)
+- **Fixed cooldown timer** (0.5s) between shots regardless of balls
+- No ball returning - new balls spawn on timer
+- Fire rate = cooldown_duration setting
+- No catching mechanic
+
+**Impact:**
+This is perhaps the MOST fundamental difference. BallxPit's system:
+1. Creates strategic ball positioning (bounce behind enemies)
+2. Rewards active play (catching = more DPS)
+3. Makes fire rate feel different
+4. Creates tension (balls out = vulnerable)
+
 ### Comparison
 
 | Feature | GoPit | BallxPit | Match |
 |---------|-------|----------|-------|
-| Ball types | 7 base types | Similar types | Yes |
-| Ball levels | L1-L3 | Similar progression | Yes |
-| Firing direction | Aim joystick | Movement direction? | Unclear |
+| **Ball economy** | Cooldown timer | **Return-based** | **❌ CRITICAL** |
+| **Ball lifecycle** | Despawn after bounces | Return at bottom | **❌ CRITICAL** |
+| **Fire gating** | Cooldown timer | Ball availability | **❌ CRITICAL** |
+| **Catching** | Not implemented | Instant ball return | **❌ Missing** |
+| Ball types | 7 base types | 18+ types | Partial |
+| Ball levels | L1-L3 | L1-L3 | ✅ Yes |
 | Autofire | Toggle option | Primary mode | Partial |
-| Ball limit | 30 max | Unknown | Unclear |
-| Status effects | 6 types | Similar | Yes |
+| Status effects | 6 types | 10+ types | Partial |
 
 ### Recommendations
 
-1. [ ] **Verify firing direction in BallxPit** - Watch gameplay to confirm
-2. [ ] **Test autofire as default** - Consider making autofire ON by default
-3. [ ] **Add more evolved ball types** - Currently 5 evolved types, may need more
+1. [ ] **CRITICAL: Implement ball return system** - Balls return at bottom, not despawn
+2. [ ] **Add ball catching mechanic** - Catch = instant return
+3. [ ] **Change fire gating to ball availability** - Only fire when balls returned
+4. [ ] **Make autofire default ON** - BallxPit's primary mode
+5. [ ] **Add more ball types** - Target 18+ like BallxPit
 
 ---
 
@@ -3111,3 +3139,51 @@ func _calculate_xp_requirement(level: int) -> int:
 ```
 
 **Note:** This is balance tuning, not a fundamental gap. GoPit's linear curve is functional, just may feel "flat" compared to games with more dynamic progression.
+
+
+## Appendix AD: In-Game Drops and Pickups (NEW)
+
+### GoPit Current Drops
+
+| Drop | Source | Effect |
+|------|--------|--------|
+| XP Gem | All enemies | Grants XP |
+| Health Gem | Vampire passive (20% chance) | Heals player |
+| Fusion Reactor | Random on kill (~2% + wave bonus) | Enables fusion |
+
+**No temporary power-ups during gameplay** - all upgrades come from level-up cards.
+
+### BallxPit Expected Behavior
+
+Many ball games have in-game pickups:
+- **Magnet** - Temporarily attract all gems
+- **Shield** - Brief invulnerability
+- **Speed boost** - Faster ball speed temporarily
+- **Multi-shot** - Temporary extra balls
+- **Bomb** - Clear screen of enemies
+- **Freeze** - Pause all enemies
+
+### Analysis
+
+**GoPit's approach:**
+- Permanent upgrades via level-up cards
+- Clean, simple loop (kill → XP → level → upgrade)
+- Fusion reactor adds special moment
+
+**Potential gap:**
+- No "exciting drop" moments during gameplay
+- No emergency saves (shield, clear screen)
+- Less variety in gameplay loop
+
+### Recommendations
+
+**P3 Priority** (optional enhancement):
+
+Consider adding rare temporary powerups:
+1. **Magnet pickup** - 10s of gem attraction
+2. **Overdrive** - 5s of rapid fire
+3. **Time warp** - 5s of enemy slow-mo
+
+These would drop rarely (1-2% chance) and add excitement without fundamentally changing balance.
+
+**Note:** This is a "nice to have" - GoPit's current system is clean and functional. Adding pickups increases complexity.
