@@ -414,7 +414,7 @@ func _calculate_xp_requirement(level: int) -> int:
 | Biome system | 4 biomes | Multiple | Partial |
 | Boss per biome | 1 | 2-3 | Gap |
 | Win condition | Beat all bosses | Same | Yes |
-| XP scaling | Linear +50 | Unknown | Unclear |
+| XP scaling | Linear +50 | 1 XP per kill (base), building bonuses | Different approach |
 
 ### Recommendations
 
@@ -1449,7 +1449,7 @@ From `game_controller.gd`:
 | Dual joystick | Yes | Yes (mobile) | Good |
 | Autofire toggle | Yes | Yes | Good |
 | Ball catching | No | Yes | Gap |
-| Aim sensitivity | Fixed | Adjustable? | Unknown |
+| Aim sensitivity | Fixed | Adjustable (40-80%, default 50%) | Gap |
 
 ### Recommendations
 
@@ -4955,10 +4955,10 @@ if distance < magnetism_range:
 
 | Feature | GoPit | BallxPit |
 |---------|-------|----------|
-| Gem types | 2 (XP, Health) | Unknown |
-| Magnetism | Upgradeable range | Unknown |
-| Auto-collect | No | May have |
-| Combo system | Yes (separate) | Unknown |
+| Gem types | 2 (XP, Health) | XP crystals + stone healer (spawns every 7-12 rows) |
+| Magnetism | Upgradeable range | Via passive items |
+| Auto-collect | No | No (must walk to collect) |
+| Combo system | Yes (separate) | Level-based (3 upgrades per level) |
 
 ### Missing Features
 
