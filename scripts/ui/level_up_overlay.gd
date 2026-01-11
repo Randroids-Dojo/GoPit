@@ -21,7 +21,8 @@ enum UpgradeType {
 enum CardType {
 	PASSIVE,      # Traditional stat upgrades
 	NEW_BALL,     # Acquire a new ball type
-	LEVEL_UP_BALL # Level up an owned ball (L1->L2 or L2->L3)
+	LEVEL_UP_BALL, # Level up an owned ball (L1->L2 or L2->L3)
+	FISSION       # Random upgrades (1-3 ball level-ups or new balls)
 }
 
 const UPGRADE_DATA := {
@@ -146,7 +147,13 @@ func _randomize_cards() -> void:
 				"ball_type": ball_type
 			})
 
-	# 3. Add passive upgrades that haven't hit max stacks
+		# 3. Add Fission card (if there are upgradeable or unowned balls)
+		if upgradeable.size() > 0 or unowned.size() > 0:
+			pool.append({
+				"card_type": CardType.FISSION
+			})
+
+	# 4. Add passive upgrades that haven't hit max stacks
 	for upgrade_type in UPGRADE_DATA:
 		var data: Dictionary = UPGRADE_DATA[upgrade_type]
 		var current_stacks: int = upgrade_stacks.get(upgrade_type, 0)
@@ -208,6 +215,12 @@ func _update_cards() -> void:
 							desc_label.text = "+50% damage & speed"
 						elif next_level == 3:
 							desc_label.text = "+100% stats (Fusion ready!)"
+
+				CardType.FISSION:
+					if name_label:
+						name_label.text = "FISSION"
+					if desc_label:
+						desc_label.text = "Random 1-3 ball upgrades!"
 		else:
 			card.visible = false
 
@@ -243,6 +256,18 @@ func _on_card_pressed(index: int) -> void:
 				var new_level: int = BallRegistry.get_ball_level(ball_type) + 1
 				BallRegistry.level_up_ball(ball_type)
 				selected_name = "%s L%d" % [BallRegistry.get_ball_name(ball_type), new_level]
+
+		CardType.FISSION:
+			if FusionRegistry:
+				var result: Dictionary = FusionRegistry.apply_fission()
+				var upgrade_count: int = result.get("upgrades", []).size()
+				if upgrade_count > 0:
+					selected_name = "FISSION x%d" % upgrade_count
+				elif result.get("xp_bonus", 0) > 0:
+					selected_name = "FISSION (+%d XP)" % result["xp_bonus"]
+				else:
+					selected_name = "FISSION"
+				SoundManager.play(SoundManager.SoundType.FISSION)
 
 	upgrade_selected.emit(selected_name)
 
