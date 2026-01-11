@@ -489,3 +489,256 @@
 11. Passive upgrades: 11 vs 51+
 12. Enemy types: 3 vs 10+
 13. Bosses: 1 vs 24
+
+---
+
+## 7. Baby Ball Mechanics (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source File:** `scripts/entities/baby_ball_spawner.gd`
+
+**Key Code Findings:**
+
+1. **TIMER-BASED SPAWNING** (`baby_ball_spawner.gd:8`):
+   ```gdscript
+   @export var base_spawn_interval: float = 2.0
+   ```
+   Fixed 2-second interval, modified by Leadership stat.
+
+2. **50% DAMAGE REDUCTION** (`baby_ball_spawner.gd:9, 78`):
+   ```gdscript
+   @export var baby_ball_damage_multiplier: float = 0.5
+   ball.damage = int(base_damage * baby_ball_damage_multiplier)
+   ```
+   BallxPit baby balls share FULL parent damage.
+
+3. **NO TYPE INHERITANCE** - Searched for ball_type/set_ball_type:
+   ```bash
+   grep -n "ball_type|set_ball_type" baby_ball_spawner.gd
+   # No matches found
+   ```
+   Baby balls are always NORMAL type, no effects.
+
+4. **AUTO-TARGETING** (`baby_ball_spawner.gd:95-100`):
+   ```gdscript
+   func _get_target_direction() -> Vector2:
+       var nearest := _find_nearest_enemy()
+       if nearest:
+           return _player.global_position.direction_to(nearest.global_position)
+   ```
+
+5. **LEADERSHIP SCALING** (`baby_ball_spawner.gd:49-58`):
+   ```gdscript
+   var total_bonus: float = (_leadership_bonus * char_mult) + passive_bonus
+   var rate: float = base_spawn_interval / ((1.0 + total_bonus) * speed_mult)
+   ```
+
+### BallxPit Behavior (Research)
+
+1. **TYPE INHERITANCE** - Baby balls inherit parent effects (Holy Laser, etc.)
+2. **FULL DAMAGE** - Baby balls share parent damage (not reduced)
+3. **EVOLUTION SPAWNING** - Spider Queen (25% on hit), Maggot (on death)
+4. **BALL COUNT SCALING** - More parent balls = more baby balls
+
+### CRITICAL DIFFERENCES
+
+| Mechanic | GoPit | BallxPit | Impact |
+|----------|-------|----------|--------|
+| **Type inheritance** | NONE (always NORMAL) | YES (inherits effects) | **CRITICAL** |
+| **Damage** | 50% reduced | Full parent damage | Lower value |
+| **Spawn trigger** | Fixed timer (2s) | Evolution-specific | Different feel |
+| **Ball count scaling** | No | Yes | Missing synergy |
+
+### Beads Tracking This Gap
+
+- Baby ball type inheritance needs new bead
+
+---
+
+## 8. Status Effect Mechanics (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source File:** `scripts/effects/status_effect.gd`
+
+**Key Code Findings:**
+
+1. **4 EFFECT TYPES** (`status_effect.gd:5`):
+   ```gdscript
+   enum Type { BURN, FREEZE, POISON, BLEED }
+   ```
+
+2. **LOW STACK LIMITS** (`status_effect.gd:30-51`):
+   - BURN: max_stacks = 1 (refreshes only), 3s duration, 5 DPS
+   - FREEZE: max_stacks = 1, 2s duration, 50% slow
+   - POISON: max_stacks = 1, 5s duration, 3 DPS
+   - BLEED: max_stacks = 5, PERMANENT (INF), 2 DPS per stack
+
+3. **NO DAMAGE AMPLIFICATION** - Effects only deal DoT or slow, no +% damage taken.
+
+4. **INTELLIGENCE SCALING** (`status_effect.gd:28, 32`):
+   ```gdscript
+   var int_mult: float = GameManager.character_intelligence_mult
+   duration = 3.0 * int_mult
+   ```
+
+### BallxPit Behavior (Research)
+
+Source: [Ball x Pit Advanced Mechanics Guide](https://ballxpit.org/guides/advanced-mechanics/)
+
+1. **6+ EFFECT TYPES** - Burn, Freeze, Poison, Bleed, Radiation, Frostburn, Disease
+2. **HIGH STACK LIMITS**:
+   - Bleed: 24 stacks (GoPit: 5)
+   - Poison: 8 stacks (GoPit: 1)
+   - Burn: 5 stacks (GoPit: 1)
+   - Radiation: 5 stacks (new)
+   - Frostburn: 4 stacks (new)
+   - Disease: 8 stacks (new)
+
+3. **DAMAGE AMPLIFICATION**:
+   - Radiation: +10% damage taken per stack (max +50%)
+   - Frostburn: +25% damage taken (flat)
+   - This is MULTIPLICATIVE with other damage sources!
+
+4. **HEMORRHAGE MECHANIC** - 12+ bleed stacks trigger 20% current HP nuke
+
+### CRITICAL DIFFERENCES
+
+| Mechanic | GoPit | BallxPit | Impact |
+|----------|-------|----------|--------|
+| **Effect types** | 4 | 6+ | Less variety |
+| **Bleed stacks** | 5 | 24 | Much lower cap |
+| **Poison stacks** | 1 | 8 | Refresh-only |
+| **Damage amplification** | NONE | +50-75% | **CRITICAL** |
+| **Hemorrhage** | NONE | 20% HP nuke at 12 stacks | Missing |
+
+### Beads Tracking This Gap
+
+- Status effect stack limits and damage amplification needs beads
+
+---
+
+## 9. Combo System (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source File:** `scripts/autoload/game_manager.gd`
+
+**Key Code Findings:**
+
+1. **KILL STREAK COMBO** (`game_manager.gd:29-31, 101`):
+   ```gdscript
+   var combo_count: int = 0
+   var combo_timer: float = 0.0
+   var combo_timeout: float = 2.0  # Seconds before combo resets
+   # record_enemy_kill() calls _increment_combo()
+   ```
+
+2. **XP MULTIPLIER** (`game_manager.gd:117-122, 259`):
+   ```gdscript
+   func get_combo_multiplier() -> float:
+       # 1x at 1-2 combo, 1.5x at 3-4, 2x at 5+
+       if combo_count >= 5: return 2.0
+       elif combo_count >= 3: return 1.5
+       return 1.0
+   # Applied to XP: final_xp = int(amount * get_combo_multiplier())
+   ```
+
+3. **RESET ON DAMAGE** (`game_manager.gd:270-271`):
+   ```gdscript
+   # Reset combo on damage
+   _reset_combo()
+   ```
+
+### BallxPit Behavior (Research)
+
+Based on extensive search, **BallxPit does NOT have a kill-streak combo system**.
+
+The term "combo" in BallxPit refers to:
+1. **Ball/Character synergies** - Evolution combinations
+2. **Damage amplification stacking** - Radiation + Frostburn = 1.875x
+3. **Build combos** - Specific character + ball + passive setups
+
+Sources: [Ball x Pit Combos & Synergies Guide](https://ballxpit.org/guides/combos-synergies/)
+
+### DIFFERENCES
+
+| Mechanic | GoPit | BallxPit | Impact |
+|----------|-------|----------|--------|
+| **Kill streak combo** | YES (2s timeout) | NOT FOUND | GoPit advantage! |
+| **XP multiplier** | 1x-2x based on streak | None for kills | GoPit advantage! |
+| **Reset on damage** | Yes | N/A | Encourages safety |
+| **Damage amp combos** | None | Yes (+50-75%) | Missing in GoPit |
+
+### Analysis
+
+GoPit has a **kill streak combo system that BallxPit may not have**. This is a potential **GoPit advantage** - it encourages rapid kills and adds a risk/reward element (taking damage resets combo).
+
+However, BallxPit's damage amplification through status effect stacking (Radiation, Frostburn) serves a similar purpose - rewarding coordinated builds.
+
+---
+
+## 10. Meta Progression (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source Files:**
+- `scripts/autoload/meta_manager.gd`
+- `scripts/data/permanent_upgrades.gd`
+
+**Key Code Findings:**
+
+1. **1 CURRENCY** (`meta_manager.gd:10`):
+   ```gdscript
+   var pit_coins: int = 0
+   ```
+   Only Pit Coins, no multi-resource system.
+
+2. **5 PERMANENT UPGRADES** (`permanent_upgrades.gd:44-95`):
+   - hp (Pit Armor): +10 HP per level, max 5
+   - damage (Ball Power): +2 damage, max 5
+   - fire_rate (Rapid Fire): -0.05s cooldown, max 5
+   - coin_bonus (Coin Magnet): +10% coins, max 4
+   - starting_level (Head Start): Start at level X, max 3
+
+3. **SIMPLE COST SCALING** (`permanent_upgrades.gd:34`):
+   ```gdscript
+   return int(base_cost * pow(cost_multiplier, current_level))
+   ```
+   2x cost per level, no resource complexity.
+
+4. **LOCAL FILE SAVE** (`meta_manager.gd:7, 94-105`):
+   ```gdscript
+   const SAVE_PATH := "user://meta.save"
+   # JSON save with coins, runs, best_wave, upgrades
+   ```
+
+5. **NO BUILDINGS** - Just upgrade purchases, no construction.
+
+### BallxPit Behavior (Research)
+
+Source: [Ball x Pit Buildings Guide](https://ballxpit.org/guides/buildings-guide/)
+
+1. **4 CURRENCIES** - Gold, Wood, Stone, Wheat
+2. **70+ BUILDINGS** in New Ballbylon
+3. **BUILDING RANKS** - D → C → B → A → S (+40-50% permanent power)
+4. **CHARACTER UNLOCKS** via buildings (Jeweler, Matchmaker, Gem Smith)
+5. **RESOURCE HARVESTING** - 7-mine U-layout = 2,500+ gold
+6. **BASE LAYOUT STRATEGY** - Placement matters for optimization
+
+### CRITICAL DIFFERENCES
+
+| Mechanic | GoPit | BallxPit | Impact |
+|----------|-------|----------|--------|
+| **Currencies** | 1 (Pit Coins) | 4 (Gold, Wood, Stone, Wheat) | Simpler |
+| **Permanent upgrades** | 5 | 70+ buildings | **MASSIVE gap** |
+| **Building system** | NONE | Yes (New Ballbylon) | Missing |
+| **Resource harvesting** | NONE | Yes | Missing |
+| **Rank progression** | Simple levels | D→S ranks | Less depth |
+| **Character unlocks** | Via requirements | Via buildings | Different |
+
+### Beads Tracking This Gap
+
+- Building system tracked in existing beads (P3)
+- Multiple currencies tracked in existing beads
