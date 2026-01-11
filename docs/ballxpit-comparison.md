@@ -1,10 +1,11 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 3.0
+> **Document Version**: 3.1
 > **Last Updated**: January 11, 2026
-> **Status**: Comprehensive Analysis Complete (167 Appendices, 14,067 lines)
+> **Status**: Comprehensive Analysis Complete + Code Verification (167 Appendices, 14,111 lines)
 > **Related Epic**: GoPit-68o
-> **Iterations**: 135+ Ralph Wiggum analysis passes
+> **Iterations**: 145 Ralph Wiggum analysis passes
+> **Verification Results**: 6 prematurely-closed beads reopened (see Critical Gaps section)
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
 
