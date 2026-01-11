@@ -5,6 +5,7 @@ extends Node2D
 
 signal ball_spawned(ball: Node2D)
 signal ball_returned  # Emitted when a ball returns to player
+signal ball_caught  # Emitted when a ball is caught (active play bonus)
 signal balls_available_changed(available: bool)  # For fire button UI
 
 @export var ball_scene: PackedScene
@@ -163,8 +164,9 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	else:
 		get_parent().add_child(ball)
 
-	# Track ball return (connect to returned signal)
+	# Track ball return/catch (connect signals)
 	ball.returned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.caught.connect(_on_ball_caught.bind(ball), CONNECT_ONE_SHOT)
 	ball.despawned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
 	balls_in_flight += 1
 	_check_availability_changed()
@@ -192,6 +194,37 @@ func _on_ball_returned(_ball: Node) -> void:
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_returned.emit()
 	_check_availability_changed()
+
+
+func _on_ball_caught(_ball: Node) -> void:
+	"""Called when a ball is caught by the player (active play bonus)"""
+	balls_in_flight = maxi(0, balls_in_flight - 1)
+	ball_caught.emit()
+	_check_availability_changed()
+
+
+func try_catch_ball() -> bool:
+	"""Attempt to catch any catchable ball in flight. Returns true if caught."""
+	if not balls_container:
+		return false
+
+	# Find the closest catchable ball
+	for ball in balls_container.get_children():
+		if ball.has_method("catch") and ball.is_catchable:
+			if ball.catch():
+				return true
+	return false
+
+
+func has_catchable_balls() -> bool:
+	"""Check if any balls are currently catchable"""
+	if not balls_container:
+		return false
+
+	for ball in balls_container.get_children():
+		if ball.has_method("catch") and ball.is_catchable:
+			return true
+	return false
 
 
 func _check_availability_changed() -> void:

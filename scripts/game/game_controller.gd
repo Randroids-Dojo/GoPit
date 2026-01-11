@@ -49,6 +49,9 @@ var enemies_per_wave: int = 5
 var _keyboard_aim_direction: Vector2 = Vector2.ZERO
 var _last_keyboard_aim: Vector2 = Vector2.UP  # Default aim upward
 
+# Catch zone for touch input (tap above this Y to try catching)
+const CATCH_TAP_ZONE_MAX_Y: float = 900.0  # Don't trigger on HUD area
+
 
 func _ready() -> void:
 	viewport_height = get_viewport_rect().size.y
@@ -66,6 +69,10 @@ func _ready() -> void:
 	# Wire up fire button
 	if fire_button:
 		fire_button.fired.connect(_on_fire_pressed)
+
+	# Wire up ball spawner catch signal
+	if ball_spawner:
+		ball_spawner.ball_caught.connect(_on_ball_caught)
 
 	# Wire up autofire toggle
 	if auto_toggle and fire_button:
@@ -344,6 +351,20 @@ func _on_fire_pressed() -> void:
 		tutorial_overlay.on_ball_fired()
 
 
+func _on_ball_caught() -> void:
+	"""Handle ball catch - give cooldown bonus to fire button"""
+	if fire_button:
+		fire_button.add_catch_bonus()
+	SoundManager.play(SoundManager.SoundType.GEM_COLLECT)  # Reuse gem sound for catch
+
+
+func try_catch_ball() -> bool:
+	"""Attempt to catch a returning ball (active play bonus)"""
+	if not ball_spawner:
+		return false
+	return ball_spawner.try_catch_ball()
+
+
 func _on_auto_toggle_pressed(button_pressed: bool) -> void:
 	if fire_button:
 		fire_button.set_autofire(button_pressed)
@@ -608,3 +629,31 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Toggle mute with M (works anytime)
 	if event.is_action_pressed("toggle_mute"):
 		SoundManager.toggle_mute()
+
+	# Catch ball with C (when balls are catchable)
+	if event.is_action_pressed("catch_ball"):
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			try_catch_ball()
+
+
+func _input(event: InputEvent) -> void:
+	"""Handle touch/click input for ball catching in game area"""
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
+	# Check for touch or click in the game area (not UI)
+	var tap_position: Vector2 = Vector2.ZERO
+	var is_tap := false
+
+	if event is InputEventScreenTouch and event.pressed:
+		tap_position = event.position
+		is_tap = true
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		tap_position = event.position
+		is_tap = true
+
+	if is_tap and tap_position.y < CATCH_TAP_ZONE_MAX_Y:
+		# Check if there are catchable balls and try to catch
+		if ball_spawner and ball_spawner.has_catchable_balls():
+			if try_catch_ball():
+				get_viewport().set_input_as_handled()
