@@ -1,116 +1,35 @@
 extends Control
 ## Level Up overlay with upgrade cards - supports ball types, ball leveling, and passive upgrades
+## Passives are now shared with FusionRegistry so fission and level-up use the same tracking.
 
 signal upgrade_selected(upgrade_type: String)
 
-enum UpgradeType {
-	DAMAGE,
-	FIRE_RATE,
-	MAX_HP,
-	MULTI_SHOT,
-	BALL_SPEED,
-	PIERCING,
-	RICOCHET,
-	CRITICAL,
-	MAGNETISM,
-	HEAL,
-	LEADERSHIP
-}
-
 # Upgrade categories for card generation
 enum CardType {
-	PASSIVE,      # Traditional stat upgrades
+	PASSIVE,      # Traditional stat upgrades (uses FusionRegistry.PassiveType)
 	NEW_BALL,     # Acquire a new ball type
 	LEVEL_UP_BALL, # Level up an owned ball (L1->L2 or L2->L3)
-	FISSION       # Random upgrades (1-3 ball level-ups or new balls)
+	FISSION,      # Random upgrades (1-3 ball level-ups or new balls)
+	HEAL          # One-time heal (not tracked in stacks)
 }
 
-const UPGRADE_DATA := {
-	UpgradeType.DAMAGE: {
-		"name": "Power Up",
-		"description": "+5 Ball Damage",
-		"apply": "_apply_damage_upgrade",
-		"max_stacks": 10
-	},
-	UpgradeType.FIRE_RATE: {
-		"name": "Quick Fire",
-		"description": "-0.1s Cooldown",
-		"apply": "_apply_fire_rate_upgrade",
-		"max_stacks": 4
-	},
-	UpgradeType.MAX_HP: {
-		"name": "Vitality",
-		"description": "+25 Max HP",
-		"apply": "_apply_hp_upgrade",
-		"max_stacks": 10
-	},
-	UpgradeType.MULTI_SHOT: {
-		"name": "Multi Shot",
-		"description": "+1 Ball per shot",
-		"apply": "_apply_multi_shot",
-		"max_stacks": 3
-	},
-	UpgradeType.BALL_SPEED: {
-		"name": "Velocity",
-		"description": "+100 Ball Speed",
-		"apply": "_apply_speed_upgrade",
-		"max_stacks": 5
-	},
-	UpgradeType.PIERCING: {
-		"name": "Piercing",
-		"description": "Pierce +1 enemy",
-		"apply": "_apply_piercing",
-		"max_stacks": 3
-	},
-	UpgradeType.RICOCHET: {
-		"name": "Ricochet",
-		"description": "+5 wall bounces",
-		"apply": "_apply_ricochet",
-		"max_stacks": 4
-	},
-	UpgradeType.CRITICAL: {
-		"name": "Critical Hit",
-		"description": "+10% crit chance",
-		"apply": "_apply_critical",
-		"max_stacks": 5
-	},
-	UpgradeType.MAGNETISM: {
-		"name": "Magnetism",
-		"description": "Gems attracted",
-		"apply": "_apply_magnetism",
-		"max_stacks": 3
-	},
-	UpgradeType.HEAL: {
-		"name": "Heal",
-		"description": "Restore 30 HP",
-		"apply": "_apply_heal",
-		"max_stacks": 99
-	},
-	UpgradeType.LEADERSHIP: {
-		"name": "Leadership",
-		"description": "+20% Baby Ball rate",
-		"apply": "_apply_leadership",
-		"max_stacks": 5
-	}
+# Heal is special - not tracked in FusionRegistry as it's not a stackable passive
+const HEAL_DATA := {
+	"name": "Heal",
+	"description": "Restore 30 HP"
 }
 
 @onready var cards_container: HBoxContainer = $Panel/VBoxContainer/CardsContainer
 @onready var title_label: Label = $Panel/VBoxContainer/TitleLabel
 
-# Each card is a Dictionary with: card_type, upgrade_type (for passive), ball_type (for ball cards)
+# Each card is a Dictionary with: card_type, passive_type (for passive), ball_type (for ball cards)
 var _available_cards: Array[Dictionary] = []
-var upgrade_stacks: Dictionary = {}
 
 
 func _ready() -> void:
 	visible = false
 	GameManager.level_up_triggered.connect(_on_level_up)
-	GameManager.game_started.connect(_reset_stacks)
 	_setup_cards()
-
-
-func _reset_stacks() -> void:
-	upgrade_stacks.clear()
 
 
 func _setup_cards() -> void:
@@ -147,21 +66,28 @@ func _randomize_cards() -> void:
 				"ball_type": ball_type
 			})
 
-		# 3. Add Fission card (if there are upgradeable or unowned balls)
-		if upgradeable.size() > 0 or unowned.size() > 0:
+		# 3. Add Fission card (if there are upgradeable or unowned balls, or available passives)
+		var has_upgrades := upgradeable.size() > 0 or unowned.size() > 0
+		if FusionRegistry:
+			has_upgrades = has_upgrades or FusionRegistry.get_available_passives().size() > 0
+		if has_upgrades:
 			pool.append({
 				"card_type": CardType.FISSION
 			})
 
-	# 4. Add passive upgrades that haven't hit max stacks
-	for upgrade_type in UPGRADE_DATA:
-		var data: Dictionary = UPGRADE_DATA[upgrade_type]
-		var current_stacks: int = upgrade_stacks.get(upgrade_type, 0)
-		if current_stacks < data.get("max_stacks", 99):
+	# 4. Add passive upgrades from FusionRegistry (shared with fission)
+	if FusionRegistry:
+		var available_passives := FusionRegistry.get_available_passives()
+		for passive_type in available_passives:
 			pool.append({
 				"card_type": CardType.PASSIVE,
-				"upgrade_type": upgrade_type
+				"passive_type": passive_type
 			})
+
+	# 5. Always add heal option (not a stackable passive)
+	pool.append({
+		"card_type": CardType.HEAL
+	})
 
 	pool.shuffle()
 	# Take first 3 (or fewer if pool is smaller)
@@ -180,17 +106,18 @@ func _update_cards() -> void:
 
 			match card_data["card_type"]:
 				CardType.PASSIVE:
-					var upgrade_type: UpgradeType = card_data["upgrade_type"]
-					var data: Dictionary = UPGRADE_DATA[upgrade_type]
-					var stacks: int = upgrade_stacks.get(upgrade_type, 0)
+					var passive_type: FusionRegistry.PassiveType = card_data["passive_type"]
+					var stacks: int = FusionRegistry.get_passive_stacks(passive_type) if FusionRegistry else 0
+					var passive_name: String = FusionRegistry.get_passive_name(passive_type) if FusionRegistry else "Unknown"
+					var passive_desc: String = FusionRegistry.get_passive_description(passive_type) if FusionRegistry else ""
 
 					if name_label:
 						if stacks > 0:
-							name_label.text = "%s (%d)" % [data["name"], stacks + 1]
+							name_label.text = "%s (%d)" % [passive_name, stacks + 1]
 						else:
-							name_label.text = data["name"]
+							name_label.text = passive_name
 					if desc_label:
-						desc_label.text = data["description"]
+						desc_label.text = passive_desc
 
 				CardType.NEW_BALL:
 					var ball_type: int = card_data["ball_type"]
@@ -220,7 +147,13 @@ func _update_cards() -> void:
 					if name_label:
 						name_label.text = "FISSION"
 					if desc_label:
-						desc_label.text = "Random 1-3 ball upgrades!"
+						desc_label.text = "Random 1-5 upgrades!"
+
+				CardType.HEAL:
+					if name_label:
+						name_label.text = HEAL_DATA["name"]
+					if desc_label:
+						desc_label.text = HEAL_DATA["description"]
 		else:
 			card.visible = false
 
@@ -234,15 +167,10 @@ func _on_card_pressed(index: int) -> void:
 
 	match card_data["card_type"]:
 		CardType.PASSIVE:
-			var upgrade_type: UpgradeType = card_data["upgrade_type"]
-			var data: Dictionary = UPGRADE_DATA[upgrade_type]
-
-			# Track stacks
-			upgrade_stacks[upgrade_type] = upgrade_stacks.get(upgrade_type, 0) + 1
-
-			# Apply the upgrade
-			call(data["apply"] as String)
-			selected_name = data["name"]
+			var passive_type: FusionRegistry.PassiveType = card_data["passive_type"]
+			if FusionRegistry:
+				FusionRegistry.apply_passive(passive_type)
+				selected_name = FusionRegistry.get_passive_name(passive_type)
 
 		CardType.NEW_BALL:
 			var ball_type: int = card_data["ball_type"]
@@ -263,11 +191,15 @@ func _on_card_pressed(index: int) -> void:
 				var upgrade_count: int = result.get("upgrades", []).size()
 				if upgrade_count > 0:
 					selected_name = "FISSION x%d" % upgrade_count
-				elif result.get("xp_bonus", 0) > 0:
-					selected_name = "FISSION (+%d XP)" % result["xp_bonus"]
+				elif result.get("pit_coins", 0) > 0:
+					selected_name = "FISSION (+%d Coins)" % result["pit_coins"]
 				else:
 					selected_name = "FISSION"
 				SoundManager.play(SoundManager.SoundType.FISSION)
+
+		CardType.HEAL:
+			GameManager.heal(30)
+			selected_name = "Heal"
 
 	upgrade_selected.emit(selected_name)
 
@@ -277,60 +209,3 @@ func _on_card_pressed(index: int) -> void:
 	GameManager.complete_level_up()
 
 
-func _apply_damage_upgrade() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("increase_damage"):
-		ball_spawner.increase_damage(5)
-
-
-func _apply_fire_rate_upgrade() -> void:
-	var fire_button := get_tree().get_first_node_in_group("fire_button")
-	if fire_button and "cooldown_duration" in fire_button:
-		fire_button.cooldown_duration = maxf(0.1, fire_button.cooldown_duration - 0.1)
-
-
-func _apply_hp_upgrade() -> void:
-	GameManager.max_hp += 25
-	GameManager.heal(25)
-
-
-func _apply_multi_shot() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("add_multi_shot"):
-		ball_spawner.add_multi_shot()
-
-
-func _apply_speed_upgrade() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("increase_speed"):
-		ball_spawner.increase_speed(100)
-
-
-func _apply_piercing() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("add_piercing"):
-		ball_spawner.add_piercing(1)
-
-
-func _apply_ricochet() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("add_ricochet"):
-		ball_spawner.add_ricochet(5)
-
-
-func _apply_critical() -> void:
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and ball_spawner.has_method("add_crit_chance"):
-		ball_spawner.add_crit_chance(0.1)
-
-
-func _apply_magnetism() -> void:
-	GameManager.gem_magnetism_range += 200.0
-
-
-func _apply_heal() -> void:
-	GameManager.heal(30)
-
-
-func _apply_leadership() -> void:
-	GameManager.add_leadership(0.2)  # 20% faster baby balls per stack
