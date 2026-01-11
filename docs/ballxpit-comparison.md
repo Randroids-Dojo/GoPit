@@ -5890,3 +5890,179 @@ Research sources:
 | **P3** | Turn-based character | Like Tactician |
 | **P3** | Auto-play character | Like Radical |
 
+---
+
+## Appendix BN: Controls and Input System Comparison (NEW)
+
+Research sources:
+- [Deltia's Gaming - Ball x Pit Controls](https://deltiasgaming.com/ball-x-pit-controls/)
+
+### BallxPit Gameplay Controls
+
+| Action | Primary | Alternate |
+|--------|---------|-----------|
+| Move Up | W | Up Arrow |
+| Move Left | A | Left Arrow |
+| Move Down | S | Down Arrow |
+| Move Right | D | Right Arrow |
+| Pause | Esc | - |
+| **Shoot** | Space | Left Click |
+| **Autofire Toggle** | F | Scroll Click |
+| **Increase Game Speed** | + | - |
+| **Decrease Game Speed** | - | - |
+
+### BallxPit Base Management Controls
+
+| Action | Control |
+|--------|---------|
+| Dismantle Building | Right Click |
+| Highlight Upgradeable | Tab |
+| Rotate Building | R |
+| Zoom In | + |
+| Zoom Out | - |
+
+### BallxPit Harvest Controls
+
+| Action | Control |
+|--------|---------|
+| Speed Up Harvest | Right Click |
+| Cancel Harvest | Esc |
+| View Workers | E |
+
+### GoPit Controls
+
+**Current implementation (fire_button.gd):**
+- Touch/tap: Fire button
+- Touch/tap: Autofire toggle button
+- Touch joysticks: Movement and aiming
+- **No keyboard shortcuts**
+- **No game speed controls**
+
+### Comparison Table
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **WASD movement** | No | Yes | Mobile-focused |
+| **Keyboard shoot** | No | Space/Click | **MISSING** |
+| **Autofire hotkey** | No | F key | **MISSING** |
+| **Speed control** | No | +/- keys | **MISSING** |
+| **Remappable keys** | No | Yes | **MISSING** |
+| **Base management** | N/A | Full system | N/A (no city builder) |
+
+### Critical Insight: Two Game Modes
+
+**BallxPit has THREE distinct control schemes:**
+1. **Gameplay** - Combat/wave survival
+2. **Base Management** - City builder mode
+3. **Harvest** - Resource gathering
+
+**GoPit is combat-only** with no base/harvest systems.
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add keyboard controls | WASD, Space, F |
+| **P2** | Add speed +/- controls | Match BallxPit |
+| **P3** | Add key remapping | Accessibility |
+| **P3** | Consider city builder | Major scope |
+
+---
+
+## Appendix BO: City Builder and Base Management (NEW)
+
+### BallxPit City Builder Overview
+
+**"New Ballbylon"** - A full city builder between combat runs:
+
+**Scale:**
+- **70+ unique buildings**
+- Building placement, rotation, dismantling
+- Upgradeable buildings (D→C→B→A→S ranks)
+- Workers for resource harvesting
+- Visual base that grows over time
+
+### Building Categories
+
+**Stat Buildings (6):**
+| Building | Stat | Effect |
+|----------|------|--------|
+| Intelligence Building | Intelligence | AOE damage |
+| Strength Building | Strength | Direct damage |
+| Endurance Building | Endurance | HP/defense |
+| Leadership Building | Leadership | Baby ball power |
+| Dexterity Building | Dexterity | Crit/accuracy |
+| Speed Building | Speed | Movement/fire rate |
+
+**Character Houses:**
+- Build specific houses to unlock characters
+- Blueprints from completing stages
+- Each character has unique house
+
+**Special Buildings:**
+- **Candle Maker**: Improves Fission range (2-5 → 3-5)
+- **Fusion Reactor upgrades**: Improve fusion options
+- Various utility buildings
+
+### Harvest System
+
+- Workers assigned to resource gathering
+- Right-click to speed up harvest
+- Resources used to build/upgrade
+- Economy loop between combat and building
+
+### GoPit Meta-Progression
+
+**Current (meta_shop.gd):**
+```
+Menu-based upgrades only:
+- Max Health
+- Move Speed
+- Fire Rate
+- Ball Damage
+- XP Multiplier
+```
+
+**No:**
+- Visual base
+- Building placement
+- Workers/harvest
+- House-based character unlocks
+
+### Comparison
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Visual base** | No | Yes | **MISSING** |
+| **Buildings** | 0 | 70+ | **CRITICAL** |
+| **Building upgrades** | N/A | D→S ranks | **MISSING** |
+| **Workers/harvest** | No | Yes | **MISSING** |
+| **Character houses** | No | Yes | **MISSING** |
+| **Stat buildings** | No | 6 types | **MISSING** |
+
+### Implementation Complexity
+
+**City builder is a MAJOR feature:**
+- Separate game mode/scene
+- Save/load building state
+- Resource economy
+- Worker AI
+- Building placement grid
+
+**Minimum Viable Alternative:**
+- Upgrade menu (current approach)
+- Add building "unlock" displays
+- Visual "town" background that grows
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add visual base (static) | Grows with upgrades |
+| **P3** | Add character houses | Visual unlock display |
+| **P4** | Full city builder | Major feature, low priority |
+
+### Related Beads
+
+- **GoPit-kohr**: City builder meta-progression (P3)
+
