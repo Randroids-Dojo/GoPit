@@ -27,7 +27,7 @@ Track progress with [x] marks:
 - [x] Boss weak point damage multiplier
 - [x] Baby ball damage (% of parent)
 - [x] Baby ball spawn interval
-- [ ] Magnetism range per upgrade level
+- [x] Magnetism range per upgrade level
 
 ---
 
@@ -861,3 +861,70 @@ Formula: `100 + (level - 1) * 50`
 3. **Add queue system** - Would match BallxPit but add complexity
 
 **Recommendation**: Keep current system. The timer-based spawn with 50% damage is intuitive and avoids the queue-flooding problem that BallxPit players complain about.
+
+---
+
+### 12. Magnetism Range
+**Iteration**: 12 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [BALL x PIT Passives Guide - GameFAQs](https://gamefaqs.gamespot.com/ps5/551362-ball-x-pit/faqs/82316)
+- [Steam Discussion: Screen-wide pickup](https://steamcommunity.com/app/2062430/discussions/0/595163560549659306/)
+
+**Key Findings**:
+- **Magnet passive**: +1 tile pickup range per level
+- Can upgrade to Level 3 like Special Balls
+- **Shieldbearer/Tactician**: Hidden level-wide magnet (character-specific)
+- **Boss fights**: Auto-enable magnet for all characters
+- Magnet passive doesn't show for Shieldbearer/Tactician (built-in)
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_magnetism.py`
+
+**Magnetism Values**:
+| Level | Range (px) | Notes |
+|-------|------------|-------|
+| 0 | 0 | No magnet (default) |
+| 1 | 200 | Basic attraction |
+| 2 | 400 | Medium range |
+| 3 | 600 | Max range |
+
+**Upgrade System**:
+- Increment: +200 pixels per upgrade
+- Max Stacks: 3
+- Total Max Range: 600 pixels
+
+**Pull Mechanics**:
+- Pull Speed: lerp(fall_speed, 500, pull_strength)
+- Pull Strength: increases as gem gets closer
+- Formula: `1 - (distance / magnetism_range)`
+
+**Special Cases**:
+- Gems: Use full magnetism_range
+- Fusion Reactors: Use 1.5x magnetism_range (wider pickup)
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Default Range | 0 (no magnet) | 0 (no magnet) | **Aligned** |
+| Max Upgrades | 3 levels | 3 stacks | **Aligned** |
+| Per-Level Increase | +1 tile | +200 pixels | Similar concept |
+| Boss Auto-Magnet | Yes | No | **Gap** |
+| Character Magnet | 2 have hidden | None | **Gap** |
+
+#### Alignment Recommendation
+
+**Priority**: P3 (Low)
+
+**Assessment**: GoPit's magnetism system matches BallxPit's structure (3 levels, starts at 0). The main differences are QoL features.
+
+**Options**:
+1. **Keep current** - Core system works well
+2. **Add boss auto-magnet** - Enable full magnet during boss fights
+3. **Add character passive** - "Collector" character with built-in magnet
+
+**Recommendation**: Keep current system. Consider adding **boss auto-magnet** as a QoL feature (gems auto-attract during boss fights). This matches BallxPit and reduces frustration during intense boss battles.
