@@ -16,7 +16,8 @@ enum BallType {
 	RADIATION,
 	DISEASE,
 	FROSTBURN,
-	WIND
+	WIND,
+	GHOST
 }
 
 const BALL_DATA := {
@@ -107,6 +108,14 @@ const BALL_DATA := {
 		"base_speed": 1000.0,  # Fast like wind
 		"color": Color(0.8, 1.0, 0.8),  # Light green-white (airy)
 		"effect": "wind"
+	},
+	BallType.GHOST: {
+		"name": "Ghost",
+		"description": "Pass-through all",
+		"base_damage": 4,
+		"base_speed": 900.0,
+		"color": Color(0.7, 0.7, 0.9, 0.6),  # Semi-transparent purple
+		"effect": "ghost"
 	}
 }
 
