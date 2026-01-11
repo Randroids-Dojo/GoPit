@@ -127,13 +127,42 @@ func _apply_slot_inheritance(ball: Node) -> void:
 	var ball_type: int = _registry_to_ball_type(slot_type)
 	ball.set_ball_type(ball_type)
 
-	# TODO: Copy evolved_type, is_fused, fused_effects when ball fusion is tracked per-slot
+	# Inherit evolved/fused properties from FusionRegistry (global state)
+	_apply_evolved_fused_inheritance(ball)
+
+
+func _apply_evolved_fused_inheritance(ball: Node) -> void:
+	"""Apply evolved/fused ball properties from FusionRegistry global state"""
+	if not FusionRegistry:
+		return
+
+	# Check for active evolved ball
+	if FusionRegistry.active_evolved_type != FusionRegistry.EvolvedBallType.NONE:
+		ball.is_evolved = true
+		ball.evolved_type = FusionRegistry.active_evolved_type
+		# Get evolved ball color
+		var evolved_data := FusionRegistry.get_evolved_ball_data(FusionRegistry.active_evolved_type)
+		if evolved_data.has("color"):
+			ball.ball_color = evolved_data["color"]
+		return  # Evolved takes priority over fused
+
+	# Check for active fused ball
+	if FusionRegistry.active_fused_id != "":
+		ball.is_fused = true
+		ball.fused_id = FusionRegistry.active_fused_id
+		var fused_data := FusionRegistry.get_fused_ball_data(FusionRegistry.active_fused_id)
+		if fused_data.has("effects"):
+			ball.fused_effects = fused_data["effects"]
+		if fused_data.has("color"):
+			ball.ball_color = fused_data["color"]
 
 
 func _registry_to_ball_type(registry_type: int) -> int:
 	"""Map BallRegistry.BallType to ball.gd BallType enum"""
-	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6
-	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
+	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6,
+	#               RADIATION=7, DISEASE=8, FROSTBURN=9
+	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6,
+	#          RADIATION=7, DISEASE=8, FROSTBURN=9
 	match registry_type:
 		0: return 0  # BASIC -> NORMAL
 		1: return 1  # BURN -> FIRE
@@ -142,6 +171,9 @@ func _registry_to_ball_type(registry_type: int) -> int:
 		4: return 5  # BLEED -> BLEED
 		5: return 3  # LIGHTNING -> LIGHTNING
 		6: return 6  # IRON -> IRON
+		7: return 7  # RADIATION -> RADIATION
+		8: return 8  # DISEASE -> DISEASE
+		9: return 9  # FROSTBURN -> FROSTBURN
 	return 0
 
 
