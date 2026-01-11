@@ -1622,6 +1622,278 @@ From `status_effect.gd`:
 
 ---
 
+## Appendix M: Ball Lifecycle and Catching Mechanics (NEW)
+
+Research sources:
+- [GameRant - Beginner Tips](https://gamerant.com/ball-x-pit-beginner-tips/)
+- [TheGamer - Complete Guide](https://www.thegamer.com/ball-x-pit-complete-guide/)
+- [Steam Discussion - Catching Balls](https://steamcommunity.com/app/2062430/discussions/0/624436409752930018/)
+- [Gamepad Squire - The Repentant Guide](https://gamepadsquire.com/blog/ball-x-pit-ultimate-guide-repentant-evolutions-strategies)
+
+### BallxPit Ball Lifecycle
+
+**Core Loop:**
+1. Player shoots ball
+2. Ball bounces off walls and enemies (+5% damage per bounce)
+3. Ball returns to player (hits bottom/back wall)
+4. Player can CATCH ball early for faster re-fire (saves 2-3 seconds)
+5. Repeat
+
+**Ball Catching Mechanic:**
+- Players intercept returning balls by positioning
+- Catching = skill-based DPS increase
+- Active play (catching) >> passive play (waiting)
+- The Shieldbearer gets +100% damage on caught balls
+
+**Ball Return:**
+- Balls NEVER despawn from bouncing
+- They always return after hitting back wall
+- Return path still damages enemies
+- No "max bounces" limit
+
+**Strategic Depth:**
+- Stand close to enemies = faster catching = higher DPS
+- Aim into crevices = more bounces = more damage
+- Ricochet strategy rewards precision
+
+### GoPit Ball Lifecycle
+
+**Current Mechanic (ball.gd):**
+```gdscript
+var max_bounces: int = 10
+# ...
+if _bounce_count > max_bounces:
+    despawn()  # Ball disappears!
+```
+
+1. Player shoots ball
+2. Ball bounces off walls (no damage scaling)
+3. Ball DESPAWNS after 10 bounces
+4. No catching mechanic
+5. Wait for cooldown, fire new ball
+
+**Ball Limits:**
+- Max 30 simultaneous balls (oldest despawn if exceeded)
+- Balls despawn on max bounces OR pierce exhausted
+
+### CRITICAL GAPS
+
+| Aspect | GoPit | BallxPit | Impact |
+|--------|-------|----------|--------|
+| **Bounce limit** | 10 → despawn | Unlimited → return | **CRITICAL** |
+| **Damage per bounce** | None | +5% per bounce | **CRITICAL** |
+| **Ball catching** | Not implemented | Core skill mechanic | **HIGH** |
+| **Ball return** | N/A (despawns) | Returns to player | **HIGH** |
+| **Active play reward** | Minimal | Higher DPS | **HIGH** |
+
+### Recommendations
+
+**Priority 1 (Changes Core Loop):**
+1. [ ] **Remove max_bounces despawn** - Balls should return, not despawn
+2. [ ] **Add +5% damage per bounce** - Core damage mechanic
+3. [ ] **Add ball return mechanic** - Balls return to player position
+
+**Priority 2 (Skill Expression):**
+4. [ ] **Add ball catching** - Tap on returning balls to catch early
+5. [ ] **Add catch bonus character** - Like The Shieldbearer
+
+---
+
+## Appendix N: Level Select and Stage Unlock System (NEW)
+
+Research sources:
+- [Deltia's Gaming - Unlock All Levels](https://deltiasgaming.com/ball-x-pit-how-to-unlock-all-levels/)
+- [GAM3S.GG - Character Unlock Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-unlock-all-characters/)
+
+### BallxPit Level Select
+
+**Stage Selection UI:**
+- 8 stages visible in level select
+- Locked stages show requirements
+- Players CHOOSE which stage to play
+- Each stage is a self-contained run
+
+**Gear Unlock System:**
+| Stage | Gears Needed |
+|-------|--------------|
+| Bone x Yard | 0 (default) |
+| Snowy x Shores | 2 |
+| Liminal x Desert | 2 |
+| Fungal x Forest | 2 |
+| Gory x Grasslands | 3 |
+| Smoldering x Depths | 4 |
+| Heavenly x Gates | 4 |
+| Vast x Void | 5 |
+
+**Gear Earning:**
+- Beat stage with Character A = 1 gear
+- Beat same stage with Character B = another gear
+- Encourages playing multiple characters
+
+### GoPit Stage System
+
+**Current Implementation (stage_manager.gd):**
+```gdscript
+stages = [
+    preload("res://resources/biomes/the_pit.tres"),
+    preload("res://resources/biomes/frozen_depths.tres"),
+    preload("res://resources/biomes/burning_sands.tres"),
+    preload("res://resources/biomes/final_descent.tres"),
+]
+# ...
+func _on_game_started() -> void:
+    current_stage = 0  # Always starts at Stage 1
+```
+
+**Current Flow:**
+1. Game ALWAYS starts at Stage 1 (The Pit)
+2. Linear progression through all 4 stages
+3. No level select UI
+4. No stage unlock system
+5. No replay of individual stages
+
+### CRITICAL GAPS
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Level select UI** | None | Yes | **CRITICAL** |
+| **Stage unlock system** | None | Gear-based | **LARGE** |
+| **Replay individual stages** | No | Yes | **LARGE** |
+| **Multi-character incentive** | None | Gears | **MEDIUM** |
+| **Stage independence** | No (linear) | Yes | **LARGE** |
+
+### Recommendations
+
+1. [ ] **Add level select screen** - Between character select and game
+2. [ ] **Add stage unlock system** - Gear-based or achievement-based
+3. [ ] **Track character-stage completion** - For gear system
+
+---
+
+## Appendix O: Run Structure - Finite vs Endless (NEW)
+
+### BallxPit Run Structure
+
+**Stage-Based Runs:**
+- Each stage = one complete run (10-20 minutes)
+- Fixed waves leading to boss
+- Beat boss = WIN for that stage
+- Return to level select
+- Pick next stage
+
+**Session Characteristics:**
+- Typical session: 1-3 stage runs
+- Clear win/loss per stage
+- Progress persists between sessions (unlocks, buildings)
+- No "endless" feeling - defined endpoints
+
+### GoPit Run Structure
+
+**Current Implementation:**
+- 4 stages × 10 waves = 40 waves total
+- Single continuous run from Stage 1 → 4
+- Victory ONLY after beating ALL 4 stages
+- Death = lose ALL progress
+
+**From stage_manager.gd:**
+```gdscript
+func complete_stage() -> void:
+    current_stage += 1
+    if current_stage >= stages.size():
+        game_won.emit()  # Only win after all 4 stages
+```
+
+**Session Characteristics:**
+- Typical run: 40+ minutes (if successful)
+- No intermediate "wins"
+- Feels endless due to length
+- High death penalty (lose everything)
+
+### COMPARISON
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| **Run length** | 40+ waves | 10-20 waves per stage |
+| **Win condition** | All 4 bosses | Any stage boss |
+| **Session length** | 40+ minutes | 10-20 minutes |
+| **Death penalty** | Lose ALL progress | Lose stage progress |
+| **Intermediate wins** | None | After each stage |
+
+### The "Endless" Problem
+
+GoPit feels endless because:
+1. No level select (must start at Stage 1)
+2. Must beat ALL stages in one run
+3. Long session commitment required
+4. No sense of "winning" until very end
+
+BallxPit solves this by:
+1. Level select (choose your challenge)
+2. Each stage = complete run
+3. Short sessions (10-20 min)
+4. Frequent wins keep engagement high
+
+### Recommendations
+
+**Priority 1 (Fundamental Change):**
+1. [ ] **Change win condition** - Beat stage boss = win for that stage
+2. [ ] **Add level select** - Choose which stage to attempt
+3. [ ] **Shorten session length** - Each stage is its own run
+
+**Priority 2:**
+4. [ ] **Add stage rewards** - Coins/unlocks per stage completion
+5. [ ] **Add stage progression** - Unlocks persist between sessions
+
+---
+
+## Appendix P: Meta Shop and Permanent Upgrades (NEW)
+
+### GoPit Current Implementation
+
+**Meta Currency: Pit Coins**
+- Earned per run: `wave * 10 + level * 25`
+- From `meta_manager.gd`
+
+**Permanent Upgrades (5 total):**
+| Upgrade | Effect | Max Level | Cost Scale |
+|---------|--------|-----------|------------|
+| Pit Armor | +10 HP/level | 5 | 100 × 2^level |
+| Ball Power | +2 damage/level | 5 | 150 × 2^level |
+| Rapid Fire | -0.05s cooldown/level | 5 | 200 × 2^level |
+| Coin Magnet | +10% coins/level | 4 | 250 × 2.5^level |
+| Head Start | Start at level X | 3 | 500 × 3^level |
+
+### BallxPit Meta-Progression
+
+**Base Building System:**
+- Buildings provide permanent bonuses
+- Blueprints drop from enemies
+- Resources needed: wheat, wood, stone, gold
+- Buildings unlock characters
+
+**Key Differences:**
+- BallxPit has visual base progression
+- Resource management layer
+- Buildings vs simple upgrades
+- Character unlocks tied to buildings
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Permanent upgrades | 5 types | Many buildings |
+| Visual progression | No base | Base grows |
+| Resource variety | 1 (coins) | 4+ resources |
+| Character unlock | Achievements | Buildings |
+
+### Recommendations
+
+1. [ ] **Expand upgrade count** - 10-15 permanent upgrades
+2. [ ] **Add character unlock shop** - Buy unlocks with coins
+3. [ ] **Consider visual progression** - Simple base or trophy room
+
+---
+
 ## Analysis Complete
 
 This document represents a comprehensive comparison between Ball x Pit and GoPit across all major game systems. The analysis identified **12 actionable gaps** tracked as beads, prioritized for implementation.
