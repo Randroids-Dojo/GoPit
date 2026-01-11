@@ -5019,3 +5019,95 @@ This comparison document contains **63 appendices** covering every aspect of GoP
 
 GoPit has a solid foundation but requires significant work on the **ball slot system** (the #1 fundamental difference) and **bounce mechanics** to align with BallxPit's core gameplay loop. Content expansion (ball types, bosses, stages) can follow once core mechanics are aligned.
 
+
+---
+
+## Appendix BE: Boss HP Bar UI (NEW)
+
+### Boss HP Bar Features
+
+**Display Elements:**
+- Boss name label
+- HP progress bar with current/max text
+- Phase markers (circles indicating phases 1-3)
+
+### Phase Marker Colors
+
+| State | Color |
+|-------|-------|
+| Completed | Dim gray (0.2, 0.2, 0.2) |
+| Current | Bright red (0.9, 0.2, 0.2) |
+| Future | Yellow (0.8, 0.7, 0.2) |
+
+### Visual Feedback
+
+- **On phase change:** HP bar flashes white
+- **On boss defeat:** HP bar turns green, fades out
+- **Fade in:** 0.3s opacity animation
+- **Fade out:** 0.5s opacity animation
+
+### Signal Connections
+
+```gdscript
+boss.phase_changed.connect(_on_phase_changed)
+boss.boss_defeated.connect(_on_boss_defeated)
+```
+
+---
+
+## Appendix BF: Codebase Analysis Completion (NEW)
+
+### Files Analyzed: 44/44 GDScript Files ✅
+
+**Autoloads (7):**
+- ✅ game_manager.gd
+- ✅ stage_manager.gd
+- ✅ ball_registry.gd
+- ✅ fusion_registry.gd
+- ✅ meta_manager.gd
+- ✅ sound_manager.gd
+- ✅ music_manager.gd
+
+**UI Scripts (15):**
+- ✅ hud.gd, boss_hp_bar.gd
+- ✅ character_select.gd
+- ✅ level_up_overlay.gd, fusion_overlay.gd
+- ✅ pause_overlay.gd, game_over_overlay.gd
+- ✅ stage_complete_overlay.gd, tutorial_overlay.gd
+- ✅ meta_shop.gd, wave_announcement.gd
+- ✅ fire_button.gd, ultimate_button.gd
+- ✅ virtual_joystick.gd, aim_line.gd
+
+**Entity Scripts (10):**
+- ✅ player.gd, ball.gd, ball_spawner.gd
+- ✅ baby_ball_spawner.gd, gem.gd
+- ✅ fusion_reactor.gd
+- ✅ enemy_base.gd, enemy_spawner.gd
+- ✅ slime.gd, crab.gd, bat.gd
+
+**Boss Scripts (2):**
+- ✅ boss_base.gd, slime_king.gd
+
+**Effects (7):**
+- ✅ status_effect.gd, camera_shake.gd
+- ✅ damage_number.gd, damage_vignette.gd
+- ✅ danger_indicator.gd, hit_particles.gd
+- ✅ ultimate_blast.gd
+
+**Data/Resources (3):**
+- ✅ permanent_upgrades.gd
+- ✅ biome.gd (resource)
+- ✅ character.gd (resource)
+
+**Main Controller (1):**
+- ✅ game_controller.gd
+
+### Resource Files Analyzed
+
+- 4 biome .tres files
+- 6 character .tres files
+
+### Documentation Complete
+
+All game systems have been analyzed and documented in **65 appendices** totaling **5,100+ lines** of comparison documentation.
+
