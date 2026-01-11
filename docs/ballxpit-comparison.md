@@ -4856,3 +4856,79 @@ GameManager.stats = {
 3. [ ] **No leaderboard** - No global or friend rankings
 4. [ ] **No replay option** - Can't watch run replay
 
+
+---
+
+## Appendix BC: Ball Types Complete Reference (NEW)
+
+### Current Ball Types (7 total)
+
+| Type | Damage | Speed | Color | Effect |
+|------|--------|-------|-------|--------|
+| Basic | 10 | 800 | Blue (0.3, 0.7, 1.0) | None |
+| Burn | 8 | 800 | Orange (1.0, 0.5, 0.1) | Burn DoT |
+| Freeze | 6 | 800 | Cyan (0.5, 0.9, 1.0) | 50% slow |
+| Poison | 7 | 800 | Green (0.4, 0.9, 0.2) | Poison DoT |
+| Bleed | 8 | 800 | Dark Red (0.9, 0.2, 0.3) | Stacking damage |
+| Lightning | 9 | 900 | Yellow (1.0, 1.0, 0.3) | Chain damage |
+| Iron | 15 | 600 | Metallic (0.7, 0.7, 0.75) | Knockback |
+
+### Level Scaling
+
+| Level | Stat Multiplier | Notes |
+|-------|-----------------|-------|
+| L1 | 1.0x | Base stats |
+| L2 | 1.5x | +50% damage and speed |
+| L3 | 2.0x | +100%, fusion-ready |
+
+**Example (Burn L3):**
+- Damage: 8 × 2.0 = 16
+- Speed: 800 × 2.0 = 1600
+
+### Ball Type Distribution
+
+| Effect Type | Ball Types |
+|-------------|------------|
+| DoT (Damage over Time) | Burn, Poison, Bleed |
+| Control | Freeze (slow) |
+| Burst | Lightning (chain), Iron (knockback) |
+| None | Basic |
+
+### BallxPit Ball Types (for reference)
+
+BallxPit has **18+ ball types** including:
+- Wind (pass-through + slow)
+- Ghost (pass-through)
+- Vampire (lifesteal)
+- Dark (self-destruct 3x damage)
+- Charm (mind control)
+- Cell (clones on bounce)
+- Laser (row/column clear)
+
+### Missing Ball Types (Beads Created)
+
+| Ball Type | Effect | Bead |
+|-----------|--------|------|
+| Wind | Pass-through + slow | GoPit-7ot |
+| Ghost | Pass-through enemies | GoPit-4lk |
+| Vampire | Lifesteal | GoPit-05b0 |
+| Dark | 3x damage self-destruct | GoPit-x8mu |
+| Brood Mother | Spawns babies on hit | GoPit-kohr |
+| Cell | Clones on bounce | GoPit-mxf1 |
+| Laser | Row/column AoE | GoPit-dc3m |
+| Charm | Mind control | GoPit-lihc |
+
+### Ownership Model
+
+- **Per-run**: Balls reset each game
+- **Starting ball**: Set by character choice
+- **Acquisition**: Level-up cards or fission
+- **Active selection**: One ball type at a time
+
+### Critical Gap: Ball Slot System
+
+**GoPit:** Fires ONE active ball type per shot
+**BallxPit:** Fires 4-5 ball types SIMULTANEOUSLY
+
+This is tracked in bead **GoPit-6zk** (P0 priority).
+
