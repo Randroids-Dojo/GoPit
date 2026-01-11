@@ -4249,3 +4249,68 @@ Wave 4+: 50% Slime, 30% Bat, 20% Crab
 | Stage variants | No | Ice/fire/poison variants |
 | Unique attacks | No | Ranged, charge, etc. |
 
+
+---
+
+## Appendix AS: Boss System Implementation (NEW)
+
+### BossBase Architecture
+
+**States:**
+```gdscript
+enum BossPhase { INTRO, PHASE_1, PHASE_2, PHASE_3, DEFEATED }
+enum AttackState { IDLE, TELEGRAPH, ATTACKING, COOLDOWN }
+```
+
+**Core Features:**
+- Phase transitions at HP thresholds (default: 100%, 66%, 33%, 0%)
+- Invulnerability during intro and phase transitions
+- Attack pattern system with telegraph + execution + cooldown
+- Add spawning capability (`spawn_adds()`)
+- Visual feedback (flashing, camera shake)
+
+**Timing:**
+| Phase | Duration |
+|-------|----------|
+| Intro | 2.0s |
+| Phase Transition | 1.5s |
+| Attack Telegraph | 1.0s |
+| Attack Cooldown | 2.0-2.5s |
+
+### Slime King (Only Boss)
+
+**Stats:**
+- HP: 500
+- XP: 100
+- Slam Damage: 30
+- Slam Radius: 120px
+
+**Attack Patterns by Phase:**
+| Phase | Attacks |
+|-------|---------|
+| 1 | Slam, Summon |
+| 2 | Slam, Summon, Split |
+| 3 | Slam, Summon, Rage |
+
+**Visual:**
+- Phase 1: Green
+- Phase 2: Yellow
+- Phase 3: Red (enraged)
+
+### Missing vs BallxPit
+
+1. [ ] **Only 1 boss** - Need 4-8 (GoPit-8wcp)
+2. [ ] **No weak points** - Single hitbox (GoPit-9ss)
+3. [ ] **No bullet patterns** - Just ground slams
+4. [ ] **No armor phases** - Always damageable outside transitions
+5. [ ] **Basic telegraphs** - Just color flash, no visual area indicators
+
+### Boss Features Present ✅
+
+- ✅ Phase transitions (3 phases)
+- ✅ Invulnerability during transitions
+- ✅ Attack state machine
+- ✅ Add spawning (summon slimes)
+- ✅ Camera shake on defeat
+- ✅ HP bar integration
+
