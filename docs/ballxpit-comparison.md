@@ -1,8 +1,8 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 2.1
+> **Document Version**: 2.2
 > **Last Updated**: January 10, 2026
-> **Status**: In Progress - Continuous Analysis
+> **Status**: In Progress - Continuous Analysis (21 Appendices)
 > **Related Epic**: GoPit-68o
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
@@ -54,6 +54,7 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 - R: [Evolution/Fusion Deep Comparison](#appendix-r-evolutionfusion-deep-comparison-new) ⭐ NEW
 - S: [Difficulty and Speed Scaling](#appendix-s-difficulty-and-speed-scaling-new) ⭐ NEW
 - T: [Enemy Placement and Patterns](#appendix-t-enemy-placement-and-patterns-new) ⭐ NEW
+- U: [Input and Controls](#appendix-u-input-and-controls-comparison-new) ⭐ NEW
 
 ---
 
@@ -66,9 +67,11 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 | Characters | 6 | 16+ | -10 |
 | Stages | 4 | 8 | -4 |
 | Bosses | 1 | 8 | -7 |
-| Evolution recipes | 5 | 40+ | -35 |
-| Ball types | 7 | 14+ | -7 |
-| Enemy types | 3 | Many | Large |
+| Evolution recipes | 5 | 42+ | -37 |
+| Ball types | 7 | 18 | -11 |
+| Status effects | 4 | 10+ | -6 |
+| Passive upgrades | 11 | 51+ | -40 |
+| Enemy types | 3 | 10+ | -7 |
 
 ### Current Alignment Status
 
