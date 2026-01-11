@@ -15,8 +15,8 @@ Track progress with [x] marks:
 - [x] Enemy base HP (slime, bat, crab)
 - [x] Enemy HP scaling per wave
 - [x] Enemy speed scaling per wave
-- [ ] XP per gem (base value)
-- [ ] XP to level up curve (100, 150, 200...?)
+- [x] XP per gem (base value)
+- [x] XP to level up curve (100, 150, 200...?)
 - [ ] Crit damage multiplier
 - [ ] Crit chance mechanics
 - [ ] Status effect: Burn damage/duration
@@ -485,3 +485,78 @@ xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
 4. **Add NG+ mode** - Major scaling increase for replayability
 
 **Recommendation**: Keep linear scaling for base game but **add post-boss HP spike** (+30-50% after beating a boss) to create dramatic difficulty moments. Consider Fast modes as future content.
+
+---
+
+### 7. XP Mechanics (Gems & Level-Up Curve)
+**Iteration**: 7 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Character Level Mechanics - BALL x PIT Wiki](https://ballxpit.wiki.gg/wiki/Character_Level_Mechanics)
+- [XP and experience - Steam Discussion](https://steamcommunity.com/app/2062430/discussions/0/624436409753060847/)
+
+**Key Findings**:
+- **1 XP = 1 Kill** (base, before modifiers)
+- Each level grants permanent stat bonuses (2-3 stats)
+- Building bonuses: Veteran's Hut +25% XP, Abbey +5% XP on level 1
+- Each level = new ball or upgrade choice
+- Housing abilities stop after Level 9
+- Meta-progression: XP after runs levels up character permanently
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_xp_mechanics.py`
+
+**XP Per Gem by Enemy Type**:
+| Enemy | Base XP | Wave 5 | Wave 10 |
+|-------|---------|--------|---------|
+| Slime | 10 | 12 | 14 |
+| Bat | 12 | 14 | 17 |
+| Crab | 13 | 15 | 18 |
+| Slime King | 100 | 100 | 100 |
+
+**XP to Level Up Curve**:
+Formula: `100 + (level - 1) * 50`
+
+| Level | XP Required | Cumulative | Gems to Level |
+|-------|-------------|------------|---------------|
+| 1 | 100 | 100 | ~10 |
+| 2 | 150 | 250 | ~15 |
+| 3 | 200 | 450 | ~20 |
+| 4 | 250 | 700 | ~25 |
+| 5 | 300 | 1,000 | ~30 |
+| 10 | 550 | 3,250 | ~55 |
+
+**XP Modifiers**:
+- Quick Learner (Rookie): +10% XP gain
+- Combo multiplier: Scales with consecutive hits
+- Wave scaling: +5% XP per gem per wave
+
+**Level Progression Speed**:
+- L1→L2: ~10 enemies
+- L2→L3: ~15 enemies
+- First 5 levels: ~60 enemies total
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Base XP/Kill | 1 | 10 | Different scale |
+| XP Curve | Unknown | 100+(level-1)*50 | GoPit linear |
+| Building Bonuses | +25%, +5% | None | GoPit simpler |
+| Per-Level Reward | Ball/upgrade choice | Ball/upgrade choice | **Aligned** |
+
+#### Alignment Recommendation
+
+**Priority**: P3 (Low)
+
+**Assessment**: GoPit's XP curve (100, 150, 200...) provides good pacing. The linear +50 per level is simple and predictable.
+
+**Options**:
+1. **Keep current** - Simple, works well for mobile
+2. **Add XP buildings** - Meta-progression like BallxPit's Veteran's Hut
+3. **Adjust curve** - Could make exponential for late-game challenge
+
+**Recommendation**: Keep current XP curve. Consider adding meta-progression XP bonuses (permanent upgrades that boost XP gain) as future content.
