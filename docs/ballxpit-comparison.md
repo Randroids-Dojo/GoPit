@@ -1,8 +1,8 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 2.4
-> **Last Updated**: January 10, 2026
-> **Status**: In Progress - Continuous Analysis (23 Appendices)
+> **Document Version**: 2.5
+> **Last Updated**: January 11, 2026
+> **Status**: In Progress - Continuous Analysis (24 Appendices)
 > **Related Epic**: GoPit-68o
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
@@ -57,6 +57,7 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 - U: [Input and Controls](#appendix-u-input-and-controls-comparison-new) ⭐ NEW
 - V: [Achievements and Progression](#appendix-v-achievements-and-progression-system-new) ⭐ NEW
 - W: [Audio and Sound Design](#appendix-w-audio-and-sound-design-new) ⭐ NEW
+- X: [Visual Feedback and Polish](#appendix-x-visual-feedback-and-polish-new) ⭐ NEW
 
 ---
 
@@ -2532,9 +2533,83 @@ _generate_metallic_clang()   // Multiple harmonics + detuning
 
 ---
 
+## Appendix X: Visual Feedback and Polish (NEW)
+
+Research sources:
+- [Settings Optimization Guide](https://ballxpit.org/guides/settings-optimization/)
+- [BALL x PIT Review - Steam Deck HQ](https://steamdeckhq.com/game-reviews/ball-x-pit/)
+
+### BallxPit Visual Feedback Systems
+
+**Screen Shake:**
+- Triggers on: enemy hits, explosions, boss attacks, evolution activation
+- Toggle option in settings (accessibility)
+- Recommended OFF for Fast+2/Fast+3 modes for visual clarity
+- Recommended OFF for handheld devices (Steam Deck, Switch)
+
+**Damage Numbers:**
+- Displayed on all hits
+- Maximum cap: 9,999 damage per hit (visual cap)
+- Color-coded by damage type (burn=orange, freeze=blue, etc.)
+- Stack with multiple hits visible simultaneously
+
+**Particle Intensity:**
+- Can be overwhelming in late-game ("sensory overload" in reviews)
+- 100+ balls + particles + effects on screen simultaneously
+- No known particle reduction setting
+
+**Visual Clarity Concerns:**
+- Players report "struggled to keep track of their own projectiles amid the particle storm"
+- Screen fills with enemies, orbs, and visual effects
+- Fast modes increase visual chaos
+
+### GoPit Visual Feedback Systems
+
+**Damage Numbers (`scripts/effects/damage_number.gd`):**
+- Floating text, rises 60px over 0.6s
+- Fades out with 0.2s delay
+- Random offset (-10 to +10 px) for stacking
+- Color-coded per damage type
+- No damage cap (can show any value)
+
+**Hit Particles (`scripts/effects/hit_particles.gd`):**
+- GPU particles, one-shot
+- Auto-free after emission complete
+- Minimal particle system
+
+**Camera Shake (`scripts/effects/camera_shake.gd`):**
+- Autoload with global `shake(intensity, decay)` function
+- Intensity decays over time (lerp to 0)
+- **No settings toggle** (always on)
+
+**Current Usage:**
+- Shake on: enemy death, boss attacks, level-up
+- Missing: ball fire, wall bounce, evolution activation
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Screen shake toggle | No | Yes | P3 |
+| Damage cap display | No cap | 9,999 | Low |
+| Evolution activation VFX | Basic | Full screen flash | P3 |
+| Boss weak point feedback | None | Color change + particles | P2 |
+| Ball type particle trails | None | Unique per ball | P3 |
+| Hit flash on enemies | None | Brief white flash | P2 |
+
+### Recommendations
+
+1. [ ] **Add screen shake toggle** - Settings → Accessibility
+2. [ ] **Add hit flash on enemies** - Brief white overlay on damage
+3. [ ] **Add ball type trails** - Particle trail matching ball color/type
+4. [ ] **Enhance evolution VFX** - Full screen flash + sound
+5. [ ] **Add boss phase feedback** - Visual indicator of phase transitions
+
+---
+
 ## Analysis Complete
 
-This document represents a comprehensive comparison between Ball x Pit and GoPit across all major game systems. The analysis identified **20+ actionable gaps** tracked as beads, prioritized for implementation.
+This document represents a comprehensive comparison between Ball x Pit and GoPit across all major game systems. The analysis identified **25+ actionable gaps** tracked as beads, prioritized for implementation.
 
 ### Key Takeaways
 
@@ -2651,3 +2726,166 @@ func fire() -> void:
             for i in range(ball_count):  # Multi-shot per slot
                 _spawn_ball(dir, slot.ball_type)
 ```
+
+
+## Appendix Y: Bounce Damage Scaling - Missing Mechanic (NEW)
+
+### BallxPit Bounce Damage
+
+**CRITICAL: BallxPit rewards skilled play with bounce damage!**
+
+**How BallxPit Works:**
+- **+5% damage per bounce** (confirmed from research)
+- Balls that ricochet multiple times become MORE powerful
+- Creates risk/reward: let ball bounce more for higher damage
+- Encourages aiming for multi-bounce trajectories
+- Maximum bonus unclear but likely capped
+
+**Example:**
+```
+Base damage: 10
+After 1 bounce: 10 * 1.05 = 10.5 → 10
+After 5 bounces: 10 * 1.25 = 12.5 → 12
+After 10 bounces: 10 * 1.50 = 15
+```
+
+### GoPit Current Implementation
+
+**Location:** `scripts/entities/ball.gd:188-199`
+
+```gdscript
+# Ball.gd - current bounce handling
+if collider.collision_layer & 1:  # walls layer
+    _bounce_count += 1
+    if _bounce_count > max_bounces:
+        despawn()
+        return
+    direction = direction.bounce(collision.get_normal())
+    SoundManager.play(SoundManager.SoundType.HIT_WALL)
+
+# Later when hitting enemy:
+var actual_damage := damage  # FIXED - no bounce scaling!
+```
+
+**What GoPit tracks:**
+- `_bounce_count` - incremented on wall hits
+- `max_bounces` - despawn limit (default 10, +5 per Ricochet upgrade)
+
+**What's missing:**
+- NO damage increase per bounce
+- Bounces only affect lifetime, not power
+
+### GAP ANALYSIS
+
+| Aspect | GoPit | BallxPit | Impact |
+|--------|-------|----------|--------|
+| **Track bounces** | ✅ Yes | ✅ Yes | - |
+| **Bounce damage bonus** | ❌ No | ✅ +5%/bounce | **HIGH** |
+| **Skill expression** | Low | High | **MEDIUM** |
+| **Ricochet value** | Survivability only | Power + survivability | **HIGH** |
+
+### Why This Matters
+
+1. **Skill expression** - BallxPit rewards players who aim for multi-bounces
+2. **Ricochet upgrade value** - More bounces = both more time AND more damage
+3. **Enemy positioning** - Far enemies take more damage (more bounces to reach)
+4. **Satisfying feedback** - "Big bounce combo" moments feel rewarding
+5. **Strategy depth** - Choose: direct hit (fast) vs ricochet (powerful)
+
+### Implementation Recommendation
+
+**Priority: P1 (High)**
+
+```gdscript
+# Proposed change to ball.gd hit handling:
+const BOUNCE_DAMAGE_BONUS := 0.05  # +5% per bounce
+
+func _get_bounce_damage() -> int:
+    var bounce_mult := 1.0 + (_bounce_count * BOUNCE_DAMAGE_BONUS)
+    return int(damage * bounce_mult)
+
+# In enemy hit handler:
+var actual_damage := _get_bounce_damage()  # NOT just damage
+```
+
+**Visual feedback ideas:**
+- Ball glows brighter with more bounces
+- Hit number shows "(+2 bounce)" bonus
+- Particle intensity increases
+
+
+## Appendix Z: Baby Ball Mechanics - Missing Type Inheritance (NEW)
+
+### BallxPit Baby Balls
+
+**In BallxPit, baby balls are POWERFUL and TYPED:**
+- Each ball SLOT spawns its own baby balls
+- Baby balls **inherit the parent ball's type and effects**
+- Fire slot → Fire baby balls (with burn)
+- Ice slot → Ice baby balls (with slow)
+- With 5 slots, you have 5 streams of different baby balls
+
+**Example with 3 filled slots:**
+```
+[Fire L2] → Fire baby balls every ~1.5s
+[Ice L2] → Ice baby balls every ~1.5s  
+[Lightning L2] → Lightning baby balls every ~1.5s
+= 3 different typed baby balls hitting enemies constantly
+```
+
+### GoPit Current Implementation
+
+**Location:** `scripts/entities/baby_ball_spawner.gd`
+
+```gdscript
+func _spawn_baby_ball() -> void:
+    var ball := ball_scene.instantiate()
+    ball.is_baby_ball = true
+    ball.damage = int(base_damage * baby_ball_damage_multiplier)
+    ball.set_direction(direction)
+    # NOTE: No ball_type set! Always generic basic balls
+```
+
+**What GoPit does:**
+- Single spawn timer (2.0s base)
+- Targets nearest enemy
+- 50% damage multiplier
+- Always spawns **BASIC** balls (no type)
+- No status effects from baby balls
+
+### GAP ANALYSIS
+
+| Aspect | GoPit | BallxPit | Impact |
+|--------|-------|----------|--------|
+| **Baby ball type** | Always basic | Inherits slot type | **HIGH** |
+| **Streams per slot** | 1 total | 1 per slot | **HIGH** |
+| **Status effects** | ❌ None | ✅ Inherits | **HIGH** |
+| **Ball level scaling** | ❌ No | ✅ Yes | **MEDIUM** |
+
+### Why This Matters
+
+1. **Ball diversity value** - Each new ball type = more baby ball variety
+2. **Passive DPS scaling** - Multiple typed baby balls = constant status effects
+3. **Strategy synergy** - Status effect combos happen automatically
+4. **Late-game power** - 5 different baby ball streams is massive DPS
+
+### Implementation Recommendation
+
+**Priority: P1 (After ball slot system)**
+
+This depends on GoPit-6zk (ball slot system). Once slots exist:
+
+```gdscript
+# Each slot spawns its own baby balls
+func _spawn_baby_balls_from_slots() -> void:
+    for slot in ball_slots:
+        if slot.ball_type != null:
+            var baby := _create_baby_ball()
+            baby.set_ball_type(slot.ball_type)  # Inherit type!
+            baby.ball_level = slot.level
+```
+
+**Also needed:**
+- Baby ball rate per slot (or shared timer)
+- Type-specific baby ball visuals
+- Status effect application from baby balls
