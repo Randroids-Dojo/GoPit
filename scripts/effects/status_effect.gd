@@ -2,7 +2,7 @@ class_name StatusEffect
 extends RefCounted
 ## Base class for status effects that can be applied to enemies
 
-enum Type { BURN, FREEZE, POISON, BLEED }
+enum Type { BURN, FREEZE, POISON, BLEED, RADIATION, DISEASE, FROSTBURN }
 
 # Effect configuration
 var type: Type
@@ -12,6 +12,7 @@ var tick_interval: float = 0.5
 var stacks: int = 1
 var max_stacks: int = 1
 var slow_multiplier: float = 1.0  # 1.0 = no slow, 0.5 = 50% slow
+var damage_amp_per_stack: float = 0.0  # Damage amplification per stack (0.1 = +10% per stack)
 
 # Runtime state
 var time_remaining: float = 0.0
@@ -49,6 +50,26 @@ func _configure() -> void:
 			damage_per_tick = 1.0  # 2 DPS per stack (1.0 every 0.5s)
 			tick_interval = 0.5
 			max_stacks = 24  # BallxPit cap: 24 stacks
+		Type.RADIATION:
+			# Radiation: Damage amplification (not DoT)
+			duration = 6.0 * int_mult
+			damage_per_tick = 0.0  # No direct damage
+			max_stacks = 5  # BallxPit cap: 5 stacks
+			damage_amp_per_stack = 0.10  # +10% damage amplification per stack
+		Type.DISEASE:
+			# Disease: Strong DoT similar to poison but faster ticks
+			duration = 4.0 * int_mult
+			damage_per_tick = 2.0  # 4 DPS base, scales with stacks
+			tick_interval = 0.5
+			max_stacks = 8  # BallxPit cap: 8 stacks
+		Type.FROSTBURN:
+			# Frostburn: Combines slow with damage amplification
+			duration = 4.0 * int_mult
+			damage_per_tick = 1.5  # Light DoT
+			tick_interval = 0.5
+			max_stacks = 4  # BallxPit cap: 4 stacks
+			slow_multiplier = 0.7  # 30% slow
+			damage_amp_per_stack = 0.25  # +25% damage amplification per stack
 
 	time_remaining = duration
 
@@ -108,6 +129,12 @@ func get_color() -> Color:
 			return Color(0.4, 1.2, 0.4)  # Green
 		Type.BLEED:
 			return Color(1.3, 0.3, 0.3)  # Red
+		Type.RADIATION:
+			return Color(0.5, 1.5, 0.2)  # Toxic yellow-green
+		Type.DISEASE:
+			return Color(0.6, 0.3, 0.8)  # Sickly purple
+		Type.FROSTBURN:
+			return Color(0.3, 0.6, 1.2)  # Pale frost blue
 	return Color.WHITE
 
 
@@ -122,4 +149,15 @@ func get_type_name() -> String:
 			return "Poison"
 		Type.BLEED:
 			return "Bleed"
+		Type.RADIATION:
+			return "Radiation"
+		Type.DISEASE:
+			return "Disease"
+		Type.FROSTBURN:
+			return "Frostburn"
 	return "Unknown"
+
+
+func get_damage_amplification() -> float:
+	"""Get total damage amplification from this effect (includes stacks)"""
+	return damage_amp_per_stack * stacks
