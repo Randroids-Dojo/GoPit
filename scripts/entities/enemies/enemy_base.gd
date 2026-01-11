@@ -398,6 +398,10 @@ func apply_status_effect(effect: StatusEffect) -> void:
 		_active_effects[effect_type] = effect
 		status_effect_applied.emit(self, effect_type)
 
+	# Apply on-hit damage (for effects like BLEED that deal instant damage on application)
+	if effect.on_hit_damage > 0:
+		_take_on_hit_damage(int(effect.on_hit_damage))
+
 	# Update speed for freeze effects
 	_update_speed_from_effects()
 	# Update visuals
@@ -448,6 +452,23 @@ func _take_dot_damage(amount: int) -> void:
 	var scene_root := get_tree().current_scene
 	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
 	DamageNumber.spawn(scene_root, global_position + Vector2(randf_range(-20, 20), -10), amount, Color(1, 0.5, 0.2))
+
+
+func _take_on_hit_damage(amount: int) -> void:
+	"""Take instant damage from on-hit status effects (e.g., BLEED)"""
+	hp -= amount
+	GameManager.record_damage_dealt(amount)
+
+	# Moderate flash (between DoT and direct hit)
+	_flash_dot()
+
+	# Moderate screen shake
+	CameraShake.shake(2.0, 8.0)
+
+	# Spawn damage number with bleed color
+	var scene_root := get_tree().current_scene
+	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+	DamageNumber.spawn(scene_root, global_position + Vector2(randf_range(-15, 15), -15), amount, Color(0.9, 0.2, 0.3))
 
 
 func _flash_dot() -> void:

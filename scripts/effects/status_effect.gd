@@ -13,6 +13,7 @@ var stacks: int = 1
 var max_stacks: int = 1
 var slow_multiplier: float = 1.0  # 1.0 = no slow, 0.5 = 50% slow
 var damage_amp_per_stack: float = 0.0  # Damage amplification per stack (0.1 = +10% per stack)
+var on_hit_damage: float = 0.0  # Instant damage when effect is applied (per stack)
 
 # Runtime state
 var time_remaining: float = 0.0
@@ -50,6 +51,7 @@ func _configure() -> void:
 			damage_per_tick = 1.0  # 2 DPS per stack (1.0 every 0.5s)
 			tick_interval = 0.5
 			max_stacks = 24  # BallxPit cap: 24 stacks
+			on_hit_damage = 2.0  # Instant damage per application
 		Type.RADIATION:
 			# Radiation: Damage amplification (not DoT)
 			duration = 6.0 * int_mult
