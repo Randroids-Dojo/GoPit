@@ -1,9 +1,11 @@
 extends Node
 ## Ball Registry - tracks owned ball types and their levels for the current run
 ## Ball levels: L1 (base) -> L2 (+50% stats) -> L3 (+100% stats, fusion-ready)
+## Ball Slot System: 4 slots, all equipped balls fire simultaneously
 
 signal ball_acquired(ball_type: BallType)
 signal ball_leveled_up(ball_type: BallType, new_level: int)
+signal slot_updated(slot_index: int, ball_type: BallType)
 
 enum BallType {
 	BASIC,
@@ -74,10 +76,18 @@ const BALL_DATA := {
 	}
 }
 
+# Ball slot configuration
+const MAX_SLOTS: int = 4
+const EMPTY_SLOT: int = -1
+
 # Owned balls for current run: BallType -> level (1-3)
 var owned_balls: Dictionary = {}
 
-# Currently active ball type for firing
+# Ball slots - each slot fires simultaneously when firing
+# Array of BallType or EMPTY_SLOT (-1) for empty slots
+var ball_slots: Array[int] = []
+
+# Currently active ball type for firing (legacy, kept for backward compatibility)
 var active_ball_type: BallType = BallType.BASIC
 
 
@@ -88,7 +98,11 @@ func _ready() -> void:
 func _reset_for_new_run() -> void:
 	owned_balls.clear()
 	active_ball_type = BallType.BASIC
-	# Start with basic ball at L1
+	# Initialize empty slots
+	ball_slots.clear()
+	for i in range(MAX_SLOTS):
+		ball_slots.append(EMPTY_SLOT)
+	# Start with basic ball at L1 in first slot
 	add_ball(BallType.BASIC)
 
 
@@ -101,7 +115,9 @@ func add_ball(ball_type: BallType) -> void:
 		# New ball type
 		owned_balls[ball_type] = 1
 		ball_acquired.emit(ball_type)
-		# Auto-switch to new ball type (player choice)
+		# Auto-assign to first empty slot
+		_assign_to_empty_slot(ball_type)
+		# Legacy: update active ball type for backward compatibility
 		active_ball_type = ball_type
 
 
@@ -239,3 +255,75 @@ func get_owned_ball_types() -> Array[BallType]:
 	for ball_type in owned_balls:
 		owned.append(ball_type)
 	return owned
+
+
+# ============================================================================
+# Ball Slot System
+# ============================================================================
+
+func _assign_to_empty_slot(ball_type: BallType) -> bool:
+	"""Assign a ball type to the first empty slot. Returns true if successful."""
+	for i in range(ball_slots.size()):
+		if ball_slots[i] == EMPTY_SLOT:
+			ball_slots[i] = ball_type
+			slot_updated.emit(i, ball_type)
+			return true
+	# No empty slots available
+	return false
+
+
+func get_active_slots() -> Array[int]:
+	"""Get all non-empty ball slots (ball types that will fire)"""
+	var active: Array[int] = []
+	for slot in ball_slots:
+		if slot != EMPTY_SLOT:
+			active.append(slot)
+	return active
+
+
+func get_slot(index: int) -> int:
+	"""Get the ball type in a specific slot (or EMPTY_SLOT)"""
+	if index < 0 or index >= ball_slots.size():
+		return EMPTY_SLOT
+	return ball_slots[index]
+
+
+func set_slot(index: int, ball_type: int) -> bool:
+	"""Set a specific slot to a ball type. Returns true if successful."""
+	if index < 0 or index >= ball_slots.size():
+		return false
+	# Can only assign owned balls or clear the slot
+	if ball_type != EMPTY_SLOT and ball_type not in owned_balls:
+		return false
+	# Check if ball type is already in another slot (no duplicates)
+	if ball_type != EMPTY_SLOT:
+		for i in range(ball_slots.size()):
+			if i != index and ball_slots[i] == ball_type:
+				return false  # Already in another slot
+	ball_slots[index] = ball_type
+	slot_updated.emit(index, ball_type)
+	return true
+
+
+func clear_slot(index: int) -> void:
+	"""Clear a specific slot"""
+	set_slot(index, EMPTY_SLOT)
+
+
+func is_ball_in_slot(ball_type: BallType) -> bool:
+	"""Check if a ball type is currently equipped in any slot"""
+	return ball_type in ball_slots
+
+
+func get_empty_slot_count() -> int:
+	"""Get the number of empty slots"""
+	var count: int = 0
+	for slot in ball_slots:
+		if slot == EMPTY_SLOT:
+			count += 1
+	return count
+
+
+func get_filled_slot_count() -> int:
+	"""Get the number of filled slots"""
+	return MAX_SLOTS - get_empty_slot_count()
