@@ -102,7 +102,7 @@ func _on_next_pressed() -> void:
 
 func _on_start_pressed() -> void:
 	var character := _characters[_current_index]
-	if not character.is_unlocked:
+	if not MetaManager.is_character_unlocked(character.character_name):
 		SoundManager.play(SoundManager.SoundType.BLOCKED)
 		return
 
@@ -142,13 +142,27 @@ func _update_display() -> void:
 	for i in range(_dots.size()):
 		_dots[i].color = Color(1, 0.9, 0.3) if i == _current_index else Color(0.4, 0.4, 0.4)
 
-	# Update locked overlay
-	locked_overlay.visible = not character.is_unlocked
-	if not character.is_unlocked:
-		lock_label.text = "LOCKED\n" + character.unlock_requirement
+	# Update locked overlay - use MetaManager for dynamic unlock tracking
+	var is_unlocked := MetaManager.is_character_unlocked(character.character_name)
+	locked_overlay.visible = not is_unlocked
+	if not is_unlocked:
+		var progress := MetaManager.get_unlock_progress(character.character_name)
+		if progress.is_empty():
+			lock_label.text = "LOCKED\n" + character.unlock_requirement
+		else:
+			# Show progress toward unlock (e.g., "Wave 15/20")
+			var progress_text := ""
+			match progress["type"]:
+				"wave":
+					progress_text = "Wave %d/%d" % [progress["current"], progress["required"]]
+				"stage":
+					progress_text = "Stage %d/%d" % [progress["current"], progress["required"]]
+				"runs":
+					progress_text = "Runs %d/%d" % [progress["current"], progress["required"]]
+			lock_label.text = "LOCKED\n" + character.unlock_requirement + "\n(" + progress_text + ")"
 
 	# Update start button
-	start_button.disabled = not character.is_unlocked
+	start_button.disabled = not is_unlocked
 
 
 func get_selected_character() -> Resource:
