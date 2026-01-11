@@ -11596,12 +11596,15 @@ func _update_drag(pos: Vector2) -> void:
 
 | Aspect | GoPit | BallxPit |
 |--------|-------|----------|
-| Touch support | ✅ Native | ❓ Unknown |
-| Mouse support | ✅ For testing | ❓ Unknown |
-| Dead zone | ✅ 5% | ✅ Similar |
+| Touch support | ✅ Native (mobile-first) | ❌ No mobile version |
+| Mouse support | ✅ For testing | ✅ PC version |
+| Controller | ✅ Gamepad | ✅ Primary input |
+| Dead zone | ✅ 5% | ✅ Adjustable (5-20%) |
 | Visual feedback | ✅ Knob follows | ✅ Similar |
 
-**Rating**: ⭐⭐⭐⭐ SOLID MOBILE INPUT
+**Platform Difference**: GoPit is mobile-first, BallxPit is PC/Console only (Windows, macOS, Switch, PS5, Xbox).
+
+**Rating**: ⭐⭐⭐⭐ SOLID MOBILE INPUT (GoPit advantage)
 
 ---
 
