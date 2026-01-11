@@ -3862,3 +3862,192 @@ Similar mechanics expected:
 - "Critical gem" drop (rare, high XP)
 
 **Priority:** P4 (polish) - Current system works well.
+
+
+## Appendix AM: Ball Slot System Visual Guide (NEW)
+
+### Current GoPit vs Target BallxPit Style
+
+```
+CURRENT GOPIT:
+┌──────────────────────────────────────────────────────────┐
+│  OWNED BALLS: [Fire L3] [Ice L2] [Lightning L1] [Poison] │
+│                   ▲                                       │
+│               ACTIVE (only one fires)                    │
+│                                                          │
+│  FIRE → 🔥 🔥 🔥  (only Fire balls, even with multi-shot)│
+└──────────────────────────────────────────────────────────┘
+
+TARGET BALLXPIT STYLE:
+┌──────────────────────────────────────────────────────────┐
+│  SLOTS: [🔥L3] [❄️L2] [⚡L1] [☠️L1] [empty]              │
+│            │      │      │      │                        │
+│            ▼      ▼      ▼      ▼                        │
+│  FIRE → 🔥 ❄️ ⚡ ☠️  (ALL types fire simultaneously!)    │
+│         🔥 ❄️ ⚡ ☠️  (× multi-shot = 12+ balls!)        │
+└──────────────────────────────────────────────────────────┘
+```
+
+### HUD Slot Display (Needed)
+
+```
+┌────────────────────────────────────────────────────────┐
+│ [HP████████░░]  Wave 5                    [⚡Ultimate] │
+│                                                        │
+│ SLOTS: [🔥L3] [❄️L2] [⚡L1] [☠️L1] [ + ]  ← ADD THIS   │
+│                                                        │
+│ [XP████░░░░░░░░░░] Level 3                            │
+└────────────────────────────────────────────────────────┘
+```
+
+### Fusion Frees Slots
+
+```
+Before fusion:  [Fire L3] [Ice L3] [⚡L1] [☠️L1] [full]
+                    │         │
+                    └────┬────┘
+                         ▼
+After fusion:   [Void]  [EMPTY] [⚡L1] [☠️L1] [empty]
+                   ↑       ↑
+              evolved   FREED for new ball type!
+```
+
+### Implementation Priority
+
+This is **GoPit-6zk (P0)** - the most critical change needed.
+
+
+## Appendix AN: Enemy Scaling and Difficulty Curve (NEW)
+
+### GoPit Current Scaling
+
+**Location:** `scripts/entities/enemies/enemy_base.gd:66-73`
+
+**Per-Wave Scaling:**
+| Stat | Formula | Wave 1 | Wave 5 | Wave 10 | Wave 20 |
+|------|---------|--------|--------|---------|---------|
+| HP | +10%/wave | 100% | 140% | 190% | 290% |
+| Speed | +5%/wave (cap 2x) | 100% | 120% | 145% | 200% |
+| XP Value | +5%/wave | 100% | 120% | 145% | 195% |
+
+**Spawn Rate (game_controller.gd:245):**
+| Wave | Spawn Interval |
+|------|----------------|
+| 1 | 2.0s |
+| 5 | 1.6s |
+| 10 | 1.1s |
+| 15 | 0.6s |
+| 16+ | 0.5s (minimum) |
+
+**Enemy Types by Wave:**
+- Wave 1: Slimes only
+- Wave 2-3: 70% Slimes, 30% Bats
+- Wave 4+: 50% Slimes, 30% Bats, 20% Crabs
+
+### Scaling Code
+
+```gdscript
+# enemy_base.gd
+func _scale_with_wave() -> void:
+    var wave: int = GameManager.current_wave
+    # Scale HP: +10% per wave
+    max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
+    # Scale speed: +5% per wave (capped at 2x)
+    speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
+    # Scale XP: +5% per wave
+    xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
+```
+
+### BallxPit Expected Behavior
+
+Typical roguelike scaling:
+- **Exponential HP growth** in later waves
+- **Enemy variety increases** with stage
+- **New mechanics** introduced per stage (not just stat buffs)
+- **Stage-specific hazards** (environmental damage)
+
+### GAP ANALYSIS
+
+| Aspect | GoPit | BallxPit (Expected) | Impact |
+|--------|-------|---------------------|--------|
+| HP scaling | Linear +10% | Possibly exponential | LOW |
+| Speed cap | 2x max | Unknown | OK |
+| Enemy variety | 3 types | 8-10+ types | **HIGH** |
+| New mechanics | None | Per-stage hazards | MEDIUM |
+| Difficulty spikes | Smooth | Boss checkpoints | OK |
+
+### Recommendations
+
+**P3 Priority** (balance tuning):
+
+1. **Consider steeper late-game scaling:**
+```gdscript
+# Exponential HP after wave 10
+if wave > 10:
+    max_hp = int(max_hp * pow(1.15, wave - 10))
+```
+
+2. **Add more enemy types** (P2 beads exist)
+
+3. **Stage-specific modifiers:**
+- The Pit: Normal
+- Frozen Depths: Enemies 20% slower, 20% more HP
+- Burning Sands: Enemies 20% faster, 10% less HP
+
+
+## Appendix AO: Key Timing Values Reference (NEW)
+
+### Combat Timings
+
+| System | Value | Location |
+|--------|-------|----------|
+| Fire cooldown | 0.5s base | fire_button.gd:11 |
+| Ball speed | 800 px/s | ball.gd:12 |
+| Ball max bounces | 10 default | ball.gd:19 |
+| Baby ball interval | 2.0s base | baby_ball_spawner.gd:8 |
+| Enemy attack warning | 1.0s | enemy_base.gd:17 |
+| Enemy attack speed | 600 px/s | enemy_base.gd:18 |
+| Enemy descent speed | 100 px/s base | enemy_base.gd:45 |
+
+### Status Effect Durations
+
+| Effect | Duration | Tick Rate | Location |
+|--------|----------|-----------|----------|
+| Burn | 3.0s | 0.5s | status_effect.gd |
+| Freeze | 2.0s | N/A (slow) | status_effect.gd |
+| Poison | 4.0s | 0.5s | status_effect.gd |
+| Bleed | 3.0s | 0.3s | status_effect.gd |
+
+### UI Timings
+
+| Element | Duration | Location |
+|---------|----------|----------|
+| Damage number float | 0.6s | damage_number.gd:13 |
+| Screen shake decay | 5.0 rate | camera_shake.gd:6 |
+| Combo timeout | 2.0s | game_manager.gd:31 |
+| Gem despawn | 10.0s | gem.gd:11 |
+| Fusion reactor despawn | 15.0s | fusion_reactor.gd:11 |
+
+### Wave/Stage Timings
+
+| Event | Value | Location |
+|-------|-------|----------|
+| Enemies per wave | 5 kills | game_controller.gd:45 |
+| Waves per stage | 10 | biome.gd:10 |
+| Spawn interval start | 2.0s | enemy_spawner.gd:9 |
+| Spawn interval min | 0.5s | game_controller.gd:245 |
+| Boss intro duration | 2.0s | boss_base.gd:36 |
+
+### Comparison Notes
+
+These timings create GoPit's gameplay feel:
+- **0.5s fire cooldown** = 2 shots/second (with autofire)
+- **1.0s warning** = enough time to dodge attacks
+- **2.0s baby ball** = steady passive DPS
+
+**Potential adjustments:**
+- Fire cooldown could be faster (0.3s) for more action
+- Baby ball could scale more with upgrades
+- Warning time could decrease in later waves
+
+**Priority:** P4 (fine-tuning) - Current values are reasonable.
