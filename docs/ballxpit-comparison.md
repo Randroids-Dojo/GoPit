@@ -6233,3 +6233,96 @@ Nuclear Bomb, Nosferatu, Satan, Soul Reaver, Deadeye's Cross
 | **P3** | Add achievement system | Track milestones |
 | **P3** | Track char×stage matrix | Completion tracking |
 
+---
+
+## Appendix BQ: Save System and Stage Progression Details (NEW)
+
+Research sources:
+- [Deltia's Gaming - Save Slots Guide](https://deltiasgaming.com/ball-x-pit-save-slots/)
+
+### Stage Unlock System (Confirmed)
+
+**Gear Requirements:**
+```
+STAGE PROGRESSION:
+┌───────────────────────────────────────────────────────────┐
+│  1. Complete a stage with Character A → earn 1 gear       │
+│  2. Complete SAME stage with Character B → earn 2nd gear  │
+│  3. 2 gears unlock the NEXT stage                         │
+│  4. Each stage boss awards a Trophy Building blueprint    │
+└───────────────────────────────────────────────────────────┘
+```
+
+**This means:**
+- You MUST complete each stage with 2 different characters to progress
+- Incentivizes trying multiple characters early
+- Natural tutorial for character variety
+
+### Stage Bosses (Confirmed)
+
+| Stage | Boss | Reward |
+|-------|------|--------|
+| BONExYARD | Skeleton King | Boneyard Trophy Building |
+| SNOWYxSHORES | Icebound Queen | Snowy Trophy Building |
+| (Others) | (Unknown) | Trophy Buildings |
+
+### Trophy Buildings
+
+- Each stage has a corresponding Trophy Building
+- Blueprint awarded on first boss defeat
+- Provides permanent bonuses when built
+- Completing stage with ALL characters maximizes benefit
+
+### Save Slot System
+
+**BallxPit supports multiple save files:**
+- Create new saves from main menu
+- Delete saves with confirmation
+- Tutorial can be skipped (Esc)
+- Base tutorial is required
+
+**GoPit has single implicit save:**
+- Auto-save only
+- No save slot management
+- No manual save/load
+
+### Comparison
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Gear unlock** | None | 2 per stage | **MISSING** |
+| **Stage bosses** | 1 (Slime King) | 8 unique | **-7 bosses** |
+| **Trophy buildings** | None | 8 | **MISSING** |
+| **Save slots** | 1 implicit | Multiple | **MISSING** |
+| **Progression gate** | Linear | Gear-gated | Different |
+
+### Key Insight: Forced Character Variety
+
+BallxPit's 2-gear requirement FORCES players to:
+- Try at least 2 characters per stage
+- Discover character strengths/weaknesses
+- Engage with the full roster
+
+GoPit allows single-character runs with no variety incentive.
+
+### GoPit Boss Implementation
+
+**Current (slime_king.gd):**
+- Only 1 boss: Slime King
+- Appears at end of first biome
+- No boss-specific rewards
+
+**Missing:**
+- 7 more unique bosses
+- Trophy building system
+- Boss-specific blueprints
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Add gear requirement (2 per stage) | Force character variety |
+| **P2** | Add 7 more bosses | One per stage |
+| **P3** | Add trophy building rewards | Boss completion bonuses |
+| **P3** | Add save slot management | Multiple saves |
+
