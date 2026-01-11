@@ -134,6 +134,12 @@ Invoke with `/godot` or let Claude auto-use it for Godot projects.
 
 See [docs/testing.md](docs/testing.md) for detailed API documentation.
 
+## Documentation
+
+- [Testing Setup](docs/testing.md) - PlayGodot automated testing
+- [UI Best Practices](docs/godot-ui-best-practices.md) - Godot UI/UX guidelines
+- [Known Issues](docs/known-issues.md) - Current limitations and workarounds
+
 ## Controls
 
 - **Left side**: Virtual joystick to aim

@@ -191,23 +191,18 @@ Before committing ANY code changes:
 
 ## Godot UI Best Practices
 
-When creating UI overlays and panels:
+See [docs/godot-ui-best-practices.md](docs/godot-ui-best-practices.md) for comprehensive UI/UX guidelines.
 
-1. **Overlay mouse_filter**: Visual-only overlays (like locked indicators, dim backgrounds) should use `mouse_filter = 2` (MOUSE_FILTER_IGNORE) so clicks pass through to interactive elements below.
-   ```
-   # In .tscn files:
-   mouse_filter = 2
+**Quick Reference** - Most common issues:
 
-   # In GDScript:
-   overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-   ```
+1. **Overlapping content**: Set `custom_minimum_size` on Panels with anchor-based children
+2. **Clicks not registering**: Use `mouse_filter = 2` (IGNORE) for visual-only overlays
+3. **Children not sizing in containers**: Use `size_flags_horizontal = 3` (EXPAND_FILL)
 
-2. **Common mouse_filter values**:
-   - `0` (STOP) - Captures mouse events, doesn't propagate (default for buttons)
-   - `1` (PASS) - Processes events but also passes to parent
-   - `2` (IGNORE) - Ignores mouse events entirely (use for visual-only elements)
-
-3. **Test UI interactions**: When adding overlays, verify that buttons/controls underneath remain clickable.
+**Mouse filter values**:
+- `0` (STOP) - Captures events (buttons)
+- `1` (PASS) - Processes and passes to parent
+- `2` (IGNORE) - Click-through (visual overlays)
 
 ## Parallel Test Execution
 

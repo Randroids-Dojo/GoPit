@@ -183,6 +183,7 @@ show_percentage = false
 layout_mode = 2
 
 [node name="AbilityPanel" type="Panel" parent="DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer"]
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 size_flags_vertical = 0
 
