@@ -10001,3 +10001,203 @@ Good UX decision - prevents cacophony.
 
 **Rating**: ⭐⭐⭐⭐ SOLID IMPLEMENTATION
 
+---
+
+## Appendix DE: Meta Progression System
+
+**Source**: `scripts/autoload/meta_manager.gd` (141 lines)
+
+### Pit Coins (Meta Currency)
+
+```gdscript
+var pit_coins: int = 0
+var total_runs: int = 0
+var best_wave: int = 0
+var unlocked_upgrades: Dictionary = {}  # upgrade_id -> level
+
+func earn_coins(wave: int, level: int) -> int:
+    var earned := wave * 10 + level * 25
+    pit_coins += earned
+    save_data()
+    return earned
+```
+
+**Earning formula**: `wave × 10 + level × 25`
+
+| Wave | Level | Coins Earned |
+|------|-------|--------------|
+| 5 | 3 | 125 |
+| 10 | 5 | 225 |
+| 20 | 10 | 450 |
+
+### Permanent Upgrades
+
+```gdscript
+func _calculate_bonuses() -> void:
+    bonus_hp = get_upgrade_level("hp") * 10          // +10 HP per level
+    bonus_damage = get_upgrade_level("damage") * 2.0  // +2 damage per level
+    bonus_fire_rate = get_upgrade_level("fire_rate") * 0.05  // -0.05s per level
+```
+
+| Upgrade | Effect | Per Level |
+|---------|--------|-----------|
+| HP | Max HP bonus | +10 |
+| Damage | Base damage bonus | +2 |
+| Fire Rate | Cooldown reduction | -0.05s |
+
+### Save System
+
+```gdscript
+const SAVE_PATH := "user://meta.save"
+
+var data := {
+    "coins": pit_coins,
+    "runs": total_runs,
+    "best_wave": best_wave,
+    "upgrades": unlocked_upgrades
+}
+
+file.store_string(JSON.stringify(data))
+```
+
+Simple JSON persistence. Robust and portable.
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Meta currency | ✅ Pit Coins | ✅ Similar |
+| Permanent upgrades | 3 types | Many more |
+| Run stats | ✅ Tracked | ✅ Detailed |
+| Save system | ✅ JSON | ✅ Similar |
+| Buildings (city builder) | ❌ None | ✅ 70+ buildings |
+
+### What's Missing
+
+BallxPit has a "city builder" meta-game with 70+ buildings that provide permanent bonuses. GoPit has a much simpler shop with 3 upgrade types.
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Currency earning | ✅ Working | Balanced formula |
+| Upgrades | ⚠️ Basic | Only 3 types |
+| Persistence | ✅ Working | JSON save |
+| Run tracking | ✅ Working | Runs, best wave |
+
+**Rating**: ⭐⭐⭐ FUNCTIONAL, NEEDS EXPANSION
+
+---
+
+## Appendix DF: Visual Effects System
+
+**Source**: Multiple files in `scripts/effects/`
+
+### 1. Damage Numbers (`damage_number.gd` - 27 lines)
+
+```gdscript
+static func spawn(parent: Node, pos: Vector2, value: int, text_color: Color, prefix: String = "") -> void:
+    var label: Label = scene.instantiate()
+    label.text = prefix + str(value)
+    label.position = pos + Vector2(randf_range(-10, 10), randf_range(-10, 10))
+    label.modulate = text_color
+    parent.add_child(label)
+
+// Animation: rise 60px over 0.6s, fade out
+```
+
+Random offset prevents overlap when hitting multiple enemies.
+
+### 2. Ultimate Blast (`ultimate_blast.gd` - 57 lines)
+
+```gdscript
+func execute() -> void:
+    _play_sound()           // ULTIMATE sound
+    _create_flash()         // White screen flash
+    _shake_camera()         // 25.0 intensity shake
+    _kill_all_enemies()     // 9999 damage to all
+
+func _kill_all_enemies() -> void:
+    var enemies := get_tree().get_nodes_in_group("enemies")
+    for enemy in enemies:
+        enemy.take_damage(9999)  // Instant kill
+```
+
+Screen-clearing nuke ability. Big impact!
+
+### 3. Damage Vignette (`damage_vignette.gd` - 53 lines)
+
+```gdscript
+// Two modes:
+// 1. Flash on damage (0.15s, 40% alpha)
+// 2. Pulse when low HP (<30%)
+
+var low_hp_threshold: float = 0.3
+var low_hp_pulse_speed: float = 3.0
+
+func _process(delta: float) -> void:
+    if flash_timer > 0:
+        // Damage flash
+        color.a = (flash_timer / flash_duration) * max_alpha
+    elif _is_low_hp:
+        // Pulsing warning
+        var pulse: float = (sin(_pulse_time * TAU) + 1.0) * 0.5
+        color.a = lerpf(low_hp_min_alpha, low_hp_max_alpha, pulse)
+```
+
+Great visual feedback for player state.
+
+### 4. Danger Indicator (`danger_indicator.gd` - 44 lines)
+
+```gdscript
+var danger_count: int = 0
+
+func add_danger() -> void:
+    danger_count += 1
+    if danger_count == 1:
+        _start_pulsing()  // Red bar pulses 0.2 → 0.5 alpha
+
+func remove_danger() -> void:
+    danger_count = maxi(0, danger_count - 1)
+    if danger_count == 0:
+        _stop_pulsing()
+```
+
+Counts enemies in danger zone, pulses red bar.
+
+### 5. Hit Particles (`hit_particles.gd`)
+
+Spawned on enemy damage for satisfying impact feedback.
+
+### Effect Summary
+
+| Effect | Trigger | Visual |
+|--------|---------|--------|
+| Damage Number | Enemy hit | Rising, fading text |
+| Ultimate Blast | Ultimate used | White flash + screen shake |
+| Damage Vignette | Player hit / low HP | Red screen edge |
+| Danger Indicator | Enemies near player | Pulsing red bar |
+| Hit Particles | Any damage | Particle burst |
+| Camera Shake | Various | Screen shake |
+
+### Comparison to BallxPit
+
+| Effect | GoPit | BallxPit |
+|--------|-------|----------|
+| Damage numbers | ✅ Yes | ✅ Yes |
+| Screen shake | ✅ Yes | ✅ Yes |
+| Screen flash | ✅ Yes | ✅ Yes |
+| Low HP warning | ✅ Vignette | ✅ Similar |
+| Hit particles | ✅ Yes | ✅ Yes |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Player feedback | ✅ Excellent | Multiple layers |
+| Impact feel | ✅ Great | Shake + particles |
+| Low HP warning | ✅ Working | Pulse vignette |
+| Danger awareness | ✅ Working | Red bar indicator |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT POLISH
+
