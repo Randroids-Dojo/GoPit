@@ -2,7 +2,7 @@ class_name StatusEffect
 extends RefCounted
 ## Base class for status effects that can be applied to enemies
 
-enum Type { BURN, FREEZE, POISON, BLEED, RADIATION, DISEASE, FROSTBURN }
+enum Type { BURN, FREEZE, POISON, BLEED, RADIATION, DISEASE, FROSTBURN, WIND }
 
 # Effect configuration
 var type: Type
@@ -70,6 +70,12 @@ func _configure() -> void:
 			max_stacks = 4  # BallxPit cap: 4 stacks
 			slow_multiplier = 0.7  # 30% slow
 			damage_amp_per_stack = 0.25  # +25% damage amplification per stack
+		Type.WIND:
+			# Wind: Light slow effect, refreshes on hit
+			duration = 2.0 * int_mult
+			damage_per_tick = 0.0  # No damage
+			max_stacks = 1  # Doesn't stack - refreshes duration
+			slow_multiplier = 0.7  # 30% slow (lighter than freeze's 50%)
 
 	time_remaining = duration
 
@@ -135,6 +141,8 @@ func get_color() -> Color:
 			return Color(0.6, 0.3, 0.8)  # Sickly purple
 		Type.FROSTBURN:
 			return Color(0.3, 0.6, 1.2)  # Pale frost blue
+		Type.WIND:
+			return Color(0.8, 1.0, 0.8)  # Light green-white (airy)
 	return Color.WHITE
 
 
@@ -155,6 +163,8 @@ func get_type_name() -> String:
 			return "Disease"
 		Type.FROSTBURN:
 			return "Frostburn"
+		Type.WIND:
+			return "Wind"
 	return "Unknown"
 
 

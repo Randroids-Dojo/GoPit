@@ -15,7 +15,8 @@ enum BallType {
 	IRON,
 	RADIATION,
 	DISEASE,
-	FROSTBURN
+	FROSTBURN,
+	WIND
 }
 
 const BALL_DATA := {
@@ -98,6 +99,14 @@ const BALL_DATA := {
 		"base_speed": 800.0,
 		"color": Color(0.3, 0.6, 1.0),  # Pale frost blue
 		"effect": "frostburn"
+	},
+	BallType.WIND: {
+		"name": "Wind",
+		"description": "Pass-through + slow",
+		"base_damage": 5,
+		"base_speed": 1000.0,  # Fast like wind
+		"color": Color(0.8, 1.0, 0.8),  # Light green-white (airy)
+		"effect": "wind"
 	}
 }
 

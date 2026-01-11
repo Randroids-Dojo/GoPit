@@ -8,7 +8,7 @@ signal hit_gem(gem: Node2D)
 signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -83,6 +83,8 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.6, 0.3, 0.8)  # Sickly purple
 		BallType.FROSTBURN:
 			ball_color = Color(0.3, 0.6, 1.0)  # Pale frost blue
+		BallType.WIND:
+			ball_color = Color(0.8, 1.0, 0.8)  # Light green-white (airy)
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -448,6 +450,19 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 				enemy.modulate = Color(0.3, 0.6, 1.0)
 				var tween := enemy.create_tween()
 				tween.tween_property(enemy, "modulate", Color.WHITE, 1.0)
+
+		BallType.WIND:
+			# Wind: Pass-through + light slow effect
+			if enemy.has_method("apply_status_effect"):
+				var wind = StatusEffect.new(StatusEffect.Type.WIND)
+				enemy.apply_status_effect(wind)
+			else:
+				# Fallback visual tint
+				enemy.modulate = Color(0.8, 1.0, 0.8)
+				var tween := enemy.create_tween()
+				tween.tween_property(enemy, "modulate", Color.WHITE, 0.5)
+			# Wind balls pass through enemies
+			pierce_count = max(pierce_count, 2)
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
@@ -889,3 +904,8 @@ func _apply_fused_effects(enemy: Node2D, base_damage: int) -> void:
 				if enemy.has_method("apply_status_effect"):
 					var frostburn = StatusEffect.new(StatusEffect.Type.FROSTBURN)
 					enemy.apply_status_effect(frostburn)
+			"wind":
+				if enemy.has_method("apply_status_effect"):
+					var wind = StatusEffect.new(StatusEffect.Type.WIND)
+					enemy.apply_status_effect(wind)
+				pierce_count = max(pierce_count, 2)
