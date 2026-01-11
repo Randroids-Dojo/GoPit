@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>$GODOT_PROJECT_NAME</title>
+		<link id="_gd_icon" rel="icon" href="favicon.svg" />
+		<style>
+			body {
+				touch-action: none;
+				margin: 0;
+				border: 0 none;
+				padding: 0;
+				text-align: center;
+				background-color: #000;
+			}
+
+			#canvas {
+				display: block;
+				margin: 0;
+				color: white;
+			}
+
+			#canvas:focus {
+				outline: none;
+			}
+
+			.godot {
+				font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+				color: #e0e0e0;
+				background-color: #000;
+				width: 100%;
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			/* Allow selecting text by default */
+			.godot canvas {
+				display: block;
+				-webkit-user-select: text;
+				user-select: text;
+			}
+
+			/* Disable user selection on the canvas */
+			.godot canvas {
+				-webkit-user-select: none;
+				user-select: none;
+			}
+
+			/* Canvas size during loading and focus-in animation */
+			.godot canvas.sizing {
+				max-width: 100%;
+				max-height: 100%;
+				width: 100vw;
+				height: 100vh;
+			}
+
+			.godot canvas.fit-width {
+				width: 100%;
+				max-width: unset;
+				max-height: unset;
+			}
+
+			.godot noscript {
+				color: #e0e0e0;
+			}
+
+			.godot noscript > div {
+				color: #223c8d;
+				background-color: #004080;
+				border: thin solid #fff;
+				padding: 1.5em;
+				line-height: 1.6em;
+				border-radius: 5px;
+				box-shadow: 0 0 1em #000;
+			}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<noscript>
+			<div>JavaScript seems to be disabled in your browser. Enable it to proceed.</div>
+		</noscript>
+		<div class="godot">
+			<canvas id="canvas" tabindex="1"></canvas>
+		</div>
+		<script src="$GODOT_BASE_PATH$GODOT_BASENAME.js"></script>
+		<script>
+			const GODOT_CONFIG = {
+				$GODOT_CONFIG
+			};
+			let godot_instance = null;
+			const StatusProgress = document.getElementById('status-progress'); // Uncomment next line if you use a loading bar.
+			// const StatusProgressBar = document.getElementById('status-progress-bar');
+
+			function godot_download_progress(current, total) {
+				if (total > 0) {
+					StatusProgress.textContent = `Downloading... ${parseInt((current / total) * 100)}%`;
+					// Uncomment next line if you use a loading bar.
+					// StatusProgressBar.value = current;
+					// StatusProgressBar.max = total;
+				} else {
+					StatusProgress.textContent = `Downloading...`;
+				}
+			}
+
+			function godot_instantiate_instance(initializer) {
+				function print_error(text) {
+					console.error(text);
+				}
+
+				function print_debug(text) {
+					console.log(text);
+				}
+
+				Godot(GODOT_CONFIG).then(async (module) => {
+					StatusProgress.textContent = '';
+					godot_instance = await module.instantiate(initializer);
+					function enable_interstitial_ads() {
+						// Interstitial ads placeholder.
+					}
+					function disable_interstitial_ads() {
+						// Interstitial ads placeholder.
+					}
+				});
+			}
+
+			function godot_force_focus() {
+				document.getElementById('canvas').focus();
+			}
+
+			if (String.prototype.replaceAll === undefined) {
+				// Replaces all occurrences of `request` with `response` in the string
+				String.prototype.replaceAll = function (request, response) {
+					let current = this;
+					let index = current.indexOf(request);
+					while (index !== -1) {
+						current =
+							current.substring(0, index) +
+							response +
+							current.substring(index + request.length);
+						index = current.indexOf(request, index + response.length);
+					}
+					return current;
+				};
+			}
+
+			const query = window.location.search.substring(1);
+			const parameters = {};
+			if (query !== '') {
+				const params = query.split('&');
+				let i;
+				for (i = 0; i < params.length; i++) {
+					const param = params[i].split('=');
+					parameters[decodeURIComponent(param[0])] = decodeURIComponent(param[1]);
+				}
+			}
+			if (typeof EditorVars !== 'undefined') {
+				parameters['server_mode'] = EditorVars.server_mode;
+				parameters['project_manager'] = EditorVars.is_project_manager;
+			}
+
+			const initializer = {
+				'onProgress': godot_download_progress,
+				'onPrint': function(line) {
+					console.log(line);
+				},
+				'onPrintError': function(line) {
+					console.error(line);
+				},
+				'thisProgram': EngineLoader.pathToTheEngine,
+				'canvas': (function() {
+					return document.getElementById('canvas');
+				})(),
+				'canvasResizedCallback': (function() {
+					try {
+						switch (godot_instance.onCanvasExit()) {
+							case -1:
+								console.log('Initialized');
+								return true;
+							case 0:
+								console.log('Success!');
+								return false;
+							default:
+								console.log('Problem?');
+								return false;
+						}
+					} catch (e) {
+						console.log(e.message);
+						return false;
+					}
+				}),
+				'onExecute': function(p_javascript) {
+					try {
+						eval(p_javascript);
+					} catch (e) {
+						return false;
+					}
+					return true;
+				},
+				'onInput': function(p_input) {
+					try {
+						godot_instance.onInput(p_input);
+					} catch (e) {
+						console.log(e.message);
+						return false;
+					}
+					return true;
+				},
+				'onInputText': function(p_text) {
+					try {
+						godot_instance.onInputText(p_text);
+					} catch (e) {
+						console.log(e.message);
+						return false;
+					}
+					return true;
+				},
+				'onQuit': function() {
+					godot_force_focus();
+				},
+			};
+
+			godot_instantiate_instance(initializer);
+		</script>
+		<!-- Vercel Web Analytics -->
+		<script>
+			window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+		</script>
+		<script defer src="/_vercel/insights/script.js"></script>
+	</body>
+</html>
