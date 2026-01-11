@@ -1050,13 +1050,19 @@ if ball_type == BallType.NORMAL or is_baby_ball:
 
 ### Gaps to Address
 
-| Gap | Priority | Bead |
-|-----|----------|------|
-| Baby ball trait inheritance | **P1** | GoPit-r1r |
-| Baby ball count cap | P2 | - |
-| Brood Mother ball type | P2 | - |
-| Leadership damage scaling | P2 | - |
-| Egg sac drop mechanic | P3 | - |
+| Gap | Priority | Bead | Status |
+|-----|----------|------|--------|
+| Baby ball trait inheritance | **P1** | GoPit-r1r | ❌ NOT IMPL |
+| Baby ball count cap | P2 | - | Open |
+| Brood Mother ball type | P2 | - | Open |
+| Leadership damage scaling | P2 | - | Open |
+| Egg sac drop mechanic | P3 | - | Open |
+
+> **Code Verification (Iteration 142)**: Baby ball inheritance NOT implemented.
+> - `baby_ball_spawner.gd:68-92` only sets `is_baby_ball` and `damage`
+> - NO `ball_type`, `registry_type`, or `ball_level` assignment
+> - Baby balls always remain BallType.NORMAL
+> - Bead GoPit-r1r reopened
 
 ### Recommendations
 
@@ -5148,13 +5154,19 @@ This comparison document contains **63 appendices** covering every aspect of GoP
 
 ### Top 5 Critical Gaps
 
-| Priority | Gap | Impact | Bead |
-|----------|-----|--------|------|
-| **P0** | Ball slot system | Fundamental gameplay difference | GoPit-6zk |
-| **P1** | Bounce damage scaling | Core damage mechanic missing | GoPit-kslj |
-| **P1** | Ball return mechanic | Balls despawn instead of return | GoPit-ay9 |
-| **P1** | Baby ball inheritance | Babies don't inherit ball type | GoPit-r1r |
-| **P1** | Bounce trajectory preview | Aim line doesn't show bounces | GoPit-2ep |
+| Priority | Gap | Impact | Bead | Status |
+|----------|-----|--------|------|--------|
+| **P0** | Ball slot system | Fundamental gameplay difference | GoPit-6zk | ✅ DONE |
+| **P1** | Bounce damage scaling | Core damage mechanic missing | GoPit-gdj | ❌ NOT IMPL |
+| **P1** | Ball return mechanic | Balls despawn instead of return | GoPit-ay9 | Open |
+| **P1** | Baby ball inheritance | Babies don't inherit ball type | GoPit-r1r | ❌ NOT IMPL |
+| **P1** | Bounce trajectory preview | Aim line doesn't show bounces | GoPit-2ep | ❌ NOT IMPL |
+
+> **Code Verification (Iterations 141-142)**: Multiple beads marked closed but NOT implemented:
+> - Bounce damage: `ball.gd` tracks `_bounce_count` but never scales damage
+> - Baby inheritance: `baby_ball_spawner.gd` doesn't set ball_type
+> - Trajectory preview: `aim_line.gd` has no raycast/bounce prediction
+> - These beads have been reopened
 
 ### Systems Comparison Summary
 
