@@ -7214,11 +7214,104 @@ func _show_exclamation() -> void:
 
 ---
 
+## Appendix CD: Loot and Drop Systems
+
+Research sources:
+- [Beginner Guide](https://ballxpit.space/ball-x-pit-beginner-guide)
+- [Items Database](https://www.ballxpitguide.com/items)
+- [Economy Guide](https://www.ballxpitguide.com/economy)
+
+### BallxPit Drop System
+
+**Drop Types:**
+
+| Drop | Purpose | When |
+|------|---------|------|
+| **XP Gems** | Level up in-run | Every enemy |
+| **Gold** | Meta currency | Rare drops |
+| **Resources** | Building materials | Rare drops |
+| **Blueprints** | Unlock buildings | Boss drops |
+| **Fusion Reactors** | Ball evolution | Boss/special |
+
+**Special Spawns:**
+- **Gemsprings**: Spawn every 7-11 rows
+- Damage them → Drop increasing XP
+- Strategic farming opportunity
+
+**Evolution Drops:**
+- Fusion Reactors dropped by bosses
+- Used for: Fission (split into upgrades), Fusion (combine balls), Evolution (upgrade balls)
+
+### GoPit Drop System
+
+**Drop Types (2):**
+
+| Drop | Purpose | Code |
+|------|---------|------|
+| **XP Gems** | Level up | `gem_color = Color(0.2, 0.9, 0.5)` |
+| **Health Gems** | Heal 10 HP | `gem_color = Color(1.0, 0.4, 0.5)` |
+
+**GoPit gem.gd:**
+```gdscript
+@export var xp_value: int = 10
+const HEALTH_GEM_HEAL: int = 10
+
+# Magnetism system
+const MAGNETISM_SPEED: float = 400.0
+var magnetism_range := GameManager.gem_magnetism_range
+```
+
+**Features:**
+- Magnetism pull toward player
+- Visual attraction line
+- Sparkle animation
+- 10 second despawn timer
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Drop types | 2 | 5+ |
+| XP gems | ✅ | ✅ |
+| Health drops | ✅ | ✅ |
+| Gold/currency | ❌ In-run | ✅ Meta + in-run |
+| Resources | ❌ | ✅ 4 types |
+| Blueprints | ❌ | ✅ Boss drops |
+| Fusion Reactors | ❌ | ✅ |
+| Gemsprings | ❌ | ✅ |
+| Magnetism | ✅ | ✅ |
+
+### GoPit Strengths
+
+1. **Magnetism system** - Pull gems toward player
+2. **Health gem variant** - Healing drops from Lifesteal passive
+3. **Visual feedback** - Attraction lines, sparkles
+
+### GoPit Gaps
+
+1. **No meta currency drops** - Gold dropped in-run for buildings
+2. **No Fusion Reactors** - Key evolution item missing
+3. **No Gemsprings** - Strategic farming targets
+4. **No resource variety** - Single XP type vs 4 resources
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Add Fusion Reactor drops | From bosses/specials |
+| **P2** | Add Gemspring enemies | XP farming targets |
+| **P2** | Add meta currency drops | For permanent upgrades |
+| **P3** | Add resource variety | Multiple drop types |
+
+**GoPit's magnetism system is polished - needs drop variety for strategic depth.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **87 appendices** (A through CC)
+- **88 appendices** (A through CD)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
