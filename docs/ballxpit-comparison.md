@@ -11089,6 +11089,324 @@ func _draw() -> void:
 
 ---
 
+## Appendix DN: Status Effect System
+
+**File**: `scripts/effects/status_effect.gd` (128 lines)
+
+### Effect Architecture
+
+```gdscript
+class_name StatusEffect
+extends RefCounted
+
+enum Type { BURN, FREEZE, POISON, BLEED }
+
+var type: Type
+var duration: float
+var damage_per_tick: float
+var tick_interval: float = 0.5
+var stacks: int = 1
+var max_stacks: int = 1
+var slow_multiplier: float = 1.0  // 1.0 = no slow
+```
+
+### Effect Configurations
+
+| Effect | Duration | DPS | Tick | Max Stacks | Special |
+|--------|----------|-----|------|------------|---------|
+| BURN | 3.0s × INT | 5.0 | 0.5s | 1 | Refreshes duration |
+| FREEZE | 2.0s × INT × Shatter | 0 | - | 1 | 50% slow |
+| POISON | 5.0s × INT | 3.0 | 0.5s | 1 | Spreads on death |
+| BLEED | INF | 2.0/stack | 0.5s | 5 | Stacks! Permanent! |
+
+### Intelligence Scaling
+
+```gdscript
+func _configure() -> void:
+    var int_mult: float = GameManager.character_intelligence_mult
+
+    match type:
+        Type.BURN:
+            duration = 3.0 * int_mult
+        Type.FREEZE:
+            // Shatter passive: +30% freeze duration
+            duration = 2.0 * int_mult * GameManager.get_freeze_duration_bonus()
+        Type.POISON:
+            duration = 5.0 * int_mult
+        Type.BLEED:
+            duration = INF  // Permanent - not affected by intelligence!
+```
+
+### Visual Colors
+
+```gdscript
+func get_color() -> Color:
+    match type:
+        Type.BURN: return Color(1.5, 0.6, 0.2)   // Orange
+        Type.FREEZE: return Color(0.5, 0.8, 1.3)  // Ice blue
+        Type.POISON: return Color(0.4, 1.2, 0.4)  // Green
+        Type.BLEED: return Color(1.3, 0.3, 0.3)   // Red
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Effect types | 4 | 4-5 |
+| Stacking | Bleed only | Multiple |
+| Character scaling | ✅ INT mult | ❓ Unknown |
+| Visual feedback | ✅ Tint colors | ✅ Icons |
+
+**Rating**: ⭐⭐⭐⭐ SOLID
+
+---
+
+## Appendix DO: Enemy Spawner System
+
+**File**: `scripts/entities/enemies/enemy_spawner.gd` (116 lines)
+
+### Wave-Based Enemy Variety
+
+```gdscript
+func _choose_enemy_type() -> PackedScene:
+    var wave: int = GameManager.current_wave
+
+    // Wave 1: Only slimes
+    if wave <= 1:
+        return slime_scene
+
+    // Wave 2-3: Introduce bats (30% chance)
+    if wave <= 3:
+        if randf() < 0.3:
+            return bat_scene
+        return slime_scene
+
+    // Wave 4+: All enemy types
+    var roll: float = randf()
+    if roll < 0.5:
+        return slime_scene      // 50%
+    elif roll < 0.8:
+        return bat_scene        // 30%
+    else:
+        return crab_scene       // 20%
+```
+
+### Burst Spawn System
+
+```gdscript
+@export var burst_chance: float = 0.1  // 10% base
+@export var burst_count_min: int = 2
+@export var burst_count_max: int = 3
+
+func set_spawn_interval(interval: float) -> void:
+    spawn_interval = interval
+    // Burst chance increases as game speeds up
+    burst_chance = minf(0.3, 0.1 + (2.0 - interval) * 0.1)
+
+func _burst_spawn() -> void:
+    var count := randi_range(burst_count_min, burst_count_max)
+    for i in range(count):
+        spawn_enemy()
+```
+
+### Spawn Timing
+
+```gdscript
+@export var spawn_interval: float = 2.0
+@export var spawn_variance: float = 0.5  // ±0.5 seconds
+
+func _start_spawn_timer() -> void:
+    var variance := randf_range(-spawn_variance, spawn_variance)
+    var next_spawn := maxf(0.3, spawn_interval + variance)
+```
+
+**Rating**: ⭐⭐⭐⭐ SOLID SPAWNING LOGIC
+
+---
+
+## Appendix DP: HUD System
+
+**File**: `scripts/ui/hud.gd` (129 lines)
+
+### Display Elements
+
+| Element | Data Source | Update |
+|---------|-------------|--------|
+| HP Bar | GameManager.player_hp / max_hp | Every frame |
+| Wave Label | StageManager.wave_in_stage / waves_before_boss | Every frame |
+| XP Bar | GameManager.current_xp / xp_to_next_level | Every frame |
+| Level Label | GameManager.player_level | Every frame |
+| Combo Label | combo_count + multiplier | On signal |
+| Mute Button | SoundManager.is_muted | On toggle |
+
+### Combo Display
+
+```gdscript
+func _on_combo_changed(combo: int, multiplier: float) -> void:
+    if combo >= 2:
+        combo_label.visible = true
+        combo_label.text = "%dx COMBO!" % combo
+        if multiplier > 1.0:
+            combo_label.text += " (%.1fx XP)" % multiplier
+
+        // Color based on multiplier
+        if multiplier >= 2.0:
+            combo_label.modulate = Color(1.0, 0.3, 0.3)  // Red for max
+        elif multiplier >= 1.5:
+            combo_label.modulate = Color(1.0, 0.8, 0.2)  // Yellow
+        else:
+            combo_label.modulate = Color.WHITE
+
+        // Pop animation
+        combo_label.scale = Vector2(1.3, 1.3)
+        tween.tween_property(combo_label, "scale", Vector2.ONE, 0.15)
+```
+
+### Wave Display with Biome
+
+```gdscript
+func _update_wave() -> void:
+    var stage_name := StageManager.get_stage_name()
+    var wave_in_stage := StageManager.wave_in_stage
+    wave_label.text = "%s %d/%d" % [
+        stage_name,
+        wave_in_stage,
+        StageManager.current_biome.waves_before_boss
+    ]
+```
+
+**Rating**: ⭐⭐⭐⭐ COMPLETE HUD
+
+---
+
+## Appendix DQ: Character Select UI
+
+**File**: `scripts/ui/character_select.gd` (158 lines)
+
+### 6 Playable Characters
+
+```gdscript
+const CHARACTER_PATHS := [
+    "res://resources/characters/rookie.tres",
+    "res://resources/characters/pyro.tres",
+    "res://resources/characters/frost_mage.tres",
+    "res://resources/characters/tactician.tres",
+    "res://resources/characters/gambler.tres",
+    "res://resources/characters/vampire.tres"
+]
+
+const PORTRAIT_COLORS := [
+    Color(0.3, 0.5, 0.7),  // Rookie - blue
+    Color(0.8, 0.3, 0.1),  // Pyro - orange
+    Color(0.4, 0.7, 0.9),  // Frost - cyan
+    Color(0.5, 0.5, 0.6),  // Tactician - gray
+    Color(0.7, 0.5, 0.8),  // Gambler - purple
+    Color(0.5, 0.2, 0.2),  // Vampire - dark red
+]
+```
+
+### Stat Bars Display
+
+```gdscript
+func _update_display() -> void:
+    // Stat bars (0-5 scale typically)
+    hp_bar.value = character.endurance
+    dmg_bar.value = character.strength
+    spd_bar.value = character.speed
+    crit_bar.value = character.dexterity
+
+    // Ability info
+    passive_name_label.text = "Passive: " + character.passive_name
+    passive_desc_label.text = character.passive_description
+    ball_label.text = "Starting: " + BALL_TYPE_NAMES[character.starting_ball]
+```
+
+### Lock System
+
+```gdscript
+// Locked overlay
+locked_overlay.visible = not character.is_unlocked
+if not character.is_unlocked:
+    lock_label.text = "LOCKED\n" + character.unlock_requirement
+
+start_button.disabled = not character.is_unlocked
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Character count | 6 | 8-12 |
+| Unlock system | ✅ Yes | ✅ Yes |
+| Stat preview | ✅ 4 stats | ✅ Similar |
+| Passive preview | ✅ Yes | ✅ Yes |
+| Starting ball shown | ✅ Yes | ❓ Unknown |
+
+**Rating**: ⭐⭐⭐⭐ SOLID CHARACTER SELECT
+
+---
+
+## Appendix DR: Game Over Overlay
+
+**File**: `scripts/ui/game_over_overlay.gd` (83 lines)
+
+### Stats Display
+
+```gdscript
+func _update_stats() -> void:
+    // Wave reached with best indicator
+    var best_text := " (NEW BEST!)" if GameManager.current_wave >= GameManager.high_score_wave else ""
+    wave_label.text = "Reached Wave %d%s" % [GameManager.current_wave, best_text]
+
+    // Level reached with best indicator
+    score_label.text = "Level %d%s" % [GameManager.player_level, best_text]
+
+    // Detailed stats
+    var time: float = GameManager.stats["time_survived"]
+    stats_label.text = """Enemies: %d
+Damage: %d
+Gems: %d
+Time: %d:%02d
+Best Wave: %d | Best Level: %d""" % [
+        GameManager.stats["enemies_killed"],
+        GameManager.stats["damage_dealt"],
+        GameManager.stats["gems_collected"],
+        minutes, seconds,
+        GameManager.high_score_wave,
+        GameManager.high_score_level
+    ]
+```
+
+### Meta Currency Integration
+
+```gdscript
+func _on_game_over() -> void:
+    // Record run and earn coins
+    MetaManager.record_run_end(GameManager.current_wave, GameManager.player_level)
+    _coins_earned = MetaManager.earn_coins(GameManager.current_wave, GameManager.player_level)
+
+    coins_label.text = "+%d Pit Coins (Total: %d)" % [_coins_earned, MetaManager.pit_coins]
+```
+
+### Post-Game Options
+
+```gdscript
+// Shop button - access meta upgrades
+func _on_shop_pressed() -> void:
+    var meta_shop := get_tree().get_first_node_in_group("meta_shop")
+    if meta_shop and meta_shop.has_method("show_shop"):
+        meta_shop.show_shop()
+
+// Restart button - return to menu
+func _on_restart_pressed() -> void:
+    GameManager.return_to_menu()
+    get_tree().reload_current_scene()
+```
+
+**Rating**: ⭐⭐⭐⭐ SOLID END-OF-RUN FLOW
+
+---
+
 ## Summary: All Session Findings
 
 ### Session 2: Appendices CT-DH (15 appendices)
@@ -11111,7 +11429,7 @@ func _draw() -> void:
 | DG | Game Controller | ⭐⭐⭐⭐⭐ | Great orchestration |
 | DH | Slime King | ⭐⭐⭐⭐⭐ | Excellent first boss |
 
-### Session 3: Appendices DI-DM (5 appendices)
+### Session 3: Appendices DI-DR (10 appendices)
 
 | Appendix | System | Rating | Notes |
 |----------|--------|--------|-------|
@@ -11120,6 +11438,11 @@ func _draw() -> void:
 | DK | Ball Entity | ⭐⭐⭐⭐⭐ | 7 types + 5 evolved |
 | DL | Fusion/Evolution | ⭐⭐⭐⭐⭐ | Fission is unique advantage |
 | DM | Enemy Variety | ⭐⭐⭐ | 3 types + 1 boss (needs more) |
+| DN | Status Effects | ⭐⭐⭐⭐ | 4 types with INT scaling |
+| DO | Enemy Spawner | ⭐⭐⭐⭐ | Wave-based variety + burst |
+| DP | HUD System | ⭐⭐⭐⭐ | Complete with combo display |
+| DQ | Character Select | ⭐⭐⭐⭐ | 6 characters with lock system |
+| DR | Game Over | ⭐⭐⭐⭐ | Stats + meta currency |
 
 ### Key Discoveries
 
@@ -11149,5 +11472,5 @@ func _draw() -> void:
    - Level select UI (not implemented)
    - Meta progression depth
 
-**Total: 123 appendices (A through DM), ~11,100 lines**
+**Total: 128 appendices (A through DR), ~11,700 lines**
 
