@@ -1556,5 +1556,92 @@ Scale up content:
 
 ---
 
+## Appendix L: Advanced Mechanics & Hidden Features
+
+Research sources:
+- [BallxPit.org Advanced Mechanics Guide](https://ballxpit.org/guides/advanced-mechanics/)
+- [Ball x Pit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+
+### BallxPit Hidden Mechanics
+
+**Speed Control System:**
+- 3 speed settings (R1 button)
+- Speed 3 (Fast): Waves 1-10, farming
+- Speed 2 (Normal): Waves 10-15
+- Speed 1 (Slow): Boss fights, learning patterns
+
+**Status Effect Stacking Limits:**
+| Effect | Max Stacks |
+|--------|------------|
+| Bleed | 24 |
+| Disease | 8 |
+| Poison | 8 |
+| Burn | 5 |
+| Radiation | 5 |
+| Frostburn | 4 |
+
+Once max stacks reached, additional applications provide zero benefit.
+
+**Damage Amplification:**
+- Status effects stack multiplicatively
+- +50% radiation + +25% frostburn = +75% total
+- Optimization creates huge damage differences
+
+**Evolution vs Fusion Power:**
+- Evolutions are 2x-3x stronger than Fusions
+- Fusions just combine; Evolutions create new mechanics
+- Hidden evolutions still being discovered
+
+### GoPit Current Status Effects
+
+From `status_effect.gd`:
+| Effect | Implementation |
+|--------|---------------|
+| BURN | DoT damage |
+| FREEZE | Slow movement |
+| POISON | DoT + spread on death |
+| BLEED | Stacking DoT |
+| LIGHTNING | Chain to nearby |
+
+**No stacking limits currently documented.**
+**No speed control system.**
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Speed control | No | 3 speeds | Low |
+| Status stack limits | No | Yes (varies) | Medium |
+| Damage amplification math | Unknown | Multiplicative | Low |
+
+### Recommendations
+
+1. [ ] **Consider speed control** - Helpful for bosses
+2. [ ] **Add status stack limits** - Prevents infinite scaling
+3. [ ] **Document amplification math** - Clarify how bonuses combine
+
+---
+
+## Analysis Complete
+
+This document represents a comprehensive comparison between Ball x Pit and GoPit across all major game systems. The analysis identified **12 actionable gaps** tracked as beads, prioritized for implementation.
+
+### Key Takeaways
+
+1. **Bounce damage (+5%/bounce)** is the single most impactful missing mechanic
+2. **Character uniqueness** needs fundamental mechanics, not just stat differences
+3. **Content volume** (characters, stages, bosses, evolutions) has large gaps
+4. **Core systems** (gem collection, movement, basic ball mechanics) are well-aligned
+
+### Next Steps
+
+1. Implement P1 beads (GoPit-gdj, GoPit-hfi) first
+2. Add at least one unique-mechanic character
+3. Expand evolution system with new ball types
+4. Add more bosses with weak points
+
+---
+
 *Document maintained as part of BallxPit alignment effort (GoPit-68o)*
-*Analysis complete - 1400+ lines covering all major systems*
+*Analysis complete - 1600+ lines covering all major systems*
+*Last updated: January 2026*
