@@ -655,7 +655,7 @@ Based on online guides, we now understand:
 
 1. [ ] **Play BallxPit directly** - First-hand experience
 2. [x] **Document all evolutions** - See Appendix B below
-3. [ ] **Map all characters** - Document unique mechanics
+3. [x] **Map all characters** - See Appendix F below
 
 ---
 
@@ -993,6 +993,153 @@ This suggests BallxPit early waves should be relatively easy, with gradual diffi
 1. [ ] **Slower early spawn rate** - 3s for waves 1-5
 2. [ ] **Fewer kills for early waves** - 3 enemies for wave 1-3
 3. [ ] **Gentler scaling curve** - HP +5% instead of +10%
+
+---
+
+## Appendix F: Character System Comparison
+
+Research sources:
+- [Dexerto - All Characters](https://www.dexerto.com/wikis/ball-x-pit/all-characters-how-to-unlock-them-2/)
+- [GAM3S.GG - Character Unlock Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-unlock-all-characters/)
+- [GameRant - All Characters](https://gamerant.com/ball-x-pit-all-characters-stage-list-unlocks/)
+
+### BallxPit Characters (16 Total)
+
+| Character | Starting Ball | Special Mechanic | Unlock |
+|-----------|---------------|------------------|--------|
+| **The Warrior** | Bleed | Balanced starter, no special | Start |
+| **The Itchy Finger** | Burn | 2x fire rate, full speed while firing | Sheriff's Office |
+| **The Embedded** | Poison | Balls pierce until wall | Veteran's Hut |
+| **The Repentant** | Freeze | +5% damage/bounce, return damage | Haunted House |
+| **The Cohabitants** | Brood Mother | Mirrored shots (half damage) | Cozy Home |
+| **The Physicist** | Light | Gravity manipulation, faster returns | Laboratory |
+| **The Spendthrift** | Vampire | All balls in wide arc | Mansion |
+| **The Flagellant** | Egg Sac | Chain ricochets | Monastery |
+| **The Shade** | Dark | Fires from back, +10% crit | Mausoleum |
+| **The Radical** | Wind | Auto-play mode | Campground |
+| **The Empty Nester** | Ghost | Crowd control, sustain | Single Family Home |
+| **The Shieldbearer** | Iron | Shield reflects, 2x bounce damage | Iron Fortress |
+| **The Juggler** | Lightning | Throw to target area | Theater |
+| **The Tactician** | Iron | Turn-based combat | Captain's HQ |
+| **The Makeshift Sisyphus** | Earthquake | 4x AoE/status damage | Rocky Hill |
+| **The Cogitator** | Laser | Auto-selects upgrades | Villa |
+
+### GoPit Characters (6 Total)
+
+| Character | Starting Ball | Passive | Stats |
+|-----------|---------------|---------|-------|
+| **Rookie** | Basic | +10% XP gain | All 1.0 |
+| **Pyro** | Burn | +20% fire dmg, +25% vs burning | STR 1.4, END 0.8 |
+| **Frost Mage** | Freeze | +50% vs frozen, +30% freeze duration | INT 1.5 |
+| **Tactician** | Basic | +2 baby balls, +30% spawn rate | LEAD 1.6, STR 0.8 |
+| **Gambler** | Lightning | 3x crit damage, +15% crit | DEX 1.6 |
+| **Vampire** | Basic | 5% lifesteal, 20% health gem | END 1.5, locked |
+
+### Critical Differences
+
+| Aspect | GoPit | BallxPit | Gap Level |
+|--------|-------|----------|-----------|
+| **Character count** | 6 | 16+ | Large |
+| **Unique mechanics** | Stat modifiers only | Completely different playstyles | **Critical** |
+| **Starting balls** | 4 types used | 14+ different balls | Large |
+| **Unlock system** | Wave survival | Blueprint/building | Different |
+
+### Mechanical Depth Comparison
+
+**BallxPit characters fundamentally change gameplay:**
+
+1. **The Repentant** - Bounce damage specialist (+5%/bounce + return damage)
+2. **The Shade** - Fires from back of screen (mirror mode)
+3. **The Cohabitants** - Mirrored double shots
+4. **The Shieldbearer** - Shield reflect mechanic
+5. **The Tactician** - Turn-based mode (!)
+6. **The Radical** - Auto-play/idle mode
+
+**GoPit characters only modify stats:**
+- All characters fire the same way
+- All characters move the same way
+- Differences are numeric (+X% damage, +Y% speed)
+- No unique mechanics beyond passives
+
+### Character-to-Character Mapping
+
+| BallxPit | GoPit Equivalent | Match Quality |
+|----------|------------------|---------------|
+| The Warrior | Rookie | Good (both starter) |
+| The Itchy Finger | - | None (2x fire rate) |
+| The Repentant | Frost Mage | Poor (bounce vs freeze) |
+| The Shieldbearer | - | None (shield mechanic) |
+| The Shade | - | None (reverse firing) |
+| The Cohabitants | Tactician | Poor (mirrors vs babies) |
+| The Spendthrift | - | None (arc firing) |
+| The Flagellant | Vampire | Poor (lifesteal different) |
+
+### Priority Characters to Add
+
+**High Priority (Unique Mechanics):**
+1. **The Repentant** - Bounce damage character (pairs with GoPit-gdj)
+2. **The Shade** - Back-firing character (unique gameplay)
+3. **The Itchy Finger** - 2x fire rate (simple to implement)
+
+**Medium Priority:**
+4. **The Shieldbearer** - Shield/reflect mechanic
+5. **The Cohabitants** - Mirrored shots
+
+### Recommendations
+
+1. [ ] **Add unique firing mechanics** - Not just stat modifiers
+2. [ ] **Add Repentant-style character** - Bounce damage specialist
+3. [ ] **Add reverse-firing character** - Like The Shade
+4. [ ] **Add 2x fire rate character** - Like The Itchy Finger
+5. [ ] **Expand to 10+ characters** - Match BallxPit variety
+6. [ ] **Consider blueprint unlock system** - Like BallxPit
+
+---
+
+## Appendix G: Meta-Progression Comparison
+
+### BallxPit Meta-Progression
+
+**Base Building System:**
+- Players build a base between runs
+- Blueprints drop from bosses
+- Buildings unlock characters
+- Buildings provide passive bonuses
+
+**Gear/Elevator System:**
+- Complete stages with different characters = gears
+- Gears upgrade elevator to unlock new stages
+- Encourages replaying with multiple characters
+
+**Permanent Upgrades:**
+- Base buildings provide permanent stat boosts
+- Some buildings unlock new ball types
+- Others provide starting bonuses
+
+### GoPit Meta-Progression
+
+From `meta_manager.gd` (if exists) or `game_manager.gd`:
+- Currently minimal meta-progression
+- Character unlocks via achievements (e.g., "Survive wave 20")
+- No base building system
+- No permanent upgrade purchases
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Base building | No | Yes | Medium |
+| Blueprint drops | No | Yes | Medium |
+| Permanent upgrades | Minimal | Extensive | Medium |
+| Character unlock system | Achievement | Building | Low |
+| Multi-run incentives | Low | High | Medium |
+
+### Recommendations
+
+1. [ ] **Add meta-currency** - Earned per run based on performance
+2. [ ] **Add permanent upgrades** - Starting stats, ball damage, etc.
+3. [ ] **Consider base building** - Light version for mobile
+4. [ ] **Multi-character incentives** - Rewards for playing different characters
 
 ---
 
