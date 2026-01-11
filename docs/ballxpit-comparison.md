@@ -120,13 +120,14 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 | **P2** | Boss weak points | GoPit-9ss | No precision play | Open |
 | **P2** | Autofire default ON | GoPit-7n5 | Different feel | ❌ NOT IMPL |
 
-> **Code Verification (Iterations 141-143)**: Multiple beads marked closed but NOT implemented:
+> **Code Verification (Iterations 141-144)**: Multiple beads marked closed but NOT implemented:
 > - Bounce damage: `ball.gd:189-193` tracks `_bounce_count` but never scales damage
+> - Ball return: `ball.gd:190-192` still despawns after max_bounces, no bottom detection
 > - Fission card: `level_up_overlay.gd` has no FISSION CardType
 > - Baby inheritance: `baby_ball_spawner.gd` doesn't set ball_type
 > - Trajectory preview: `aim_line.gd` has no raycast/bounce prediction
 > - Autofire default: `fire_button.gd:19` still shows `autofire_enabled: bool = false`
-> - **Beads reopened**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5
+> - **Beads reopened**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5, GoPit-ay9
 
 ### Key Findings from Research
 
@@ -5160,15 +5161,16 @@ This comparison document contains **63 appendices** covering every aspect of GoP
 |----------|-----|--------|------|--------|
 | **P0** | Ball slot system | Fundamental gameplay difference | GoPit-6zk | ✅ DONE |
 | **P1** | Bounce damage scaling | Core damage mechanic missing | GoPit-gdj | ❌ NOT IMPL |
-| **P1** | Ball return mechanic | Balls despawn instead of return | GoPit-ay9 | Open |
+| **P1** | Ball return mechanic | Balls despawn instead of return | GoPit-ay9 | ❌ NOT IMPL |
 | **P1** | Baby ball inheritance | Babies don't inherit ball type | GoPit-r1r | ❌ NOT IMPL |
 | **P1** | Bounce trajectory preview | Aim line doesn't show bounces | GoPit-2ep | ❌ NOT IMPL |
 
-> **Code Verification (Iterations 141-142)**: Multiple beads marked closed but NOT implemented:
+> **Code Verification (Iterations 141-144)**: Multiple beads marked closed but NOT implemented:
 > - Bounce damage: `ball.gd` tracks `_bounce_count` but never scales damage
+> - Ball return: `ball.gd:190-192` still despawns after max_bounces, no bottom detection
 > - Baby inheritance: `baby_ball_spawner.gd` doesn't set ball_type
 > - Trajectory preview: `aim_line.gd` has no raycast/bounce prediction
-> - These beads have been reopened
+> - **Total beads reopened**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5, GoPit-ay9
 
 ### Systems Comparison Summary
 
