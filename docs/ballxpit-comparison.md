@@ -7602,11 +7602,106 @@ func _physics_process(_delta: float) -> void:
 
 ---
 
+## Appendix CH: Boss Fight Systems (Strong Alignment!)
+
+Research sources:
+- [Boss Battle Guide](https://ballxpit.org/guides/boss-battle-guide/)
+- [Boss Battle Strategies](https://ballxpit.org/guides/boss-battle-strategies/)
+- [Skeleton King Guide](https://deltiasgaming.com/ball-x-pit-skeleton-king-boss-guide/)
+
+### BallxPit Boss System
+
+**Structure:**
+- 3 bosses per stage (2 mini + 1 final)
+- 8 stages = 24 total bosses
+- Each boss has unique attack patterns
+
+**Boss Mechanics:**
+- HP phases with transitions
+- Attack telegraphs (0.5-1.0s)
+- Bullet patterns to dodge
+- Add spawning
+- Invulnerability during transitions
+
+**Example: Skeleton King Attacks:**
+| Attack | Pattern | Counter |
+|--------|---------|---------|
+| Bullet Spray | Patterned | Maintain distance |
+| Burst-Fire | Gaps between | Slip left/right |
+| Hand Projectile | Grid telegraph | Avoid patch |
+
+### GoPit Boss System
+
+**Implementation (boss_base.gd):**
+```gdscript
+enum BossPhase { INTRO, PHASE_1, PHASE_2, PHASE_3, DEFEATED }
+enum AttackState { IDLE, TELEGRAPH, ATTACKING, COOLDOWN }
+
+@export var phase_thresholds: Array[float] = [1.0, 0.66, 0.33, 0.0]
+@export var telegraph_duration: float = 1.0
+@export var attack_cooldown: float = 2.0
+
+var phase_attacks: Dictionary = {
+    BossPhase.PHASE_1: ["basic"],
+    BossPhase.PHASE_2: ["basic", "special"],
+    BossPhase.PHASE_3: ["basic", "special", "rage"]
+}
+```
+
+**Features:**
+- ✅ 3 phases with HP thresholds (100%, 66%, 33%)
+- ✅ Attack state machine (IDLE → TELEGRAPH → ATTACKING → COOLDOWN)
+- ✅ 1.0s telegraph duration
+- ✅ Phase-specific attack pools
+- ✅ Invulnerability during transitions
+- ✅ Add spawning capability
+- ✅ HP bar integration
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| HP phases | ✅ 3 phases | ✅ Multiple |
+| Attack telegraphs | ✅ 1.0s | ✅ 0.5-1.0s |
+| Attack patterns | ⚠️ Basic | ✅ Complex |
+| Phase transitions | ✅ Invuln | ✅ Invuln |
+| Add spawning | ✅ | ✅ |
+| Bosses per stage | 1 | 3 (2 mini + 1 final) |
+| Total bosses | ~4 | 24 |
+| Bullet patterns | ❌ None | ✅ Bullet hell |
+
+### Strong Alignment Found!
+
+**GoPit's boss_base.gd is well-architected:**
+- Same phase structure as BallxPit
+- Same telegraph timing range
+- Same invulnerability mechanic
+- Same add spawning pattern
+
+### Remaining Gaps
+
+1. **Quantity**: 1 boss/stage vs 3/stage
+2. **Pattern Complexity**: No bullet patterns
+3. **Boss Variety**: Need more unique bosses
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 2 mini-bosses per stage | Match BallxPit structure |
+| **P2** | Add bullet patterns | Dodgeable projectiles |
+| **P2** | Add more boss types | 8+ unique bosses |
+| **P3** | Add boss-specific mechanics | Unique gimmicks |
+
+**GoPit's boss system is the most aligned feature with BallxPit - needs content, not architecture changes!**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **91 appendices** (A through CG)
+- **92 appendices** (A through CH)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
