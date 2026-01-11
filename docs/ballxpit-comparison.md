@@ -429,6 +429,7 @@ func _calculate_xp_requirement(level: int) -> int:
 - Random 1-3 upgrades
 - 60% chance level up existing, 40% new ball
 - XP bonus if all maxed
+- **Only triggered by Fusion Reactor drops (not level-up choice)**
 
 **Level-Up Choices (pick 1 of 3):**
 1. New ball type (from unowned)
@@ -437,24 +438,36 @@ func _calculate_xp_requirement(level: int) -> int:
 
 ### What BallxPit Does (Confirmed)
 
-Based on guides:
+Based on guides ([Deltia's Gaming](https://deltiasgaming.com/ball-x-pit-fission-fusion-and-evolution-guide/), [Fusion Reactor Wiki](https://ballpit.fandom.com/wiki/Fusion_Reactor)):
 
-1. **Three Level-Up Options**:
-   - **Fission**: Upgrades multiple balls to L3 at once (early game priority)
-   - **Fusion**: Combines two L3 balls into one with mixed features
-   - **Evolution**: Transforms L3 balls into powerful new types (can further evolve)
+**Fusion Reactor Trigger:**
+- Enemies sometimes drop Fusion Reactors (rainbow orb)
+- Collecting one pauses game and presents 3 options
 
-2. **Evolution vs Fusion**:
-   - "Evolutions tend to be much more potent"
-   - Evolutions can be combined further
-   - Fusions are simpler combinations
+**Three Options (Fission/Fusion/Evolution):**
 
-3. **Known Evolutions**:
-   - Burn + Iron = Bomb
-   - Poison + Bleed = Virus
-   - Freeze + Lightning = Blizzard
-   - Burn + Poison = Magma
-   - Plus: Vampire Lord, Nuclear Bomb, etc.
+1. **Fission** (Always Available):
+   - Upgrades **up to 5 items** (balls/passives) by one level each
+   - If all maxed: grants **Gold** instead (not XP)
+   - Primary early-game strategy for fast L3 farming
+
+2. **Fusion** (Conditional - needs 2+ L3 balls):
+   - Combines two L3 balls into one with both abilities
+   - Simpler combination, weaker than evolution
+   - Cannot fuse if pair has an evolution recipe
+
+3. **Evolution** (Conditional - needs matching L3 recipe):
+   - 42+ unique evolutions with specific recipes
+   - Damage multipliers 1.5x to 4.0x
+   - Evolutions can further evolve (multi-tier):
+     - Nuclear Bomb = Bomb + Poison (evolved + L3)
+     - Black Hole = Sun + Dark (evolved + evolved)
+     - Satan = Incubus + Succubus
+     - Nosferatu = Vampire Lord + Mosquito King + Spider Queen (**only 3-way**)
+
+**Evolution Progression:**
+- Base balls → L3 → Evolution → Advanced Evolution → Achievement Evolution
+- Example chain: Burn L3 + Iron L3 → Bomb → Bomb L3 + Poison L3 → Nuclear Bomb
 
 4. **In-Game Encyclopedia**: Fills in as you discover evolutions
 
@@ -462,29 +475,49 @@ Based on guides:
 
 | Feature | GoPit | BallxPit | Match |
 |---------|-------|----------|-------|
-| Ball leveling | L1-L3 | L1-L3 | Yes |
-| Fusion recipes | 5 evolved types | Many more | Partial |
-| Generic fusion | Yes | Yes (weaker than evolution) | Yes |
-| Fission as level-up | No (drop only) | Yes (level-up option) | **Gap** |
-| Level-up choices | 3 cards | 3 cards (Fission/Fusion/Evolution) | Partial |
+| Ball leveling | L1-L3 | L1-L3 | ✅ Yes |
+| Fusion Reactor trigger | Enemy drops | Enemy drops | ✅ Yes |
+| Evolution recipes | 5 | 42+ | **❌ Gap (-37)** |
+| Generic fusion | Yes | Yes (weaker than evolution) | ✅ Yes |
+| Fission upgrade count | 1-3 items | **Up to 5 items** | **❌ Gap** |
+| Maxed fallback | XP bonus | **Gold** bonus | ⚠️ Differs |
+| Multi-tier evolution | No | Yes (evolved+evolved) | **❌ Gap** |
+| 3-way fusion | No | Yes (Nosferatu only) | ⚠️ Missing |
+| Damage multipliers | ~1.5x | 1.5x-4.0x | **❌ Gap** |
+| In-game encyclopedia | No | Yes | **❌ Gap** |
 
-### Critical Gap: Fission as Level-Up Option
+### Critical Gaps Identified
 
-**BallxPit**: Fission appears as a level-up card choice, upgrades multiple balls to L3 at once. This is a primary early-game strategy.
+**Gap 1: Fission Upgrade Count**
+- BallxPit: Up to 5 items upgraded per Fission
+- GoPit: Only 1-3 items
+- **Impact**: Slower progression, less satisfying power spikes
 
-**GoPit**: Fission is only available via random Fusion Reactor drops. Level-up only offers:
-- New ball type
-- Level up existing ball
-- Passive upgrade
+**Gap 2: Multi-Tier Evolution System**
+- BallxPit: Evolved balls can combine with other L3/evolved balls
+  - Example: Bomb (evolved) + Poison L3 = Nuclear Bomb
+  - Black Hole = Sun (evolved) + Dark (evolved)
+- GoPit: No multi-tier evolutions, evolved balls are terminal
+- **Impact**: Missing late-game depth and power fantasy
 
-**Recommendation**: Add Fission as a level-up card option (instead of Fusion Reactor drops)
+**Gap 3: Evolution Damage Multipliers**
+- BallxPit: 1.5x to 4.0x damage per evolution tier
+- GoPit: ~1.5x flat (from `EVOLVED_BALL_DATA`)
+- **Impact**: Evolutions don't feel dramatically more powerful
+
+**Gap 4: Evolution Recipe Count**
+- BallxPit: 42+ recipes including achievement evolutions
+- GoPit: Only 5 recipes
+- **Impact**: Limited build variety
 
 ### Recommendations
 
-1. [ ] **Add Fission to level-up choices** - Critical alignment gap
-2. [ ] **Add more evolution recipes** - Target 10-15 evolutions
-3. [ ] **Add in-game encyclopedia** - Track discovered evolutions
-4. [ ] **Balance evolution vs fusion power** - Evolutions should be stronger
+1. [ ] **Increase Fission upgrade count** - 1-5 items (from 1-3)
+2. [ ] **Add multi-tier evolution system** - Evolved + L3 = Advanced
+3. [ ] **Scale evolution damage multipliers** - Tier 1: 1.5x, Tier 2: 2.5x, Tier 3: 4x
+4. [ ] **Add 15+ evolution recipes** - Priority: Storm, Vampire Lord, Nuclear Bomb
+5. [ ] **Add in-game encyclopedia** - Track discovered evolutions
+6. [ ] **Change fission fallback to Gold** - Match BallxPit behavior
 
 ---
 
@@ -2091,13 +2124,80 @@ From `scripts/autoload/fusion_registry.gd`:
 - Wind ball → unlocks 5+ evolutions
 - Vampire ball → unlocks Vampire Lord
 
+### Fission Mechanics Deep Dive
+
+**Research Sources:**
+- [Deltia's Fission/Fusion Guide](https://deltiasgaming.com/ball-x-pit-fission-fusion-and-evolution-guide/)
+- [Fusion Reactor Wiki](https://ballpit.fandom.com/wiki/Fusion_Reactor)
+
+#### BallxPit Fission System
+
+**Trigger:** Fusion Reactor drop (rainbow orb) from enemies
+
+**Mechanics:**
+- Always available option (no requirements)
+- Upgrades **up to 5 items** (balls AND/OR passives) by one level each
+- Random selection from all equipped items below max level
+- If ALL items maxed: grants **Gold** instead
+- Primary early-game farming strategy
+
+**Strategic Use:**
+- Stages 1-3: Spam fission to quickly get 2+ balls to L3
+- Mid-game: Balance fission vs evolution opportunities
+- Late-game: Gold income when build complete
+
+#### GoPit Fission System (Current)
+
+From `scripts/autoload/fusion_registry.gd:246-278`:
+
+```gdscript
+static func apply_fission() -> Dictionary:
+    var upgraded_items: Array = []
+    var num_upgrades := randi_range(1, 3)  # Only 1-3 items
+
+    var upgradeable_balls := BallRegistry.get_upgradeable_balls()
+    var eligible: Array = []
+
+    for ball_type in upgradeable_balls:
+        eligible.append({"type": "ball", "ball_type": ball_type})
+    # Note: Passives NOT included currently
+
+    # If nothing upgradeable, give XP
+    if eligible.is_empty():
+        GameManager.add_xp(100)  # XP, not Gold
+        return {"upgraded": [], "xp_bonus": 100}
+```
+
+**Current Implementation Issues:**
+1. Only upgrades 1-3 items (should be up to 5)
+2. Only upgrades balls (not passives)
+3. Falls back to XP (BallxPit uses Gold)
+4. Fixed XP amount (100) vs variable Gold
+
+#### Fission Gap Summary
+
+| Feature | GoPit | BallxPit | Fix Priority |
+|---------|-------|----------|--------------|
+| Max upgrades | 1-3 | Up to 5 | P2 |
+| Targets | Balls only | Balls + Passives | P2 |
+| Maxed fallback | XP (100) | Gold (variable) | P3 |
+| Early-game impact | Low | High (farming strat) | P2 |
+
 ### Recommendations
 
+**Evolution System:**
 1. [ ] **Add Wind ball type** - Enables many evolutions
 2. [ ] **Add Ghost ball type** - Pass-through + unlocks evolutions
 3. [ ] **Add Vampire ball** - Popular sustain option
-4. [ ] **Implement triple fusion** - Evolved + L3 = ultimate form
+4. [ ] **Implement multi-tier evolution** - Evolved + L3 = Advanced evolution
 5. [ ] **Add 10+ evolutions** - Priority: Storm, Lightning Rod, Inferno
+6. [ ] **Scale damage multipliers** - Tier 1: 1.5x, Tier 2: 2.5x, Tier 3: 4x
+
+**Fission System:**
+7. [ ] **Increase fission cap to 5** - Match BallxPit power
+8. [ ] **Include passives in fission** - Not just balls
+9. [ ] **Change fallback to Gold** - Instead of XP
+10. [ ] **Add fission counter UI** - Show "Upgraded 4 items!"
 
 ---
 
@@ -2455,3 +2555,99 @@ This document represents a comprehensive comparison between Ball x Pit and GoPit
 *Document maintained as part of BallxPit alignment effort (GoPit-68o)*
 *Analysis complete - 1600+ lines covering all major systems*
 *Last updated: January 2026*
+
+---
+
+## Appendix X: Ball Slot System - CRITICAL DIFFERENCE (NEW)
+
+Research sources:
+- [TheGamer Complete Guide](https://www.thegamer.com/ball-x-pit-complete-guide/)
+- [Steam Discussions - Fire Rate](https://steamcommunity.com/app/2062430/discussions/0/624436409752895957/)
+- [GAM3S.GG Character Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-unlock-all-characters/)
+
+### BallxPit Ball Slot System
+
+**CRITICAL: This is a fundamental gameplay difference!**
+
+**How BallxPit Works:**
+- Player has **4-5 ball SLOTS**
+- Each slot holds a different ball type
+- **When you fire, ALL equipped balls fire simultaneously**
+- Each shot = 4-5 different ball types + baby balls
+- Fire rate = how fast you can fire your FULL volley again
+
+**Example:**
+```
+Slots: [Fire L3] [Ice L3] [Lightning L2] [Poison L1]
+One fire press → 4 balls fire (one of each type) + baby balls
+```
+
+**Character Variations:**
+- **The Spendthrift**: Fires all balls in a wide arc pattern
+- **The Empty Nester**: Fires multiple copies of ONE ball type (rotates which)
+- **The Cohabitants**: Fires mirrored copies of every shot
+
+**Strategic Depth:**
+- Plan which balls to pick up (limited slots)
+- Evolution combines 2 balls → frees a slot
+- "Evolved balls can be fused with a normal ball (both L3), so that's 3 total balls in 1 slot"
+- Managing slots is core strategy
+
+### GoPit Current Implementation
+
+From `scripts/entities/ball_spawner.gd`:
+
+```gdscript
+var use_registry := BallRegistry != null
+if use_registry:
+    var active_type: int = BallRegistry.active_ball_type  // ONE type
+    ball.set_ball_type(_registry_to_ball_type(active_type))
+```
+
+**How GoPit Works:**
+- Player OWNS multiple ball types (via level-up cards)
+- Only **ONE active ball type** at a time
+- Multi-shot fires multiple balls of the **SAME type**
+- Must manually switch active ball type
+
+**Example:**
+```
+Owned: [Fire L3] [Ice L3] [Lightning L2] [Poison L1]
+Active: Fire
+One fire press → 1 Fire ball (or N Fire balls with multi-shot)
+```
+
+### GAP ANALYSIS
+
+| Aspect | GoPit | BallxPit | Impact |
+|--------|-------|----------|--------|
+| **Ball slots** | 1 active | 4-5 simultaneous | **CRITICAL** |
+| **Fire behavior** | One type | All types at once | **CRITICAL** |
+| **Multi-shot** | Same type x N | Each type x N | **HIGH** |
+| **Slot management** | N/A | Core strategy | **HIGH** |
+| **Evolution benefit** | Power up | Free slot + power | **HIGH** |
+
+### Why This Matters
+
+1. **Completely different feel** - BallxPit is chaotic multi-ball mayhem
+2. **Strategy layer** - Which balls to keep, which to evolve
+3. **Synergies** - Fire + Ice + Lightning all hitting at once
+4. **Character design** - Characters modify HOW all balls fire
+5. **Evolution value** - Combining balls frees slots for more variety
+
+### Recommendations
+
+**P0 (Fundamental Change):**
+1. [ ] **Implement ball slot system** - 4-5 slots, all fire at once
+2. [ ] **Redesign multi-shot** - Each slot gets multi-shot bonus
+3. [ ] **Add slot UI** - Show equipped balls in HUD
+
+**Implementation Notes:**
+```gdscript
+# Proposed change to ball_spawner.gd:
+func fire() -> void:
+    for slot in ball_slots:  # Fire ALL equipped types
+        if slot.ball_type != null:
+            for i in range(ball_count):  # Multi-shot per slot
+                _spawn_ball(dir, slot.ball_type)
+```
