@@ -267,10 +267,10 @@ func _show_attack_telegraph(attack_name: String) -> void:
 
 func _execute_attack() -> void:
 	attack_state = AttackState.ATTACKING
-	_do_attack(_current_attack)
+	_perform_attack(_current_attack)
 
 
-func _do_attack(attack_name: String) -> void:
+func _perform_attack(attack_name: String) -> void:
 	# Override in subclass with actual attack implementations
 	# Default implementation just ends the attack immediately
 	match attack_name:

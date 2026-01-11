@@ -220,7 +220,7 @@ func _show_attack_telegraph(attack_name: String) -> void:
 			rage_tween.tween_property(self, "modulate", Color.WHITE, 0.05)
 
 
-func _do_attack(attack_name: String) -> void:
+func _perform_attack(attack_name: String) -> void:
 	_attack_finished = false
 
 	match attack_name:

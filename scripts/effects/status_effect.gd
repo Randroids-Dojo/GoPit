@@ -30,25 +30,25 @@ func _configure() -> void:
 	match type:
 		Type.BURN:
 			duration = 3.0 * int_mult
-			damage_per_tick = 2.5  # 5 DPS (2.5 damage every 0.5s)
+			damage_per_tick = 2.5  # 5 DPS base (2.5 damage every 0.5s), scales with stacks
 			tick_interval = 0.5
-			max_stacks = 1  # Refreshes duration instead
+			max_stacks = 5  # BallxPit cap: 5 stacks
 		Type.FREEZE:
 			# Shatter passive: +30% freeze duration
 			duration = 2.0 * int_mult * GameManager.get_freeze_duration_bonus()
 			damage_per_tick = 0.0
 			slow_multiplier = 0.5  # 50% slow
-			max_stacks = 1
+			max_stacks = 1  # Freeze doesn't stack - refreshes duration
 		Type.POISON:
 			duration = 5.0 * int_mult
-			damage_per_tick = 1.5  # 3 DPS
+			damage_per_tick = 1.5  # 3 DPS base, scales with stacks
 			tick_interval = 0.5
-			max_stacks = 1
+			max_stacks = 8  # BallxPit cap: 8 stacks
 		Type.BLEED:
 			duration = INF  # Permanent until enemy dies (not affected by intelligence)
 			damage_per_tick = 1.0  # 2 DPS per stack (1.0 every 0.5s)
 			tick_interval = 0.5
-			max_stacks = 5
+			max_stacks = 24  # BallxPit cap: 24 stacks
 
 	time_remaining = duration
 
@@ -84,10 +84,8 @@ func update(delta: float) -> int:
 
 	if tick_timer >= tick_interval and damage_per_tick > 0:
 		tick_timer -= tick_interval
-		# Bleed damage scales with stacks
-		if type == Type.BLEED:
-			return int(damage_per_tick * stacks)
-		return int(damage_per_tick)
+		# All DoT effects scale damage with stacks (BURN, POISON, BLEED)
+		return int(damage_per_tick * stacks)
 
 	return 0
 
