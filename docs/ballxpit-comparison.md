@@ -4356,11 +4356,11 @@ These timings create GoPit's gameplay feel:
 | Character | END | STR | LEAD | SPD | DEX | INT | Starting Ball | Passive |
 |-----------|-----|-----|------|-----|-----|-----|---------------|---------|
 | Rookie | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | Iron | +10% XP |
-| Pyro | 0.8 | 1.4 | 0.9 | 1.0 | 1.0 | 0.9 | Burn | +20% fire, burning enemies +25% damage taken |
-| Frost Mage | ? | ? | ? | ? | ? | ? | Freeze | ? |
-| Tactician | ? | ? | ? | ? | ? | ? | ? | ? |
-| Gambler | ? | ? | ? | ? | ? | ? | ? | ? |
-| Vampire | ? | ? | ? | ? | ? | ? | ? | ? |
+| Pyro | 0.8 | 1.4 | 0.9 | 1.0 | 1.0 | 0.9 | Burn | +20% fire, burning +25% damage taken |
+| Frost Mage | 0.9 | 0.9 | 1.0 | 0.9 | 0.8 | 1.5 | Freeze | Shatter: frozen +50% damage, +30% freeze duration |
+| Tactician | 1.1 | 0.8 | 1.6 | 0.9 | 0.9 | 1.1 | Basic | Squad Leader: +2 baby balls, +30% spawn rate |
+| Gambler | 0.8 | 1.0 | 0.9 | 1.1 | 1.6 | 0.8 | Poison | Jackpot: 3x crit damage, +15% crit chance |
+| Vampire | 1.5 | 1.0 | 0.8 | 1.0 | 1.0 | 0.9 | Basic | Lifesteal: 5% heal on damage, 20% health gem on kill |
 
 ### BallxPit Character Differences
 
@@ -9483,7 +9483,7 @@ Simple but effective visual design.
 | Bounds | Soft clamp | Similar |
 | Damage feedback | Red flash + shake | Similar |
 | Visual style | Circle + direction | Similar |
-| I-frames | ❌ None | ? Unknown |
+| I-frames | ❌ None | ❌ Likely none (players report unavoidable boss damage) |
 
 ### Assessment
 
@@ -13982,3 +13982,81 @@ Sources:
 - [Fast Mode Guide](https://ballxpit.org/guides/fast-mode/)
 - [New Game Plus Guide](https://ballxpit.org/guides/new-game-plus/)
 - [Boss Battle Strategies](https://ballxpit.org/guides/boss-battle-strategies/)
+
+---
+
+## Appendix FB: BallxPit Character Mechanics Deep Dive
+
+**Research Update**: January 11, 2026 (Iteration 128)
+
+### BallxPit Character Count: 16 Total
+
+Each character has a **unique firing mechanic** beyond just stat modifiers.
+
+### Character Mechanics List
+
+| # | Character | Starting Ball | Unique Mechanic |
+|---|-----------|---------------|-----------------|
+| 1 | The Warrior | Bleed | No special ability (balanced stats) |
+| 2 | The Itchy Finger | Burn | **2x fire rate**, full speed while shooting |
+| 3 | The Repentant | Freeze | **+5% damage/bounce**, balls return via back wall |
+| 4 | The Cohabitants | Brood Mother | **Fire double balls** in mirrored direction, 50% damage each |
+| 5 | The Shade | Dark | **Fire from behind enemies**, 10% base crit rate |
+| 6 | The Embedded | Poison | **Pierce all enemies** until hitting wall |
+| 7 | The Empty Nester | Ghost | **No baby balls** but fires multiple special balls at once |
+| 8 | The Shieldbearer | Iron | **Shield bounces balls** toward enemies |
+| 9 | The Spendthrift | Vampire | **Fire all equipped balls** simultaneously in arc |
+| 10 | The Makeshift Sisyphus | Earthquake | **4x AoE/status multiplier**, trades direct damage |
+| 11 | The Radical | Wind | **AI controls everything** - movement, aiming, upgrades |
+| 12 | The Flagellant | Egg Sac | Balls bounce normally off bottom screen boundary |
+| 13 | The Cogitator | Laser (V) | +2 seconds to harvest timer (meta mechanic) |
+| 14 | The Physicist | Light | Unknown unique mechanic |
+| 15 | The Juggler | Lightning | Unknown unique mechanic |
+| 16+ | Additional | Various | Research ongoing |
+
+### BallxPit Stat System
+
+**6 Core Stats:**
+- **Endurance** → HP (1 point ≈ 10 HP)
+- **Strength** → Base damage before modifiers
+- **Leadership** → Baby ball count & damage
+- **Speed** → Ball & player movement speed
+- **Dexterity** → Crit chance, fire rate
+- **Intelligence** → AoE and status effect power
+
+### Key Insight: Mechanics vs Stats
+
+**BallxPit**: Each character plays fundamentally differently:
+- The Repentant rewards bouncing strategy (+5%/bounce)
+- The Shade requires positioning (fires from back)
+- The Radical is AFK farming (AI plays)
+- The Embedded is about piercing paths
+
+**GoPit**: All 6 characters fire identically:
+- Only stat multipliers differ
+- Passives are stat boosts, not mechanic changes
+- No positioning or strategy variation
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Characters | 16 | 6 | MAJOR |
+| Unique mechanics | 16 (all) | 0 | **CRITICAL** |
+| Firing variations | 8+ types | 1 | **CRITICAL** |
+| AI-controlled char | The Radical | None | Missing |
+| Reverse-fire char | The Shade | None | Missing |
+| Double-shot char | The Cohabitants | None | Missing |
+| Pierce-all char | The Embedded | None | Missing |
+
+### Priority Additions for GoPit
+
+1. **The Repentant-style** (GoPit-z0mt exists): Bounce damage character
+2. **The Shade-style**: Reverse fire direction
+3. **The Cohabitants-style**: Mirrored double-shot
+4. **The Itchy Finger-style**: 2x fire rate (GoPit-clu)
+
+Sources:
+- [GAM3S.GG Character Tier List](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-character-tier-list/)
+- [GameFAQs Character Guide](https://gamefaqs.gamespot.com/pc/539487-ball-x-pit/faqs/82265)
+- [Dexerto Character Tier List](https://www.dexerto.com/wikis/ball-x-pit/character-tier-list-2/)
