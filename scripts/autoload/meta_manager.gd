@@ -3,8 +3,19 @@ extends Node
 
 signal coins_changed(new_amount: int)
 signal upgrade_purchased(upgrade_id: String, new_level: int)
+signal character_unlocked(character_name: String)
 
 const SAVE_PATH := "user://meta.save"
+
+# Characters that start unlocked by default (no requirement)
+const DEFAULT_UNLOCKED_CHARACTERS := [
+	"Rookie", "Pyro", "Frost Mage", "Tactician", "Gambler"
+]
+
+# Unlock requirements mapping (character_name -> requirement check function name)
+const CHARACTER_UNLOCK_REQUIREMENTS := {
+	"Vampire": {"type": "wave", "value": 20}  # Survive to wave 20
+}
 
 # Persistent data
 var pit_coins: int = 0
@@ -12,6 +23,7 @@ var total_runs: int = 0
 var best_wave: int = 0
 var highest_stage_cleared: int = 0  # 0 = none, 1 = The Pit, etc.
 var unlocked_upgrades: Dictionary = {}  # upgrade_id -> level
+var unlocked_characters: Array = []  # List of unlocked character names
 
 # Permanent upgrade bonuses (applied at run start)
 var bonus_hp: int = 0
@@ -50,6 +62,8 @@ func record_run_end(wave: int, _level: int) -> void:
 	if wave > best_wave:
 		best_wave = wave
 	save_data()
+	# Check if any new characters can be unlocked
+	check_unlock_conditions()
 
 
 func record_stage_cleared(stage_index: int) -> void:
@@ -102,13 +116,84 @@ func get_fire_rate_bonus() -> float:
 	return bonus_fire_rate
 
 
+# =============================================================================
+# CHARACTER UNLOCK SYSTEM
+# =============================================================================
+
+func is_character_unlocked(character_name: String) -> bool:
+	"""Check if a character is unlocked (either default or earned)"""
+	if character_name in DEFAULT_UNLOCKED_CHARACTERS:
+		return true
+	return character_name in unlocked_characters
+
+
+func unlock_character(character_name: String) -> void:
+	"""Unlock a character permanently"""
+	if character_name not in unlocked_characters:
+		unlocked_characters.append(character_name)
+		character_unlocked.emit(character_name)
+		save_data()
+
+
+func check_unlock_conditions() -> Array:
+	"""Check all unlock conditions and unlock any newly earned characters.
+	Returns array of newly unlocked character names."""
+	var newly_unlocked: Array = []
+
+	for character_name in CHARACTER_UNLOCK_REQUIREMENTS:
+		if is_character_unlocked(character_name):
+			continue  # Already unlocked
+
+		var requirement: Dictionary = CHARACTER_UNLOCK_REQUIREMENTS[character_name]
+		var is_met := false
+
+		match requirement["type"]:
+			"wave":
+				is_met = best_wave >= requirement["value"]
+			"stage":
+				is_met = highest_stage_cleared >= requirement["value"]
+			"runs":
+				is_met = total_runs >= requirement["value"]
+
+		if is_met:
+			unlock_character(character_name)
+			newly_unlocked.append(character_name)
+
+	return newly_unlocked
+
+
+func get_unlock_progress(character_name: String) -> Dictionary:
+	"""Get progress toward unlocking a character.
+	Returns {current: int, required: int, type: String} or empty dict if no requirement."""
+	if character_name not in CHARACTER_UNLOCK_REQUIREMENTS:
+		return {}
+
+	var requirement: Dictionary = CHARACTER_UNLOCK_REQUIREMENTS[character_name]
+	var current: int = 0
+
+	match requirement["type"]:
+		"wave":
+			current = best_wave
+		"stage":
+			current = highest_stage_cleared
+		"runs":
+			current = total_runs
+
+	return {
+		"current": current,
+		"required": requirement["value"],
+		"type": requirement["type"]
+	}
+
+
 func save_data() -> void:
 	var data := {
 		"coins": pit_coins,
 		"runs": total_runs,
 		"best_wave": best_wave,
 		"highest_stage": highest_stage_cleared,
-		"upgrades": unlocked_upgrades
+		"upgrades": unlocked_upgrades,
+		"unlocked_characters": unlocked_characters
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -135,6 +220,7 @@ func load_data() -> void:
 		best_wave = data.get("best_wave", 0)
 		highest_stage_cleared = data.get("highest_stage", 0)
 		unlocked_upgrades = data.get("upgrades", {})
+		unlocked_characters = data.get("unlocked_characters", [])
 		coins_changed.emit(pit_coins)
 
 
@@ -144,6 +230,7 @@ func reset_data() -> void:
 	best_wave = 0
 	highest_stage_cleared = 0
 	unlocked_upgrades = {}
+	unlocked_characters = []
 	bonus_hp = 0
 	bonus_damage = 0.0
 	bonus_fire_rate = 0.0
