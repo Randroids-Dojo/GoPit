@@ -6488,11 +6488,95 @@ Research sources:
 
 ---
 
+## Appendix BU: Gameplay Strategy and Ball Catching Mechanic
+
+Research source:
+- [5 Tips to Survive Rounds](https://ballxpit.org/guides/5-tips-to-survive-rounds/)
+
+### The Ball Catching Skill Gap
+
+**CRITICAL DISCOVERY:** BallxPit has a skill-based ball catching mechanic that GoPit completely lacks.
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  BALLXPIT: Balls RETURN to player and must be CAUGHT             ║
+║  GOPIT:    Balls despawn after max_bounces (no return)           ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+### How Ball Return Works in BallxPit
+
+1. **Fire balls forward** → they bounce off walls and enemies
+2. **Balls return toward player** after hitting back wall
+3. **Player must CATCH returning balls** to reload them
+4. **Missing a catch = downtime** → balls continue bouncing until caught
+
+**This creates a rhythm-action skill layer:**
+- Fast players can rapid-fire by staying in ball path
+- Slow reactions = wasted offensive time
+- Positioning affects catch timing
+
+### Pro Positioning Strategy
+
+From the survival guide:
+
+| Tip | Strategy | Why It Works |
+|-----|----------|--------------|
+| **Stay at TOP** | Position near top of screen | Balls return faster, enemies below you |
+| **Shoot BEHIND** | Aim through gaps in enemy lines | Hit back-row enemies, multi-bounce damage |
+| **Wait for potions** | Let health drops fall before collecting | Don't waste healing at full HP |
+| **Level special balls** | Prioritize special ball upgrades | Synergy with bounce damage |
+
+### The Catch Mechanic Creates Gameplay Depth
+
+**Without catching (GoPit):**
+- Fire and forget
+- No positioning skill
+- Passive gameplay
+
+**With catching (BallxPit):**
+- Active ball management
+- Position affects DPS
+- Skill ceiling for advanced players
+- Missing catches = punishment
+
+### GoPit Current State
+
+```gdscript
+# From ball.gd - balls just despawn
+func _on_bounce():
+    bounces += 1
+    if bounces >= max_bounces:
+        queue_free()  # No return to player!
+```
+
+### CRITICAL GAP
+
+| Mechanic | GoPit | BallxPit | Priority |
+|----------|-------|----------|----------|
+| **Ball return** | ❌ None | ✅ Full | **P1** |
+| **Catch mechanic** | ❌ None | ✅ Skill-based | **P1** |
+| **Position matters** | ⚠️ Minimal | ✅ Strategic | **P1** |
+| **Miss penalty** | ❌ None | ✅ Lost DPS | **P1** |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Implement ball return | Balls travel back toward player after back wall |
+| **P1** | Add catch hitbox | Player catches balls to reload |
+| **P1** | Add catch feedback | Visual/audio on successful catch |
+| **P2** | Add miss tracking | Stats for catch rate |
+
+**This reinforces GoPit-ay9 as P1 priority - ball return isn't just about visual consistency, it's a core skill mechanic.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **78 appendices** (A through BS)
+- **79 appendices** (A through BU)
 - **82 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
