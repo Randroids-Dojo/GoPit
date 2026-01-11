@@ -155,6 +155,7 @@ var active_fused_id: String = ""
 
 
 func _ready() -> void:
+	_init_passive_slots()  # Initialize slots on startup
 	GameManager.game_started.connect(_reset_for_new_run)
 
 
@@ -168,7 +169,7 @@ func reset() -> void:
 	owned_fused_balls.clear()
 	active_evolved_type = EvolvedBallType.NONE
 	active_fused_id = ""
-	passive_stacks.clear()
+	_init_passive_slots()
 
 
 # ===== EVOLUTION (Specific Recipes) =====
@@ -500,18 +501,46 @@ const PASSIVE_DATA := {
 	}
 }
 
-# Passive stacks for current run
-var passive_stacks: Dictionary = {}  # PassiveType -> int
+# =============================================================================
+# PASSIVE SLOT SYSTEM (4 slots with levels L1-L3)
+# =============================================================================
+
+const MAX_PASSIVE_SLOTS: int = 4
+const MAX_PASSIVE_LEVEL: int = 3
+
+# Each slot: {"type": PassiveType or -1 for empty, "level": 0-3}
+var passive_slots: Array[Dictionary] = []
+
+signal passive_slots_changed()
+
+
+func _init_passive_slots() -> void:
+	"""Initialize empty passive slots"""
+	passive_slots.clear()
+	for i in MAX_PASSIVE_SLOTS:
+		passive_slots.append({"type": -1, "level": 0})
 
 
 func get_passive_stacks(passive_type: PassiveType) -> int:
-	"""Get current stack count for a passive"""
-	return passive_stacks.get(passive_type, 0)
+	"""Get current level of a passive (returns 0 if not equipped)
+	Note: 'stacks' is legacy naming, now represents level (1-3)"""
+	for slot in passive_slots:
+		if slot["type"] == passive_type:
+			return slot["level"]
+	return 0
 
 
-func get_passive_max_stacks(passive_type: PassiveType) -> int:
-	"""Get max stacks for a passive"""
-	return PASSIVE_DATA.get(passive_type, {}).get("max_stacks", 99)
+func get_passive_slot_index(passive_type: PassiveType) -> int:
+	"""Get the slot index where a passive is equipped, or -1 if not found"""
+	for i in MAX_PASSIVE_SLOTS:
+		if passive_slots[i]["type"] == passive_type:
+			return i
+	return -1
+
+
+func get_passive_max_stacks(_passive_type: PassiveType) -> int:
+	"""Get max level for a passive (always 3 in slot system)"""
+	return MAX_PASSIVE_LEVEL
 
 
 func get_passive_name(passive_type: PassiveType) -> String:
@@ -524,28 +553,83 @@ func get_passive_description(passive_type: PassiveType) -> String:
 	return PASSIVE_DATA.get(passive_type, {}).get("description", "")
 
 
+func get_equipped_passives() -> Array[Dictionary]:
+	"""Get all equipped passives with their slot index and level"""
+	var equipped: Array[Dictionary] = []
+	for i in MAX_PASSIVE_SLOTS:
+		if passive_slots[i]["type"] != -1:
+			equipped.append({
+				"slot": i,
+				"type": passive_slots[i]["type"],
+				"level": passive_slots[i]["level"]
+			})
+	return equipped
+
+
+func get_empty_slot_count() -> int:
+	"""Get number of empty passive slots"""
+	var count: int = 0
+	for slot in passive_slots:
+		if slot["type"] == -1:
+			count += 1
+	return count
+
+
+func has_empty_slot() -> bool:
+	"""Check if there's an empty passive slot"""
+	for slot in passive_slots:
+		if slot["type"] == -1:
+			return true
+	return false
+
+
 func get_available_passives() -> Array[PassiveType]:
-	"""Get all passives that haven't reached max stacks"""
+	"""Get passives that can be upgraded (not at L3) or newly equipped (if slots available)"""
 	var available: Array[PassiveType] = []
+	var has_empty: bool = has_empty_slot()
+
 	for passive_type in PASSIVE_DATA:
-		var current: int = passive_stacks.get(passive_type, 0)
-		var max_stack: int = PASSIVE_DATA[passive_type].get("max_stacks", 99)
-		if current < max_stack:
+		var current_level: int = get_passive_stacks(passive_type)
+
+		if current_level == 0:
+			# Not equipped - available only if there's an empty slot
+			if has_empty:
+				available.append(passive_type)
+		elif current_level < MAX_PASSIVE_LEVEL:
+			# Equipped but can be leveled up
 			available.append(passive_type)
+		# If current_level >= MAX_PASSIVE_LEVEL, not available
+
 	return available
 
 
 func apply_passive(passive_type: PassiveType) -> bool:
-	"""Apply a passive upgrade. Returns true if successful."""
-	var current: int = passive_stacks.get(passive_type, 0)
-	var max_stack: int = PASSIVE_DATA.get(passive_type, {}).get("max_stacks", 99)
+	"""Apply a passive upgrade. Either equips to empty slot at L1 or levels up existing."""
+	var current_level: int = get_passive_stacks(passive_type)
 
-	if current >= max_stack:
-		return false
+	if current_level == 0:
+		# Not equipped - try to fill an empty slot
+		for i in MAX_PASSIVE_SLOTS:
+			if passive_slots[i]["type"] == -1:
+				passive_slots[i] = {"type": passive_type, "level": 1}
+				_apply_passive_effect(passive_type)
+				passive_slots_changed.emit()
+				return true
+		return false  # No empty slots
+	elif current_level < MAX_PASSIVE_LEVEL:
+		# Already equipped - level it up
+		var slot_idx: int = get_passive_slot_index(passive_type)
+		if slot_idx >= 0:
+			passive_slots[slot_idx]["level"] += 1
+			_apply_passive_effect(passive_type)
+			passive_slots_changed.emit()
+			return true
 
-	passive_stacks[passive_type] = current + 1
+	return false  # Already at max level
 
-	# Apply the actual effect
+
+func _apply_passive_effect(passive_type: PassiveType) -> void:
+	"""Apply the actual effect of a passive upgrade"""
 	match passive_type:
 		PassiveType.DAMAGE:
 			var ball_spawner := _get_ball_spawner()
@@ -582,8 +666,6 @@ func apply_passive(passive_type: PassiveType) -> bool:
 			GameManager.gem_magnetism_range += 200.0
 		PassiveType.LEADERSHIP:
 			GameManager.add_leadership(0.2)
-
-	return true
 
 
 func _get_ball_spawner() -> Node:

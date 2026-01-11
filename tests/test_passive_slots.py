@@ -86,3 +86,98 @@ async def test_multiple_passives_tracked(game):
                    (1 if hp_stacks >= 1 else 0) + \
                    (1 if crit_stacks >= 1 else 0)
     assert stacks_count >= 2, f"At least 2 passives should track. Got damage={damage_stacks}, hp={hp_stacks}, crit={crit_stacks}"
+
+
+@pytest.mark.asyncio
+async def test_passive_slot_system_has_4_slots(game):
+    """Verify FusionRegistry has 4 passive slots."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    max_slots = await game.get_property(FUSION_REGISTRY, "MAX_PASSIVE_SLOTS")
+    assert max_slots == 4, "Should have 4 passive slots"
+
+
+@pytest.mark.asyncio
+async def test_passive_slots_start_empty(game):
+    """All passive slots should start empty."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
+    assert len(equipped) == 0, "No passives should be equipped initially"
+
+
+@pytest.mark.asyncio
+async def test_passive_fills_slot_at_level_1(game):
+    """Applying a passive should fill a slot at level 1."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    # Apply DAMAGE passive (type 0)
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])
+
+    # Check it's equipped at L1
+    level = await game.call(FUSION_REGISTRY, "get_passive_stacks", [0])
+    assert level == 1, "Passive should be at level 1"
+
+    equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
+    assert len(equipped) == 1, "One passive should be equipped"
+
+
+@pytest.mark.asyncio
+async def test_passive_levels_up_to_l3(game):
+    """Applying same passive should level it up to L3."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    # Apply DAMAGE passive 3 times
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # L1
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # L2
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # L3
+
+    level = await game.call(FUSION_REGISTRY, "get_passive_stacks", [0])
+    assert level == 3, "Passive should reach level 3"
+
+
+@pytest.mark.asyncio
+async def test_cannot_level_beyond_l3(game):
+    """Passive at L3 cannot be leveled further."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    # Level to L3
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # L1
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # L2
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # L3
+
+    # Try to level again
+    result = await game.call(FUSION_REGISTRY, "apply_passive", [0])
+    assert result is False, "Should fail to level beyond L3"
+
+    level = await game.call(FUSION_REGISTRY, "get_passive_stacks", [0])
+    assert level == 3, "Level should remain at 3"
+
+
+@pytest.mark.asyncio
+async def test_max_4_passives_equipped(game):
+    """Only 4 passives can be equipped at once."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    # Fill all 4 slots with different passives
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # DAMAGE
+    await game.call(FUSION_REGISTRY, "apply_passive", [1])  # FIRE_RATE
+    await game.call(FUSION_REGISTRY, "apply_passive", [2])  # MAX_HP
+    await game.call(FUSION_REGISTRY, "apply_passive", [3])  # MULTI_SHOT
+
+    equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
+    assert len(equipped) == 4, "Should have 4 equipped passives"
+
+    # Try to add a 5th passive
+    result = await game.call(FUSION_REGISTRY, "apply_passive", [4])  # BALL_SPEED
+    assert result is False, "Should fail to add 5th passive"
+
+    # Still only 4 equipped
+    equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
+    assert len(equipped) == 4, "Still only 4 passives should be equipped"
