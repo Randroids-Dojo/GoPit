@@ -742,3 +742,335 @@ Source: [Ball x Pit Buildings Guide](https://ballxpit.org/guides/buildings-guide
 
 - Building system tracked in existing beads (P3)
 - Multiple currencies tracked in existing beads
+
+---
+
+## 11. Aim and Trajectory System (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source Files:**
+- `scripts/input/aim_line.gd`
+- `scripts/input/virtual_joystick.gd`
+
+**Key Code Findings:**
+
+1. **DASHED TRAJECTORY LINE** (`aim_line.gd:4-9, 54-70`):
+   ```gdscript
+   @export var max_length: float = 400.0
+   @export var dash_length: float = 20.0
+   @export var gap_length: float = 10.0
+   # Creates dashed line effect
+   ```
+   Visual preview of where ball will go.
+
+2. **GHOST STATE ON RELEASE** (`aim_line.gd:40-47`):
+   ```gdscript
+   func hide_line() -> void:
+       is_active = false
+       # Don't hide - fade to ghost state
+       _fade_tween.tween_property(self, "default_color", ghost_color, 0.2)
+   ```
+   Line fades to gray when not aiming (helpful for quick-fire).
+
+3. **VIRTUAL JOYSTICK** (`virtual_joystick.gd:7-9`):
+   ```gdscript
+   @export var base_radius: float = 80.0
+   @export var knob_radius: float = 30.0
+   @export var dead_zone: float = 0.05  # 5% dead zone
+   ```
+   Touch/mouse drag control for aiming.
+
+4. **TOUCH + MOUSE SUPPORT** (`virtual_joystick.gd:34-57`):
+   Supports both mouse drag and touch screen input.
+
+5. **NO SENSITIVITY SETTING** - Dead zone is fixed at 5%.
+
+### BallxPit Behavior (Research)
+
+Source: [Ball x Pit Controls Guide](https://ballxpit.net/controls)
+
+1. **2-AXIS CONTROL** - Separate movement + aim sticks
+2. **ADJUSTABLE SENSITIVITY** - 30-90% range in settings
+3. **SUBTLE AIM ASSIST** - For controller users
+4. **KEY REMAPPING** - Full rebind support
+5. **HYBRID CONTROL** - Controller move + mouse aim option
+
+### DIFFERENCES
+
+| Mechanic | GoPit | BallxPit | Impact |
+|----------|-------|----------|--------|
+| **Trajectory line** | Dashed + ghost state | Unknown | GoPit may be better |
+| **Aim sensitivity** | Fixed (5% dead zone) | Adjustable 30-90% | Less customization |
+| **Aim assist** | None | Subtle for controller | Missing |
+| **Key remapping** | None | Full support | Missing |
+| **Control modes** | Touch/mouse joystick | Controller + keyboard + mouse | Less options |
+
+### Analysis
+
+GoPit's dashed trajectory line with ghost state is potentially a **unique feature** that may not exist in BallxPit. This helps players see where their last shot went while lining up the next one.
+
+---
+
+## 12. Audio and Music System (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source Files:**
+- `scripts/autoload/sound_manager.gd`
+- `scripts/autoload/music_manager.gd`
+
+**Key Code Findings:**
+
+1. **FULLY PROCEDURAL AUDIO** (`sound_manager.gd:234-297`):
+   ```gdscript
+   func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
+       var wav := AudioStreamWAV.new()
+       wav.format = AudioStreamWAV.FORMAT_16_BITS
+       # ... generates waveforms programmatically
+   ```
+   ALL sounds are synthesized at runtime using sine waves, noise, and envelopes. Zero audio file assets.
+
+2. **21 SOUND TYPES** (`sound_manager.gd:42-71`):
+   ```gdscript
+   enum SoundType {
+       FIRE, HIT_WALL, HIT_ENEMY, ENEMY_DEATH, GEM_COLLECT, PLAYER_DAMAGE,
+       LEVEL_UP, GAME_OVER, WAVE_COMPLETE, BLOCKED,
+       FIRE_BALL, ICE_BALL, LIGHTNING_BALL, POISON_BALL, BLEED_BALL, IRON_BALL,
+       BURN_APPLY, FREEZE_APPLY, POISON_APPLY, BLEED_APPLY,
+       FUSION_REACTOR, EVOLUTION, FISSION, ULTIMATE
+   }
+   ```
+
+3. **PER-SOUND VARIANCE** (`sound_manager.gd:217-222`):
+   ```gdscript
+   player.pitch_scale = randf_range(1.0 - pitch_var, 1.0 + pitch_var)
+   player.volume_db = randf_range(-vol_var * 6.0, vol_var * 6.0)
+   ```
+   Each sound plays with random pitch/volume variation for natural feel.
+
+4. **PROCEDURAL MUSIC** (`music_manager.gd:1-28`):
+   ```gdscript
+   const BPM := 120.0
+   var _bass_player: AudioStreamPlayer
+   var _drum_player: AudioStreamPlayer
+   var _melody_player: AudioStreamPlayer
+   ```
+   Three-layer music: bass, drums, melody - all synthesized in real-time.
+
+5. **INTENSITY-BASED MUSIC** (`music_manager.gd:71-94`):
+   ```gdscript
+   func set_intensity(intensity: float) -> void:
+       current_intensity = clampf(intensity, 1.0, 5.0)
+       _bass_player.volume_db = lerpf(-12.0, -4.0, (intensity - 1.0) / 4.0)
+   ```
+   Music intensity (1.0-5.0) scales with wave progression. Melody only appears at intensity >= 2.0.
+
+6. **SYNTHESIZED INSTRUMENTS**:
+   - **Bass**: Sine + saw wave with sub octave (`music_manager.gd:122-155`)
+   - **Kick**: Pitch-dropping sine (150Hz→50Hz) (`music_manager.gd:157-181`)
+   - **Snare**: Noise + tonal component (`music_manager.gd:183-208`)
+   - **Hihat**: High-frequency noise burst (`music_manager.gd:210-232`)
+   - **Melody**: Sine with vibrato, minor pentatonic (`music_manager.gd:114-119`)
+
+7. **VOLUME CONTROLS** (`sound_manager.gd:13-33`):
+   ```gdscript
+   var master_volume: float = 1.0
+   var sfx_volume: float = 1.0
+   var music_volume: float = 1.0
+   var is_muted: bool = false
+   ```
+   Separate master, SFX, and music controls with persistence.
+
+8. **8-CHANNEL POLYPHONY** (`sound_manager.gd:8`):
+   ```gdscript
+   const MAX_PLAYERS := 8
+   ```
+   Pool of 8 AudioStreamPlayers for simultaneous sounds.
+
+### BallxPit Behavior (Research)
+
+Based on gameplay videos and store descriptions:
+
+1. **PRE-RECORDED AUDIO** - Professional studio-quality sound effects
+2. **LICENSED MUSIC** - Multiple music tracks, possibly per-biome
+3. **AUDIO VARIETY** - Different sounds per ball type, enemy type, impact type
+4. **ADAPTIVE SOUNDTRACK** - Music responds to gameplay intensity
+5. **POLISHED MIX** - Balanced levels, spatial audio for gameplay clarity
+
+### DIFFERENCES
+
+| Mechanic | GoPit | BallxPit | Impact |
+|----------|-------|----------|--------|
+| **Sound generation** | Procedural synthesis | Pre-recorded assets | **UNIQUE APPROACH** |
+| **Music system** | Procedural 120 BPM | Composed tracks | **UNIQUE APPROACH** |
+| **Audio file size** | ~0 bytes (no assets) | Large (audio files) | GoPit advantage |
+| **Sound variety** | Infinite (random variance) | Fixed (asset-based) | Trade-off |
+| **Polish level** | Retro/chiptune feel | Professional quality | Less polished |
+| **Intensity scaling** | Yes (1.0-5.0) | Likely yes | Similar |
+| **Per-ball sounds** | Yes (6 types) | Yes | Similar |
+| **Status effect sounds** | Yes (4 types) | Yes | Similar |
+
+### Analysis
+
+GoPit's **fully procedural audio** is a **UNIQUE DIFFERENTIATOR**:
+
+**Advantages:**
+- Zero audio asset size (tiny game download)
+- Infinite variation - no repetitive sounds
+- Retro/chiptune aesthetic fits game style
+- Dynamic music that scales with gameplay intensity
+
+**Trade-offs:**
+- Less polished than professional audio
+- Limited to what can be synthesized (no voices, complex instruments)
+- May sound "synthetic" to players expecting AAA audio
+
+**Recommendation**: This is a **feature to emphasize**, not a gap to close. The procedural approach gives GoPit a unique audio identity.
+
+### Beads Tracking This
+
+- **GoPit-um2p**: VERIFY: Audio and music system - **COMPLETE**
+
+---
+
+## 13. UI/UX and HUD Layout (VERIFIED)
+
+### GoPit Implementation (Code Evidence)
+
+**Source Files:**
+- `scripts/ui/hud.gd`
+- `scripts/ui/character_select.gd`
+- `scripts/ui/level_up_overlay.gd`
+- `scenes/game.tscn`
+
+**Key Code Findings:**
+
+1. **HUD COMPONENTS** (`hud.gd:4-11`, `game.tscn:100-270`):
+   ```
+   TopBar:
+   - HPBar (ProgressBar + label showing HP/MaxHP)
+   - WaveLabel (e.g., "The Pit 3/10")
+   - MuteButton (speaker icon toggle)
+   - PauseButton
+
+   XPBarContainer:
+   - XPBar (ProgressBar)
+   - LevelLabel (e.g., "Lv.5")
+
+   ComboLabel (pop-up with animation)
+
+   InputContainer (bottom):
+   - Move Joystick (left)
+   - Fire Button + Auto Toggle (center-left)
+   - Ultimate Button (center-right)
+   - Aim Joystick (right)
+   ```
+
+2. **COMBO DISPLAY** (`hud.gd:103-128`):
+   ```gdscript
+   if combo >= 2:
+       combo_label.text = "%dx COMBO!" % combo
+       if multiplier > 1.0:
+           combo_label.text += " (%.1fx XP)" % multiplier
+       // Color: white < yellow (1.5x) < red (2.0x)
+   ```
+   Pop-up combo counter with XP multiplier, color-coded.
+
+3. **10 UI OVERLAYS** (from `game.tscn`):
+   - HUD (always visible during play)
+   - GameOverOverlay (score, stats, shop/restart)
+   - LevelUpOverlay (3 upgrade cards)
+   - FusionOverlay (Fission/Fusion/Evolution tabs)
+   - PauseOverlay (resume, mute, quit)
+   - TutorialOverlay (hints with highlight ring)
+   - MetaShop (permanent upgrade purchase)
+   - CharacterSelect (6 characters with stats)
+   - StageCompleteOverlay (stage cleared)
+   - BossHPBar (when boss active)
+   - DamageVignette (red flash on damage)
+
+4. **CHARACTER SELECT** (`character_select.gd:6-23`):
+   ```gdscript
+   const CHARACTER_PATHS := [
+       "rookie.tres", "pyro.tres", "frost_mage.tres",
+       "tactician.tres", "gambler.tres", "vampire.tres"
+   ]
+   ```
+   6 characters with:
+   - Portrait (colored placeholder with letter)
+   - Name, description
+   - Stat bars (HP, DMG, SPD, CRIT)
+   - Passive ability display
+   - Starting ball type
+   - Locked overlay for unmet requirements
+
+5. **LEVEL-UP CARDS** (`level_up_overlay.gd:22-25`):
+   ```gdscript
+   enum CardType {
+       PASSIVE,       # Traditional stat upgrades
+       NEW_BALL,      # Acquire new ball type
+       LEVEL_UP_BALL  # Level up owned ball (L1->L2->L3)
+   }
+   ```
+   3 cards from random pool of passives + ball upgrades.
+
+6. **PORTRAIT-MODE LAYOUT** (`game.tscn` resolution):
+   ```
+   720x1280 (9:16 aspect ratio)
+   ```
+   Designed for mobile portrait orientation.
+
+7. **TOUCH-FRIENDLY CONTROLS**:
+   - Virtual joysticks with 80px base radius
+   - Fire button with 50px radius
+   - All buttons minimum 60px touch targets
+
+### BallxPit Behavior (Research)
+
+Based on gameplay videos and app store screenshots:
+
+1. **BALL SLOT BAR** - 4-5 ball slots shown at top with equipped balls
+2. **SPEED TOGGLE** - 1x/1.5x/2x/4x visible in HUD
+3. **PERK SLOTS** - 4 equipped perks visible
+4. **LEVEL SELECT** - Stage selection screen with unlock progression
+5. **BUILDING VIEW** - City/farm area for meta-progression
+6. **NG+ INDICATOR** - Shows current NG+ iteration
+7. **GEAR CURRENCY** - Displayed alongside gold/XP
+8. **LANDSCAPE MODE** - Many screenshots show landscape orientation
+
+### DIFFERENCES
+
+| Element | GoPit | BallxPit | Impact |
+|---------|-------|----------|--------|
+| **Ball slots display** | None (1 active) | 4-5 slot bar | Missing |
+| **Speed toggle** | None | 1x-4x selector | Missing |
+| **Perk/passive display** | None visible | 4 slots shown | Missing |
+| **Level select** | None (linear) | Stage picker | Missing |
+| **Building/city view** | None | Meta-progression hub | Missing |
+| **Orientation** | Portrait only | Both orientations | Different |
+| **Character count** | 6 | 16+ | Fewer options |
+| **Combo display** | Yes (XP mult) | Unknown | GoPit feature |
+| **Tutorial overlay** | Yes (highlight ring) | Unknown | GoPit feature |
+
+### GoPit UI Advantages
+
+1. **Combo system with visual feedback** - Color-coded, animated pop-up
+2. **Tutorial highlight ring** - Points to UI elements for onboarding
+3. **Damage vignette** - Red screen flash for damage feedback
+4. **Clean portrait layout** - Optimized for mobile one-handed play
+5. **Wave announcement** - "Stage X - Wave Y" splash text
+
+### Missing UI Elements (Priority)
+
+1. **Ball slot bar** - Critical for multi-ball system (P0 if multi-ball added)
+2. **Speed toggle** - Common request for action games (P2)
+3. **Level select screen** - Required for stage unlock system (P1)
+4. **Perk/passive display** - If perk system added (P2)
+5. **Building view** - If meta-progression expanded (P3)
+
+### Beads Tracking This
+
+- **GoPit-tl0a**: VERIFY: UI/UX and HUD layout - **COMPLETE**
+- **GoPit-b1l**: Add level select UI screen - P1
+- **GoPit-21cr**: Add speed toggle system - P2
