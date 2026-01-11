@@ -7121,11 +7121,104 @@ BallxPit environment effects by biome:
 
 ---
 
+## Appendix CC: Enemy Systems Comparison
+
+Research sources:
+- [Tips & Tricks Guide](https://ballxpit.org/guides/tips-tricks/)
+- [Beginner's Guide](https://ballxpit.org/guides/beginner-guide/)
+
+### BallxPit Enemy System
+
+**Enemy Count:** Many distinct types across 8 biomes
+
+**Attack Telegraphs:**
+- Every enemy telegraphs 0.5-1.0 seconds before attack
+- Visual indicators for behavior patterns
+- Recommended: Learn patterns at Speed 1 first
+
+**Wave Structure:**
+- 50+ waves per biome
+- 3 bosses per biome (2 mini + 1 final)
+- Waves 1-10: Simple enemies
+- Waves 15+: Elite enemies spawn
+- Later waves: Enemies can destroy player constructions
+
+**Priority Targeting:**
+- Spawners (spawn more enemies)
+- Buffers (buff other enemies)
+- High-damage threats
+
+### GoPit Enemy System
+
+**Enemy Types (3):**
+
+| Enemy | Behavior | HP | Speed |
+|-------|----------|-----|-------|
+| Slime | Direct descent | 10 base | 100 |
+| Bat | Flying pattern | Variable | Variable |
+| Crab | Armored | Variable | Variable |
+
+**Attack Telegraph (IMPLEMENTED!):**
+```gdscript
+const WARNING_DURATION: float = 1.0  # 1 second warning
+func _show_exclamation() -> void:
+    _exclamation_label.text = "!"  # Visual indicator
+    # Pulse animation + shake during warning
+```
+
+**Wave Introduction:**
+```gdscript
+# Wave 1: Only slimes
+# Wave 2-3: 30% chance bats
+# Wave 4+: 50% slime, 30% bat, 20% crab
+```
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Enemy types | 3 | Many (8 biomes worth) |
+| Attack telegraphs | ✅ 1.0s | ✅ 0.5-1.0s |
+| Visual warnings | ✅ "!" indicator | ✅ Per-enemy patterns |
+| Wave scaling | ✅ HP +10%/wave | ✅ Detailed progression |
+| Priority enemies | ❌ None | ✅ Spawners, buffers |
+| Destruction enemies | ❌ None | ✅ Can destroy buildings |
+| Mini-bosses | ❌ None | ✅ 2 per biome |
+
+### GoPit Strengths
+
+1. **Attack telegraph implemented** - 1 second warning with visual indicator
+2. **Wave-based enemy introduction** - Gradual difficulty ramp
+3. **HP/Speed scaling** - +10% HP, +5% speed per wave (capped at 2x)
+4. **Self-damage on attack** - Enemies lose 3 HP per attack attempt
+
+### GoPit Gaps
+
+1. **Only 3 enemy types** vs potentially dozens in BallxPit
+2. **No biome-specific enemies** - Same enemies everywhere
+3. **No priority/spawner enemies** - No strategic targeting needed
+4. **No mini-bosses** - Only final boss per biome
+5. **Simple spawn patterns** - Random X position, linear descent
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 5-10 more enemy types | Variety per biome |
+| **P2** | Add spawner enemies | Strategic targeting |
+| **P2** | Add mini-bosses | 2 per biome before final |
+| **P2** | Add unique movement patterns | Zig-zag, charge, etc. |
+| **P3** | Add buff enemies | Buff nearby enemies |
+
+**GoPit's attack telegraph system is solid - needs more enemy variety.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **86 appendices** (A through CB)
+- **87 appendices** (A through CC)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
