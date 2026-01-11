@@ -11,7 +11,7 @@ Track progress with [x] marks:
 - [x] Ball damage per level (L1=10, L2=?, L3=?)
 - [x] Ball speed per level
 - [x] Fire cooldown / rate
-- [ ] Bounce damage scaling (+X% per bounce?)
+- [x] Bounce damage scaling (+X% per bounce?)
 - [ ] Enemy base HP (slime, bat, crab)
 - [ ] Enemy HP scaling per wave
 - [ ] Enemy speed scaling per wave
@@ -262,3 +262,78 @@ Track progress with [x] marks:
 3. **Align to BallxPit** - Add ball queue system (significant rework)
 
 **Recommendation**: Keep simultaneous fire system - it's more visceral and fun. Consider adding ball-specific cooldown modifiers for future special balls (similar to Dark ball's 3s cooldown in BallxPit).
+
+---
+
+### 4. Bounce Damage Scaling
+**Iteration**: 4 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Steam Discussion: Scaling questions](https://steamcommunity.com/app/2062430/discussions/0/595163936630895366/)
+- [The Repentant Guide - Ball x Pit Wiki](https://ballxpit.org/characters/the-repentant/)
+
+**Key Findings**:
+- **The Repentant** character has +5% damage per bounce passive
+- Bounce scaling can result in massive damage:
+  - 15-20 bounces = +75-100% damage
+  - 30 bounces = 2.5x damage (150% bonus)
+- Shot angle affects bounces:
+  - Horizontal/vertical: 8-12 bounces
+  - Diagonal shots: 20-30 bounces (2x-3x more damage)
+- Holy Laser with 30 bounces = 3.75x effective damage
+- **Character-specific mechanic** - not all characters have this
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_bounce_damage.py`
+
+**Current Implementation**:
+- Max Bounces: **10** (despawn limit)
+- Bounce count tracked: **Yes**
+- **Bounce damage scaling: NOT IMPLEMENTED**
+- Balls despawn when `_bounce_count > max_bounces`
+
+**Code Analysis** (`ball.gd`):
+```gdscript
+var _bounce_count: int = 0  # Tracked but unused for damage
+
+# On wall collision:
+_bounce_count += 1
+if _bounce_count > max_bounces:
+    despawn()
+    return
+```
+
+**Theoretical Values if Implemented (+5% per bounce)**:
+| Bounces | Damage Mult | Damage (base 10) |
+|---------|-------------|------------------|
+| 0 | 1.00x | 10 |
+| 5 | 1.25x | 12 |
+| 10 | 1.50x | 15 |
+| 15 | 1.75x | 17 |
+| 20 | 2.00x | 20 |
+| 30 | 2.50x | 25 |
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Bounce Scaling | +5% per bounce (Repentant) | **NOT IMPLEMENTED** | **Gap!** |
+| Max Bounces | Unknown | 10 | Low compared to 20-30 in BallxPit |
+| Angle Strategy | Diagonal = more bounces = more damage | No effect | **Missing mechanic** |
+
+#### Alignment Recommendation
+
+**Priority**: P1 (High) - This is a notable missing mechanic
+
+**Key Gap**: GoPit tracks bounce count but doesn't use it for damage scaling. BallxPit's Repentant character builds entire playstyle around bounce scaling.
+
+**Options**:
+1. **Add global bounce scaling** - All balls gain +5% per bounce (simple)
+2. **Add character passive** - New "Bouncer" character with bounce scaling passive
+3. **Add upgrade/relic** - Unlock bounce scaling as meta-progression item
+4. **Increase max bounces** - Allow more bounces to enable the strategy
+
+**Recommendation**: Implement bounce damage scaling as a **character passive** (similar to BallxPit's Repentant). This adds strategic depth without changing default gameplay. Also consider increasing max_bounces from 10 to 20-30 to allow diagonal shot strategies.
