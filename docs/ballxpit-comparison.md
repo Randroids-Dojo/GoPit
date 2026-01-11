@@ -4932,3 +4932,90 @@ BallxPit has **18+ ball types** including:
 
 This is tracked in bead **GoPit-6zk** (P0 priority).
 
+
+---
+
+## Appendix BD: Executive Summary - Priority Alignment Roadmap (NEW)
+
+### Document Overview
+
+This comparison document contains **63 appendices** covering every aspect of GoPit's implementation compared to BallxPit. Key findings are summarized below.
+
+### Top 5 Critical Gaps
+
+| Priority | Gap | Impact | Bead |
+|----------|-----|--------|------|
+| **P0** | Ball slot system | Fundamental gameplay difference | GoPit-6zk |
+| **P1** | Bounce damage scaling | Core damage mechanic missing | GoPit-kslj |
+| **P1** | Ball return mechanic | Balls despawn instead of return | GoPit-ay9 |
+| **P1** | Baby ball inheritance | Babies don't inherit ball type | GoPit-r1r |
+| **P1** | Bounce trajectory preview | Aim line doesn't show bounces | GoPit-2ep |
+
+### Systems Comparison Summary
+
+| System | GoPit | BallxPit | Alignment |
+|--------|-------|----------|-----------|
+| Ball types | 7 | 18+ | 🔴 39% |
+| Ball slots | 1 | 4-5 | 🔴 20% |
+| Evolutions | 5 | 15+ | 🟡 33% |
+| Characters | 6 | 10+ | 🟡 60% |
+| Stages | 4 | 8 | 🟡 50% |
+| Enemy types | 3 | 5-6 | 🟡 50% |
+| Boss types | 1 | 8 | 🔴 13% |
+| Permanent upgrades | 5 | 10-15 | 🟡 33% |
+| Status effects | 4 | 6+ | 🟡 67% |
+
+### What GoPit Does Well ✅
+
+1. **Procedural audio** - Unique differentiator (no audio files)
+2. **Visual feedback** - Damage vignette, particles, shake
+3. **Meta-progression** - Pit Coins and permanent upgrades exist
+4. **Boss system** - Phases and attacks implemented
+5. **Combo system** - XP multiplier on consecutive kills
+
+### Implementation Recommendations
+
+**Phase 1 - Core Mechanics (P0-P1):**
+1. Implement ball slot system (4-5 simultaneous types)
+2. Add bounce damage scaling (+5% per bounce)
+3. Add ball return mechanic
+4. Fix baby ball type inheritance
+5. Add bounce trajectory preview
+
+**Phase 2 - Content Expansion (P2):**
+1. Add 10+ new ball types
+2. Add 10+ evolution recipes
+3. Add 4+ boss types
+4. Fix status effect stacking
+5. Add more enemy types
+
+**Phase 3 - Polish (P3):**
+1. Add 4 more stages
+2. Expand character roster to 10+
+3. Add achievement system
+4. Add environmental hazards
+5. Sound variations
+
+### Beads Summary
+
+| Priority | Count | Focus |
+|----------|-------|-------|
+| P0 | 1 | Ball slots |
+| P1 | 6 | Core mechanics |
+| P2 | ~35 | Features & fixes |
+| P3 | ~27 | Content & polish |
+| **Total** | **69** | All tracked |
+
+### Files Analyzed
+
+- 50+ GDScript files read and documented
+- All autoloads (GameManager, StageManager, etc.)
+- All UI scripts (overlays, HUD, controls)
+- All entity scripts (player, enemies, balls, gems)
+- All effect scripts (particles, shake, status)
+- All data scripts (characters, biomes, upgrades)
+
+### Conclusion
+
+GoPit has a solid foundation but requires significant work on the **ball slot system** (the #1 fundamental difference) and **bounce mechanics** to align with BallxPit's core gameplay loop. Content expansion (ball types, bosses, stages) can follow once core mechanics are aligned.
+
