@@ -12965,3 +12965,307 @@ Sources:
 - [ ] Achievement/quest systems
 - [ ] Cosmetics/skins
 - [ ] Multiplayer/social features
+
+---
+
+## Appendix EN: Game State Management Comparison
+
+### BallxPit Save System
+
+**Cloud Saves:**
+- Steam Cloud support (automatic sync between devices)
+- Progress uploads on game close, downloads on connect
+
+**Save File Locations:**
+- Windows (Steam): `%appdata%\..\LocalLow\Kenny Sun\BALL x PIT\`
+- Game Pass: `%appdata%\..\Local\Packages\DevolverDigital.BallxPit_6kzv4j18v0c96\SystemAppData\wgs\`
+
+**Demo Transfer:**
+- Demo progress carries over to full game
+- Automatic prompt on first launch
+
+**Known Issues:**
+- Game freeze on "Continue" (possibly related to offline resource gain)
+- Game Pass save corruption issues reported
+
+### GoPit Save System
+
+**Current Implementation:**
+```gdscript
+# High scores only
+const HIGH_SCORE_PATH := "user://high_score.save"
+# Meta progression
+const SAVE_PATH := "user://meta.save"  # In MetaManager
+```
+
+**Saved Data:**
+- High score wave
+- High score level
+- Total victories
+- Pit coins
+- Upgrade levels
+
+**Missing:**
+- No mid-run saves
+- No cloud sync
+- No offline resource gain
+- No demo/version transfer
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Cloud saves | Steam Cloud | None | MAJOR |
+| Mid-run saves | Yes | No | SIGNIFICANT |
+| Offline progress | Yes | No | MAJOR |
+| Save file robustness | Issues reported | Simple JSON | Minor |
+
+Sources:
+- [Steam Community - Save File Location](https://steamcommunity.com/app/2062430/discussions/0/594026463740564749/)
+- [PCGamingWiki - Ball X Pit](https://www.pcgamingwiki.com/wiki/Ball_X_Pit)
+
+---
+
+## Appendix EO: XP & Leveling System Comparison
+
+### BallxPit Leveling
+
+**In-Run XP System:**
+- Enemies drop XP gems on death
+- Collect gems to fill XP bar
+- Level up → choose ball/passive upgrade
+- Balls level 1→2→3, L3 required for fusion
+
+**Fusion Items:**
+- Dropped by enemies (glowing orb)
+- Required to trigger evolution
+- Two L3 compatible balls + Fusion Item → evolved ball
+
+**Character XP:**
+- Separate from in-run XP
+- Earned at end of run
+- Buildings provide XP bonuses
+
+### GoPit Leveling
+
+**Current Implementation:**
+```gdscript
+func _calculate_xp_requirement(level: int) -> int:
+    return 100 + (level - 1) * 50
+# Level 1: 100 XP, Level 2: 150 XP, Level 3: 200 XP...
+
+func add_xp(amount: int) -> void:
+    var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier())
+```
+
+**XP Modifiers:**
+- Combo multiplier: 1x (1-2), 1.5x (3-4), 2x (5+)
+- Quick Learner passive: +10%
+- No character-level XP bonus
+
+**Ball Leveling:**
+- Separate from player level
+- Offered via level-up cards (NEW_BALL, LEVEL_UP_BALL)
+- L3 required for fusion (same as BallxPit)
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| XP formula | Unknown | 100 + 50×(L-1) | N/A |
+| Fusion Items | Enemy drop required | Automatic at L3 | Different |
+| Character XP | End-of-run progression | None | MAJOR |
+| XP modifiers | Buildings, passives | Combo, 1 passive | SIGNIFICANT |
+
+---
+
+## Appendix EP: Enemy AI & Attack Patterns Comparison
+
+### BallxPit Enemy Behavior
+
+**Attack Telegraphing:**
+- ALL enemies telegraph 0.5-1s before attacking
+- Predictable patterns = dodgeable attacks
+- Pro tip: Use Speed 1 to learn new enemy patterns
+
+**Enemy Attack Types:**
+1. **Ranged attacks** - Dodgeable, require movement
+2. **Short-range attacks** - Trigger on proximity (Space Invaders style)
+3. **Descend attacks** - Auto-hit at screen bottom (undodgeable)
+
+**Wave Structure:**
+- Bosses every 10 waves (10, 20, 30, 40, 50+)
+- Each level: 2 stage bosses + 1 final boss = 3 total
+- Stage bosses drop guaranteed Fusion upgrades
+
+**AI Character (The Radical):**
+- AI priority: survival > damage > XP gain
+- Performance caps at Wave 15-20
+- Can't dodge complex boss patterns
+- Won't focus-fire high-HP elites
+
+**Status Effect Stacks (Max):**
+- Radiation: 5
+- Disease: 8
+- Frostburn: 4
+- Bleed: 24
+- Burn: 5
+- Poison: 8
+
+### GoPit Enemy Behavior
+
+**Current Implementation:**
+```gdscript
+# Enemy spawning based on wave
+func _choose_enemy_type() -> PackedScene:
+    var wave: int = GameManager.current_wave
+    if wave <= 1: return slime_scene  # Wave 1: Only slimes
+    if wave <= 3:
+        if randf() < 0.3: return bat_scene  # 30% bats
+        return slime_scene
+    # Wave 4+: All types
+    var roll: float = randf()
+    if roll < 0.5: return slime_scene
+    elif roll < 0.8: return bat_scene
+    else: return crab_scene
+```
+
+**Enemy Types (3):**
+- Slime - Basic enemy
+- Bat - Flying, faster
+- Crab - Armored, slower
+
+**Attack System:**
+- Proximity-based damage (touch = damage)
+- No telegraphing
+- No ranged attacks to dodge
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Enemy types | 85+ | 3 | CRITICAL |
+| Telegraphing | 0.5-1s warning | None | MAJOR |
+| Attack types | Ranged, melee, descend | Touch only | MAJOR |
+| Status stacks | 6 types, varied caps | 4 types, fixed | SIGNIFICANT |
+| Boss structure | 3 per level | 1 per stage | SIGNIFICANT |
+
+Sources:
+- [Ball x Pit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+- [Boss Battle Strategies Guide](https://ballxpit.org/guides/boss-battle-strategies/)
+
+---
+
+## Appendix EQ: UI/HUD & Accessibility Comparison
+
+### BallxPit UI/HUD
+
+**HUD Elements:**
+- Persistent stats overlay (damage, evolution count, wave progress)
+- Toggleable for cleaner visuals on smaller screens
+
+**Controls:**
+- Dual-axis: movement + aiming
+- Keyboard: WASD + mouse
+- Controller: Left stick movement, right stick aiming
+- Full control remapping
+
+**Accessibility Features (6):**
+1. Motion Sensitivity - Screen shake toggle
+2. Game Speed Adjustment - Slower speed option
+3. Difficulty Scaling - Pre-set difficulty levels
+4. Vibration Toggle - Disable haptics
+5. Control Remapping - Full keybind customization
+6. Manual Level-Up - Player-controlled pause timing
+
+**Display:**
+- 16:10 aspect ratio native support
+- Steam Deck optimized (1280x800)
+
+### GoPit UI/HUD
+
+**Current HUD (from hud.gd):**
+- HP bar
+- XP bar
+- Wave counter
+- Level display
+- Slot display (ball slots)
+- Combo counter
+
+**Controls:**
+- Virtual joystick (mobile-first)
+- No keyboard support documented
+- Fire button separate from aim
+
+**Accessibility:**
+- None implemented
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Stats overlay | Toggleable | Always on | Minor |
+| Control schemes | KB+M, Controller | Virtual joystick | MAJOR |
+| Accessibility options | 6 features | 0 | CRITICAL |
+| Screen shake toggle | Yes | No | SIGNIFICANT |
+| Speed adjustment | 3 levels | None | MAJOR |
+| Control remapping | Full | None | MAJOR |
+
+**Priority Additions:**
+1. Keyboard/mouse controls (GoPit-r0p6 exists)
+2. Screen shake toggle
+3. Speed adjustment system
+4. Control remapping
+
+Sources:
+- [Ball x Pit Settings Optimization Guide](https://ballxpit.org/guides/settings-optimization/)
+
+---
+
+## Appendix ER: Session 7 Research Summary
+
+### Areas Researched This Session
+
+| Area | Appendix | Key Finding |
+|------|----------|-------------|
+| Game State/Saves | EN | No cloud saves, no offline progress in GoPit |
+| XP/Leveling | EO | No character-level progression in GoPit |
+| Enemy AI/Patterns | EP | No telegraphing, only 3 enemy types in GoPit |
+| UI/Accessibility | EQ | 0 accessibility features in GoPit |
+
+### Updated Gap Priority Matrix
+
+**CRITICAL (Must Address for Parity):**
+| Feature | Gap Factor | Existing Issue |
+|---------|------------|----------------|
+| Enemy variety | 28x (85 vs 3) | GoPit-h0n9 |
+| Passive system | 4x (61 vs 16) | GoPit-tm68 |
+| Ball types | 8.5x (60 vs 7) | - |
+| Building meta | ∞ (70 vs 0) | - |
+| Accessibility | ∞ (6 vs 0) | - |
+
+**MAJOR (Should Address):**
+| Feature | Gap | Existing Issue |
+|---------|-----|----------------|
+| Ball return | Fundamental | GoPit-ay9 |
+| Character mechanics | 16 vs 6 stat-only | GoPit-308u |
+| Enemy telegraphing | Missing | - |
+| Speed toggle | Missing | GoPit-21cr |
+| Keyboard controls | Missing | GoPit-r0p6 |
+| Cloud saves | Missing | - |
+
+### Comparison Document Statistics
+
+- **Total appendices:** 148 (A through ER)
+- **Total lines:** ~14,000
+- **Sessions documented:** 7
+- **Research areas covered:** 20+
+
+### Remaining Research Areas
+
+- [ ] Cosmetics and visual customization
+- [ ] Leaderboards and social features
+- [ ] Achievements and quests
+- [ ] Tutorial and onboarding
+- [ ] Monetization (if any)
+- [ ] Audio/music system details
