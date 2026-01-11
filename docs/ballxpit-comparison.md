@@ -4698,3 +4698,94 @@ slow_multiplier = 0.5  # Enemy speed × 0.5
 | Iron | None | - |
 | Lightning | None | - |
 
+
+---
+
+## Appendix AZ: Player System Implementation (NEW)
+
+### Player Stats
+
+| Parameter | Value |
+|-----------|-------|
+| Move Speed | 300 px/s (× character speed mult) |
+| Radius | 35 px |
+| Collision Layer | 16 (player) |
+| Collision Mask | 12 (enemies + gems) |
+
+### Movement Bounds
+
+```gdscript
+bounds_min = Vector2(30, 280)   # Left wall, below TopBar
+bounds_max = Vector2(690, 1150) # Right wall, above input area
+```
+
+### Visual
+
+- Blue circle body (0.3, 0.7, 1.0)
+- Light blue outline (0.5, 0.9, 1.0)
+- Direction indicator line (last aim direction)
+
+### Damage Flash
+
+```gdscript
+modulate = Color(1.5, 0.5, 0.5)  # Red tint
+# Fade back over 0.2s
+```
+
+### Missing Features
+
+1. [ ] **No invincibility frames** - Can be hit repeatedly (GoPit-joa)
+2. [ ] **No dodge/dash ability** - BallxPit may have evasion
+3. [ ] **Fixed player size** - No size upgrades
+
+---
+
+## Appendix BA: Gem System Implementation (NEW)
+
+### Gem Types
+
+| Type | Color | XP | Special |
+|------|-------|-----|---------|
+| XP Gem | Green (0.2, 0.9, 0.5) | 10 | Standard drop |
+| Health Gem | Pink (1.0, 0.4, 0.5) | 0 | Heals 10 HP |
+
+### Movement Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Fall Speed | 150 px/s |
+| Magnetism Speed | 400 px/s |
+| Collection Radius | 40 px |
+| Despawn Time | 10s |
+
+### Magnetism System
+
+```gdscript
+# Range from GameManager.gem_magnetism_range (upgraded via Magnetism passive)
+if distance < magnetism_range:
+    pull_strength = 1.0 - (distance / magnetism_range)
+    speed = lerp(150, 400, pull_strength)
+    # Draw green line to player
+```
+
+### Visual Effects
+
+- Diamond shape with sparkle animation
+- Glow effect when being attracted
+- Highlight sparkle in corner
+
+### BallxPit Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Gem types | 2 (XP, Health) | Unknown |
+| Magnetism | Upgradeable range | Unknown |
+| Auto-collect | No | May have |
+| Combo system | Yes (separate) | Unknown |
+
+### Missing Features
+
+1. [ ] **No coin gems** - Meta-currency from gems
+2. [ ] **No gem magnet auto-pickup** - Always requires proximity
+3. [ ] **Limited gem variety** - Only XP and health
+
