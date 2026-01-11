@@ -8,7 +8,7 @@ signal hit_gem(gem: Node2D)
 signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -41,6 +41,7 @@ const TRAIL_SCENE_LIGHTNING: PackedScene = preload("res://scenes/effects/lightni
 const TRAIL_SCENE_POISON: PackedScene = preload("res://scenes/effects/poison_trail.tscn")
 const TRAIL_SCENE_BLEED: PackedScene = preload("res://scenes/effects/bleed_trail.tscn")
 const TRAIL_SCENE_IRON: PackedScene = preload("res://scenes/effects/iron_trail.tscn")
+const TRAIL_SCENE_VAMPIRE: PackedScene = preload("res://scenes/effects/vampire_trail.tscn")
 
 # Baby ball properties (auto-spawned, smaller, less damage)
 var is_baby_ball: bool = false
@@ -90,6 +91,8 @@ func _apply_ball_type_visuals() -> void:
 		BallType.GHOST:
 			ball_color = Color(0.7, 0.7, 0.9, 0.6)  # Semi-transparent purple
 			modulate.a = 0.6  # Make ball semi-transparent
+		BallType.VAMPIRE:
+			ball_color = Color(0.5, 0.1, 0.3)  # Dark crimson
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -121,6 +124,8 @@ func _spawn_particle_trail() -> void:
 			trail_scene = TRAIL_SCENE_BLEED
 		BallType.IRON:
 			trail_scene = TRAIL_SCENE_IRON
+		BallType.VAMPIRE:
+			trail_scene = TRAIL_SCENE_VAMPIRE
 
 	if trail_scene:
 		_particle_trail = trail_scene.instantiate()
@@ -193,6 +198,10 @@ func _draw() -> void:
 		BallType.IRON:
 			# Metallic shine
 			draw_arc(Vector2(-actual_radius * 0.3, -actual_radius * 0.3), actual_radius * 0.4, -0.5, 1.0, 8, Color(1.0, 1.0, 1.0, 0.5), 2.0)
+		BallType.VAMPIRE:
+			# Fang marks effect
+			draw_circle(Vector2(-3, actual_radius * 0.3), 2.5, Color(0.8, 0.0, 0.2))
+			draw_circle(Vector2(3, actual_radius * 0.3), 2.5, Color(0.8, 0.0, 0.2))
 
 
 func _physics_process(delta: float) -> void:
@@ -496,6 +505,16 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 			tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
 			# Ghost balls pass through all enemies (very high pierce)
 			pierce_count = 999
+
+		BallType.VAMPIRE:
+			# Vampire: Lifesteal on hit (heal 20% of damage dealt)
+			var lifesteal_amount := int(_base_damage * 0.2)
+			if lifesteal_amount > 0:
+				GameManager.heal(lifesteal_amount)
+			# Vampiric visual effect
+			enemy.modulate = Color(0.5, 0.1, 0.3)
+			var tween := enemy.create_tween()
+			tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
@@ -949,3 +968,8 @@ func _apply_fused_effects(enemy: Node2D, base_damage: int) -> void:
 			"ghost":
 				# Ghost effect - full pass-through
 				pierce_count = 999
+			"vampire":
+				# Vampire effect - lifesteal
+				var lifesteal_amount := int(base_damage * 0.2)
+				if lifesteal_amount > 0:
+					GameManager.heal(lifesteal_amount)
