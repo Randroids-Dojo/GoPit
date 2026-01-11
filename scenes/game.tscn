@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=22 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
@@ -22,6 +22,7 @@
 [ext_resource type="Script" path="res://scripts/ui/stage_complete_overlay.gd" id="18_stagecomplete"]
 [ext_resource type="Script" path="res://scripts/entities/baby_ball_spawner.gd" id="19_baby_spawner"]
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
+[ext_resource type="Script" path="res://scripts/ui/ultimate_button.gd" id="22_ultimate"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -247,6 +248,15 @@ custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 size_flags_horizontal = 4
 script = ExtResource("4_fire")
+
+[node name="UltimateButtonContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 2
+
+[node name="UltimateButton" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+script = ExtResource("22_ultimate")
 
 [node name="AimJoystickContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
 layout_mode = 2

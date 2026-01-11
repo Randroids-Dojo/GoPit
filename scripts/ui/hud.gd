@@ -35,6 +35,9 @@ func _ready() -> void:
 		mute_button.pressed.connect(_on_mute_pressed)
 		_update_mute_button()
 
+	# Listen for mute state changes (e.g., from pause menu)
+	SoundManager.mute_changed.connect(_on_mute_changed)
+
 	# Connect pause button
 	if pause_button:
 		pause_button.pressed.connect(_on_pause_pressed)
@@ -46,6 +49,9 @@ func _ready() -> void:
 
 func _on_mute_pressed() -> void:
 	SoundManager.toggle_mute()
+
+
+func _on_mute_changed(_is_muted: bool) -> void:
 	_update_mute_button()
 
 

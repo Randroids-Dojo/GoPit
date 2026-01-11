@@ -21,6 +21,9 @@ signal wave_changed(new_wave: int)
 signal hp_changed(current_hp: int, max_hp: int)
 signal combo_changed(combo: int, multiplier: float)
 signal leadership_changed(new_value: float)
+signal ultimate_ready
+signal ultimate_used
+signal ultimate_charge_changed(current: float, max_val: float)
 
 # Combo system
 var combo_count: int = 0
@@ -42,6 +45,12 @@ var xp_to_next_level: int = 100
 var player_level: int = 1
 var gem_magnetism_range: float = 0.0
 var leadership: float = 0.0  # Affects baby ball spawn rate
+
+# Ultimate ability system
+const ULTIMATE_CHARGE_MAX: float = 100.0
+const CHARGE_PER_KILL: float = 10.0
+const CHARGE_PER_GEM: float = 5.0
+var ultimate_charge: float = 0.0
 
 # Character system
 var selected_character: Resource = null
@@ -276,6 +285,35 @@ func add_leadership(amount: float) -> void:
 	leadership_changed.emit(leadership)
 
 
+# === Ultimate ability methods ===
+
+func add_ultimate_charge(amount: float) -> void:
+	## Add charge to the ultimate meter. Emits ultimate_ready when full.
+	if ultimate_charge >= ULTIMATE_CHARGE_MAX:
+		return  # Already full
+
+	var was_ready := ultimate_charge >= ULTIMATE_CHARGE_MAX
+	ultimate_charge = minf(ULTIMATE_CHARGE_MAX, ultimate_charge + amount)
+	ultimate_charge_changed.emit(ultimate_charge, ULTIMATE_CHARGE_MAX)
+
+	if not was_ready and ultimate_charge >= ULTIMATE_CHARGE_MAX:
+		ultimate_ready.emit()
+
+
+func use_ultimate() -> bool:
+	## Attempt to use the ultimate ability. Returns true if successful.
+	if ultimate_charge >= ULTIMATE_CHARGE_MAX:
+		ultimate_charge = 0.0
+		ultimate_used.emit()
+		ultimate_charge_changed.emit(0.0, ULTIMATE_CHARGE_MAX)
+		return true
+	return false
+
+
+func is_ultimate_ready() -> bool:
+	return ultimate_charge >= ULTIMATE_CHARGE_MAX
+
+
 # === Passive ability helpers ===
 
 func get_xp_multiplier() -> float:
@@ -369,6 +407,7 @@ func _reset_stats() -> void:
 	gem_magnetism_range = 0.0
 	leadership = 0.0
 	is_endless_mode = false
+	ultimate_charge = 0.0
 	# Reset session stats
 	stats["enemies_killed"] = 0
 	stats["balls_fired"] = 0

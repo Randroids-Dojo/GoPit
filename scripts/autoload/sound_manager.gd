@@ -2,6 +2,8 @@ extends Node
 ## SoundManager autoload - plays placeholder sounds using procedural audio
 ## Manages audio settings (volume, mute) with persistence
 
+signal mute_changed(is_muted: bool)
+
 var _players: Array[AudioStreamPlayer] = []
 const MAX_PLAYERS := 8
 const SAMPLE_RATE := 44100.0
@@ -34,6 +36,7 @@ var is_muted: bool = false:
 	set(value):
 		is_muted = value
 		AudioServer.set_bus_mute(0, is_muted)
+		mute_changed.emit(is_muted)
 		_save_settings()
 
 enum SoundType {
@@ -62,7 +65,9 @@ enum SoundType {
 	# Fusion sounds
 	FUSION_REACTOR,  # Pickup sound
 	EVOLUTION,       # Success fanfare
-	FISSION          # Energy burst
+	FISSION,         # Energy burst
+	# Ultimate ability
+	ULTIMATE         # Screen-clearing blast
 }
 
 # Per-sound pitch/volume variance settings
@@ -92,7 +97,9 @@ const SOUND_SETTINGS := {
 	# Fusion sounds
 	SoundType.FUSION_REACTOR: {"pitch_var": 0.05, "vol_var": 0.05},
 	SoundType.EVOLUTION: {"pitch_var": 0.0, "vol_var": 0.0},
-	SoundType.FISSION: {"pitch_var": 0.1, "vol_var": 0.1}
+	SoundType.FISSION: {"pitch_var": 0.1, "vol_var": 0.1},
+	# Ultimate
+	SoundType.ULTIMATE: {"pitch_var": 0.0, "vol_var": 0.0}
 }
 
 
@@ -282,6 +289,9 @@ func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
 			data = _generate_evolution_fanfare()
 		SoundType.FISSION:
 			data = _generate_energy_burst()
+		# Ultimate
+		SoundType.ULTIMATE:
+			data = _generate_ultimate_blast_sound()
 
 	wav.data = data
 	return wav
@@ -668,6 +678,59 @@ func _generate_energy_burst() -> PackedByteArray:
 		var noise := (randf() * 2.0 - 1.0) * 0.1
 
 		var sample := (burst + noise) * envelope * 0.2
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+# ============================================================================
+# Ultimate Ability Sound
+# ============================================================================
+
+func _generate_ultimate_blast_sound() -> PackedByteArray:
+	"""Ultimate ability: Epic power blast with rising tone and explosion"""
+	var samples := int(SAMPLE_RATE * 0.6)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+
+		# Three-phase envelope: rise, peak, decay
+		var envelope: float
+		if progress < 0.15:
+			# Rising power-up
+			envelope = progress / 0.15
+		elif progress < 0.25:
+			# Peak explosion
+			envelope = 1.0
+		else:
+			# Long decay
+			envelope = pow(1.0 - (progress - 0.25) / 0.75, 0.5)
+
+		# Rising pitch during power-up phase
+		var base_freq: float
+		if progress < 0.15:
+			base_freq = lerpf(200.0, 800.0, progress / 0.15)
+		else:
+			base_freq = lerpf(800.0, 200.0, (progress - 0.15) / 0.85)
+
+		# Multiple harmonics for full sound
+		var tone := sin(t * base_freq * TAU) * 0.3
+		tone += sin(t * base_freq * 2.0 * TAU) * 0.2
+		tone += sin(t * base_freq * 3.0 * TAU) * 0.1
+
+		# Add explosion noise during peak
+		var noise := 0.0
+		if progress > 0.1 and progress < 0.4:
+			var noise_amount: float = 1.0 - abs(progress - 0.2) / 0.2
+			noise = (randf() * 2.0 - 1.0) * noise_amount * 0.3
+
+		# Low rumble throughout
+		var rumble := sin(t * 60.0 * TAU) * 0.15
+
+		var sample := (tone + noise + rumble) * envelope * 0.25
 		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
 
 	return data
