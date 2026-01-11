@@ -7,6 +7,7 @@ signal hit_enemy(enemy: Node2D)
 signal hit_gem(gem: Node2D)
 signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
+signal caught  # Emitted when ball is caught by player (active play bonus)
 
 enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE }
 
@@ -32,7 +33,9 @@ var _particle_trail: GPUParticles2D = null
 # Ball return mechanic - balls return when crossing bottom of screen
 const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position - start return
 const RETURN_COMPLETE_Y: float = 350.0  # Near player position - complete return
+const CATCH_ZONE_Y: float = 600.0  # Ball is catchable when y < this (in catch zone)
 var is_returning: bool = false  # True when ball is flying back to player
+var is_catchable: bool = false  # True when ball can be caught (returning and in catch zone)
 
 # Trail particle scenes per ball type (preloaded for performance)
 const TRAIL_SCENE_FIRE: PackedScene = preload("res://scenes/effects/fire_trail.tscn")
@@ -220,6 +223,8 @@ func _physics_process(delta: float) -> void:
 		if global_position.y > RETURN_Y_THRESHOLD:
 			_start_return()
 	else:
+		# Check if ball is in catch zone (can be caught by player)
+		is_catchable = global_position.y < CATCH_ZONE_Y
 		# Check if ball has returned to player area
 		if global_position.y < RETURN_COMPLETE_Y:
 			return_to_player()
@@ -343,8 +348,55 @@ func return_to_player() -> void:
 		queue_free()
 
 
+func catch() -> bool:
+	"""Attempt to catch the ball - returns true if successful (ball was catchable)"""
+	if not is_catchable:
+		return false
+
+	caught.emit()
+	# Visual catch effect
+	_show_catch_effect()
+	# Return to pool
+	if has_meta("pooled") and PoolManager:
+		reset()
+		PoolManager.release_ball(self)
+	else:
+		queue_free()
+	return true
+
+
+func _show_catch_effect() -> void:
+	"""Visual effect when ball is caught"""
+	# Spawn a brief burst effect at catch position
+	var burst := Control.new()
+	burst.global_position = global_position
+	burst.z_index = 10
+
+	var circle := ColorRect.new()
+	var size := 40.0
+	circle.size = Vector2(size, size)
+	circle.position = Vector2(-size / 2, -size / 2)
+	circle.color = Color(0.3, 1.0, 0.5, 0.8)  # Green for catch
+	burst.add_child(circle)
+
+	get_tree().current_scene.add_child(burst)
+
+	var tween := burst.create_tween()
+	tween.tween_property(circle, "modulate:a", 0.0, 0.2)
+	tween.parallel().tween_property(circle, "scale", Vector2(2.0, 2.0), 0.2)
+	tween.tween_callback(burst.queue_free)
+
+
 func reset() -> void:
 	"""Reset ball state for object pool reuse"""
+	# Disconnect signals to prevent "already connected" errors
+	for conn in returned.get_connections():
+		returned.disconnect(conn.callable)
+	for conn in caught.get_connections():
+		caught.disconnect(conn.callable)
+	for conn in despawned.get_connections():
+		despawned.disconnect(conn.callable)
+
 	# Reset position and physics
 	direction = Vector2.UP
 	velocity = Vector2.ZERO
@@ -376,6 +428,7 @@ func reset() -> void:
 	fused_id = ""
 	fused_effects.clear()
 	is_returning = false
+	is_catchable = false
 
 	# Reset visual state
 	modulate = Color.WHITE

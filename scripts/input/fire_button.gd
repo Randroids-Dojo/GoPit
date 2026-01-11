@@ -20,6 +20,9 @@ var autofire_enabled: bool = true  # Default ON for smoother gameplay
 var _shake_tween: Tween
 var _ball_spawner: Node2D = null
 var _balls_available: bool = true  # Ball return mechanic
+var _catch_bonus_stacks: int = 0  # Stacks of catch bonus (30% cooldown reduction per stack)
+const CATCH_BONUS_MULTIPLIER: float = 0.7  # 30% cooldown reduction per catch
+const MAX_CATCH_STACKS: int = 3  # Max stacks (0.7^3 = ~34% of base cooldown)
 
 
 func _ready() -> void:
@@ -80,6 +83,15 @@ func _draw() -> void:
 	if autofire_enabled:
 		draw_arc(center, button_radius + 3, 0, TAU, 32, Color(0.2, 1.0, 0.6, 0.8), 3.0)
 
+	# Draw catch bonus indicator (small dots above button)
+	if _catch_bonus_stacks > 0:
+		var dot_y := center.y - button_radius - 10
+		var dot_spacing := 12.0
+		var start_x := center.x - ((_catch_bonus_stacks - 1) * dot_spacing) / 2.0
+		for i in _catch_bonus_stacks:
+			var dot_pos := Vector2(start_x + i * dot_spacing, dot_y)
+			draw_circle(dot_pos, 4.0, Color(0.3, 1.0, 0.5, 0.9))  # Green dots
+
 
 func _draw_arc_filled(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color) -> void:
 	var points := PackedVector2Array()
@@ -116,7 +128,14 @@ func _try_fire() -> void:
 	if is_ready:
 		is_ready = false
 		# Apply character speed multiplier to cooldown (higher speed = faster fire)
-		cooldown_timer = cooldown_duration / GameManager.character_speed_mult
+		var base_cooldown := cooldown_duration / GameManager.character_speed_mult
+		# Apply catch bonus stacks (30% reduction per stack)
+		var final_cooldown := base_cooldown
+		if _catch_bonus_stacks > 0:
+			for i in _catch_bonus_stacks:
+				final_cooldown *= CATCH_BONUS_MULTIPLIER
+			_catch_bonus_stacks = 0  # Consume all stacks on fire
+		cooldown_timer = final_cooldown
 		cooldown_started.emit()
 		fired.emit()
 		queue_redraw()
@@ -177,3 +196,13 @@ func set_autofire(enabled: bool) -> void:
 		autofire_toggled.emit(autofire_enabled)
 		GameManager.set_shooting(autofire_enabled)  # Update movement speed
 		queue_redraw()
+
+
+func add_catch_bonus() -> void:
+	"""Add a catch bonus stack (30% cooldown reduction, up to 3 stacks)"""
+	_catch_bonus_stacks = mini(_catch_bonus_stacks + 1, MAX_CATCH_STACKS)
+	queue_redraw()
+
+
+func get_catch_bonus_stacks() -> int:
+	return _catch_bonus_stacks
