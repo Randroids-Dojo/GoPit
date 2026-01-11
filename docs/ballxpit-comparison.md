@@ -7040,7 +7040,7 @@ Research sources:
 ### Documentation Status
 
 - **85 appendices** (A through CA)
-- **82 open beads** tracking all gaps
+- **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
 ### The #1 Fundamental Difference
