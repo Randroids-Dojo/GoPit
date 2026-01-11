@@ -6326,3 +6326,92 @@ GoPit allows single-character runs with no variety incentive.
 | **P3** | Add trophy building rewards | Boss completion bonuses |
 | **P3** | Add save slot management | Multiple saves |
 
+---
+
+## Appendix BR: Blueprint and Building Harvest System (NEW)
+
+Research sources:
+- [Deltia's Gaming - Blueprints Guide](https://deltiasgaming.com/ball-x-pit-blueprints/)
+
+### Level Structure (Confirmed)
+
+**Each level has 3 bosses:**
+```
+LEVEL STRUCTURE:
+┌───────────────────────────────────────────────────────────┐
+│  Mini-boss 1 → Blueprint drop                             │
+│  Mini-boss 2 → Blueprint drop                             │
+│  Final Boss  → Blueprint drop (first kill = Trophy)       │
+└───────────────────────────────────────────────────────────┘
+```
+
+**8 levels × 3 bosses = 24 boss encounters total**
+
+### Blueprint Types
+
+| Type | Source | Purpose |
+|------|--------|---------|
+| **Trophy** | First final boss kill | Special building |
+| **Warfare** | Subsequent boss kills | Combat buildings |
+| **Housing** | Subsequent boss kills | Character houses |
+
+### Building Categories
+
+**Warfare Buildings:**
+- Combat stat boosts
+- Unlock combat abilities
+
+**Housing Buildings:**
+- Unlock new characters
+- Each character has specific house
+
+**Trophy Buildings:**
+- Unique per-stage rewards
+- Special bonuses
+
+### Harvest Mechanic (KEY INSIGHT)
+
+**Buildings require "harvesting" to activate:**
+```
+HARVEST PROCESS:
+┌───────────────────────────────────────────────────────────┐
+│  1. Construct building with blueprint + resources         │
+│  2. Place building where workers can reach                │
+│  3. Click "Harvest" button                                │
+│  4. Workers BOUNCE BALLS at building                      │
+│  5. Hit building enough times → unlocks abilities         │
+└───────────────────────────────────────────────────────────┘
+```
+
+**The ball-bouncing mechanic extends to the city builder!**
+- Workers aim and shoot at buildings
+- Buildings "unlock" through hits
+- Same core mechanic, different context
+
+### GoPit Comparison
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Mini-bosses** | 0 | 2 per level | **MISSING** |
+| **Boss count** | 1 total | 24 total | **-23** |
+| **Blueprints** | None | 3 types | **MISSING** |
+| **Building harvest** | N/A | Ball-bounce | Unique |
+| **Building activation** | N/A | Hit-based | Unique |
+
+### Design Philosophy
+
+BallxPit uses its **core mechanic everywhere**:
+- Combat: Bounce balls at enemies
+- Boss fights: Bounce balls at bosses
+- City builder: Bounce balls at buildings
+- Harvesting: Workers bounce balls
+
+**This creates unified game feel across all systems.**
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 2 mini-bosses per stage | Match structure |
+| **P3** | Consider ball-based meta UI | Thematic consistency |
+
