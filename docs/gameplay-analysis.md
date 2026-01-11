@@ -13,8 +13,8 @@ Track progress with [x] marks:
 - [x] Fire cooldown / rate
 - [x] Bounce damage scaling (+X% per bounce?)
 - [x] Enemy base HP (slime, bat, crab)
-- [ ] Enemy HP scaling per wave
-- [ ] Enemy speed scaling per wave
+- [x] Enemy HP scaling per wave
+- [x] Enemy speed scaling per wave
 - [ ] XP per gem (base value)
 - [ ] XP to level up curve (100, 150, 200...?)
 - [ ] Crit damage multiplier
@@ -410,3 +410,78 @@ if _bounce_count > max_bounces:
 3. **Add elemental weaknesses** - Fire enemies weak to ice, etc.
 
 **Recommendation**: Keep current HP values. Focus on adding more enemy types for variety rather than adjusting base HP. Consider elemental weakness system for future depth.
+
+---
+
+### 6. Enemy HP & Speed Scaling Per Wave
+**Iteration**: 6 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Fast Mode Guide](https://ballxpit.org/guides/fast-mode/)
+- [New Game Plus Guide](https://ballxpit.org/guides/new-game-plus/)
+- [Scaling needs toned down - Steam Discussion](https://steamcommunity.com/app/2062430/discussions/0/624436409752739038/)
+
+**Key Findings**:
+- **Post-boss HP spike**: Enemies feel like they get ~3x HP after first boss
+- **Fast modes compound**: Enemies become exponentially stronger per wave
+- **NG+ scaling**: +50% HP and +50% damage across the board
+- **Wave 15 difficulty spike**: Requires 2 evolutions to survive
+- **Meta progression**: Stat scaling buildings reduce early difficulty
+- BallxPit uses **game modes** (Normal, Fast, Fast+2, Fast+3) for difficulty
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_enemy_scaling.py`
+
+**Scaling Formulas**:
+```gdscript
+# HP: +10% per wave (linear, no cap)
+max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
+
+# Speed: +5% per wave (capped at 2x)
+speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
+
+# XP: +5% per wave (linear, no cap)
+xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
+```
+
+**Multiplier Progression**:
+| Wave | HP Mult | Speed Mult | XP Mult |
+|------|---------|------------|---------|
+| 1 | 1.0x | 1.00x | 1.00x |
+| 5 | 1.4x | 1.20x | 1.20x |
+| 10 | 1.9x | 1.45x | 1.45x |
+| 15 | 2.4x | 1.70x | 1.70x |
+| 20 | 2.9x | 1.95x | 1.95x |
+| 30 | 3.9x | 2.00x | 2.45x |
+| 50 | 5.9x | 2.00x | 3.45x |
+
+**Speed Cap Analysis**:
+- Speed reaches 2x cap at **wave 21**
+- After wave 21, HP continues scaling but speed stays capped
+- This prevents enemies from becoming impossibly fast
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| HP Scaling | Post-boss spikes, exponential in Fast modes | +10% linear per wave | BallxPit more volatile |
+| Speed Scaling | Unknown (part of Fast mode) | +5% per wave, capped at 2x | GoPit predictable |
+| Difficulty Curve | Spikes at boss, wave 15, NG+ | Gradual linear increase | **Different design** |
+| Game Modes | Normal/Fast/Fast+2/Fast+3 | Single mode | BallxPit more variety |
+
+#### Alignment Recommendation
+
+**Priority**: P2 (Medium)
+
+**Key Difference**: GoPit uses smooth linear scaling while BallxPit has deliberate difficulty spikes (post-boss, wave 15, NG+). BallxPit's approach creates dramatic moments; GoPit's is more consistent.
+
+**Options**:
+1. **Keep current** - Predictable scaling, good for mobile
+2. **Add post-boss spike** - +50% HP/damage after each boss
+3. **Add game speed modes** - Like BallxPit's Fast/Fast+2/Fast+3
+4. **Add NG+ mode** - Major scaling increase for replayability
+
+**Recommendation**: Keep linear scaling for base game but **add post-boss HP spike** (+30-50% after beating a boss) to create dramatic difficulty moments. Consider Fast modes as future content.
