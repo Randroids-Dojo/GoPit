@@ -112,13 +112,15 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 
 ### Top 5 Critical Gaps (Must Fix)
 
-| Priority | Gap | Bead | Impact |
-|----------|-----|------|--------|
-| **P1** | Bounce damage scaling (+5%/bounce) | GoPit-gdj | Changes core gameplay |
-| **P1** | Fission as level-up card | GoPit-hfi | Missing upgrade path |
-| **P2** | Unique character mechanics | GoPit-oyz | Characters feel same |
-| **P2** | Boss weak points | GoPit-9ss | No precision play |
-| **P2** | Autofire default ON | GoPit-7n5 | Different feel |
+| Priority | Gap | Bead | Impact | Status |
+|----------|-----|------|--------|--------|
+| **P1** | Bounce damage scaling (+5%/bounce) | GoPit-gdj | Changes core gameplay | ⚠️ Verify impl |
+| **P1** | Fission as level-up card | GoPit-hfi | Missing upgrade path | ⚠️ Verify impl |
+| **P2** | Unique character mechanics | GoPit-oyz | Characters feel same | Open |
+| **P2** | Boss weak points | GoPit-9ss | No precision play | Open |
+| **P2** | Autofire default ON | GoPit-7n5 | Different feel | Open |
+
+> **Note**: Beads GoPit-gdj and GoPit-hfi show as closed, but code verification needed. Check `ball.gd` for bounce damage and `level_up_overlay.gd` for fission card.
 
 ### Key Findings from Research
 
