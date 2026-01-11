@@ -4314,3 +4314,61 @@ enum AttackState { IDLE, TELEGRAPH, ATTACKING, COOLDOWN }
 - ✅ Camera shake on defeat
 - ✅ HP bar integration
 
+
+---
+
+## Appendix AT: Meta-Progression System Implementation (NEW)
+
+### Pit Coins Earning Formula
+
+```gdscript
+earned := wave * 10 + level * 25
+```
+
+**Examples:**
+- Wave 5, Level 3: 50 + 75 = 125 coins
+- Wave 10, Level 5: 100 + 125 = 225 coins
+
+### Permanent Upgrades (5 total)
+
+| ID | Name | Effect | Base Cost | Multiplier | Max Level |
+|----|------|--------|-----------|------------|-----------|
+| hp | Pit Armor | +10 HP per level | 100 | 2.0x | 5 |
+| damage | Ball Power | +2 damage per level | 150 | 2.0x | 5 |
+| fire_rate | Rapid Fire | -0.05s cooldown per level | 200 | 2.0x | 5 |
+| coin_bonus | Coin Magnet | +10% coins per level | 250 | 2.5x | 4 |
+| starting_level | Head Start | Start at higher level | 500 | 3.0x | 3 |
+
+**Cost Scaling Example (Pit Armor):**
+- Level 1: 100 coins
+- Level 2: 200 coins
+- Level 3: 400 coins
+- Level 4: 800 coins
+- Level 5: 1600 coins
+- **Total to max: 3,100 coins**
+
+### Persistence
+
+**Saved to `user://meta.save`:**
+- `coins`: Current Pit Coins balance
+- `runs`: Total runs completed
+- `best_wave`: Highest wave reached
+- `upgrades`: Dictionary of upgrade levels
+
+### BallxPit Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Permanent upgrades | 5 | 10-15 |
+| Character unlocks | No shop | Shop purchase |
+| Visual progression | None | Base building |
+| Run stats tracked | 3 | Many more |
+
+### Missing Features
+
+1. [ ] **Only 5 upgrades** - Need 10-15 total
+2. [ ] **No character unlock shop** - Characters just unlocked/locked
+3. [ ] **No visual progression** - No trophy room or base
+4. [ ] **Limited stats** - Only coins, runs, best wave
+5. [ ] **No achievements** - No milestone rewards
+
