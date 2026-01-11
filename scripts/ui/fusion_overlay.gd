@@ -104,7 +104,7 @@ func _update_content() -> void:
 
 func _show_fission_content() -> void:
 	title_label.text = "FISSION"
-	description_label.text = "Get random ball upgrades or new balls.\nIf all maxed, receive bonus XP instead."
+	description_label.text = "Get random ball upgrades or new balls.\nIf all maxed, receive Pit Coins instead."
 	ball_grid.visible = false
 	preview_container.visible = false
 
