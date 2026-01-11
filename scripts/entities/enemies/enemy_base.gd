@@ -33,13 +33,11 @@ var _base_speed: float = 0.0  # Original speed before slow effects
 var _effect_tint: Color = Color.WHITE  # Combined tint from active effects
 var _effect_particles: Dictionary = {}  # StatusEffect.Type -> GPUParticles2D
 
-# Particle scenes for status effects
-const EFFECT_PARTICLES := {
-	StatusEffect.Type.BURN: "res://scenes/effects/burn_particles.tscn",
-	StatusEffect.Type.FREEZE: "res://scenes/effects/freeze_particles.tscn",
-	StatusEffect.Type.POISON: "res://scenes/effects/poison_particles.tscn",
-	StatusEffect.Type.BLEED: "res://scenes/effects/bleed_particles.tscn"
-}
+# Particle scenes for status effects (preloaded for performance)
+const BURN_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/burn_particles.tscn")
+const FREEZE_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/freeze_particles.tscn")
+const POISON_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/poison_particles.tscn")
+const BLEED_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/bleed_particles.tscn")
 
 @export var max_hp: int = 10
 @export var speed: float = 100.0
@@ -510,11 +508,18 @@ func _ensure_effect_particles(effect_type: int) -> void:
 	if _effect_particles.has(effect_type):
 		return  # Already have particles for this effect
 
-	if not EFFECT_PARTICLES.has(effect_type):
-		return  # No particle scene for this effect type
+	# Get preloaded particle scene for this effect type
+	var particle_scene: PackedScene = null
+	match effect_type:
+		StatusEffect.Type.BURN:
+			particle_scene = BURN_PARTICLES_SCENE
+		StatusEffect.Type.FREEZE:
+			particle_scene = FREEZE_PARTICLES_SCENE
+		StatusEffect.Type.POISON:
+			particle_scene = POISON_PARTICLES_SCENE
+		StatusEffect.Type.BLEED:
+			particle_scene = BLEED_PARTICLES_SCENE
 
-	var scene_path: String = EFFECT_PARTICLES[effect_type]
-	var particle_scene: PackedScene = load(scene_path)
 	if particle_scene:
 		var particles: GPUParticles2D = particle_scene.instantiate()
 		add_child(particles)

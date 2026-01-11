@@ -28,15 +28,13 @@ var _trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 8
 var _particle_trail: GPUParticles2D = null
 
-# Trail particle scenes per ball type
-const TRAIL_PARTICLES := {
-	BallType.FIRE: "res://scenes/effects/fire_trail.tscn",
-	BallType.ICE: "res://scenes/effects/ice_trail.tscn",
-	BallType.LIGHTNING: "res://scenes/effects/lightning_trail.tscn",
-	BallType.POISON: "res://scenes/effects/poison_trail.tscn",
-	BallType.BLEED: "res://scenes/effects/bleed_trail.tscn",
-	BallType.IRON: "res://scenes/effects/iron_trail.tscn"
-}
+# Trail particle scenes per ball type (preloaded for performance)
+const TRAIL_SCENE_FIRE: PackedScene = preload("res://scenes/effects/fire_trail.tscn")
+const TRAIL_SCENE_ICE: PackedScene = preload("res://scenes/effects/ice_trail.tscn")
+const TRAIL_SCENE_LIGHTNING: PackedScene = preload("res://scenes/effects/lightning_trail.tscn")
+const TRAIL_SCENE_POISON: PackedScene = preload("res://scenes/effects/poison_trail.tscn")
+const TRAIL_SCENE_BLEED: PackedScene = preload("res://scenes/effects/bleed_trail.tscn")
+const TRAIL_SCENE_IRON: PackedScene = preload("res://scenes/effects/iron_trail.tscn")
 
 # Baby ball properties (auto-spawned, smaller, less damage)
 var is_baby_ball: bool = false
@@ -91,12 +89,22 @@ func _spawn_particle_trail() -> void:
 	if ball_type == BallType.NORMAL or is_baby_ball:
 		return
 
-	# Check if we have a trail scene for this type
-	if not TRAIL_PARTICLES.has(ball_type):
-		return
+	# Get preloaded trail scene for this type
+	var trail_scene: PackedScene = null
+	match ball_type:
+		BallType.FIRE:
+			trail_scene = TRAIL_SCENE_FIRE
+		BallType.ICE:
+			trail_scene = TRAIL_SCENE_ICE
+		BallType.LIGHTNING:
+			trail_scene = TRAIL_SCENE_LIGHTNING
+		BallType.POISON:
+			trail_scene = TRAIL_SCENE_POISON
+		BallType.BLEED:
+			trail_scene = TRAIL_SCENE_BLEED
+		BallType.IRON:
+			trail_scene = TRAIL_SCENE_IRON
 
-	var scene_path: String = TRAIL_PARTICLES[ball_type]
-	var trail_scene: PackedScene = load(scene_path)
 	if trail_scene:
 		_particle_trail = trail_scene.instantiate()
 		add_child(_particle_trail)
