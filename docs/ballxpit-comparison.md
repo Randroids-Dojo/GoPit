@@ -1,8 +1,8 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 1.1
+> **Document Version**: 2.0
 > **Last Updated**: January 2026
-> **Status**: In Progress
+> **Status**: Complete (Initial Analysis)
 > **Related Epic**: GoPit-68o
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
@@ -13,6 +13,9 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 - [Ball x Pit Ultimate Beginner's Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-ultimate-beginners-guide/)
 - [Ball x Pit Evolutions Guide](https://steelseries.com/blog/ball-x-pit-evolutions-and-guide)
 - [Ball X Pit Autofire Guide](https://spot.monster/games/game-guides/ball-x-pit-autofire-guide-2/)
+- [GAM3S.GG Evolution Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-evolution-guide/)
+- [Dexerto - All Characters](https://www.dexerto.com/wikis/ball-x-pit/all-characters-how-to-unlock-them-2/)
+- [BallxPit.org Boss Battle Guide](https://ballxpit.org/guides/boss-battle-guide/)
 
 ---
 
@@ -33,39 +36,86 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 
 ## Executive Summary
 
+### Quick Stats Comparison
+
+| Metric | GoPit | BallxPit | Gap |
+|--------|-------|----------|-----|
+| Characters | 6 | 16+ | -10 |
+| Stages | 4 | 8 | -4 |
+| Bosses | 1 | 8 | -7 |
+| Evolution recipes | 5 | 40+ | -35 |
+| Ball types | 7 | 14+ | -7 |
+| Enemy types | 3 | Many | Large |
+
 ### Current Alignment Status
 
-| Category | Alignment | Priority |
-|----------|-----------|----------|
-| Ball Shooting | Partial | Medium |
-| Player Movement | Good | Low |
-| Enemy Behavior | Good | Low |
-| Level Progression | Partial | Medium |
-| Fusion/Fission System | Good | Low |
-| Character Selection | Good | Low |
-| Gem Collection | Good | Low |
-| Boss Fights | Basic | Medium |
+| Category | Alignment | Priority | Key Gap |
+|----------|-----------|----------|---------|
+| Ball Mechanics | **Critical Gap** | P1 | No bounce damage (+5%/bounce) |
+| Level-Up System | **Critical Gap** | P1 | No Fission card option |
+| Characters | Large Gap | P2 | Stats only, no unique mechanics |
+| Bosses | Large Gap | P2 | 1 boss, no weak points |
+| Stages | Medium Gap | P3 | No unlock system |
+| Controls | Good | Low | Missing ball catching |
+| Gem/XP | Good | Low | Well aligned |
+
+### Top 5 Critical Gaps (Must Fix)
+
+| Priority | Gap | Bead | Impact |
+|----------|-----|------|--------|
+| **P1** | Bounce damage scaling (+5%/bounce) | GoPit-gdj | Changes core gameplay |
+| **P1** | Fission as level-up card | GoPit-hfi | Missing upgrade path |
+| **P2** | Unique character mechanics | GoPit-oyz | Characters feel same |
+| **P2** | Boss weak points | GoPit-9ss | No precision play |
+| **P2** | Autofire default ON | GoPit-7n5 | Different feel |
 
 ### Key Findings from Research
 
-Based on analysis of BallxPit guides and documentation:
+**Core Mechanics Differences:**
 
-1. **Positioning > Precision**: BallxPit emphasizes smart positioning over precise aiming. "Precision aiming matters less than smart positioning."
-2. **Autofire is Primary**: Autofire is the default mode, manual firing (F key) is used mainly for bosses
-3. **Ball Catching**: Players can manually catch balls to reset them faster (2-3s saved per ball)
-4. **Fission/Fusion/Evolution**: Three distinct upgrade paths at level-up
-   - **Fission**: Upgrades multiple balls to L3 (early game)
-   - **Fusion**: Combines two L3 balls (mid-game)
-   - **Evolution**: Transforms balls into new types (late-game)
-5. **Character Attack Directions**: Some characters have unique firing directions (e.g., The Shade fires from back of screen)
+1. **Bounce Damage is CORE** - BallxPit balls gain +5% damage per bounce
+   - Ricochet is a strategy, not limitation
+   - The Repentant character specializes in this
+   - Changes entire aiming philosophy
 
-### Key Gaps Identified
+2. **Fission/Fusion/Evolution as Level-Up Choices**
+   - BallxPit: Three card types at level-up
+   - GoPit: Fission only via random drops
 
-1. **Autofire as default**: BallxPit uses autofire as primary mode; we have it as toggle
-2. **Ball catching mechanic**: Not implemented - players can catch balls in BallxPit
-3. **Character-specific firing directions**: Some BallxPit characters fire from different directions
-4. **Boss variety**: Only Slime King implemented, need more boss types
-5. **Fission as level-up option**: Our Fission is fusion_registry drop, not level-up choice
+3. **Characters Have Unique MECHANICS**
+   - The Shade fires from back of screen
+   - The Cohabitants fire mirrored shots
+   - GoPit: All characters fire identically
+
+4. **Bosses Have Weak Points**
+   - Skeleton King crown takes 2x damage
+   - Precision targeting required
+   - GoPit: Any hit does same damage
+
+5. **Stage Unlock via Replay**
+   - Complete with different characters for gears
+   - Gears unlock new stages
+   - Encourages multi-character play
+
+### All Open Beads
+
+**P1 - Critical:**
+- GoPit-gdj: Add bounce damage scaling
+- GoPit-hfi: Add Fission as level-up card
+- GoPit-68o: EPIC - This comparison analysis
+
+**P2 - High:**
+- GoPit-oyz: Add unique firing mechanic character
+- GoPit-b2k: Add boss phases and attack patterns
+- GoPit-ri4: Add more evolution recipes
+- GoPit-7n5: Make autofire default ON
+- GoPit-9ss: Add weak point system for bosses
+
+**P3 - Medium:**
+- GoPit-nba: Expand character roster to 10+
+- GoPit-clu: Add 2x fire rate character
+- GoPit-a2b: Add stage unlock system
+- GoPit-qxg: Add stage-specific enemies
 
 ---
 
@@ -1384,4 +1434,127 @@ Research sources:
 
 ---
 
+## Appendix K: Passive Upgrade System Comparison
+
+Research sources:
+- [Ball X Pit Wiki - Passives](https://ballpit.fandom.com/wiki/Passives)
+- [Dexerto - All Passives](https://www.dexerto.com/wikis/ball-x-pit/all-passives/)
+- [GAM3S.GG - Passive Evolution Ranked](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-passive-evolution-ranked/)
+
+### BallxPit Passive System
+
+**51 Base Passives** with:
+- Level 1-3 for each
+- Passive EVOLUTIONS (combine passives)
+- Max 3 evolved passives per run
+
+**Top Passive Evolutions:**
+| Evolution | Recipe | Effect |
+|-----------|--------|--------|
+| **Soul Reaver** | Everflowing Goblet + Vampiric Sword | 25% lifesteal on all hits |
+| **Deadeye's Cross** | All 4 elemental daggers | 60% crit chance |
+| **Wings of Anointed** | Movement passives | +30% movement speed |
+| **Cornucopia** | Baby Rattle + War Horn | Increased drops |
+
+**Key Differences:**
+- Passives can be EVOLVED (like balls)
+- Don't need to be L3 to evolve
+- Multiplicative with character stats
+
+### GoPit Passive System
+
+**11 Base Passives:**
+| Upgrade | Effect | Max Stacks |
+|---------|--------|------------|
+| Power Up | +5 Ball Damage | 10 |
+| Quick Fire | -0.1s Cooldown | 4 |
+| Vitality | +25 Max HP | 10 |
+| Multi Shot | +1 Ball per shot | 3 |
+| Velocity | +100 Ball Speed | 5 |
+| Piercing | Pierce +1 enemy | 3 |
+| Ricochet | +5 wall bounces | 4 |
+| Critical Hit | +10% crit chance | 5 |
+| Magnetism | Gem attraction | 3 |
+| Heal | Restore 30 HP | 99 |
+| Leadership | +20% Baby Ball rate | 5 |
+
+**No passive evolutions currently.**
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| Base passives | 11 | 51 | Large |
+| Passive evolutions | No | Yes | Large |
+| Passive levels | 1 only | 1-3 | Medium |
+| Evolved passive limit | N/A | 3 per run | N/A |
+
+### Recommendations
+
+1. [ ] **Add passive evolution system** - Combine passives for evolved effects
+2. [ ] **Add more base passives** - Target 20-30 total
+3. [ ] **Add passive leveling** - L1-L3 like balls
+4. [ ] **Add evolved passive limit** - Strategic choice
+
+---
+
+## Summary: Implementation Priority
+
+### Phase 1: Core Mechanics (P1)
+
+These fundamentally change how the game feels:
+
+1. **GoPit-gdj: Bounce Damage Scaling**
+   - Add +5% damage per bounce
+   - Remove/increase max bounce limit
+   - Enables ricochet strategy
+
+2. **GoPit-hfi: Fission as Level-Up Card**
+   - Add Fission card type to level-up
+   - Upgrades multiple balls to L3
+   - Completes the Fission/Fusion/Evolution triad
+
+### Phase 2: Character & Content (P2)
+
+Add variety and depth:
+
+3. **GoPit-oyz: Unique Firing Mechanics**
+   - At least one character with different firing
+   - The Shade (back-firing) or Cohabitants (mirrors)
+
+4. **GoPit-9ss: Boss Weak Points**
+   - Add weak point system (2x damage)
+   - Adds precision skill expression
+
+5. **GoPit-7n5: Autofire Default ON**
+   - Match BallxPit feel
+   - Manual for bosses
+
+6. **GoPit-ri4: More Evolutions**
+   - Target 10-15 total
+   - Add new ball types first (Dark, Light, Vampire)
+
+7. **GoPit-b2k: Boss Phases**
+   - Improve existing Slime King
+   - Add more bosses
+
+### Phase 3: Content Expansion (P3)
+
+Scale up content:
+
+8. **GoPit-nba + GoPit-clu: More Characters**
+   - Target 10+ characters
+   - Include The Itchy Finger (2x fire rate)
+
+9. **GoPit-a2b: Stage Unlock System**
+   - Gears from completing with different characters
+   - Encourages replay
+
+10. **GoPit-qxg: Stage-Specific Enemies**
+    - Ice enemies for Frozen Depths
+    - Fire enemies for Burning Sands
+
+---
+
 *Document maintained as part of BallxPit alignment effort (GoPit-68o)*
+*Analysis complete - 1400+ lines covering all major systems*
