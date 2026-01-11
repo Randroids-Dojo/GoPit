@@ -68,17 +68,19 @@ bd sync               # Sync with git
 ### Running Tests
 
 ```bash
-# Run all PlayGodot tests
+# Run all PlayGodot tests (parallel by default, 4 workers)
 ./test.sh
 
-# Or with pytest directly
-python3 -m pytest tests/ -v --tb=short
+# Run with custom worker count
+./test.sh -n 8                 # 8 workers
+./test.sh -n 0                 # Sequential (no parallel)
+TEST_WORKERS=2 ./test.sh       # 2 workers via env var
 
 # Run specific test file
-python3 -m pytest tests/test_fire.py -v
+./test.sh tests/test_fire.py
 
-# Run comprehensive playtest
-python3 -m pytest tests/test_comprehensive_playtest.py -v
+# Or with pytest directly
+python3 -m pytest tests/ -v --tb=short -n 4
 ```
 
 ### Test Coverage Expectations
@@ -206,32 +208,52 @@ See [docs/godot-ui-best-practices.md](docs/godot-ui-best-practices.md) for compr
 
 ## Parallel Test Execution
 
-PlayGodot tests now support **automatic parallel execution** via dynamic port allocation.
+PlayGodot tests run in **parallel by default** (4 workers) for faster feedback.
 
 ### How It Works
 
-Each test session automatically gets a unique port:
+1. **File splitting**: Tests are split across multiple files for efficient parallel distribution
+2. **Dynamic ports**: Each worker gets a unique port via pytest-xdist worker ID
+3. **Automatic**: `./test.sh` runs parallel by default, no extra flags needed
 
-1. **PLAYGODOT_PORT env var** - Explicit override (highest priority)
-2. **pytest-xdist worker ID** - For parallel workers within a session
-3. **Dynamic free port** - Auto-allocated for cross-session safety
+### Test File Organization
 
-### Running Tests in Parallel
+Playtest tests are split for parallel efficiency:
+- `test_playtest_input.py` - Fire cooldown, joystick aiming (~8s)
+- `test_playtest_physics.py` - Ball bounce, despawn, collision (~8s)
+- `test_playtest_enemies.py` - Spawning, player zone, waves (~25s)
+- `test_playtest_progression.py` - Gems, XP, level-up (~15s)
+- `test_playtest_feedback.py` - UI, audio, damage feedback (~10s)
+- `test_playtest_session.py` - Full 60-second gameplay simulation (~65s)
+
+### Running Tests
 
 ```bash
-# Sequential (auto port)
-pytest tests/ -v
+# Default: parallel with 4 workers
+./test.sh
 
-# Parallel within session (requires: pip install pytest-xdist)
-pytest tests/ -n 4
+# Override worker count
+./test.sh -n 8                 # 8 workers
+./test.sh -n 0                 # Sequential (disable parallel)
+TEST_WORKERS=2 ./test.sh       # 2 workers via env var
+
+# Single file (auto-detects, runs without parallel)
+./test.sh tests/test_fire.py
 
 # Multiple sessions (each gets unique port automatically)
 # Terminal 1: pytest tests/test_fire.py -v
 # Terminal 2: pytest tests/test_autofire.py -v
-
-# Explicit port override
-PLAYGODOT_PORT=7000 pytest tests/ -v
 ```
+
+### Shared Test Helpers
+
+Common utilities are in `tests/helpers.py`:
+- `PATHS` - Node path dictionary
+- `wait_for_fire_ready()` - Wait with timeout for fire button
+- `wait_for_condition()` - Generic condition waiter
+- `wait_for_enemy()` - Wait for enemy spawn
+- `get_joystick_center()` - Get joystick center coordinates
+- `PlaytestReport` - Issue collection for playtest feedback
 
 ### Troubleshooting
 

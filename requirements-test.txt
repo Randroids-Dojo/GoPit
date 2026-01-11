@@ -1,0 +1,12 @@
+# Test dependencies for GoPit PlayGodot tests
+# Install with: pip install -r requirements-test.txt
+
+# Core testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+
+# Parallel test execution
+pytest-xdist>=3.5.0
+
+# PlayGodot framework (installed from local clone or GitHub)
+# playgodot

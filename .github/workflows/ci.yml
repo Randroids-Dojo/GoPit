@@ -43,11 +43,11 @@ jobs:
           echo "=== Cloning PlayGodot ==="
           git clone --depth 1 https://github.com/Randroids-Dojo/PlayGodot.git
 
-      - name: Install PlayGodot
+      - name: Install PlayGodot and test dependencies
         run: |
           cd PlayGodot/python
           pip install -e .
-          pip install pytest pytest-asyncio
+          pip install pytest pytest-asyncio pytest-xdist
 
       - name: Import Godot Project
         run: |
@@ -59,10 +59,10 @@ jobs:
 
       - name: Run PlayGodot Tests
         run: |
-          echo "=== Running PlayGodot Integration Tests ==="
+          echo "=== Running PlayGodot Integration Tests (4 parallel workers) ==="
           export GODOT_PATH="${{ github.workspace }}/godot-automation/godot.linuxbsd.editor.x86_64.mono"
-          # Run with xvfb for headless display support
-          xvfb-run --auto-servernum pytest tests/ -v --tb=short
+          # Run with xvfb for headless display support, 4 parallel workers
+          xvfb-run --auto-servernum pytest tests/ -v --tb=short -n 4
           echo "PlayGodot tests completed"
 
       - name: Upload Screenshots
