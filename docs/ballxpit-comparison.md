@@ -9788,3 +9788,216 @@ func spawn_adds(enemy_scene: PackedScene, count: int, spread: float = 100.0) -> 
 
 **Rating**: ⭐⭐⭐⭐ EXCELLENT FRAMEWORK, NEEDS CONTENT
 
+---
+
+## Appendix DC: Enemy Base System
+
+**Source**: `scripts/entities/enemies/enemy_base.gd` (580 lines)
+
+### Enemy States
+
+```gdscript
+enum State { DESCENDING, WARNING, ATTACKING, DEAD }
+```
+
+| State | Description |
+|-------|-------------|
+| DESCENDING | Moving down toward player |
+| WARNING | 1s telegraph before attack (shakes, "!" indicator) |
+| ATTACKING | Lunging at player's position |
+| DEAD | Cleanup state |
+
+### Attack Flow
+
+```
+Enemy descends → Reaches player Y level → WARNING state (1s)
+    ↓
+"!" indicator + shaking → Attack lunges at player
+    ↓
+Miss: Snap back to pre-attack position, lose 3 HP
+Hit: Deal damage to player, lose 3 HP
+    ↓
+If HP > 0: Return to DESCENDING (will attack again)
+If HP = 0: Die
+```
+
+**SELF-DAMAGE**: Enemies take 3 HP when attacking. They eventually kill themselves!
+
+### Wave Scaling
+
+```gdscript
+func _scale_with_wave() -> void:
+    var wave := GameManager.current_wave
+    // HP: +10% per wave
+    max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
+    // Speed: +5% per wave (capped at 2x)
+    speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
+    // XP: +5% per wave
+    xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
+```
+
+| Wave | HP Mult | Speed Mult | XP Mult |
+|------|---------|------------|---------|
+| 1 | 1.0x | 1.0x | 1.0x |
+| 5 | 1.4x | 1.2x | 1.2x |
+| 10 | 1.9x | 1.45x | 1.45x |
+| 20 | 2.9x | 2.0x (cap) | 1.95x |
+
+### Status Effect Integration
+
+```gdscript
+var _active_effects: Dictionary = {}  // Type -> StatusEffect
+
+func apply_status_effect(effect: StatusEffect) -> void:
+    if _active_effects.has(effect_type):
+        existing.add_stack()  // Stack if allowed
+        existing.refresh()    // Refresh duration
+    else:
+        _active_effects[effect_type] = effect
+        _update_speed_from_effects()  // Apply slows
+        _update_effect_visuals()      // Update tint + particles
+```
+
+### Effect Particles
+
+```gdscript
+const EFFECT_PARTICLES := {
+    StatusEffect.Type.BURN: "res://scenes/effects/burn_particles.tscn",
+    StatusEffect.Type.FREEZE: "res://scenes/effects/freeze_particles.tscn",
+    StatusEffect.Type.POISON: "res://scenes/effects/poison_particles.tscn",
+    StatusEffect.Type.BLEED: "res://scenes/effects/bleed_particles.tscn"
+}
+```
+
+Particles are added/removed dynamically based on active effects.
+
+### Poison Spread on Death
+
+```gdscript
+func _spread_poison() -> void:
+    const SPREAD_RADIUS: float = 100.0
+
+    for enemy in enemies_container.get_children():
+        if enemy == self: continue
+        if enemy is EnemyBase:
+            var dist := global_position.distance_to(enemy.global_position)
+            if dist <= SPREAD_RADIUS:
+                var poison := StatusEffect.new(StatusEffect.Type.POISON)
+                enemy.apply_status_effect(poison)
+```
+
+Poisoned enemies spread poison to nearby enemies when they die!
+
+### Danger Zone Visualization
+
+```gdscript
+const DANGER_ZONE_Y: float = 1000.0
+
+func _on_enter_danger_zone() -> void:
+    modulate = Color(1.5, 0.5, 0.5)  // Red tint
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Attack telegraph | ✅ 1s warning | ✅ Similar |
+| Self-damage | ✅ 3 HP per attack | ❌ Unknown |
+| Wave scaling | ✅ HP/Speed/XP | ✅ Similar |
+| Status effects | ✅ Particles + tint | ✅ Similar |
+| Poison spread | ✅ On death | ✅ Similar |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| State machine | ✅ Clean | 4 states |
+| Attack telegraph | ✅ Working | "!" + shake |
+| Wave scaling | ✅ Working | Balanced |
+| Status effects | ✅ Excellent | Full integration |
+| Subclass extensibility | ✅ Great | Virtual methods |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT IMPLEMENTATION
+
+---
+
+## Appendix DD: Baby Ball System
+
+**Source**: `scripts/entities/baby_ball_spawner.gd` (119 lines)
+
+### Concept
+
+Baby balls are auto-targeting projectiles that fire passively, providing supplemental DPS. They:
+- Fire automatically on a timer
+- Target nearest enemy
+- Deal 50% of normal damage
+- Are 60% smaller than normal balls
+
+### Properties
+
+```gdscript
+@export var base_spawn_interval: float = 2.0
+@export var baby_ball_damage_multiplier: float = 0.5
+@export var baby_ball_scale: float = 0.6
+```
+
+### Leadership Integration
+
+```gdscript
+func _update_spawn_rate() -> void:
+    var char_mult: float = GameManager.character_leadership_mult
+    var speed_mult: float = GameManager.character_speed_mult
+    var passive_bonus: float = GameManager.get_baby_ball_rate_bonus()  // Squad Leader: +30%
+
+    var total_bonus: float = (_leadership_bonus * char_mult) + passive_bonus
+    var rate: float = base_spawn_interval / ((1.0 + total_bonus) * speed_mult)
+    _spawn_timer.wait_time = maxf(0.3, rate)  // Minimum 0.3s
+```
+
+### Targeting System
+
+```gdscript
+func _get_target_direction() -> Vector2:
+    var nearest := _find_nearest_enemy()
+    if nearest:
+        return _player.global_position.direction_to(nearest.global_position)
+    // Fallback: random upward
+    return Vector2(randf_range(-0.3, 0.3), -1.0).normalized()
+```
+
+### Character Synergies
+
+| Character | Effect on Baby Balls |
+|-----------|---------------------|
+| Tactician | +2 starting, +30% rate (passive) |
+| Any with Leadership upgrade | +20% rate per stack |
+| Any with high Leadership stat | Multiplied rate bonus |
+
+### Silent Firing
+
+```gdscript
+// Baby balls fire silently to avoid audio spam
+// (main ball fire sound is loud enough)
+```
+
+Good UX decision - prevents cacophony.
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Auto-targeting balls | ✅ Baby balls | ✅ Some characters |
+| Leadership stat | ✅ Affects rate | ? Unknown |
+| Passive DPS | ✅ Yes | ✅ Various |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Auto-targeting | ✅ Working | Nearest enemy |
+| Leadership scaling | ✅ Working | Complex formula |
+| Character synergy | ✅ Excellent | Tactician synergy |
+| Audio handling | ✅ Smart | Silent to prevent spam |
+
+**Rating**: ⭐⭐⭐⭐ SOLID IMPLEMENTATION
+
