@@ -13,9 +13,9 @@ extends Control
 var pause_overlay: CanvasLayer
 var _combo_tween: Tween
 
-# Speaker icons (using Unicode)
-const SPEAKER_ON := "\U0001F50A"  # Speaker with sound waves
-const SPEAKER_OFF := "\U0001F507"  # Muted speaker
+# Speaker icons (ASCII-compatible)
+const SPEAKER_ON := ")))"  # Sound waves
+const SPEAKER_OFF := "X"   # Muted
 
 
 func _ready() -> void:
