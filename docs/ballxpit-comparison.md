@@ -6572,11 +6572,166 @@ func _on_bounce():
 
 ---
 
+## Appendix BV: New Game Plus (NG+) System
+
+Research source:
+- [New Game Plus Guide](https://ballxpit.org/guides/new-game-plus/)
+
+### BallxPit NG+ Overview
+
+**Unlock Requirements:**
+- Complete all 8 biomes on Normal difficulty
+- Defeat final boss of biome 8
+- Reach Wave 50+
+
+### NG+ Difficulty Changes
+
+| Aspect | Normal Mode | NG+ Mode | Change |
+|--------|-------------|----------|--------|
+| Enemy HP | 100% | 150% | +50% |
+| Enemy Damage | 100% | 150% | +50% |
+| Checkpoints | Every 10 waves | **NONE** | Removed entirely |
+| Boss Fight Duration | 2-3 minutes | 4-5 minutes | ~2x longer |
+| Resource Costs | 1x | 2-3x | Major increase |
+
+### The Checkpoint Removal
+
+**Critical difference:**
+- Normal: Die at Wave 40 → Restart from Wave 40
+- NG+: Die at Wave 40 → **Restart from Wave 1**
+
+This transforms the game from "progress-saving" to "roguelike permadeath."
+
+### Resource Scaling in NG+
+
+| Resource Strategy | Normal | NG+ |
+|-------------------|--------|-----|
+| Gold Mines | 7 | 9-10 minimum |
+| Gold Buffer | 2,000 | 5,000+ |
+| Upgrade Priority | Flexible | Critical |
+
+### GoPit NG+ Status
+
+**Current State:** No NG+ system exists.
+
+GoPit has:
+- ❌ No difficulty scaling post-completion
+- ❌ No checkpoint system (so can't "remove" it)
+- ❌ No replayability incentive
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add NG+ mode | Unlock after completing all stages |
+| **P3** | Implement +50% enemy scaling | Match BallxPit formula |
+| **P3** | Add achievement integration | "Flawless NG+ Run" |
+
+---
+
+## Appendix BW: Advanced Stacking and Damage Amplification
+
+Research source:
+- [Advanced Mechanics Guide](https://ballxpit.org/guides/advanced-mechanics/)
+
+### Complete Status Effect Stacking Caps
+
+| Effect | Max Stacks | Damage/Effect | Notes |
+|--------|-----------|---------------|-------|
+| **Radiation** | 5 | +10%/stack (max +50%) | Multiplicative to ALL damage |
+| **Disease** | 8 | 3-6 dmg/sec + 15% spread | Spreads to nearby enemies |
+| **Frostburn** | 4 | 8-12 dmg/sec + 25% amp | 20-second duration |
+| **Bleed** | 24 | 2 stacks/sec (Leech) | Triggers Hemorrhage at 12 |
+| **Burn** | 5 | 10-20 dmg/sec | Standard DOT |
+| **Poison** | 8 | Standard DOT | - |
+
+### The Damage Amplification System
+
+**BallxPit uses layered multiplicative scaling:**
+
+```
+Base Damage × (1 + Radiation%) × (1 + Frostburn%) = Final Damage
+
+Example:
+36 base × 1.50 (5 radiation) × 1.25 (4 frostburn) = 67.5 damage
+```
+
+### Optimal Stack Strategy
+
+**Key insight:** Once at max stacks, switch targets.
+
+```
+# WRONG: Continue attacking same enemy
+Enemy A: 5 radiation (capped) → wasted stacks
+
+# RIGHT: Switch after cap
+Enemy A: 5 radiation → Switch to Enemy B
+Enemy B: 5 radiation → Switch to Enemy C
+= 3 enemies with max damage amp
+```
+
+### Duration Management
+
+| Effect | Duration | Reapplication |
+|--------|----------|---------------|
+| Radiation | **Infinite** | Never needed |
+| Frostburn | 20 seconds | Every 15-18s |
+| Bleed | Until consumed | At 12+ for Hemorrhage |
+| Disease | Persistent | Until spread complete |
+
+### Hemorrhage Deep Dive
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  HEMORRHAGE: 12+ bleed stacks → 20% CURRENT HP damage            ║
+║  Consumes all stacks. Best applied at FULL enemy health.         ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+**This creates skill expression:**
+- Noobs: Apply bleed, forget about it
+- Pros: Stack to exactly 12, trigger, restack
+
+### GoPit Status Effect Comparison
+
+| System | GoPit | BallxPit |
+|--------|-------|----------|
+| Stacking caps | ❌ None defined | ✅ Per-effect caps |
+| Radiation amplification | ❌ Missing | ✅ +50% multiplicative |
+| Hemorrhage mechanic | ❌ Missing | ✅ 20% HP burst |
+| Duration tracking | ⚠️ Basic | ✅ Per-effect |
+| Target switching reward | ❌ None | ✅ Strategic |
+
+### Building Upgrade Priority
+
+BallxPit has a specific stat priority:
+
+| Priority | Stat | Effect | Why |
+|----------|------|--------|-----|
+| 1 | Intelligence | AOE/baby ball damage | Scales all AOE |
+| 2 | Strength | Character damage | Direct DPS |
+| 3 | Endurance | HP | Survivability |
+| 4 | Leadership | Companion scaling | Situational |
+| 5 | Dexterity | Crit/dodge | Low impact |
+| 6 | Speed | Movement | Minimal |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Implement stacking caps | Define max per effect |
+| **P1** | Add damage amplification | Radiation → multiplicative |
+| **P1** | Add Hemorrhage | 12 bleed → 20% HP burst |
+| **P2** | Add duration system | Per-effect timers |
+| **P2** | Add target-switch reward | Incentivize spreading |
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **79 appendices** (A through BU)
+- **81 appendices** (A through BW)
 - **82 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
