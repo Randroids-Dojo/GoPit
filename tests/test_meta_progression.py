@@ -10,13 +10,8 @@ async def test_coins_earned_on_game_over(game):
     # Get initial coin balance
     initial_coins = await game.get_property("/root/MetaManager", "pit_coins")
 
-    # Let enemies damage player until game over
-    # Speed up by directly setting HP low
-    await game.call("/root/GameManager", "take_damage", [95])
-    await asyncio.sleep(0.5)
-
-    # Take final damage to trigger game over
-    await game.call("/root/GameManager", "take_damage", [10])
+    # Kill player in one hit to avoid i-frame issues (player has 100 HP)
+    await game.call("/root/GameManager", "take_damage", [100])
     await asyncio.sleep(1.0)
 
     # Check game over overlay is visible

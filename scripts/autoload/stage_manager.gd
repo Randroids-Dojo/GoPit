@@ -79,3 +79,12 @@ func is_boss_wave() -> bool:
 	if not current_biome:
 		return false
 	return wave_in_stage >= current_biome.waves_before_boss
+
+
+func get_post_boss_hp_multiplier() -> float:
+	## Returns HP multiplier based on bosses defeated.
+	## Each boss adds roughly 3x HP to enemies, creating distinct difficulty phases.
+	const BOSS_HP_MULT: float = 3.0
+	if current_stage <= 0:
+		return 1.0
+	return pow(BOSS_HP_MULT, current_stage)
