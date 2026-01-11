@@ -8975,7 +8975,7 @@ func is_ultimate_ready() -> bool
 - Visual ring indicator in HUD
 - Pulses when ready
 
-**Comparison**: BallxPit has character-specific ultimate abilities. GoPit's implementation is simpler but functional.
+**Comparison**: BallxPit does NOT have ultimate abilities (see Appendix AG). GoPit's ultimate is an ORIGINAL feature that adds strategic depth.
 
 ### Session Stats Tracked
 
