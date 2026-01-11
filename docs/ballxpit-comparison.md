@@ -1,11 +1,11 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 3.2
+> **Document Version**: 3.3
 > **Last Updated**: January 11, 2026
 > **Status**: Comprehensive Analysis Complete + Code Verification (167 Appendices, 14,111 lines)
 > **Related Epic**: GoPit-68o
-> **Iterations**: 146 Ralph Wiggum analysis passes
-> **Verification Results**: 7 prematurely-closed beads reopened (see Critical Gaps section)
+> **Iterations**: 147 Ralph Wiggum analysis passes
+> **Verification Results**: 9 prematurely-closed beads reopened (see Critical Gaps section)
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
 
@@ -121,7 +121,7 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 | **P2** | Boss weak points | GoPit-9ss | No precision play | Open |
 | **P2** | Autofire default ON | GoPit-7n5 | Different feel | ❌ NOT IMPL |
 
-> **Code Verification (Iterations 141-146)**: Multiple beads marked closed but NOT implemented:
+> **Code Verification (Iterations 141-147)**: Multiple beads marked closed but NOT implemented:
 > - Bounce damage: `ball.gd:189-193` tracks `_bounce_count` but never scales damage
 > - Ball return: `ball.gd:190-192` still despawns after max_bounces, no bottom detection
 > - Fission card: `level_up_overlay.gd` has no FISSION CardType
@@ -129,7 +129,7 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 > - Trajectory preview: `aim_line.gd` has no raycast/bounce prediction
 > - Autofire default: `fire_button.gd:19` still shows `autofire_enabled: bool = false`
 > - Bleed on-hit: `status_effect.gd:47-51` only has DoT, no on-hit bonus damage
-> - **Beads reopened**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5, GoPit-ay9, GoPit-2wz
+> - **Beads reopened (9 total)**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5, GoPit-ay9, GoPit-2wz, GoPit-kslj, GoPit-v0j (duplicates)
 
 ### Key Findings from Research
 
