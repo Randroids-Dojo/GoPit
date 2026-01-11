@@ -8471,13 +8471,144 @@ func _configure() -> void:
 
 ---
 
+## Appendix CQ: Ball Entity System (Comprehensive!)
+
+### BallxPit Ball System
+
+- Multiple ball types with unique effects
+- Balls fire simultaneously from slots
+- Level system affects stats
+- Visual differentiation per type
+
+### GoPit Ball Entity
+
+**Implementation (ball.gd - 605 lines!):**
+
+**7 Ball Types:**
+```gdscript
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON }
+
+// Each with unique visuals and on-hit effects:
+BallType.FIRE    -> burn status, +damage bonus
+BallType.ICE     -> freeze status (50% slow)
+BallType.LIGHTNING -> chain to nearby enemy
+BallType.POISON  -> DoT status
+BallType.BLEED   -> stacking DoT
+BallType.IRON    -> knockback + high damage
+```
+
+**Level Visual Indicators:**
+```gdscript
+// L2: single white ring
+draw_arc(Vector2.ZERO, radius + 2, 0, TAU, 24, Color.WHITE, 1.5)
+// L3: gold outer ring (fusion-ready!)
+draw_arc(Vector2.ZERO, radius + 5, 0, TAU, 24, Color(1.0, 0.85, 0.0), 2.0)
+```
+
+**Particle Trails Per Type:**
+```gdscript
+const TRAIL_PARTICLES := {
+    BallType.FIRE: "res://scenes/effects/fire_trail.tscn",
+    BallType.ICE: "res://scenes/effects/ice_trail.tscn",
+    BallType.LIGHTNING: "res://scenes/effects/lightning_trail.tscn",
+    BallType.POISON: "res://scenes/effects/poison_trail.tscn",
+    BallType.BLEED: "res://scenes/effects/bleed_trail.tscn",
+    BallType.IRON: "res://scenes/effects/iron_trail.tscn"
+}
+```
+
+**Critical Hit System:**
+```gdscript
+var total_crit_chance := crit_chance + GameManager.get_bonus_crit_chance()
+if total_crit_chance > 0 and randf() < total_crit_chance:
+    actual_damage = int(actual_damage * GameManager.get_crit_damage_multiplier())
+    is_crit = true
+```
+
+**Character Passive Integration:**
+```gdscript
+// Inferno passive: +20% fire damage
+if ball_type == BallType.FIRE:
+    actual_damage = int(actual_damage * GameManager.get_fire_damage_multiplier())
+
+// Shatter: +50% damage vs frozen
+if collider.has_status_effect(StatusEffect.Type.FREEZE):
+    actual_damage = int(actual_damage * GameManager.get_damage_vs_frozen())
+```
+
+**Evolved Ball Effects (5 types):**
+| Evolved | Effect | Implementation |
+|---------|--------|----------------|
+| BOMB | AoE explosion | 100px radius, 1.5x damage |
+| BLIZZARD | Chain freeze | 3 enemies, 80px range |
+| VIRUS | Spread + lifesteal | DoT + 20% heal |
+| MAGMA | Ground pools | 3s duration, 5 DPS |
+| VOID | Alternating | Burn/freeze toggle |
+
+**Fused Ball Multi-Effect:**
+```gdscript
+func _apply_fused_effects(enemy, base_damage):
+    for effect in fused_effects:
+        match effect:
+            "burn": apply burn
+            "freeze": apply freeze
+            "poison": apply poison
+            "bleed": apply bleed
+            "lightning": chain lightning
+            "knockback": push enemy
+```
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Ball types | 7 | 10+ |
+| Level visuals | ✅ Rings | ✅ |
+| Particle trails | ✅ 6 types | ✅ |
+| Status effects | ✅ 4 types | ✅ |
+| Critical hits | ✅ + passives | ✅ |
+| Evolved balls | ✅ 5 types | ✅ |
+| Fused balls | ✅ Multi-effect | ✅ |
+| Baby balls | ✅ | ✅ |
+| Simultaneous fire | ❌ 1 at a time | ✅ 4-5 |
+
+### What GoPit Does EXCELLENTLY
+
+- ✅ 605 lines of polished ball code
+- ✅ Visual feedback per ball type
+- ✅ Level indicator rings (L2 white, L3 gold)
+- ✅ Particle trail system
+- ✅ Critical hit with visual flash
+- ✅ Character passive integration
+- ✅ Full evolved ball effects
+- ✅ Multi-effect fused balls
+- ✅ Piercing and bouncing
+
+### The One Gap
+
+**SIMULTANEOUS FIRING**: GoPit fires 1 ball type per shot.
+BallxPit fires 4-5 ball types at once from slots.
+
+This is the **P0 fundamental difference** identified earlier.
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P0** | Ball slot system | Fire 4-5 balls simultaneously |
+| **P3** | Add 3+ more ball types | Match BallxPit variety |
+
+**GoPit's ball entity is EXCELLENTLY implemented - needs slot system for simultaneous fire!**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **100 appendices** (A through CP)
+- **101 appendices** (A through CQ)
 - **91 open beads** tracking all gaps
-- **8,800+ lines** of comparison
+- **9,000+ lines** of comparison
 
 ### The #1 Fundamental Difference
 
