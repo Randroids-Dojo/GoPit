@@ -25,6 +25,7 @@ signal ultimate_ready
 signal ultimate_used
 signal ultimate_charge_changed(current: float, max_val: float)
 signal invincibility_changed(is_invincible: bool)
+signal shooting_changed(is_shooting: bool)
 
 # Combo system
 var combo_count: int = 0
@@ -35,6 +36,10 @@ var combo_timeout: float = 2.0  # Seconds before combo resets
 const INVINCIBILITY_DURATION: float = 0.5  # Seconds of invincibility after damage
 var is_invincible: bool = false
 var invincibility_timer: float = 0.0
+
+# Shooting slows movement (creates trade-off: autofire = damage but slow, manual = full speed)
+const SHOOTING_SPEED_MULT: float = 0.5  # 50% speed while shooting
+var is_shooting: bool = false
 
 var current_state: GameState = GameState.MENU:
 	set(value):
@@ -418,6 +423,23 @@ func get_baby_ball_rate_bonus() -> float:
 	if active_passive == Passive.SQUAD_LEADER:
 		return 0.3
 	return 0.0
+
+
+# === Shooting state and movement ===
+
+func set_shooting(shooting: bool) -> void:
+	## Set whether player is currently shooting (affects movement speed)
+	if is_shooting != shooting:
+		is_shooting = shooting
+		shooting_changed.emit(is_shooting)
+
+
+func get_movement_speed_mult() -> float:
+	## Returns effective movement speed multiplier (character speed * shooting penalty)
+	var base := character_speed_mult
+	if is_shooting:
+		base *= SHOOTING_SPEED_MULT
+	return base
 
 
 func advance_wave() -> void:
