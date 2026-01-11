@@ -3719,7 +3719,7 @@ Many roguelikes offer:
 | Campaign | ✅ Yes | ✅ Yes | - |
 | Endless | ❌ No | ✅ Maybe | LOW |
 | Daily | ❌ No | ✅ Maybe | HIGH |
-| Boss Rush | ❌ No | ❌ Unknown | MEDIUM |
+| Boss Rush | ❌ No | ❌ No (has Fast/NG+ modes instead) | - |
 
 ### Why This Matters
 
@@ -14012,9 +14012,9 @@ Each character has a **unique firing mechanic** beyond just stat modifiers.
 | 11 | The Radical | Wind | **AI controls everything** - movement, aiming, upgrades |
 | 12 | The Flagellant | Egg Sac | Balls bounce normally off bottom screen boundary |
 | 13 | The Cogitator | Laser (V) | +2 seconds to harvest timer (meta mechanic) |
-| 14 | The Physicist | Light | Unknown unique mechanic |
-| 15 | The Juggler | Lightning | Unknown unique mechanic |
-| 16+ | Additional | Various | Research ongoing |
+| 14 | The Physicist | Light | **Gravity pulls balls to TOP of screen** (parabolic trajectories, fastest Black Hole path) |
+| 15 | The Juggler | Lightning | **Balls LOBBED in arc**, land at cursor, bounce only after landing |
+| 16 | (Total: 16 characters confirmed) | | |
 
 ### BallxPit Stat System
 
