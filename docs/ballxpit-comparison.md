@@ -1,8 +1,8 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 2.0
-> **Last Updated**: January 2026
-> **Status**: Complete (Initial Analysis)
+> **Document Version**: 2.1
+> **Last Updated**: January 10, 2026
+> **Status**: In Progress - Continuous Analysis
 > **Related Epic**: GoPit-68o
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
@@ -21,6 +21,7 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 
 ## Table of Contents
 
+**Main Sections:**
 1. [Executive Summary](#executive-summary)
 2. [Ball Shooting Mechanics](#ball-shooting-mechanics)
 3. [Player Movement](#player-movement)
@@ -30,7 +31,29 @@ This document provides a detailed comparison between the real **Ball x Pit** gam
 7. [Character Selection](#character-selection)
 8. [Gem Collection and XP](#gem-collection-and-xp)
 9. [Boss Fights](#boss-fights)
-10. [Recommendations](#recommendations)
+10. [Recommendations Summary](#recommendations-summary)
+
+**Appendices:**
+- A: [File Reference](#appendix-a-file-reference)
+- B: [BallxPit Evolution Recipes](#appendix-b-ballxpit-evolution-recipes)
+- C: [Baby Ball Mechanics](#appendix-c-baby-ball-mechanics-comparison)
+- D: [Ball Bounce and Catching](#appendix-d-ball-bounce-and-catching-mechanics)
+- E: [Difficulty and Pacing](#appendix-e-difficulty-and-pacing-analysis)
+- F: [Character System](#appendix-f-character-system-comparison)
+- G: [Meta-Progression](#appendix-g-meta-progression-comparison)
+- H: [Stage/Biome System](#appendix-h-stagebiome-system-comparison)
+- I: [Control and Input](#appendix-i-control-and-input-comparison)
+- J: [Enemy and Boss](#appendix-j-enemy-and-boss-comparison)
+- K: [Passive Upgrade System](#appendix-k-passive-upgrade-system-comparison)
+- L: [Advanced Mechanics](#appendix-l-advanced-mechanics--hidden-features)
+- M: [Ball Lifecycle and Catching](#appendix-m-ball-lifecycle-and-catching-mechanics-new) ⭐ NEW
+- N: [Level Select and Unlock](#appendix-n-level-select-and-stage-unlock-system-new) ⭐ NEW
+- O: [Run Structure](#appendix-o-run-structure---finite-vs-endless-new) ⭐ NEW
+- P: [Meta Shop](#appendix-p-meta-shop-and-permanent-upgrades-new) ⭐ NEW
+- Q: [Ball Types Deep Comparison](#appendix-q-ball-types-deep-comparison-new) ⭐ NEW
+- R: [Evolution/Fusion Deep Comparison](#appendix-r-evolutionfusion-deep-comparison-new) ⭐ NEW
+- S: [Difficulty and Speed Scaling](#appendix-s-difficulty-and-speed-scaling-new) ⭐ NEW
+- T: [Enemy Placement and Patterns](#appendix-t-enemy-placement-and-patterns-new) ⭐ NEW
 
 ---
 
@@ -1894,9 +1917,364 @@ BallxPit solves this by:
 
 ---
 
+## Appendix Q: Ball Types Deep Comparison (NEW)
+
+Research sources:
+- [Ball X Pit Wiki - Balls](https://ballpit.fandom.com/wiki/Balls)
+- [GAM3S.GG - All Special Balls](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-all-special-balls/)
+- [Dexerto - All Evolutions](https://www.dexerto.com/wikis/ball-x-pit/all-evolution-recipes-combinations/)
+
+### BallxPit Ball Types (18 Base Balls)
+
+| Ball | Ability | Damage Mod | Special Mechanic |
+|------|---------|------------|------------------|
+| **Bleed** | 2 stacks per hit, 1 dmg/stack on hit | Normal | Max 8 stacks, damage scales with hits |
+| **Brood Mother** | 25% baby ball spawn on hit | Normal | Synergy with Leadership |
+| **Burn** | 1 stack for 3s, 4-8 DPS/stack | Normal | Max 3 stacks |
+| **Cell** | Splits into clone 2x on hit | Normal | Creates extra balls |
+| **Charm** | 4% charm for 5s | Normal | Enemy attacks other enemies |
+| **Dark** | 3x damage, self-destructs | 3x | 3s cooldown, The Shade's ball |
+| **Earthquake** | 5-13 AoE dmg (3x3 tiles) | Normal | Area control |
+| **Egg Sac** | Explodes into 2-4 baby balls | Normal | 3s cooldown |
+| **Freeze** | 4% freeze for 5s, +25% dmg taken | Reduced | Crowd control |
+| **Ghost** | Passes through enemies | Reduced | Hits backline |
+| **Iron** | Double damage, 40% slower | 2x | Slow but powerful |
+| **Laser H** | 9-18 dmg entire row | - | Pierces all |
+| **Laser V** | 9-18 dmg entire column | - | Pierces all |
+| **Light** | Blinds 3s, 50% miss chance | Normal | Defensive |
+| **Lightning** | 1-20 chain dmg to 3 enemies | Normal | AoE chain |
+| **Poison** | 1 stack, 1-4 DPS/stack, 6s | Normal | Max 5 stacks |
+| **Vampire** | 4.5% chance heal 1 HP | Normal | Sustain |
+| **Wind** | Passes through, 30% slow, -25% dmg | 0.75x | Control + pierce |
+
+### GoPit Ball Types (7 Total)
+
+From `scripts/autoload/ball_registry.gd`:
+
+| Ball | Ability | Base Damage | Base Speed | Effect |
+|------|---------|-------------|------------|--------|
+| **Basic** | None | 10 | 800 | None |
+| **Burn** | 3s burn, 5 DPS | 8 | 800 | Burn DoT |
+| **Freeze** | 2s slow (50%) | 6 | 800 | Movement slow |
+| **Poison** | 5s DoT, 3 DPS | 7 | 800 | Poison DoT |
+| **Bleed** | Infinite stacking, 2 DPS/stack | 8 | 800 | Max 5 stacks |
+| **Lightning** | Chain 50% to 1 enemy | 9 | 900 | Single chain |
+| **Iron** | Knockback | 15 | 600 | Displacement |
+
+### Status Effect Comparison
+
+From `scripts/effects/status_effect.gd`:
+
+| Effect | GoPit | BallxPit |
+|--------|-------|----------|
+| **Burn DPS** | 5 (2.5/0.5s) | 4-8/stack (max 3 stacks = 12-24 DPS) |
+| **Burn Max Stacks** | 1 (refresh) | 3 |
+| **Freeze Duration** | 2s | 5s |
+| **Freeze Damage Amp** | None | +25% |
+| **Poison DPS** | 3 (1.5/0.5s) | 1-4/stack (max 5 = 5-20 DPS) |
+| **Poison Max Stacks** | 1 | 5 |
+| **Bleed Max Stacks** | 5 | 8 |
+| **Bleed Mechanic** | DoT per stack | Damage on HIT per stack |
+
+### CRITICAL GAPS
+
+#### Missing Ball Types (11)
+1. **Cell** - Clone split mechanic
+2. **Charm** - Enemy mind control
+3. **Dark** - 3x damage glass cannon
+4. **Earthquake** - AoE ground effect
+5. **Egg Sac** - Baby ball burst
+6. **Ghost** - Pass through enemies
+7. **Laser H/V** - Full row/column pierce
+8. **Light** - Blind (miss chance)
+9. **Brood Mother** - 25% baby ball on hit
+10. **Vampire** - Heal on hit
+11. **Wind** - Pass through + slow
+
+#### Mechanic Differences
+
+| Mechanic | GoPit | BallxPit | Priority |
+|----------|-------|----------|----------|
+| **Freeze +25% damage** | Not implemented | Core mechanic | P1 |
+| **Bleed on-hit damage** | DoT only | Damage on every hit | P1 |
+| **Burn stacking** | Refresh only | 3 stacks = 3x DPS | P2 |
+| **Poison stacking** | 1 stack | 5 stacks | P2 |
+| **Lightning chain** | 1 enemy | 3 enemies | P2 |
+| **Clone/split balls** | None | Cell ball | P3 |
+| **Pass-through balls** | Piercing upgrade | Ghost/Wind types | P3 |
+
+### Recommendations
+
+**P1 (Core Balance)**:
+1. [ ] **Fix Freeze** - Add +25% damage amplification on frozen targets
+2. [ ] **Fix Bleed** - Damage on EACH HIT, not just DoT (or add on-hit)
+3. [ ] **Add Burn stacking** - Allow 3 stacks for higher DPS ceiling
+
+**P2 (Depth)**:
+4. [ ] **Add Dark ball** - 3x damage self-destruct for high-risk play
+5. [ ] **Add Ghost ball** - Pass through for backline targeting
+6. [ ] **Improve Lightning** - Chain to 3 enemies instead of 1
+
+**P3 (Content)**:
+7. [ ] **Add Charm** - Mind control is unique mechanic
+8. [ ] **Add Cell** - Clone mechanic creates ball variety
+9. [ ] **Add Laser types** - Row/column clear for satisfying AoE
+
+---
+
+## Appendix R: Evolution/Fusion Deep Comparison (NEW)
+
+### BallxPit Evolution System
+
+**Requirements:**
+- Two L3 balls of different types
+- Both consumed to create evolved ball
+- Evolved balls can further fuse with a third L3 ball
+
+**Full Recipe List (42+ Evolutions):**
+
+| Evolution | Recipe 1 | Recipe 2 | Effect |
+|-----------|----------|----------|--------|
+| Blizzard | Freeze + Lightning | Freeze + Wind | Mass freeze + chain |
+| Bomb | Burn + Iron | - | 150-300 AoE explosion |
+| Frozen Flame | Burn + Freeze | - | Alternating freeze/burn |
+| Inferno | Burn + Wind | - | Piercing fire |
+| Lightning Rod | Lightning + Iron | - | Double chain damage |
+| Magma | Burn + Earthquake | - | Burning ground |
+| Noxious | Poison + Wind | - | Poison AoE cloud |
+| Storm | Lightning + Wind | - | AoE lightning |
+| Swamp | Poison + Earthquake | - | Poison zone |
+| Virus | Ghost + Poison | - | Spreading plague |
+| Vampire Lord | Bleed + Vampire | - | Lifesteal + bleed |
+| *...37+ more* | - | - | - |
+
+### GoPit Evolution System
+
+From `scripts/autoload/fusion_registry.gd`:
+
+**Current Recipes (5 Total):**
+
+| Evolution | Recipe | Effect |
+|-----------|--------|--------|
+| **Bomb** | Burn + Iron | 150% AoE explosion |
+| **Blizzard** | Freeze + Lightning | AoE freeze + chain |
+| **Virus** | Bleed + Poison | Spreading DoT + lifesteal |
+| **Magma** | Burn + Poison | Burning ground pool |
+| **Void** | Burn + Freeze | Alternating burn/freeze |
+
+### Gap Analysis
+
+| Metric | GoPit | BallxPit | Gap |
+|--------|-------|----------|-----|
+| **Total evolutions** | 5 | 42+ | -37 |
+| **Ball types available** | 7 | 18 | -11 |
+| **Possible combinations** | 21 (7C2) | 153 (18C2) | -132 |
+| **Recipe coverage** | 24% | ~30% | Similar % |
+| **Triple fusion** | No | Yes | Missing |
+
+### Missing High-Impact Evolutions
+
+**Priority Adds:**
+1. **Storm** (Lightning + Wind) - AoE lightning popular pick
+2. **Vampire Lord** (Bleed + Vampire) - Sustain build enabler
+3. **Lightning Rod** (Lightning + Iron) - Power play
+4. **Noxious** (Poison + Wind) - Poison cloud
+5. **Inferno** (Burn + Wind) - Piercing fire
+
+**Requires New Ball Types:**
+- Ghost ball → unlocks Virus (current recipe uses Bleed+Poison)
+- Wind ball → unlocks 5+ evolutions
+- Vampire ball → unlocks Vampire Lord
+
+### Recommendations
+
+1. [ ] **Add Wind ball type** - Enables many evolutions
+2. [ ] **Add Ghost ball type** - Pass-through + unlocks evolutions
+3. [ ] **Add Vampire ball** - Popular sustain option
+4. [ ] **Implement triple fusion** - Evolved + L3 = ultimate form
+5. [ ] **Add 10+ evolutions** - Priority: Storm, Lightning Rod, Inferno
+
+---
+
+## Appendix S: Difficulty and Speed Scaling (NEW)
+
+Research sources:
+- [BallxPit Fast Mode Guide](https://ballxpit.org/guides/fast-mode/)
+- [BallxPit NG+ Guide](https://ballxpit.org/guides/new-game-plus/)
+
+### BallxPit Difficulty System
+
+**Speed Control (R1 button):**
+| Speed | Usage |
+|-------|-------|
+| Speed 3 (Fast) | Waves 1-10, farming |
+| Speed 2 (Normal) | Waves 10-15 |
+| Speed 1 (Slow) | Bosses, new enemies |
+
+**Difficulty Modes:**
+- Normal, Fast, Fast+2, Fast+3
+- Exponential scaling in Fast modes
+- New Game Plus: +50% HP/damage globally
+
+**Post-Boss Spike:**
+- ~3x HP jump after first boss
+- Creates distinct difficulty phases
+
+### GoPit Difficulty System
+
+**From enemy_base.gd:**
+```gdscript
+// Per wave scaling:
+max_hp *= 1.0 + (wave - 1) * 0.1    // +10% HP
+speed *= min(2.0, 1.0 + (wave - 1) * 0.05)  // +5% speed (cap 2x)
+```
+
+**Spawn Interval (game_controller.gd):**
+- Start: 2.0s, decrease by 0.1s per wave
+- Minimum: 0.5s
+
+**No speed control, no difficulty modes, linear scaling only.**
+
+### GAPS
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Speed control | No | 3 speeds | P2 |
+| Difficulty modes | No | 4+ modes | P3 |
+| Scaling type | Linear | Exponential | P3 |
+| Post-boss spike | No | ~3x HP | P2 |
+
+### Recommendations
+
+1. [ ] **Add speed control** - 3 speeds with UI toggle
+2. [ ] **Add post-boss HP spike** - Difficulty phases
+
+---
+
+## Appendix T: Enemy Placement and Patterns (NEW)
+
+### GoPit Spawning
+
+**From enemy_spawner.gd:**
+- Random X position (no patterns)
+- Fixed spawn Y (above screen)
+- Burst: 10% base chance, 2-3 enemies
+
+**Enemy Mix by Wave:**
+| Wave | Slime | Bat | Crab |
+|------|-------|-----|------|
+| 1 | 100% | 0% | 0% |
+| 2-3 | 70% | 30% | 0% |
+| 4+ | 50% | 30% | 20% |
+
+### BallxPit Spawning (Expected)
+
+- Formation spawns (lines, V-shapes)
+- Stage-specific enemy types
+- Wave patterns with gaps
+- Higher enemy variety
+
+### GAPS
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Spawn patterns | Random | Formations |
+| Stage enemies | Same all stages | Unique per stage |
+| Enemy variety | 3 types | 10+ types |
+
+### Recommendations
+
+1. [ ] **Add spawn formations** - Lines, V-shapes
+2. [ ] **Add stage-specific enemies** - Ice/fire variants
+
+---
+
+## Appendix U: Input and Controls Comparison (NEW)
+
+Research sources:
+- [Ball x Pit Controls Guide](https://deltiasgaming.com/ball-x-pit-controls-list-guide/)
+- [Steam Discussions - Controls](https://steamcommunity.com/app/2062430/discussions/0/595162650440290352/)
+
+### BallxPit Input System
+
+**Platforms:**
+- Windows (KB+M, Controller)
+- PlayStation 5 (DualSense with haptics)
+- Xbox Series X/S
+- Nintendo Switch
+
+**Control Features:**
+| Feature | Support |
+|---------|---------|
+| Controller | Full support (preferred) |
+| Keyboard+Mouse | Rebindable keys |
+| Aim sensitivity | Adjustable 0-100% |
+| Deadzone | Adjustable 5-20% |
+| Haptic feedback | PS5 DualSense |
+| Adaptive triggers | PS5 DualSense |
+| Accessibility | Xbox Adaptive, Eye Tracker |
+
+**Speed Control:**
+- R1 button cycles Speed 1/2/3
+- Critical for boss fights (slow) vs farming (fast)
+
+### GoPit Input System
+
+**From `scripts/input/`:**
+
+**Fire Button (`fire_button.gd`):**
+- Touch/click support
+- Cooldown visualization
+- Autofire toggle
+- Blocked feedback (shake + sound)
+
+**Virtual Joystick (`virtual_joystick.gd`):**
+- Drag-to-aim
+- 5% dead zone
+- Touch + mouse support
+- Real-time direction emission
+
+**Current Implementation:**
+```gdscript
+// Fire button handles:
+- InputEventMouseButton
+- InputEventScreenTouch
+
+// Joystick handles:
+- InputEventMouseButton
+- InputEventMouseMotion
+- InputEventScreenTouch
+- InputEventScreenDrag
+```
+
+### Gap Analysis
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Controller | Not implemented | Full support | P2 |
+| Rebindable keys | No | Yes | P3 |
+| Speed control | No | 3 speeds | P2 |
+| Haptic feedback | No | PS5 | P4 |
+| Aim sensitivity | Fixed | Adjustable | P3 |
+| Deadzone config | Fixed 5% | Adjustable | P3 |
+
+### GoPit Strengths
+
+- Touch controls work well for mobile
+- Autofire is implemented (BallxPit may require manual)
+- Virtual joystick is intuitive
+
+### Recommendations
+
+1. [ ] **Add speed control** - 3 speeds accessible via button
+2. [ ] **Add controller support** - Gamepad for PC builds
+3. [ ] **Consider aim sensitivity slider** - Settings menu option
+
+---
+
 ## Analysis Complete
 
-This document represents a comprehensive comparison between Ball x Pit and GoPit across all major game systems. The analysis identified **12 actionable gaps** tracked as beads, prioritized for implementation.
+This document represents a comprehensive comparison between Ball x Pit and GoPit across all major game systems. The analysis identified **20+ actionable gaps** tracked as beads, prioritized for implementation.
 
 ### Key Takeaways
 
