@@ -16,6 +16,9 @@ var _player: Node2D
 # Leadership stat affects spawn rate (from GameManager)
 var _leadership_bonus: float = 0.0
 
+# Slot cycling - baby balls rotate through active ball slots
+var _slot_cycle_index: int = 0
+
 
 func _ready() -> void:
 	add_to_group("baby_ball_spawner")
@@ -75,11 +78,17 @@ func _spawn_baby_ball() -> void:
 	ball.scale = Vector2(baby_ball_scale, baby_ball_scale)
 	ball.is_baby_ball = true
 
-	# Baby balls deal reduced damage
+	# Inherit ball type from active slots (cycles through slots)
+	_apply_slot_inheritance(ball)
+
+	# Baby balls deal reduced damage based on inherited type
 	var base_damage: int = 10
-	var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-	if ball_spawner and "ball_damage" in ball_spawner:
-		base_damage = ball_spawner.ball_damage
+	if BallRegistry and ball.registry_type >= 0:
+		base_damage = BallRegistry.get_damage(ball.registry_type)
+	else:
+		var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
+		if ball_spawner and "ball_damage" in ball_spawner:
+			base_damage = ball_spawner.ball_damage
 	ball.damage = int(base_damage * baby_ball_damage_multiplier)
 
 	# Set direction toward nearest enemy
@@ -95,6 +104,45 @@ func _spawn_baby_ball() -> void:
 	# (main ball fire sound is loud enough)
 
 	baby_ball_spawned.emit(ball)
+
+
+func _apply_slot_inheritance(ball: Node) -> void:
+	"""Apply ball type inheritance from active slots (cycles through slots)"""
+	if not BallRegistry:
+		return
+
+	var active_slots := BallRegistry.get_active_slots()
+	if active_slots.is_empty():
+		return
+
+	# Cycle through active slots
+	var slot_type: int = active_slots[_slot_cycle_index % active_slots.size()]
+	_slot_cycle_index += 1
+
+	# Set registry type and ball level
+	ball.registry_type = slot_type
+	ball.ball_level = BallRegistry.get_ball_level(slot_type)
+
+	# Map registry type to ball.gd BallType enum
+	var ball_type: int = _registry_to_ball_type(slot_type)
+	ball.set_ball_type(ball_type)
+
+	# TODO: Copy evolved_type, is_fused, fused_effects when ball fusion is tracked per-slot
+
+
+func _registry_to_ball_type(registry_type: int) -> int:
+	"""Map BallRegistry.BallType to ball.gd BallType enum"""
+	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6
+	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
+	match registry_type:
+		0: return 0  # BASIC -> NORMAL
+		1: return 1  # BURN -> FIRE
+		2: return 2  # FREEZE -> ICE
+		3: return 4  # POISON -> POISON
+		4: return 5  # BLEED -> BLEED
+		5: return 3  # LIGHTNING -> LIGHTNING
+		6: return 6  # IRON -> IRON
+	return 0
 
 
 func _get_target_direction() -> Vector2:
