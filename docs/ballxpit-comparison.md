@@ -7505,11 +7505,108 @@ The UI promises fusion but it's not implemented.
 
 ---
 
+## Appendix CG: Movement and Positioning Mechanics
+
+Research sources:
+- [Tips & Tricks Guide](https://ballxpit.org/guides/tips-tricks/)
+- [Tactics Guide](https://md-eksperiment.org/en/post/20251224-ball-x-pit-2025-pro-tactics-for-character-builds-boss-fights-and-efficient-bases)
+
+### BallxPit Movement System
+
+**Core Philosophy:**
+> "Movement and positioning matter more than raw damage" in early game.
+
+**Movement Mechanics:**
+- Stay mobile, circle enemies at medium range
+- Use screen edges for ball ricochet opportunities
+- Keep escape routes open
+- Speed toggle: 1x (slow), 2x (normal), 3x (fast)
+
+**Speed Control (R1 button):**
+| Speed | Use Case |
+|-------|----------|
+| 1 (Slow) | Boss fights, laser levels, learning patterns |
+| 2 (Normal) | Waves 10-15, balanced gameplay |
+| 3 (Fast) | Farming waves 1-10, easy enemies |
+
+**Key Quote:**
+> "Speed 3 during laser-heavy levels equals instant death from missed dodges."
+
+**Dodge Priority by Wave:**
+- Waves 1-5: 80% dodge, 20% aim
+- Waves 10+: 60% dodge, 40% aim
+
+### GoPit Movement System
+
+**Implementation (player.gd):**
+```gdscript
+@export var move_speed: float = 300.0
+
+func _physics_process(_delta: float) -> void:
+    var effective_speed := move_speed * GameManager.character_speed_mult
+    velocity = movement_input * effective_speed
+    move_and_slide()
+    # Clamp to bounds
+    position = position.clamp(bounds_min, bounds_max)
+```
+
+**Features:**
+- ✅ Joystick-controlled movement
+- ✅ Character speed multiplier
+- ✅ Boundary clamping
+- ✅ Direction indicator
+- ❌ No speed toggle
+- ❌ No dodge mechanic
+- ❌ No shooting movement penalty
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Free movement | ✅ | ✅ |
+| Joystick control | ✅ | ✅ (or WASD) |
+| Speed multiplier | ✅ Character stat | ✅ + toggle |
+| Speed toggle | ❌ None | ✅ 3 speeds |
+| Dodge mechanic | ❌ None | ✅ Telegraphs |
+| Shooting penalty | ❌ None | ✅ Slows movement |
+| Wall ricochet strategy | ⚠️ Not designed for | ✅ Core strategy |
+
+### The Speed Toggle Gap
+
+**BallxPit's dynamic speed control:**
+- Slow for boss patterns → instant speed up after
+- Fast for farming → slow for danger
+- Even world-record holders use speed control
+
+**GoPit has no equivalent** - always same speed.
+
+### Wings Passive (BallxPit)
+
++30% movement speed passive - essential for:
+- Dodging bullet hell patterns
+- Boss pattern avoidance
+- "Perfect positioning"
+
+**GoPit has no movement-enhancing passive.**
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add speed toggle | 3 speed settings |
+| **P2** | Add shooting penalty | Slow while firing |
+| **P2** | Add Wings passive | +30% move speed |
+| **P3** | Add dodge roll | Invincibility frames |
+
+**GoPit has basic movement - needs speed control for strategic depth.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **90 appendices** (A through CF)
+- **91 appendices** (A through CG)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
