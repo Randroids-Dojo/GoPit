@@ -1,9 +1,13 @@
 extends Node
 ## Ball Registry - tracks owned ball types and their levels for the current run
 ## Ball levels: L1 (base) -> L2 (+50% stats) -> L3 (+100% stats, fusion-ready)
+##
+## SLOT SYSTEM: Player has 5 slots, ALL equipped balls fire simultaneously.
+## This is the core mechanic difference from single-active-ball systems.
 
 signal ball_acquired(ball_type: BallType)
 signal ball_leveled_up(ball_type: BallType, new_level: int)
+signal slot_changed(slot_index: int, ball_type)  # null if slot emptied
 
 enum BallType {
 	BASIC,
@@ -12,14 +16,11 @@ enum BallType {
 	POISON,
 	BLEED,
 	LIGHTNING,
-	IRON,
-	RADIATION,
-	DISEASE,
-	FROSTBURN,
-	WIND,
-	GHOST,
-	VAMPIRE
+	IRON
 }
+
+## Maximum number of ball slots (all fire simultaneously)
+const MAX_SLOTS := 5
 
 const BALL_DATA := {
 	BallType.BASIC: {
@@ -77,103 +78,103 @@ const BALL_DATA := {
 		"base_speed": 600.0,
 		"color": Color(0.7, 0.7, 0.75),  # Metallic gray
 		"effect": "knockback"
-	},
-	BallType.RADIATION: {
-		"name": "Radiation",
-		"description": "Amplifies all damage",
-		"base_damage": 6,
-		"base_speed": 850.0,
-		"color": Color(0.5, 1.0, 0.2),  # Toxic yellow-green
-		"effect": "radiation"
-	},
-	BallType.DISEASE: {
-		"name": "Disease",
-		"description": "Stacking DoT",
-		"base_damage": 7,
-		"base_speed": 800.0,
-		"color": Color(0.6, 0.3, 0.8),  # Sickly purple
-		"effect": "disease"
-	},
-	BallType.FROSTBURN: {
-		"name": "Frostburn",
-		"description": "Slow + damage amp",
-		"base_damage": 8,
-		"base_speed": 800.0,
-		"color": Color(0.3, 0.6, 1.0),  # Pale frost blue
-		"effect": "frostburn"
-	},
-	BallType.WIND: {
-		"name": "Wind",
-		"description": "Pass-through + slow",
-		"base_damage": 5,
-		"base_speed": 1000.0,  # Fast like wind
-		"color": Color(0.8, 1.0, 0.8),  # Light green-white (airy)
-		"effect": "wind"
-	},
-	BallType.GHOST: {
-		"name": "Ghost",
-		"description": "Pass-through all",
-		"base_damage": 4,
-		"base_speed": 900.0,
-		"color": Color(0.7, 0.7, 0.9, 0.6),  # Semi-transparent purple
-		"effect": "ghost"
-	},
-	BallType.VAMPIRE: {
-		"name": "Vampire",
-		"description": "Lifesteal on hit",
-		"base_damage": 9,
-		"base_speed": 800.0,
-		"color": Color(0.5, 0.1, 0.3),  # Dark crimson
-		"effect": "vampire"
 	}
 }
 
 # Owned balls for current run: BallType -> level (1-3)
 var owned_balls: Dictionary = {}
 
-# Currently active ball type for firing (legacy, kept for compatibility)
-var active_ball_type: BallType = BallType.BASIC
+# Ball slots: array of {ball_type: BallType, level: int} or null for empty slot
+# ALL equipped slots fire simultaneously when player fires
+var ball_slots: Array = []
 
-# Ball slot system: 5 slots that can each hold a different ball type
-# All equipped slots fire simultaneously per shot
-# -1 means empty slot, otherwise holds a BallType value
-const MAX_SLOTS: int = 5
-var active_ball_slots: Array[int] = [-1, -1, -1, -1, -1]
-
-signal slots_changed()
+# Currently active ball type for firing (legacy - now returns first slot's type)
+var active_ball_type: BallType:
+	get:
+		for slot in ball_slots:
+			if slot != null:
+				return slot.ball_type
+		return BallType.BASIC
 
 
 func _ready() -> void:
 	GameManager.game_started.connect(_reset_for_new_run)
+	_init_slots()
+
+
+func _init_slots() -> void:
+	"""Initialize empty slots array"""
+	ball_slots.clear()
+	for i in range(MAX_SLOTS):
+		ball_slots.append(null)
 
 
 func _reset_for_new_run() -> void:
-	reset()
-
-
-func reset() -> void:
-	"""Reset the registry to initial state (for new runs and tests)"""
 	owned_balls.clear()
-	active_ball_type = BallType.BASIC
-	# Reset all slots to empty
-	active_ball_slots = [-1, -1, -1, -1, -1]
-	# Start with basic ball at L1 in first slot
+	_init_slots()
+	# Start with basic ball in slot 0
 	add_ball(BallType.BASIC)
 
 
-func add_ball(ball_type: BallType) -> void:
-	"""Add a new ball type or level up existing one"""
-	if ball_type in owned_balls:
-		# Already owned - level it up
-		level_up_ball(ball_type)
-	else:
-		# New ball type
-		owned_balls[ball_type] = 1
-		ball_acquired.emit(ball_type)
-		# Auto-switch to new ball type (legacy compatibility)
-		active_ball_type = ball_type
-		# Auto-assign to first empty slot
-		_assign_to_empty_slot(ball_type)
+func add_ball(ball_type: BallType) -> bool:
+	"""Add a new ball type to a slot, or level up if already equipped.
+	Returns true if ball was added/leveled, false if no empty slots."""
+	# Check if already in a slot
+	var existing_slot := get_slot_index(ball_type)
+	if existing_slot >= 0:
+		# Already equipped - level it up
+		return level_up_ball(ball_type)
+
+	# Find empty slot
+	var empty_slot := _find_empty_slot()
+	if empty_slot < 0:
+		return false  # No empty slots
+
+	# Add to slot
+	ball_slots[empty_slot] = {"ball_type": ball_type, "level": 1}
+	owned_balls[ball_type] = 1
+	ball_acquired.emit(ball_type)
+	slot_changed.emit(empty_slot, ball_type)
+	return true
+
+
+func _find_empty_slot() -> int:
+	"""Find first empty slot index, or -1 if none available"""
+	for i in range(MAX_SLOTS):
+		if ball_slots[i] == null:
+			return i
+	return -1
+
+
+func get_slot_index(ball_type: BallType) -> int:
+	"""Get slot index for a ball type, or -1 if not equipped"""
+	for i in range(MAX_SLOTS):
+		if ball_slots[i] != null and ball_slots[i].ball_type == ball_type:
+			return i
+	return -1
+
+
+func get_equipped_slots() -> Array:
+	"""Get all non-null slots for firing"""
+	var equipped: Array = []
+	for slot in ball_slots:
+		if slot != null:
+			equipped.append(slot)
+	return equipped
+
+
+func get_equipped_count() -> int:
+	"""Get number of equipped ball types"""
+	var count := 0
+	for slot in ball_slots:
+		if slot != null:
+			count += 1
+	return count
+
+
+func has_empty_slot() -> bool:
+	"""Check if there's room for another ball type"""
+	return _find_empty_slot() >= 0
 
 
 func level_up_ball(ball_type: BallType) -> bool:
@@ -185,8 +186,16 @@ func level_up_ball(ball_type: BallType) -> bool:
 	if current_level >= 3:
 		return false  # Already max level
 
-	owned_balls[ball_type] = current_level + 1
-	ball_leveled_up.emit(ball_type, current_level + 1)
+	var new_level := current_level + 1
+	owned_balls[ball_type] = new_level
+
+	# Also update slot level
+	var slot_idx := get_slot_index(ball_type)
+	if slot_idx >= 0:
+		ball_slots[slot_idx].level = new_level
+		slot_changed.emit(slot_idx, ball_type)
+
+	ball_leveled_up.emit(ball_type, new_level)
 	return true
 
 
@@ -280,10 +289,34 @@ func get_active_level() -> int:
 	return get_ball_level(active_ball_type)
 
 
-func set_active_ball(ball_type: BallType) -> void:
-	"""Set the active ball type for firing"""
-	if ball_type in owned_balls:
-		active_ball_type = ball_type
+func set_active_ball(_ball_type: BallType) -> void:
+	"""DEPRECATED: With slot system, all equipped balls fire simultaneously.
+	This function is kept for backward compatibility but does nothing."""
+	pass
+
+
+func remove_from_slot(ball_type: BallType) -> bool:
+	"""Remove a ball type from its slot (for evolutions/fusions).
+	Returns true if removed, false if not found."""
+	var slot_idx := get_slot_index(ball_type)
+	if slot_idx < 0:
+		return false
+
+	ball_slots[slot_idx] = null
+	owned_balls.erase(ball_type)
+	slot_changed.emit(slot_idx, null)
+	return true
+
+
+func swap_slots(slot_a: int, slot_b: int) -> void:
+	"""Swap contents of two slots (for UI reordering)"""
+	if slot_a < 0 or slot_a >= MAX_SLOTS or slot_b < 0 or slot_b >= MAX_SLOTS:
+		return
+	var temp = ball_slots[slot_a]
+	ball_slots[slot_a] = ball_slots[slot_b]
+	ball_slots[slot_b] = temp
+	slot_changed.emit(slot_a, ball_slots[slot_a].ball_type if ball_slots[slot_a] else null)
+	slot_changed.emit(slot_b, ball_slots[slot_b].ball_type if ball_slots[slot_b] else null)
 
 
 func get_unowned_ball_types() -> Array[BallType]:
@@ -310,83 +343,3 @@ func get_owned_ball_types() -> Array[BallType]:
 	for ball_type in owned_balls:
 		owned.append(ball_type)
 	return owned
-
-
-# =============================================================================
-# BALL SLOT SYSTEM
-# =============================================================================
-
-func _assign_to_empty_slot(ball_type: BallType) -> bool:
-	"""Assign ball to first empty slot. Returns true if successful."""
-	for i in range(MAX_SLOTS):
-		if active_ball_slots[i] == -1:
-			active_ball_slots[i] = ball_type
-			slots_changed.emit()
-			return true
-	return false  # No empty slots
-
-
-func get_active_slots() -> Array[int]:
-	"""Get all active ball slots (for firing)"""
-	return active_ball_slots
-
-
-func get_filled_slots() -> Array[int]:
-	"""Get only non-empty slots (ball types that will fire)"""
-	var filled: Array[int] = []
-	for slot in active_ball_slots:
-		if slot != -1:
-			filled.append(slot)
-	return filled
-
-
-func get_slot_count() -> int:
-	"""Get number of filled slots"""
-	var count: int = 0
-	for slot in active_ball_slots:
-		if slot != -1:
-			count += 1
-	return count
-
-
-func set_slot(slot_index: int, ball_type: int) -> bool:
-	"""Set a specific slot to a ball type. Use -1 to clear slot."""
-	if slot_index < 0 or slot_index >= MAX_SLOTS:
-		return false
-	if ball_type != -1 and ball_type not in owned_balls:
-		return false  # Can't equip ball we don't own
-
-	active_ball_slots[slot_index] = ball_type
-	slots_changed.emit()
-	return true
-
-
-func clear_slot(slot_index: int) -> void:
-	"""Clear a slot (set to empty)"""
-	if slot_index >= 0 and slot_index < MAX_SLOTS:
-		active_ball_slots[slot_index] = -1
-		slots_changed.emit()
-
-
-func swap_slots(slot_a: int, slot_b: int) -> void:
-	"""Swap two slots"""
-	if slot_a < 0 or slot_a >= MAX_SLOTS or slot_b < 0 or slot_b >= MAX_SLOTS:
-		return
-	var temp := active_ball_slots[slot_a]
-	active_ball_slots[slot_a] = active_ball_slots[slot_b]
-	active_ball_slots[slot_b] = temp
-	slots_changed.emit()
-
-
-func is_ball_in_slot(ball_type: BallType) -> bool:
-	"""Check if a ball type is currently equipped in any slot"""
-	return ball_type in active_ball_slots
-
-
-func get_empty_slot_count() -> int:
-	"""Get number of empty slots available"""
-	var count: int = 0
-	for slot in active_ball_slots:
-		if slot == -1:
-			count += 1
-	return count

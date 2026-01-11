@@ -1,7 +1,6 @@
-[gd_scene load_steps=24 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=23 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
-[ext_resource type="Script" path="res://scripts/ui/passive_slots_display.gd" id="24_passive_slots"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
 [ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
 [ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
@@ -9,7 +8,6 @@
 [ext_resource type="Script" path="res://scripts/effects/danger_indicator.gd" id="15_danger"]
 [ext_resource type="PackedScene" uid="uid://meta_shop_scene" path="res://scenes/ui/meta_shop.tscn" id="16_meta_shop"]
 [ext_resource type="PackedScene" uid="uid://char_select_scene" path="res://scenes/ui/character_select.tscn" id="17_charselect"]
-[ext_resource type="PackedScene" uid="uid://level_select_scene" path="res://scenes/ui/level_select.tscn" id="23_levelselect"]
 [ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="2_spawner"]
 [ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="3_joystick"]
 [ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="4_fire"]
@@ -25,7 +23,7 @@
 [ext_resource type="Script" path="res://scripts/entities/baby_ball_spawner.gd" id="19_baby_spawner"]
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 [ext_resource type="Script" path="res://scripts/ui/ultimate_button.gd" id="22_ultimate"]
-[ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
+[ext_resource type="Script" path="res://scripts/ui/slot_display.gd" id="23_slot_display"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -144,12 +142,6 @@ layout_mode = 2
 text = "Wave 1"
 horizontal_alignment = 2
 
-[node name="SpeedIndicator" type="Label" parent="UI/HUD/TopBar"]
-layout_mode = 2
-text = "1x"
-horizontal_alignment = 1
-script = ExtResource("speed_indicator")
-
 [node name="MuteButton" type="Button" parent="UI/HUD/TopBar"]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
@@ -190,21 +182,22 @@ grow_vertical = 2
 text = "Lv.1"
 vertical_alignment = 1
 
-[node name="PassiveSlotsDisplay" type="HBoxContainer" parent="UI/HUD"]
+[node name="SlotDisplay" type="HBoxContainer" parent="UI/HUD"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -130.0
-offset_top = -280.0
-offset_right = 130.0
+offset_left = -150.0
+offset_top = -260.0
+offset_right = 150.0
 offset_bottom = -220.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_constants/separation = 5
 alignment = 1
-script = ExtResource("24_passive_slots")
+script = ExtResource("23_slot_display")
 
 [node name="ComboLabel" type="Label" parent="UI/HUD"]
 layout_mode = 1
@@ -664,10 +657,6 @@ text = "Resume"
 layout_mode = 2
 text = "Sound: ON"
 
-[node name="ScreenShakeButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
-layout_mode = 2
-text = "Screen Shake: ON"
-
 [node name="QuitButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Quit"
@@ -776,8 +765,6 @@ color = Color(1, 0, 0, 0)
 [node name="MetaShop" parent="UI" instance=ExtResource("16_meta_shop")]
 
 [node name="CharacterSelect" parent="UI" instance=ExtResource("17_charselect")]
-
-[node name="LevelSelect" parent="UI" instance=ExtResource("23_levelselect")]
 
 [node name="StageCompleteOverlay" type="CanvasLayer" parent="UI"]
 visible = false

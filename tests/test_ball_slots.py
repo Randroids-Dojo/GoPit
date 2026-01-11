@@ -1,144 +1,126 @@
-"""Tests for ball slot system - multiple ball types firing simultaneously."""
+"""Tests for the ball slot system (GoPit-6zk)."""
 import asyncio
 import pytest
 
-GAME = "/root/Game"
-FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
-BALLS_CONTAINER = "/root/Game/GameArea/Balls"
-BALL_SPAWNER = "/root/Game/GameArea/BallSpawner"
-BALL_REGISTRY = "/root/BallRegistry"
 
-# Timeout for waiting operations (seconds)
-WAIT_TIMEOUT = 5.0
-
-
-async def wait_for_fire_ready(game, timeout=WAIT_TIMEOUT):
-    """Wait for fire button to be ready with timeout."""
-    elapsed = 0
-    while elapsed < timeout:
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        if is_ready:
-            return True
-        await asyncio.sleep(0.1)
-        elapsed += 0.1
-    return False
-
-
-async def reset_ball_registry(game):
-    """Reset BallRegistry to clean state for testing."""
-    await game.call(BALL_REGISTRY, "reset")
-    await asyncio.sleep(0.1)  # Give time for state to settle
+@pytest.mark.asyncio
+async def test_slot_system_exists(game):
+    """Verify BallRegistry has ball_slots array."""
+    ball_slots = await game.get_property("/root/BallRegistry", "ball_slots")
+    assert ball_slots is not None
+    assert isinstance(ball_slots, list)
 
 
 @pytest.mark.asyncio
-async def test_ball_registry_has_slots(game):
-    """BallRegistry should have active_ball_slots array."""
-    await reset_ball_registry(game)
-    # Check that BallRegistry has the slots array
-    slots = await game.call(BALL_REGISTRY, "get_active_slots")
-    assert slots is not None, "BallRegistry should have active_ball_slots"
-    assert len(slots) == 5, "Should have 5 ball slots"
+async def test_max_slots_is_five(game):
+    """Verify MAX_SLOTS constant is 5."""
+    max_slots = await game.get_property("/root/BallRegistry", "MAX_SLOTS")
+    assert max_slots == 5
 
 
 @pytest.mark.asyncio
 async def test_initial_slot_has_basic_ball(game):
-    """First slot should have BASIC ball after game starts."""
-    await reset_ball_registry(game)
-    slots = await game.call(BALL_REGISTRY, "get_active_slots")
-    # First slot should be BASIC (0), rest should be empty (-1)
-    assert slots[0] == 0, "First slot should have BASIC ball type (0)"
-
-
-@pytest.mark.asyncio
-async def test_add_ball_fills_slot(game):
-    """Adding a new ball should auto-assign to first empty slot."""
-    await reset_ball_registry(game)
-    # Get initial slots
-    slots_before = await game.call(BALL_REGISTRY, "get_active_slots")
-    initial_filled = sum(1 for s in slots_before if s != -1)
-
-    # Add a new ball type (BURN = 1)
-    await game.call(BALL_REGISTRY, "add_ball", [1])
-
-    # Check slots after
-    slots_after = await game.call(BALL_REGISTRY, "get_active_slots")
-    filled_after = sum(1 for s in slots_after if s != -1)
-
-    assert filled_after == initial_filled + 1, "Should have one more filled slot"
-    assert 1 in slots_after, "BURN ball should be in a slot"
-
-
-@pytest.mark.asyncio
-async def test_multi_slot_fires_multiple_types(game):
-    """Firing with multiple slots should spawn multiple ball types."""
-    await reset_ball_registry(game)
-    # Disable autofire
-    await game.call(FIRE_BUTTON, "set_autofire", [False])
-
-    # Wait for button ready
-    ready = await wait_for_fire_ready(game)
-    assert ready, "Fire button should become ready"
-
-    # Add a second ball type to slots (FREEZE = 2)
-    await game.call(BALL_REGISTRY, "add_ball", [2])
-    await asyncio.sleep(0.1)
-
-    # Get filled slot count
-    filled_slots = await game.call(BALL_REGISTRY, "get_filled_slots")
-    slot_count = len(filled_slots)
-    assert slot_count >= 2, f"Should have at least 2 filled slots, got {slot_count}"
-
-    # Clear existing balls
-    ball_count_before = await game.call(BALLS_CONTAINER, "get_child_count")
-
-    # Fire
-    await game.click(FIRE_BUTTON)
+    """After game start, slot 0 should have Basic ball at L1."""
+    # Start game to initialize registry
+    await game.call("/root/Game", "start_game")
     await asyncio.sleep(0.3)
 
-    # Check that multiple balls spawned (one per slot)
-    ball_count_after = await game.call(BALLS_CONTAINER, "get_child_count")
-    balls_spawned = ball_count_after - ball_count_before + slot_count  # Account for balls that may have despawned
-
-    # Should have spawned at least slot_count balls
-    assert ball_count_after >= slot_count, f"Should spawn at least {slot_count} balls (one per slot)"
+    ball_slots = await game.get_property("/root/BallRegistry", "ball_slots")
+    assert ball_slots[0] is not None
+    assert ball_slots[0]["ball_type"] == 0  # BASIC = 0
+    assert ball_slots[0]["level"] == 1
 
 
 @pytest.mark.asyncio
-async def test_get_slot_count(game):
-    """get_slot_count should return number of filled slots."""
-    await reset_ball_registry(game)
-    slot_count = await game.call(BALL_REGISTRY, "get_slot_count")
-    assert slot_count >= 1, "Should have at least 1 slot filled (BASIC)"
+async def test_add_ball_fills_empty_slot(game):
+    """Adding a new ball type should fill an empty slot."""
+    # Start game
+    await game.call("/root/Game", "start_game")
+    await asyncio.sleep(0.3)
+
+    # Add a new ball type (BURN = 1)
+    result = await game.call("/root/BallRegistry", "add_ball", [1])
+    assert result == True
+
+    # Verify it's in a slot
+    slot_idx = await game.call("/root/BallRegistry", "get_slot_index", [1])
+    assert slot_idx >= 0
 
 
 @pytest.mark.asyncio
-async def test_set_slot(game):
-    """Should be able to manually set a slot to a specific ball type."""
-    await reset_ball_registry(game)
-    # First add POISON ball (type 3) to owned balls
-    await game.call(BALL_REGISTRY, "add_ball", [3])
+async def test_add_same_ball_levels_up(game):
+    """Adding same ball type should level it up instead of adding new slot."""
+    # Start game
+    await game.call("/root/Game", "start_game")
+    await asyncio.sleep(0.3)
 
-    # Manually set slot 2 to POISON
-    success = await game.call(BALL_REGISTRY, "set_slot", [2, 3])
-    assert success, "Should be able to set slot to owned ball type"
+    # Basic ball starts at L1, adding again should level to L2
+    result = await game.call("/root/BallRegistry", "add_ball", [0])
+    assert result == True
 
-    # Verify slot was set
-    slots = await game.call(BALL_REGISTRY, "get_active_slots")
-    assert slots[2] == 3, "Slot 2 should now have POISON ball"
+    # Verify level increased
+    level = await game.call("/root/BallRegistry", "get_ball_level", [0])
+    assert level == 2
 
 
 @pytest.mark.asyncio
-async def test_clear_slot(game):
-    """Should be able to clear a slot."""
-    await reset_ball_registry(game)
-    # First make sure slot 1 has something
-    await game.call(BALL_REGISTRY, "add_ball", [1])
-    slots = await game.call(BALL_REGISTRY, "get_active_slots")
-    initial_slot_1 = slots[1]
+async def test_get_equipped_slots_returns_filled_only(game):
+    """get_equipped_slots should only return non-null slots."""
+    # Start game
+    await game.call("/root/Game", "start_game")
+    await asyncio.sleep(0.3)
 
-    # Clear slot 1
-    await game.call(BALL_REGISTRY, "clear_slot", [1])
+    equipped = await game.call("/root/BallRegistry", "get_equipped_slots")
+    assert len(equipped) >= 1  # At least basic ball
 
-    # Verify slot was cleared
-    slots_after = await game.call(BALL_REGISTRY, "get_active_slots")
-    assert slots_after[1] == -1, "Slot 1 should be empty after clearing"
+    # Verify all are valid (have ball_type)
+    for slot in equipped:
+        assert "ball_type" in slot
+        assert "level" in slot
+
+
+@pytest.mark.asyncio
+async def test_has_empty_slot_with_slots_available(game):
+    """has_empty_slot should return True when slots available."""
+    # Start game
+    await game.call("/root/Game", "start_game")
+    await asyncio.sleep(0.3)
+
+    has_empty = await game.call("/root/BallRegistry", "has_empty_slot")
+    assert has_empty == True  # Only 1 slot used, 4 empty
+
+
+@pytest.mark.asyncio
+async def test_fire_spawns_all_equipped_types(game):
+    """Firing should spawn all equipped ball types simultaneously."""
+    fire_button = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
+    balls_path = "/root/Game/GameArea/Balls"
+
+    # Add a second ball type (BURN)
+    result = await game.call("/root/BallRegistry", "add_ball", [1])
+    assert result == True
+
+    # Verify we have 2 equipped slots
+    equipped = await game.call("/root/BallRegistry", "get_equipped_slots")
+    assert len(equipped) == 2, f"Expected 2 equipped slots, got {len(equipped)}"
+
+    # Wait for button to be ready
+    is_ready = await game.get_property(fire_button, "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(fire_button, "is_ready")
+
+    # Click fire button (like existing fire tests)
+    await game.click(fire_button)
+    await asyncio.sleep(0.3)
+
+    # Check ball count - should have at least 2 (one per slot type)
+    child_count = await game.call(balls_path, "get_child_count")
+    assert child_count >= 2, f"Expected at least 2 balls (one per slot), got {child_count}"
+
+
+@pytest.mark.asyncio
+async def test_slot_display_exists(game):
+    """Verify SlotDisplay UI component exists in HUD."""
+    slot_display = await game.get_node("/root/Game/UI/HUD/SlotDisplay")
+    assert slot_display is not None

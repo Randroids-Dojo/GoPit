@@ -1,12 +1,8 @@
 extends Node2D
 ## Spawns balls in the aimed direction when fire is triggered
 ## Now integrates with BallRegistry for ball types and levels
-## Ball Return Mechanic: Balls return when reaching bottom of screen
 
 signal ball_spawned(ball: Node2D)
-signal ball_returned  # Emitted when a ball returns to player
-signal ball_caught  # Emitted when a ball is caught (active play bonus)
-signal balls_available_changed(available: bool)  # For fire button UI
 
 @export var ball_scene: PackedScene
 @export var spawn_offset: float = 30.0
@@ -27,10 +23,6 @@ var ball_type: int = 0  # Legacy: 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
 var _damage_bonus: int = 0
 var _speed_bonus: float = 0.0
 
-# Ball Return Mechanic - track balls in flight
-var balls_in_flight: int = 0
-var _previous_available: bool = true
-
 
 func _ready() -> void:
 	add_to_group("ball_spawner")
@@ -43,45 +35,23 @@ func set_aim_direction(direction: Vector2) -> void:
 		current_aim_direction = direction.normalized()
 
 
-func set_aim_direction_xy(x: float, y: float) -> void:
-	"""Set aim direction using separate x, y components (for automation tests)"""
-	set_aim_direction(Vector2(x, y))
-
-
-func can_fire() -> bool:
-	"""Check if player has balls available to fire (return mechanic)"""
-	return balls_in_flight < max_balls
-
-
-func get_balls_in_flight() -> int:
-	return balls_in_flight
-
-
 func fire() -> void:
 	if current_aim_direction == Vector2.ZERO:
 		return
 
-	# Check ball availability (return mechanic)
-	if not can_fire():
+	# Get all equipped ball slots
+	var equipped_slots := BallRegistry.get_equipped_slots() if BallRegistry else []
+	if equipped_slots.is_empty():
+		# Fallback to legacy single-ball behavior
+		_fire_legacy()
 		return
 
-	# Get all active ball types from slots
-	var slot_balls: Array[int] = []
-	if BallRegistry:
-		slot_balls = BallRegistry.get_filled_slots()
+	# Calculate total balls to spawn: slots × multi-shot
+	var total_balls := equipped_slots.size() * ball_count
+	_enforce_ball_limit(total_balls)
 
-	# Fallback to legacy single ball if no registry or no slots filled
-	if slot_balls.is_empty():
-		slot_balls = [BallRegistry.active_ball_type if BallRegistry else 0]
-
-	# Enforce ball limit by despawning oldest balls
-	# Total balls = slot_balls.size() * ball_count (multi-shot per slot)
-	var total_balls_to_spawn: int = slot_balls.size() * ball_count
-	_enforce_ball_limit(total_balls_to_spawn)
-
-	# Fire all slot ball types simultaneously
-	for slot_ball_type in slot_balls:
-		# Each slot fires ball_count balls (multi-shot)
+	# Fire ALL equipped types simultaneously (core slot mechanic)
+	for slot in equipped_slots:
 		for i in range(ball_count):
 			# Calculate spread offset for multi-shot
 			var spread_offset: float = 0.0
@@ -89,7 +59,22 @@ func fire() -> void:
 				spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
 
 			var dir := current_aim_direction.rotated(spread_offset)
-			_spawn_ball_typed(dir, slot_ball_type)
+			_spawn_ball_from_slot(dir, slot)
+
+	SoundManager.play(SoundManager.SoundType.FIRE)
+
+
+func _fire_legacy() -> void:
+	"""Legacy single-ball firing (fallback)"""
+	_enforce_ball_limit(ball_count)
+
+	for i in range(ball_count):
+		var spread_offset: float = 0.0
+		if ball_count > 1:
+			spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
+
+		var dir := current_aim_direction.rotated(spread_offset)
+		_spawn_ball(dir)
 
 	SoundManager.play(SoundManager.SoundType.FIRE)
 
@@ -116,38 +101,62 @@ func _enforce_ball_limit(balls_to_add: int) -> void:
 				oldest.queue_free()
 
 
-func _spawn_ball(direction: Vector2) -> void:
-	"""Legacy spawn using active_ball_type. Kept for backward compatibility."""
-	var active_type: int = BallRegistry.active_ball_type if BallRegistry else 0
-	_spawn_ball_typed(direction, active_type)
-
-
-func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
-	"""Spawn a ball of a specific type from the registry"""
-	# Get ball from pool if available, otherwise instantiate
-	var ball: Node
-	if PoolManager:
-		ball = PoolManager.get_ball()
-	else:
-		ball = ball_scene.instantiate()
+func _spawn_ball_from_slot(direction: Vector2, slot: Dictionary) -> void:
+	"""Spawn a ball with stats from a specific slot"""
+	var ball := ball_scene.instantiate()
 	ball.position = global_position + direction * spawn_offset
 	ball.set_direction(direction)
 
-	# Get stats from BallRegistry for the specific ball type
+	var registry_type: int = slot.ball_type
+	var ball_level: int = slot.level
+	var speed_mult: float = GameManager.character_speed_mult
+
+	# Get damage/speed from registry using slot's ball type and level
+	var registry_damage: int = BallRegistry.get_damage(registry_type)
+	var registry_speed: float = BallRegistry.get_speed(registry_type)
+
+	ball.damage = registry_damage + _damage_bonus
+	ball.speed = (registry_speed + _speed_bonus) * speed_mult
+	ball.ball_level = ball_level
+	ball.registry_type = registry_type
+
+	# Map registry type to ball.gd BallType enum
+	ball.set_ball_type(_registry_to_ball_type(registry_type))
+
+	ball.pierce_count = pierce_count
+	ball.max_bounces = max_bounces
+	ball.crit_chance = crit_chance
+
+	if balls_container:
+		balls_container.add_child(ball)
+	else:
+		get_parent().add_child(ball)
+
+	ball_spawned.emit(ball)
+
+
+func _spawn_ball(direction: Vector2) -> void:
+	"""Legacy spawn using active ball type (for fallback)"""
+	var ball := ball_scene.instantiate()
+	ball.position = global_position + direction * spawn_offset
+	ball.set_direction(direction)
+
+	# Get stats from BallRegistry if available
 	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
 	var speed_mult: float = GameManager.character_speed_mult
 	if use_registry:
-		var registry_damage: int = BallRegistry.get_damage(registry_ball_type)
-		var registry_speed: float = BallRegistry.get_speed(registry_ball_type)
-		var ball_level: int = BallRegistry.get_ball_level(registry_ball_type)
+		var active_type: int = BallRegistry.active_ball_type
+		var registry_damage: int = BallRegistry.get_damage(active_type)
+		var registry_speed: float = BallRegistry.get_speed(active_type)
+		var ball_level: int = BallRegistry.get_ball_level(active_type)
 
 		ball.damage = registry_damage + _damage_bonus
 		ball.speed = (registry_speed + _speed_bonus) * speed_mult
 		ball.ball_level = ball_level
-		ball.registry_type = registry_ball_type
+		ball.registry_type = active_type
 
 		# Map registry type to ball.gd BallType enum
-		ball.set_ball_type(_registry_to_ball_type(registry_ball_type))
+		ball.set_ball_type(_registry_to_ball_type(active_type))
 	else:
 		# Fallback to legacy behavior
 		ball.damage = ball_damage + _damage_bonus
@@ -163,13 +172,6 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 		balls_container.add_child(ball)
 	else:
 		get_parent().add_child(ball)
-
-	# Track ball return/catch (connect signals)
-	ball.returned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
-	ball.caught.connect(_on_ball_caught.bind(ball), CONNECT_ONE_SHOT)
-	ball.despawned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
-	balls_in_flight += 1
-	_check_availability_changed()
 
 	ball_spawned.emit(ball)
 
@@ -187,52 +189,6 @@ func _registry_to_ball_type(registry_type: int) -> int:
 		5: return 3  # LIGHTNING -> LIGHTNING
 		6: return 6  # IRON -> IRON
 	return 0
-
-
-func _on_ball_returned(_ball: Node) -> void:
-	"""Called when a ball returns to player (reaches bottom of screen)"""
-	balls_in_flight = maxi(0, balls_in_flight - 1)
-	ball_returned.emit()
-	_check_availability_changed()
-
-
-func _on_ball_caught(_ball: Node) -> void:
-	"""Called when a ball is caught by the player (active play bonus)"""
-	balls_in_flight = maxi(0, balls_in_flight - 1)
-	ball_caught.emit()
-	_check_availability_changed()
-
-
-func try_catch_ball() -> bool:
-	"""Attempt to catch any catchable ball in flight. Returns true if caught."""
-	if not balls_container:
-		return false
-
-	# Find the closest catchable ball
-	for ball in balls_container.get_children():
-		if ball.has_method("catch") and ball.is_catchable:
-			if ball.catch():
-				return true
-	return false
-
-
-func has_catchable_balls() -> bool:
-	"""Check if any balls are currently catchable"""
-	if not balls_container:
-		return false
-
-	for ball in balls_container.get_children():
-		if ball.has_method("catch") and ball.is_catchable:
-			return true
-	return false
-
-
-func _check_availability_changed() -> void:
-	"""Emit signal if ball availability changed"""
-	var now_available := can_fire()
-	if now_available != _previous_available:
-		_previous_available = now_available
-		balls_available_changed.emit(now_available)
 
 
 func increase_damage(amount: int) -> void:

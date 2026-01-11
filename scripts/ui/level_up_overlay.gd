@@ -49,14 +49,16 @@ func _randomize_cards() -> void:
 	_available_cards.clear()
 	var pool: Array[Dictionary] = []
 
-	# 1. Add new ball types (not yet owned)
+	# 1. Add new ball types (not yet owned) - only if slots available
 	if BallRegistry:
-		var unowned := BallRegistry.get_unowned_ball_types()
-		for ball_type in unowned:
-			pool.append({
-				"card_type": CardType.NEW_BALL,
-				"ball_type": ball_type
-			})
+		# Only offer new balls if there's room in a slot
+		if BallRegistry.has_empty_slot():
+			var unowned := BallRegistry.get_unowned_ball_types()
+			for ball_type in unowned:
+				pool.append({
+					"card_type": CardType.NEW_BALL,
+					"ball_type": ball_type
+				})
 
 		# 2. Add ball level-ups (owned balls below L3)
 		var upgradeable := BallRegistry.get_upgradeable_balls()
