@@ -8,7 +8,7 @@ signal hit_gem(gem: Node2D)
 signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -85,6 +85,9 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.3, 0.6, 1.0)  # Pale frost blue
 		BallType.WIND:
 			ball_color = Color(0.8, 1.0, 0.8)  # Light green-white (airy)
+		BallType.GHOST:
+			ball_color = Color(0.7, 0.7, 0.9, 0.6)  # Semi-transparent purple
+			modulate.a = 0.6  # Make ball semi-transparent
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -463,6 +466,15 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 				tween.tween_property(enemy, "modulate", Color.WHITE, 0.5)
 			# Wind balls pass through enemies
 			pierce_count = max(pierce_count, 2)
+
+		BallType.GHOST:
+			# Ghost: Full pass-through, no status effect
+			# Ghostly visual effect on enemy
+			enemy.modulate = Color(0.7, 0.7, 0.9, 0.5)
+			var tween := enemy.create_tween()
+			tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+			# Ghost balls pass through all enemies (very high pierce)
+			pierce_count = 999
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
@@ -909,3 +921,6 @@ func _apply_fused_effects(enemy: Node2D, base_damage: int) -> void:
 					var wind = StatusEffect.new(StatusEffect.Type.WIND)
 					enemy.apply_status_effect(wind)
 				pierce_count = max(pierce_count, 2)
+			"ghost":
+				# Ghost effect - full pass-through
+				pierce_count = 999

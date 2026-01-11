@@ -168,17 +168,17 @@ async def test_fired_ball_has_correct_level(game):
 @pytest.mark.asyncio
 async def test_get_unowned_ball_types(game):
     """Should correctly return ball types not yet owned."""
-    # Get unowned types (should be 10: all except BASIC which is auto-added on game start)
-    # Ball types: BASIC, BURN, FREEZE, POISON, BLEED, LIGHTNING, IRON, RADIATION, DISEASE, FROSTBURN, WIND
+    # Get unowned types (should be 11: all except BASIC which is auto-added on game start)
+    # Ball types: BASIC, BURN, FREEZE, POISON, BLEED, LIGHTNING, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST
     unowned = await game.call(BALL_REGISTRY, "get_unowned_ball_types")
-    assert len(unowned) == 10, "Should have 10 unowned ball types initially"
+    assert len(unowned) == 11, "Should have 11 unowned ball types initially"
 
     # Add BURN
     await game.call(BALL_REGISTRY, "add_ball", [1])
 
-    # Now should have 9 unowned
+    # Now should have 10 unowned
     unowned_after = await game.call(BALL_REGISTRY, "get_unowned_ball_types")
-    assert len(unowned_after) == 9, "Should have 9 unowned after adding BURN"
+    assert len(unowned_after) == 10, "Should have 10 unowned after adding BURN"
 
 
 @pytest.mark.asyncio
