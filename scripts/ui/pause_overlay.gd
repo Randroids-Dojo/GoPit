@@ -22,6 +22,9 @@ func _ready() -> void:
 		mute_button.pressed.connect(_on_mute_pressed)
 		_update_mute_button()
 
+	# Listen for mute state changes
+	SoundManager.mute_changed.connect(_on_mute_changed)
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Handle back button on Android / Escape key
@@ -65,6 +68,9 @@ func _on_quit_pressed() -> void:
 
 func _on_mute_pressed() -> void:
 	SoundManager.toggle_mute()
+
+
+func _on_mute_changed(_is_muted: bool) -> void:
 	_update_mute_button()
 
 
