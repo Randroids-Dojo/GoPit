@@ -12484,3 +12484,484 @@ GoPit Slime King has phases and attacks, but **any hit does full damage**.
 - [Deltia's Skeleton King Guide](https://deltiasgaming.com/ball-x-pit-skeleton-king-boss-guide/)
 - [Steam Empty Nester Discussion](https://steamcommunity.com/app/2062430/discussions/0/624436409752831730/)
 
+
+## Appendix EF: Currency & Economy System (MAJOR GAP)
+
+### BallxPit Economy (5 Currencies + City Building)
+
+**Resource Types:**
+1. **Gold** - Premium currency from Gold Mines (1-4 per bounce, up to 100 bounces/harvest)
+2. **Wheat** - Basic resource, easiest to accumulate
+3. **Wood** - Mid-tier resource
+4. **Stone** - Hardest to earn, lowest yield
+5. **Gems** - Premium currency (likely IAP)
+
+**Harvest System:**
+- Between-runs resource collection in "New Ballbylon" (player's base)
+- Launch all unlocked characters into base, they bounce collecting resources
+- Optimized setup: 1,500+ gold every 1-2 minutes
+- 7-mine gold farm with speed-boost house = 3,100 gold/harvest
+
+**Building System:**
+- Wheat Fields, Forests, Boulders (resource generators)
+- Automated Harvesting: Farm (1-3 wheat/4-6 min), Lumberyard (1-3 wood/7-9 min), Stone Mine (1-3 stone/8-10 min)
+- Gold Mine: 1-4 gold per bounce
+- Gatherer's Hut: Sends characters on automated runs
+
+### GoPit Economy (1 Currency)
+
+**Single Currency:**
+- **Pit Coins** - Earned at run end: wave × 10 + level × 25
+
+**In-Run Currency:**
+- **XP Gems** - 10 XP per gem, used for level-up system
+- **Health Gems** - Heal 10 HP, no XP
+
+**Permanent Upgrades (5 types):**
+- Pit Armor (HP): 100/200/400/800/1600 coins
+- Ball Power (damage): 150/300/600/1200/2400 coins
+- Rapid Fire (cooldown): 200/400/800/1600/3200 coins
+- Coin Magnet (bonus coins): 250/625/1562/3906 coins
+- Head Start (starting level): 500/1500/4500 coins
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Currency types | 5 | 1 | MAJOR |
+| Meta-game | City building | Simple shop | MAJOR |
+| Resource collection | Active bouncing game | Passive end-of-run | MAJOR |
+| Strategic depth | Multi-resource economy | Linear coin grinding | MAJOR |
+
+**Recommendation:** Consider adding a simplified base-building or resource collection meta-game.
+
+Sources:
+- [Ball x Pit Economy Guide](https://www.ballxpitguide.com/economy)
+- [Ball x Pit Harvest Guide](https://ballxpit.org/guides/harvest-guide/)
+
+---
+
+## Appendix EG: Passive/Perk System (CRITICAL GAP)
+
+### BallxPit Passives (61 Total)
+
+**Base Passives (51):**
+Unlockable during runs, level up to 3, some evolve via Fusion Reactor.
+
+Examples by category:
+- **Damage**: Deadeye's Amulet (crit +10-15 damage), Silver Bullet (+20% damage until wall hit), War Horn (baby balls +20% damage)
+- **Defense**: Breastplate (-10% damage taken), Protective Charm (one-time shield), Everflowing Goblet (overheal at 20% efficiency)
+- **Utility**: Archer's Effigy (spawn stone archer every 7-12 rows), Golden Bull (spawn bull collecting 10 gold/min), Turret (shoots baby ball every 2s)
+
+**Evolved Passives (10):**
+Created by combining base passives in Fusion Reactor:
+
+| Evolution | Recipe | Effect |
+|-----------|--------|--------|
+| Cornucopia | Baby Rattle + War Horn | Spawn 0-1 extra baby balls |
+| Gracious Impaler | Reacher's Spear + Deadeye's Amulet | 5% instant kill on crit |
+| Odiferous Shell | Wretched Onion + Breastplate | 50% instant kill on touch |
+| Phantom Regalia | Ghostly Corset + Ethereal Cloak | Pierce all enemies to back wall, +50% damage |
+| Soul Reaver | Vampiric Sword + Everflowing Goblet | 1 HP per kill, overheal at 30% |
+| Tormenters Mask | Spiked Collar + Crown of Thorns | 10% instant kill on enemy detection |
+| Wings of the Anointed | Radiant Feather + Fleet Feet | +40% ball speed, +20% move speed, ground hazard immunity |
+| Deadeye's Cross | 4 gem daggers (Diamond/Sapphire/Ruby/Emerald) | 60% crit chance |
+
+**Passive Slots:**
+- Bag Maker building provides +1 ball slot (most impactful early building)
+- Some passives require owning specific ball types (Poison, Freeze, Burn, etc.)
+
+### GoPit Upgrades (16 Total)
+
+**In-Run Upgrades (11):**
+- DAMAGE: +5 damage (max 10 stacks)
+- FIRE_RATE: -0.1s cooldown (max 4)
+- MAX_HP: +25 HP (max 10)
+- MULTI_SHOT: +1 ball (max 3)
+- BALL_SPEED: +100 speed (max 5)
+- PIERCING: +1 pierce (max 3)
+- RICOCHET: +5 bounces (max 4)
+- CRITICAL: +10% crit (max 5)
+- MAGNETISM: +200 range (max 3)
+- HEAL: Restore 30 HP (max 99)
+- LEADERSHIP: +20% baby ball rate (max 5)
+
+**Permanent Upgrades (5):** See Appendix EF
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Total passives | 61 | 16 | CRITICAL (4x) |
+| Evolved passives | 10 | 0 | MAJOR |
+| Passive synergies | Complex combinations | None | MAJOR |
+| Utility passives | Summoners, turrets, collectors | None | MAJOR |
+
+**Priority Additions:**
+1. Soul Reaver (lifesteal) - pairs with high-damage builds
+2. Wings of the Anointed (speed) - mobility focus
+3. Deadeye's Cross (crit) - damage amplification
+4. Summoner passives (turret, archer) - adds strategic layer
+
+Sources:
+- [Ball X Pit Wiki - Passives](https://ballpit.fandom.com/wiki/Passives)
+- [Ball x Pit Passive Evolutions Guide](https://ballxpit.org/guides/passive-evolutions/)
+
+---
+
+## Appendix EH: Biomes & Stage System (SIGNIFICANT GAP)
+
+### BallxPit Biomes
+
+**Named Biomes with Unique Themes:**
+- **Bone x Yard** - Cozy Home Blueprint drops here
+- **Snowy x Shores** - Veteran's Hut Blueprint (poison specialist)
+- **Gory Grasslands** - Monastery Blueprint (low-HP high-reward character)
+- Desert biome - Laser enemy focus (bullet-hell style)
+- Additional unnamed biomes
+
+**Features:**
+- Boss drops character blueprints (rarely from regular enemies)
+- Blueprint progress shown on level select screen
+- Each biome has unique enemy variants
+- Mid-game unlocks after clearing 3-5 biomes
+
+### GoPit Stages (4)
+
+**Current Stages:**
+1. **The Pit** - Default background (dark blue/purple)
+2. **Frozen Depths** - Ice theme
+3. **Burning Sands** - Fire theme
+4. **Final Descent** - End game
+
+**Biome Resource Structure:**
+```gdscript
+@export var biome_name: String
+@export var background_color: Color
+@export var wall_color: Color
+@export var waves_before_boss: int = 10
+# Future: hazard_scenes, enemy_variants, music_track
+```
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Named biomes | 5+ | 4 | Minor |
+| Unique enemies | Per-biome variants | None | MAJOR |
+| Boss drops | Blueprints, items | None | MAJOR |
+| Hazards | Ground hazards, lasers | None | MAJOR |
+| Visual themes | Rich environments | Color swaps only | SIGNIFICANT |
+
+**Recommendation:** Add environmental hazards and biome-specific enemy variants.
+
+Sources:
+- [BallxPit Biomes Guide](https://ballxpit.net/biomes)
+- [Character Unlock Guide](https://ballxpit.org/guides/character-unlock-guide/)
+
+---
+
+## Appendix EI: Player Movement & Dodging System
+
+### BallxPit Movement
+
+**Core Mechanics:**
+- Free movement in 4 directions (joystick/keyboard)
+- Bullet-hell dodging emphasis
+- Speed toggle (R1 on PS5): slow for boss fights, fast for farming
+
+**Enemy Attack Types:**
+1. **Ranged attacks** - Can be dodged, require constant movement
+2. **Short-range attacks** - Only trigger when enemies get close (Space Invaders style)
+3. **Descend attacks** - Enemies at screen bottom attack automatically (undodgeable)
+
+**Telegraphing:**
+- Every enemy telegraphs 0.5-1 second before attacking
+- Predictable patterns = dodgeable attacks
+
+**Strategic Positioning:**
+- Don't stand still — circle enemies at medium range
+- Use screen edges for ricochet opportunities
+- Keep escape routes open
+- 80% dodging / 20% aiming in waves 1-5
+- 60% dodging / 40% aiming in waves 10+
+
+**Speed Considerations:**
+- Moving too fast = overcorrection on dodges
+- Moving too fast = harder to collect XP drops
+
+### GoPit Movement
+
+**Current Implementation:**
+```gdscript
+var move_speed: float = 300.0
+velocity = movement_input * effective_speed * GameManager.character_speed_mult
+```
+
+**Features:**
+- Free movement via virtual joystick
+- Character speed multiplier (per-character)
+- Bounded to play area (bounds_min to bounds_max)
+- Direction indicator shows aim direction
+
+**Missing:**
+- No speed toggle
+- No enemy telegraphing system
+- No dodge mechanics (i-frames, dash, etc.)
+- No collision-based damage from enemies (enemies attack on proximity, not dodgeable)
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Speed toggle | 3 speeds | None | MAJOR |
+| Enemy telegraphing | 0.5-1s warnings | None | MAJOR |
+| Dodge emphasis | Core mechanic | Secondary | SIGNIFICANT |
+| Attack dodgeability | Ranged: yes, Close: no | All proximity-based | MAJOR |
+
+**Recommendation:** Add enemy attack telegraphing and make ranged attacks dodgeable.
+
+Sources:
+- [Ball x Pit Tips & Tricks](https://ballxpit.org/guides/tips-tricks/)
+- [Ball X Pit Controls Guide](https://deltiasgaming.com/ball-x-pit-controls-list-guide/)
+
+---
+
+## Appendix EJ: Session 6 Research Summary
+
+### Areas Researched This Session
+
+1. **Currency/Economy System** (Appendix EF)
+   - BallxPit: 5 currencies + city building meta-game
+   - GoPit: 1 currency (Pit Coins)
+   - Gap: MAJOR
+
+2. **Passive/Perk System** (Appendix EG)
+   - BallxPit: 61 passives (51 base + 10 evolved)
+   - GoPit: 16 upgrades (11 in-run + 5 permanent)
+   - Gap: CRITICAL (4x difference)
+
+3. **Biomes/Stages** (Appendix EH)
+   - BallxPit: 5+ named biomes with unique enemies/hazards
+   - GoPit: 4 color-themed stages
+   - Gap: SIGNIFICANT
+
+4. **Player Movement** (Appendix EI)
+   - BallxPit: Speed toggle, enemy telegraphing, bullet-hell dodging
+   - GoPit: Simple movement, proximity damage
+   - Gap: MAJOR
+
+### Priority Gaps to Address
+
+| Priority | Feature | Gap Level | Effort |
+|----------|---------|-----------|--------|
+| P0 | Ball return mechanic | FUNDAMENTAL | High |
+| P1 | Passive system expansion | CRITICAL | High |
+| P1 | Character unique mechanics | CRITICAL | High |
+| P1 | Speed toggle | MAJOR | Low |
+| P2 | City building meta | MAJOR | Very High |
+| P2 | Enemy telegraphing | MAJOR | Medium |
+| P2 | Biome-specific enemies | SIGNIFICANT | Medium |
+
+### Existing Beads Issues Created from Research
+
+Research has generated these tracked issues:
+- GoPit-ay9: Add ball return mechanic [P1]
+- GoPit-tm68: Add passive/perk system with 4 slots [P1]
+- GoPit-308u: Add 10 more characters with gameplay-changing abilities [P2]
+- GoPit-21cr: Add speed toggle system [P2]
+- GoPit-h0n9: Add more enemy types [P2]
+
+### Research Remaining
+
+- [ ] Shop items and purchases
+- [ ] Ball unlock/acquisition methods
+- [ ] Tutorial/onboarding comparison
+- [ ] Audio/music system comparison
+- [ ] Achievement/quest systems
+
+---
+
+## Appendix EK: Buildings & Market System (MAJOR GAP)
+
+### BallxPit Buildings (70+ Total)
+
+**Building Categories:**
+
+1. **Resource Production:**
+   - Gold Mines (critical - 7 in U-shape = 2,500-3,100 gold/harvest)
+   - Wheat Fields, Forests, Boulders
+   - Farm, Lumberyard, Stone Mine (automated)
+
+2. **Character Houses:**
+   - Each character requires a housing blueprint (except Warrior)
+   - Blueprints drop from bosses in specific biomes
+
+3. **Stat Buildings (6 types):**
+   - Each grants +1 to a base stat (max +5 with upgrades)
+   - Intelligence, Strength, Endurance, Dexterity, etc.
+
+4. **Key Gameplay Buildings:**
+   - **Bag Maker** - +1 ball slot (most impactful early building)
+   - **Matchmaker** - Enables 2-character runs (doubles synergies)
+   - **Antique Shop** - Guarantees passive items
+   - **Evolution Chamber** - Unlocks advanced fusions
+
+### Market System
+
+**Gold is the Bottleneck:**
+- ALL advanced buildings cost 200-500+ gold
+- Late-game: Gold is the ONLY resource that matters
+- Market unlocks mid-game, allows buying wheat/wood/stone with gold
+
+**Supply/Demand Economy:**
+- Selling lots of one resource decreases price
+- Hold until 10k for full asking price
+- Hold Shift to see larger sell values (up to 10k)
+- Sell Wheat (always in demand: Wood and Stone)
+
+### GoPit Shop System
+
+**Current Implementation:**
+- Meta Shop with Pit Coins
+- 5 permanent upgrades only
+- No resource trading
+- No building system
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Buildings | 70+ | 0 | CRITICAL |
+| Resource types | 5 | 1 | MAJOR |
+| Supply/demand | Yes | No | MAJOR |
+| Character unlocks | Building-based | Auto-unlock | SIGNIFICANT |
+
+Sources:
+- [Ball x Pit Buildings Guide](https://ballxpit.org/guides/buildings-guide/)
+- [BALL x PIT Wiki - Buildings](https://ballxpit.wiki.gg/wiki/Buildings)
+
+---
+
+## Appendix EL: Ball Types & Acquisition (SIGNIFICANT GAP)
+
+### BallxPit Ball Types (18 Base + 42 Evolved = 60 Total)
+
+**Base Balls (18):**
+
+| Ball | Effect | Starting Character |
+|------|--------|-------------------|
+| Bleed | 2 bleed stacks, +1 dmg/stack on hit (max 8) | The Warrior |
+| Brood Mother | 25% baby ball spawn on hit | The Cohabitants |
+| Burn | +1 burn stack (max 3), 4-8 dmg/sec/stack | The Itchy Finger |
+| Cell | Splits into clone on hit (2 times) | Unlockable |
+| Charm | 4% chance charm enemy 5s (enemies attack each other) | Unlockable |
+| Dark | 3x damage, self-destruct on hit, 3s cooldown | The Shade |
+| Earthquake | 5-13 dmg in 3x3 area | The Makeshift Sisyphus |
+| Egg Sac | Explodes into 2-4 baby balls, 3s cooldown | The Flagellant |
+| Freeze | 4% freeze 5s, frozen +25% damage taken | The Repentant |
+| Ghost | Passes through enemies | The Empty Nester |
+| Iron | 2x damage, -40% speed | The Shieldbearer |
+| Laser (H) | 9-18 dmg to entire row | Unlockable |
+| Laser (V) | 9-18 dmg to entire column | The Cogitator |
+| Light | Blind 3s (50% miss chance) | The Physicist |
+| Lightning | 1-20 dmg to up to 3 nearby enemies | The Juggler |
+| Poison | +1 poison stack (max 5), 1-4 dmg/sec/stack | The Embedded |
+| Vampire | 4.5% heal 1 HP on hit | The Spendthrift |
+| Wind | Pierce + 30% slow, -25% damage | The Radical |
+
+**Evolved Balls (42):**
+Created by fusing two L3 balls in Fusion Reactor. Examples:
+- Bomb = Burn + Iron (150-300 AoE damage)
+- Frozen Flame = Freeze + Burn (frostburn DoT + 25% amplification)
+- Voodoo Doll = Bleed + Dark (requires Sacrifice curse active)
+
+**Acquisition Methods:**
+1. Level up during runs (offered from unlocked pool)
+2. Start with character's assigned ball
+3. Progress through stages to unlock new types
+4. Buildings can make certain balls easier to unlock
+
+### GoPit Ball Types (7)
+
+| Type | Effect |
+|------|--------|
+| BASIC | Standard ball |
+| BURN | Fire DoT |
+| FREEZE | Slow/freeze |
+| POISON | Poison DoT |
+| BLEED | Bleed stacks |
+| LIGHTNING | Chain lightning |
+| IRON | High damage, slow |
+
+**Acquisition:** All unlocked by default, no progression-based unlocks.
+
+### Gap Analysis
+
+| Aspect | BallxPit | GoPit | Gap |
+|--------|----------|-------|-----|
+| Base balls | 18 | 7 | MAJOR (2.5x) |
+| Evolved balls | 42 | 5 recipes | SIGNIFICANT |
+| Total unique | 60 | 7 | CRITICAL (8.5x) |
+| Utility balls | Ghost, Cell, Charm | None | MAJOR |
+| Self-destruct | Dark ball | None | Missing |
+| Lifesteal ball | Vampire | None | Missing |
+
+**Priority Additions:**
+1. Ghost ball (pierce) - simple but strategic
+2. Vampire ball (lifesteal) - synergizes with high-damage builds
+3. Cell ball (splitting) - multiplier potential
+4. Dark ball (risk/reward) - high skill ceiling
+
+Sources:
+- [Ball X Pit Wiki - Balls](https://ballpit.fandom.com/wiki/Balls)
+- [Ball x Pit All Special Balls Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-all-special-balls/)
+
+---
+
+## Appendix EM: Session 6 Complete Summary
+
+### All Research Completed This Session
+
+| Area | Appendix | Gap Level |
+|------|----------|-----------|
+| Currency/Economy | EF | MAJOR |
+| Passive/Perk System | EG | CRITICAL |
+| Biomes/Stages | EH | SIGNIFICANT |
+| Player Movement | EI | MAJOR |
+| Buildings/Market | EK | CRITICAL |
+| Ball Types/Acquisition | EL | CRITICAL |
+
+### Critical Gaps Identified
+
+**CRITICAL (Must Address):**
+1. Passive system - 61 vs 16 (4x gap)
+2. Building meta-game - 70+ vs 0
+3. Ball variety - 60 vs 7 (8.5x gap)
+
+**MAJOR (Should Address):**
+1. Ball return mechanic (FUNDAMENTAL)
+2. Currency variety - 5 vs 1
+3. Speed toggle system
+4. Enemy telegraphing
+5. Character unique mechanics - 16 vs 6
+
+**SIGNIFICANT (Nice to Have):**
+1. Biome-specific enemies
+2. Blueprint drops from bosses
+3. Supply/demand market
+4. Utility balls (Ghost, Charm, Cell)
+
+### Comparison Document Stats
+
+- Total appendices: 143 (A through EM)
+- Total lines: ~13,000
+- Sessions documented: 6
+
+### Next Research Areas
+
+- [ ] Tutorial/onboarding comparison
+- [ ] Audio/music system
+- [ ] Achievement/quest systems
+- [ ] Cosmetics/skins
+- [ ] Multiplayer/social features
