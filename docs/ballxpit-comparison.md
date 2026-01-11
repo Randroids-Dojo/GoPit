@@ -3388,3 +3388,195 @@ func execute() -> void:
 - Combo with ball slots (all balls fire at once?)
 
 **Priority:** P3 (optional polish) - Current system works well.
+
+
+## Appendix AH: Pause Menu and Settings (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/ui/pause_overlay.gd`
+
+**Options:**
+1. Resume - Continue playing
+2. Sound: ON/OFF - Toggle all audio
+3. Quit - Return to start (reload scene)
+
+**Missing settings:**
+| Setting | Status | Common in Mobile Games |
+|---------|--------|------------------------|
+| Music volume | ❌ Missing | Very common |
+| SFX volume | ❌ Missing | Very common |
+| Vibration toggle | ❌ Missing | Common |
+| Game speed | ❌ Missing | Common in roguelikes |
+| Sensitivity | ❌ Missing | Common for joysticks |
+| Credits/About | ❌ Missing | Standard |
+
+### BallxPit Expected Settings
+
+Mobile games typically have:
+- Separate music/SFX sliders
+- Vibration toggle (haptics)
+- Language selection
+- Cloud save toggle
+- Privacy/data settings
+- Social links (Discord, etc.)
+
+### Game Flow Comparison
+
+**GoPit:**
+```
+Launch → Character Select → Game → Game Over → Character Select
+```
+
+**Missing:**
+- No dedicated main menu
+- No mode selection
+- No daily challenge/endless mode
+- No leaderboards screen
+
+### Recommendations
+
+**P3 Priority** (polish):
+
+1. **Split audio controls:**
+```gdscript
+var music_volume: float = 1.0
+var sfx_volume: float = 1.0
+```
+
+2. **Add game speed option:**
+```
+[ 0.5x ] [ 1.0x ] [ 1.5x ] [ 2.0x ]
+```
+
+3. **Add main menu:**
+- Play (→ Character Select)
+- Shop (→ Meta Shop)
+- Settings
+- Daily Challenge (future)
+
+**Note:** These are quality-of-life improvements. Core gameplay is priority.
+
+
+## Appendix AI: Game Modes Comparison (NEW)
+
+### GoPit Current Modes
+
+**Only one mode:** Standard run (4 stages → final boss → win)
+
+**No alternative modes:**
+- No endless/survival mode
+- No daily challenge
+- No boss rush
+- No practice mode
+
+### BallxPit Expected Modes
+
+Many roguelikes offer:
+1. **Story/Campaign** - Finite stages with ending
+2. **Endless** - Survive as long as possible
+3. **Daily Challenge** - Same seed for all players, leaderboard
+4. **Boss Rush** - Fight bosses back-to-back
+
+### GAP ANALYSIS
+
+| Mode | GoPit | BallxPit (Expected) | Complexity |
+|------|-------|---------------------|------------|
+| Campaign | ✅ Yes | ✅ Yes | - |
+| Endless | ❌ No | ✅ Maybe | LOW |
+| Daily | ❌ No | ✅ Maybe | HIGH |
+| Boss Rush | ❌ No | ❌ Unknown | MEDIUM |
+
+### Why This Matters
+
+1. **Replayability** - Different modes keep game fresh
+2. **Engagement** - Daily challenges bring players back
+3. **Competition** - Leaderboards drive engagement
+4. **Skill expression** - Endless shows mastery
+
+### Recommendations
+
+**P3 Priority** (future feature):
+
+**Easy win - Endless Mode:**
+```gdscript
+# Just disable stage completion, scale infinitely
+var is_endless_mode: bool = false
+
+func _advance_wave() -> void:
+    if is_endless_mode:
+        # Skip boss, just increase difficulty
+        _scale_difficulty()
+    else:
+        # Normal stage progression
+        _check_boss_wave()
+```
+
+**Benefits:**
+- Minimal code change
+- High replayability value
+- Good for score competition
+
+
+## Appendix AJ: Persistence and Stats Tracking (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/autoload/meta_manager.gd`
+
+**Persisted Data (local JSON):**
+```json
+{
+  "coins": 500,
+  "runs": 15,
+  "best_wave": 25,
+  "upgrades": {"hp": 2, "damage": 1}
+}
+```
+
+**Run Stats (in-memory only):**
+- Time survived
+- Enemies killed
+- Damage dealt
+- Gems collected
+- High score wave/level (GameManager)
+
+**What GoPit Has:**
+| Feature | Status |
+|---------|--------|
+| Local save | ✅ Yes |
+| Best wave tracking | ✅ Yes |
+| Total runs | ✅ Yes |
+| Upgrade progress | ✅ Yes |
+| Run stats display | ✅ Yes |
+
+**What GoPit Lacks:**
+| Feature | Status |
+|---------|--------|
+| Cloud save | ❌ No |
+| Online leaderboards | ❌ No |
+| Friends comparison | ❌ No |
+| Detailed stat history | ❌ No |
+| Achievement unlocks | ❌ Partial |
+
+### BallxPit Expected Features
+
+Mobile games typically have:
+- Cloud save (Play Games / Game Center)
+- Global leaderboards
+- Weekly/daily leaderboards
+- Achievement badges with rewards
+- Friends list integration
+
+### Assessment
+
+**GoPit's local persistence is adequate for MVP.**
+
+**Recommendations:**
+
+**P4 Priority** (future/optional):
+1. Cloud save integration (platform-specific)
+2. Simple leaderboard (server required)
+3. Achievement badges displayed in UI
+
+**Note:** Online features require backend infrastructure. Focus on core gameplay first.
