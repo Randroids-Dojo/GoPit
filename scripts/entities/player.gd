@@ -17,12 +17,17 @@ var last_aim_direction: Vector2 = Vector2.UP  # Default aim upward
 var bounds_min: Vector2 = Vector2(30, 280)  # Left wall + some padding, top area (below enlarged TopBar)
 var bounds_max: Vector2 = Vector2(690, 1150)  # Right wall - padding, above input area
 
+# Invincibility blinking
+var _blink_tween: Tween = null
+
 
 func _ready() -> void:
 	add_to_group("player")
 	# Set up collision - layer 16 (player), mask 4+8 (enemies + gems)
 	collision_layer = 16
 	collision_mask = 12  # 4 (enemies) + 8 (gems)
+	# Connect to invincibility signal for blinking effect
+	GameManager.invincibility_changed.connect(_on_invincibility_changed)
 
 
 func _physics_process(_delta: float) -> void:
@@ -78,3 +83,20 @@ func _flash_damage() -> void:
 func set_bounds(min_pos: Vector2, max_pos: Vector2) -> void:
 	bounds_min = min_pos
 	bounds_max = max_pos
+
+
+func _on_invincibility_changed(is_invincible: bool) -> void:
+	# Stop any existing blink tween
+	if _blink_tween and _blink_tween.is_valid():
+		_blink_tween.kill()
+		_blink_tween = null
+
+	if is_invincible:
+		# Start blinking effect - rapid alpha toggle
+		_blink_tween = create_tween()
+		_blink_tween.set_loops()  # Loop indefinitely until stopped
+		_blink_tween.tween_property(self, "modulate:a", 0.3, 0.05)
+		_blink_tween.tween_property(self, "modulate:a", 1.0, 0.05)
+	else:
+		# Restore full opacity when invincibility ends
+		modulate.a = 1.0
