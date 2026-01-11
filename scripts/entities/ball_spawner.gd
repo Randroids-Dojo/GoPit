@@ -39,17 +39,31 @@ func fire() -> void:
 	if current_aim_direction == Vector2.ZERO:
 		return
 
+	# Get all active ball types from slots
+	var slot_balls: Array[int] = []
+	if BallRegistry:
+		slot_balls = BallRegistry.get_filled_slots()
+
+	# Fallback to legacy single ball if no registry or no slots filled
+	if slot_balls.is_empty():
+		slot_balls = [BallRegistry.active_ball_type if BallRegistry else 0]
+
 	# Enforce ball limit by despawning oldest balls
-	_enforce_ball_limit(ball_count)
+	# Total balls = slot_balls.size() * ball_count (multi-shot per slot)
+	var total_balls_to_spawn: int = slot_balls.size() * ball_count
+	_enforce_ball_limit(total_balls_to_spawn)
 
-	for i in range(ball_count):
-		# Calculate spread offset for multi-shot
-		var spread_offset: float = 0.0
-		if ball_count > 1:
-			spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
+	# Fire all slot ball types simultaneously
+	for slot_ball_type in slot_balls:
+		# Each slot fires ball_count balls (multi-shot)
+		for i in range(ball_count):
+			# Calculate spread offset for multi-shot
+			var spread_offset: float = 0.0
+			if ball_count > 1:
+				spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
 
-		var dir := current_aim_direction.rotated(spread_offset)
-		_spawn_ball(dir)
+			var dir := current_aim_direction.rotated(spread_offset)
+			_spawn_ball_typed(dir, slot_ball_type)
 
 	SoundManager.play(SoundManager.SoundType.FIRE)
 
@@ -77,6 +91,13 @@ func _enforce_ball_limit(balls_to_add: int) -> void:
 
 
 func _spawn_ball(direction: Vector2) -> void:
+	"""Legacy spawn using active_ball_type. Kept for backward compatibility."""
+	var active_type: int = BallRegistry.active_ball_type if BallRegistry else 0
+	_spawn_ball_typed(direction, active_type)
+
+
+func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
+	"""Spawn a ball of a specific type from the registry"""
 	# Get ball from pool if available, otherwise instantiate
 	var ball: Node
 	if PoolManager:
@@ -86,22 +107,21 @@ func _spawn_ball(direction: Vector2) -> void:
 	ball.position = global_position + direction * spawn_offset
 	ball.set_direction(direction)
 
-	# Get stats from BallRegistry if available
+	# Get stats from BallRegistry for the specific ball type
 	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
 	var speed_mult: float = GameManager.character_speed_mult
 	if use_registry:
-		var active_type: int = BallRegistry.active_ball_type
-		var registry_damage: int = BallRegistry.get_damage(active_type)
-		var registry_speed: float = BallRegistry.get_speed(active_type)
-		var ball_level: int = BallRegistry.get_ball_level(active_type)
+		var registry_damage: int = BallRegistry.get_damage(registry_ball_type)
+		var registry_speed: float = BallRegistry.get_speed(registry_ball_type)
+		var ball_level: int = BallRegistry.get_ball_level(registry_ball_type)
 
 		ball.damage = registry_damage + _damage_bonus
 		ball.speed = (registry_speed + _speed_bonus) * speed_mult
 		ball.ball_level = ball_level
-		ball.registry_type = active_type
+		ball.registry_type = registry_ball_type
 
 		# Map registry type to ball.gd BallType enum
-		ball.set_ball_type(_registry_to_ball_type(active_type))
+		ball.set_ball_type(_registry_to_ball_type(registry_ball_type))
 	else:
 		# Fallback to legacy behavior
 		ball.damage = ball_damage + _damage_bonus
