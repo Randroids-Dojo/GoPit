@@ -10579,27 +10579,38 @@ func get_equipped_slots() -> Array:
 
 ### Comparison to BallxPit
 
-| Aspect | GoPit | BallxPit |
-|--------|-------|----------|
-| Max simultaneous balls | 5 | 4-5 |
-| Ball types | 7 | 8-10 |
-| Level system | 3 levels | 3 levels |
-| Fusion at L3 | ✅ Yes | ✅ Yes |
-| Slot UI visible | ❓ Needs verification | ✅ Yes |
+| Aspect | GoPit | BallxPit | Notes |
+|--------|-------|----------|-------|
+| Max simultaneous balls | 5 | 4 | **GoPit exceeds BallxPit** |
+| Ball types | 7 | 8-10 | Gap: -1 to -3 types |
+| Level system | 3 levels | 3 levels | Aligned |
+| Fusion at L3 | ✅ Yes | ✅ Yes | Aligned |
+| Slot UI visible | ✅ Yes | ✅ Yes | Aligned (slot_display.gd) |
+
+**Source**: [GAM3S.GG Unlock Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-unlock-all-characters/) confirms 4 special ball slots in BallxPit.
+
+### Slot Display UI (slot_display.gd)
+
+GoPit has a HUD component (`scripts/ui/slot_display.gd`, 68 lines) showing all 5 slots:
+- Filled slots: `[F2]` format (icon + level, colored by ball type)
+- Empty slots: `[+]` in gray
+- Icons: O=Basic, F=Burn, I=Freeze, P=Poison, B=Bleed, L=Lightning, M=Iron
+- Updates via `BallRegistry.slot_changed` signal
 
 ### Assessment
 
 | Aspect | Status | Notes |
 |--------|--------|-------|
-| Slot system | ✅ IMPLEMENTED | 5 slots, all fire |
+| Slot system | ✅ IMPLEMENTED | 5 slots (MORE than BallxPit's 4!) |
 | Level scaling | ✅ Working | 1.0x/1.5x/2.0x |
 | Ball variety | ✅ Good | 7 types |
 | Signals | ✅ Complete | ball_acquired, slot_changed |
 | Fusion integration | ✅ Working | is_fusion_ready() |
+| Slot UI | ✅ Working | HUD display of all slots |
 
 **Rating**: ⭐⭐⭐⭐⭐ EXCELLENT - P0 GAP IS CLOSED!
 
-**CORRECTION**: Previous analysis incorrectly identified this as a P0 gap. The 5-slot simultaneous firing system IS fully implemented.
+**CORRECTION**: Previous analysis incorrectly identified this as a P0 gap. The 5-slot simultaneous firing system IS fully implemented. GoPit actually offers MORE slots than BallxPit (5 vs 4).
 
 ---
 
