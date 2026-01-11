@@ -148,6 +148,11 @@ func _ready() -> void:
 
 
 func _reset_for_new_run() -> void:
+	reset()
+
+
+func reset() -> void:
+	"""Reset the registry to initial state (for new runs and tests)"""
 	owned_balls.clear()
 	active_ball_type = BallType.BASIC
 	# Reset all slots to empty
