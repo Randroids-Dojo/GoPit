@@ -28,12 +28,19 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# Connect to ball spawner for ball return mechanic
 	call_deferred("_connect_to_ball_spawner")
+	# Set initial shooting state based on autofire (affects movement speed)
+	call_deferred("_set_initial_shooting_state")
 
 
 func _connect_to_ball_spawner() -> void:
 	_ball_spawner = get_tree().get_first_node_in_group("ball_spawner")
 	if _ball_spawner and _ball_spawner.has_signal("balls_available_changed"):
 		_ball_spawner.balls_available_changed.connect(_on_balls_available_changed)
+
+
+func _set_initial_shooting_state() -> void:
+	# Autofire defaults to ON, which means player is "shooting" (slower movement)
+	GameManager.set_shooting(autofire_enabled)
 
 
 func _process(delta: float) -> void:
@@ -160,6 +167,7 @@ func get_cooldown_progress() -> float:
 func toggle_autofire() -> void:
 	autofire_enabled = not autofire_enabled
 	autofire_toggled.emit(autofire_enabled)
+	GameManager.set_shooting(autofire_enabled)  # Update movement speed
 	queue_redraw()
 
 
@@ -167,4 +175,5 @@ func set_autofire(enabled: bool) -> void:
 	if autofire_enabled != enabled:
 		autofire_enabled = enabled
 		autofire_toggled.emit(autofire_enabled)
+		GameManager.set_shooting(autofire_enabled)  # Update movement speed
 		queue_redraw()

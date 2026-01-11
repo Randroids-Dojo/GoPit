@@ -31,8 +31,8 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	# Apply movement with character speed multiplier
-	var effective_speed := move_speed * GameManager.character_speed_mult
+	# Apply movement speed (includes character multiplier and shooting penalty)
+	var effective_speed := move_speed * GameManager.get_movement_speed_mult()
 	velocity = movement_input * effective_speed
 	move_and_slide()
 
