@@ -30,7 +30,9 @@ const MAX_TRAIL_POINTS: int = 8
 var _particle_trail: GPUParticles2D = null
 
 # Ball return mechanic - balls return when crossing bottom of screen
-const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position
+const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position - start return
+const RETURN_COMPLETE_Y: float = 350.0  # Near player position - complete return
+var is_returning: bool = false  # True when ball is flying back to player
 
 # Trail particle scenes per ball type (preloaded for performance)
 const TRAIL_SCENE_FIRE: PackedScene = preload("res://scenes/effects/fire_trail.tscn")
@@ -203,10 +205,16 @@ func _physics_process(delta: float) -> void:
 			_trail_points.remove_at(0)
 		queue_redraw()
 
-	# Check if ball has crossed the bottom threshold (return mechanic)
-	if global_position.y > RETURN_Y_THRESHOLD:
-		return_to_player()
-		return
+	# Ball return mechanic with return path damage
+	if not is_returning:
+		# Check if ball should start returning (crossed bottom threshold)
+		if global_position.y > RETURN_Y_THRESHOLD:
+			_start_return()
+	else:
+		# Check if ball has returned to player area
+		if global_position.y < RETURN_COMPLETE_Y:
+			return_to_player()
+			return
 
 	var collision := move_and_collide(velocity * delta)
 	if collision:
@@ -306,8 +314,17 @@ func despawn() -> void:
 		queue_free()
 
 
+func _start_return() -> void:
+	"""Start returning to player - ball reverses direction and flies back"""
+	is_returning = true
+	# Reverse direction to fly back toward player (mostly upward)
+	direction = Vector2.UP
+	# Visual feedback - slight tint to show returning state
+	modulate = Color(0.8, 0.8, 1.0, 0.9)
+
+
 func return_to_player() -> void:
-	"""Ball has reached bottom of screen - return to player for reuse"""
+	"""Ball has completed return to player area - return to pool"""
 	returned.emit()
 	# Return to pool if pooled, otherwise free
 	if has_meta("pooled") and PoolManager:
@@ -349,6 +366,7 @@ func reset() -> void:
 	is_fused = false
 	fused_id = ""
 	fused_effects.clear()
+	is_returning = false
 
 	# Reset visual state
 	modulate = Color.WHITE
