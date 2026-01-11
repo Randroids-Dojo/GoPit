@@ -7393,11 +7393,123 @@ func _try_fire() -> void:
 
 ---
 
+## Appendix CF: Level-Up and Upgrade Systems
+
+Research sources:
+- [Upgrades Guide](https://ballxpit.org/guides/upgrades/)
+- [Evolution Guide](https://ballxpit.org/guides/evolution-guide/)
+- [Evolution Tier List](https://ballxpit.org/guides/evolution-tier-list-2025/)
+
+### BallxPit Upgrade Systems (3 Types)
+
+**1. Ball Evolutions (In-Run, 43 total):**
+- Combine two Level 3 balls → evolved ball
+- Rainbow orb triggers evolution choice
+- Priority: Evolution > Fusion > Fission
+- Damage multipliers 1.5x-4.0x
+
+**2. Passive Evolutions (Permanent, 8 total):**
+- Fuse stat items (Int, Str, Dex)
+- Persist across all runs
+- Permanent once discovered
+
+**3. Building Upgrades (70+ buildings):**
+- Construct in New Ballbylon
+- Permanent stat increases
+- Character unlocks
+
+**Level-Up Choices:**
+| Option | Effect |
+|--------|--------|
+| Evolution | Combine 2 L3 balls → powerful evolved ball |
+| Fusion | Combine 2 balls → enhanced hybrid |
+| Fission | Split into 1-5 random upgrades |
+
+### GoPit Upgrade System
+
+**Card Types (3):**
+```gdscript
+enum CardType {
+    PASSIVE,      # Traditional stat upgrades (11 types)
+    NEW_BALL,     # Acquire a new ball type
+    LEVEL_UP_BALL # Level up owned ball (L1->L2->L3)
+}
+```
+
+**Passive Upgrades (11):**
+| Upgrade | Effect | Max Stacks |
+|---------|--------|-----------|
+| Power Up | +5 damage | 10 |
+| Quick Fire | -0.1s cooldown | 4 |
+| Vitality | +25 HP | 10 |
+| Multi Shot | +1 ball | 3 |
+| Velocity | +100 speed | 5 |
+| Piercing | Pierce +1 enemy | 3 |
+| Ricochet | +5 bounces | 4 |
+| Critical | +10% crit | 5 |
+| Magnetism | Gem attraction | 3 |
+| Heal | +30 HP instant | 99 |
+| Leadership | +20% baby ball rate | 5 |
+
+**Ball Leveling:**
+- L1 → L2: +50% damage & speed
+- L2 → L3: +100% stats (Fusion ready!)
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Card selection | ✅ 3 random | ✅ 3 choices |
+| Passive upgrades | 11 types | 8 permanent + many temp |
+| Ball leveling | ✅ L1-L3 | ✅ L1-L3 |
+| Evolution | ❌ Missing | ✅ 43 combinations |
+| Fusion | ❌ Missing | ✅ Ball combos |
+| Fission | ⚠️ Implemented | ✅ 1-5 upgrades |
+| Rainbow orb | ❌ None | ✅ Triggers choice |
+| Evolution priority | ❌ N/A | Evolution > Fusion > Fission |
+
+### The Evolution Gap
+
+**BallxPit's core loop:**
+1. Level balls to L3
+2. Rainbow orb drops
+3. Choose Evolution/Fusion/Fission
+4. Create powerful evolved ball (1.5x-4x damage)
+
+**GoPit's loop:**
+1. Level balls to L3
+2. "Fusion ready!" text shown
+3. ...nothing happens
+
+### GoPit "Fusion Ready" Placeholder
+
+```gdscript
+# From level_up_overlay.gd
+elif next_level == 3:
+    desc_label.text = "+100% stats (Fusion ready!)"
+```
+
+The UI promises fusion but it's not implemented.
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Implement Evolution system | Combine L3 balls |
+| **P1** | Add rainbow orb drops | Trigger evolution choice |
+| **P1** | Add 10-15 evolutions | Start with meta ones |
+| **P2** | Add Fusion mechanic | Ball combination |
+| **P2** | Add permanent passives | Persist across runs |
+
+**GoPit has solid level-up foundation - needs Evolution system to match BallxPit's depth.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **89 appendices** (A through CE)
+- **90 appendices** (A through CF)
 - **91 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
