@@ -18,6 +18,22 @@ from typing import Optional
 from pathlib import Path
 
 
+# Timeout for waiting operations (seconds)
+WAIT_TIMEOUT = 5.0
+
+
+async def wait_for_fire_ready(game, fire_button_path, timeout=WAIT_TIMEOUT):
+    """Wait for fire button to be ready with timeout."""
+    elapsed = 0
+    while elapsed < timeout:
+        is_ready = await game.get_property(fire_button_path, "is_ready")
+        if is_ready:
+            return True
+        await asyncio.sleep(0.1)
+        elapsed += 0.1
+    return False
+
+
 # =============================================================================
 # NODE PATHS
 # =============================================================================
@@ -119,10 +135,8 @@ async def test_fire_button_cooldown(game, report):
     await game.call(PATHS["fire_button"], "set_autofire", [False])
 
     # Wait for fire button to be ready (may be on cooldown from autofire)
-    is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
-    while not is_ready:
-        await asyncio.sleep(0.1)
-        is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
+    ready = await wait_for_fire_ready(game, PATHS["fire_button"])
+    assert ready, "Fire button should become ready within timeout"
 
     # Initially button should be ready
     is_ready_initial = await game.get_property(PATHS["fire_button"], "is_ready")
@@ -263,10 +277,8 @@ async def test_ball_despawn_offscreen(game, report):
     await game.call(PATHS["fire_button"], "set_autofire", [False])
 
     # Wait for fire button to be ready (may be on cooldown from autofire)
-    is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
-    while not is_ready:
-        await asyncio.sleep(0.1)
-        is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
+    ready = await wait_for_fire_ready(game, PATHS["fire_button"])
+    assert ready, "Fire button should become ready within timeout"
 
     # Stop baby ball spawner to prevent auto-spawned balls from affecting count
     baby_spawner_path = "/root/Game/GameArea/BabyBallSpawner"

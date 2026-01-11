@@ -6,6 +6,21 @@ GAME = "/root/Game"
 FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
 BALLS_CONTAINER = "/root/Game/GameArea/Balls"
 
+# Timeout for waiting operations (seconds)
+WAIT_TIMEOUT = 5.0
+
+
+async def wait_for_fire_ready(game, timeout=WAIT_TIMEOUT):
+    """Wait for fire button to be ready with timeout."""
+    elapsed = 0
+    while elapsed < timeout:
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+        if is_ready:
+            return True
+        await asyncio.sleep(0.1)
+        elapsed += 0.1
+    return False
+
 
 @pytest.mark.asyncio
 async def test_fire_once(game):
@@ -18,10 +33,8 @@ async def test_fire_once(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
 
     # Wait for fire button to be ready (may be on cooldown from autofire)
-    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-    while not is_ready:
-        await asyncio.sleep(0.1)
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    ready = await wait_for_fire_ready(game)
+    assert ready, "Fire button should become ready within timeout"
 
     # Get initial ball count
     balls_before = await game.call(BALLS_CONTAINER, "get_child_count")
@@ -47,10 +60,8 @@ async def test_fire_with_aim(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
 
     # Wait for fire button to be ready (may be on cooldown from autofire)
-    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-    while not is_ready:
-        await asyncio.sleep(0.1)
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    ready = await wait_for_fire_ready(game)
+    assert ready, "Fire button should become ready within timeout"
 
     # Click the fire button
     await game.click(FIRE_BUTTON)
@@ -68,18 +79,14 @@ async def test_fire_multiple(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
 
     # Wait for fire button to be ready (may be on cooldown from autofire)
-    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-    while not is_ready:
-        await asyncio.sleep(0.1)
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    ready = await wait_for_fire_ready(game)
+    assert ready, "Fire button should become ready within timeout"
 
     # Fire 3 balls
     for i in range(3):
         # Wait for cooldown if needed
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        while not is_ready:
-            await asyncio.sleep(0.1)
-            is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+        ready = await wait_for_fire_ready(game)
+        assert ready, f"Fire button should become ready for shot {i+1}"
 
         await game.click(FIRE_BUTTON)
         await asyncio.sleep(0.1)
