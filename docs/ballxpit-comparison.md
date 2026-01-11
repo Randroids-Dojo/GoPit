@@ -6811,11 +6811,74 @@ Maggot + Holy Laser Evolution:
 
 ---
 
+## Appendix BY: Endless Mode Comparison (GoPit Advantage)
+
+Research sources:
+- [Steam Discussion: endless/infinite mode?](https://steamcommunity.com/app/2062430/discussions/0/624436409752778228/)
+- [Steam Discussion: Game needs endless mode BAD](https://steamcommunity.com/app/2062430/discussions/0/595163560549886518/)
+
+### BallxPit Endless Mode Status
+
+**BallxPit does NOT have endless mode.**
+
+From Steam community:
+> "If by endless/infinite mode you mean a run going endlessly, then no. Every run follows the same pattern, just the difficulty ramps up."
+
+**Community requests include:**
+- "This game is missing the most important thing... infinite replayability"
+- "We need endless mode where enemies are mixed from different stages and scale infinitely"
+- "2 mini-bosses/bosses could fight you at once"
+
+BallxPit uses **NG+** for post-game content instead of endless mode.
+
+### GoPit Endless Mode Implementation
+
+**GoPit HAS endless mode!** (`scripts/autoload/game_manager.gd`)
+
+```gdscript
+var is_endless_mode: bool = false
+
+func enable_endless_mode() -> void:
+    ## Called when player chooses to continue after victory
+    is_endless_mode = true
+    current_state = GameState.PLAYING
+```
+
+**How it works:**
+1. Player completes all stages → Victory screen
+2. Player chooses "Continue" or "Endless"
+3. Game continues with infinite wave progression
+4. Enemies continue spawning and scaling
+
+### Feature Parity Summary
+
+| Feature | GoPit | BallxPit | Status |
+|---------|-------|----------|--------|
+| **Endless Mode** | ✅ Implemented | ❌ Missing | **GoPit ahead** |
+| NG+ System | ❌ Missing | ✅ Implemented | BallxPit ahead |
+| Mixed Enemy Waves | ⚠️ Basic | ❌ Requested | GoPit ahead |
+| Multi-Boss Fights | ❌ Not implemented | ❌ Requested | Neither |
+
+### This is a RARE GoPit advantage
+
+Most comparisons show BallxPit ahead. **Endless mode is an area where GoPit leads.**
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **Keep** | Endless mode | Maintain this advantage |
+| **P2** | Add endless leaderboards | Track high scores/waves |
+| **P2** | Add mixed biome enemies | Community-requested feature |
+| **P3** | Add multi-boss waves | Community-requested feature |
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **82 appendices** (A through BX)
+- **83 appendices** (A through BY)
 - **82 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
