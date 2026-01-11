@@ -3580,3 +3580,285 @@ Mobile games typically have:
 3. Achievement badges displayed in UI
 
 **Note:** Online features require backend infrastructure. Focus on core gameplay first.
+
+---
+
+## Appendix AL: Status Effect Deep Dive (NEW)
+
+### GoPit Status Effect Implementation
+
+**Location:** `scripts/effects/status_effect.gd`
+
+| Effect | Duration | DPS | Max Stacks | Special |
+|--------|----------|-----|------------|---------|
+| **Burn** | 3.0s × INT | 5 (2.5/0.5s) | 1 (refresh) | None |
+| **Freeze** | 2.0s × INT | 0 | 1 | 50% slow |
+| **Poison** | 5.0s × INT | 3 (1.5/0.5s) | 1 | Spreads on death |
+| **Bleed** | Infinite | 2/stack (1.0/0.5s) | 5 | Stacks |
+
+### BallxPit Status Effects (from research)
+
+| Effect | Max Stacks | Mechanic |
+|--------|------------|----------|
+| **Burn** | 3 | 4-8 DPS per stack |
+| **Freeze** | 1 | +25% damage taken |
+| **Poison** | 5 | 1-4 DPS per stack |
+| **Bleed** | 8 | Damage on EVERY HIT per stack |
+
+### CRITICAL GAPS
+
+| Gap | GoPit | BallxPit | Impact |
+|-----|-------|----------|--------|
+| **Freeze +25% damage** | Not implemented | Core mechanic | **HIGH** |
+| **Burn stacking** | Refresh only | 3 stacks = 3x DPS | **MEDIUM** |
+| **Bleed on-hit** | DoT only | +dmg per hit per stack | **HIGH** |
+| **Poison stacks** | 1 | 5 | **MEDIUM** |
+| **Bleed stacks** | 5 | 8 | **LOW** |
+
+### Recommendations
+
+**P1 Priority:**
+1. [ ] Add +25% damage amplification to Freeze effect
+2. [ ] Change Bleed to add on-hit damage, not just DoT
+
+**P2 Priority:**
+3. [ ] Enable Burn stacking (max 3)
+4. [ ] Enable Poison stacking (max 5)
+5. [ ] Increase Bleed max stacks to 8
+
+---
+
+## Appendix AM: Fission System Deep Dive (NEW)
+
+### GoPit Fission Implementation
+
+**Location:** `scripts/autoload/fusion_registry.gd:304-343`
+
+**Current Behavior:**
+```gdscript
+var num_upgrades := randi_range(1, 3)  // Only 1-3 items!
+
+for i in num_upgrades:
+    if upgradeable.size() > 0 and (unowned.size() == 0 or randf() < 0.6):
+        BallRegistry.level_up_ball(ball_type)  // Balls only!
+    elif unowned.size() > 0:
+        BallRegistry.add_ball(ball_type)
+
+// Fallback: XP bonus (not Gold)
+GameManager.add_xp(xp_bonus)
+```
+
+### BallxPit Fission System
+
+**From research:**
+- Upgrades **up to 5 items** per fission
+- Upgrades **balls AND passives**
+- If all maxed: **Gold** bonus (not XP)
+- Primary early-game farming strategy
+
+### GAP ANALYSIS
+
+| Feature | GoPit | BallxPit | Impact |
+|---------|-------|----------|--------|
+| **Max upgrades** | 1-3 | Up to 5 | **HIGH** |
+| **Targets** | Balls only | Balls + Passives | **HIGH** |
+| **Maxed fallback** | XP | Gold | **MEDIUM** |
+| **Strategy value** | Low | Primary early-game | **HIGH** |
+
+### Recommendations
+
+**P2 Priority:**
+1. [ ] Increase fission cap to 5 items (GoPit-c7z)
+2. [ ] Add passives to fission pool (GoPit-c1v)
+3. [ ] Change fallback from XP to meta-currency (Gold/Coins)
+
+---
+
+## Appendix AN: Character Passive Verification (NEW)
+
+### GoPit Character Passives (6 Characters)
+
+| Character | Passive | Implementation Status |
+|-----------|---------|----------------------|
+| **Rookie** | +10% XP gain | Stats only (1.0 all) |
+| **Pyro** | +20% fire dmg, +25% vs burning | Partial (no burn amp check) |
+| **Frost Mage** | +50% vs frozen, +30% freeze duration | Freeze duration works |
+| **Tactician** | +2 baby balls, +30% spawn rate | Leadership stat (1.6) |
+| **Gambler** | 3x crit damage, +15% crit | Dexterity stat (1.6) |
+| **Vampire** | 5% lifesteal, 20% health gem | Health gem works |
+
+### Key Findings
+
+**All GoPit characters use STAT MULTIPLIERS only:**
+- No unique firing patterns
+- No unique ball behaviors
+- No special mechanics
+
+**BallxPit characters have UNIQUE MECHANICS:**
+- The Shade: Fires from BACK of screen
+- The Cohabitants: Mirrored double shots
+- The Spendthrift: All balls in wide arc
+- The Repentant: +5% damage per bounce
+
+### Recommendations
+
+**P2 Priority:**
+1. [ ] Add character with unique firing (GoPit-oyz)
+2. [ ] Implement Pyro's burn amplification check
+3. [ ] Consider "The Repentant" style bounce damage character
+
+---
+
+## Appendix AO: Enemy Attack Timing Verification (NEW)
+
+### GoPit Enemy Attack Constants
+
+**Location:** `scripts/entities/enemies/enemy_base.gd:17-19`
+
+```gdscript
+const WARNING_DURATION: float = 1.0  // Seconds to show warning
+const ATTACK_SPEED: float = 600.0    // Speed when lunging at player
+const ATTACK_SELF_DAMAGE: int = 3    // HP lost per attack attempt
+```
+
+### Attack State Machine
+
+1. **DESCENDING** → Move down at `speed`
+2. **WARNING** → 1.0s warning with "!" and shake
+3. **ATTACKING** → Lunge at ATTACK_SPEED (600)
+4. **After Attack** → Snap back to pre-attack position, self-damage 3 HP
+
+### BallxPit Comparison
+
+**Matches:**
+- Warning exclamation mark
+- Shake animation during warning
+- Lunge attack pattern
+
+**Unknown:**
+- Exact warning duration in BallxPit
+- Self-damage mechanic in BallxPit
+- Snap-back behavior
+
+### Assessment
+
+GoPit's enemy attack system appears well-aligned with BallxPit conventions. The warning/attack pattern is a common roguelike pattern.
+
+---
+
+*Document maintained as part of BallxPit alignment effort (GoPit-68o)*
+*Analysis ongoing - 3700+ lines covering all major systems*
+*Last updated: January 2026*
+
+
+## Appendix AK: Player Damage and Invincibility (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/autoload/game_manager.gd:265-276`
+
+**Damage handling:**
+```gdscript
+func take_damage(amount: int) -> void:
+    player_hp = max(0, player_hp - amount)
+    SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
+    player_damaged.emit(amount)
+    # Reset combo on damage
+    _reset_combo()
+    # Big screen shake on player damage
+    CameraShake.shake(15.0, 3.0)
+```
+
+**No invincibility frames** - Player can be hit multiple times rapidly.
+
+### Enemy Attack Pattern (enemy_base.gd)
+
+GoPit has a sophisticated attack warning system:
+1. **WARNING phase** (1 second): Exclamation mark, enemy shakes
+2. **ATTACK phase**: Enemy lunges toward player
+3. **Self-damage**: Enemies lose 3 HP per attack attempt
+4. **Reset**: Enemy returns to original position after attack
+
+**This is GOOD design** - Clear telegraphing allows player reaction.
+
+### Potential Issue
+
+**No i-frames after hit** means:
+- Multiple enemies can hit simultaneously
+- Burst damage from overlapping attacks
+- Player can die very quickly if surrounded
+
+### BallxPit Expected Behavior
+
+Most action games have:
+- 0.5-1.0 second invincibility after damage
+- Visual flash/blink during i-frames
+- Knockback to separate from enemies
+
+### Recommendations
+
+**P2 Priority:**
+
+```gdscript
+var damage_cooldown: float = 0.0
+const INVINCIBILITY_DURATION: float = 0.5
+
+func take_damage(amount: int) -> void:
+    if damage_cooldown > 0:
+        return  # Still invincible
+    
+    player_hp -= amount
+    damage_cooldown = INVINCIBILITY_DURATION
+    # Start blinking effect
+    _start_invincibility_blink()
+```
+
+**Note:** Current system works because enemy warnings give time to dodge. Consider adding i-frames only if rapid-hit scenarios become frustrating.
+
+
+## Appendix AL: Gem Collection Mechanics (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/entities/gem.gd`
+
+**Collection:**
+| Parameter | Value |
+|-----------|-------|
+| Auto-collect radius | 40 pixels |
+| Fall speed | 150 px/s |
+| Despawn time | 10 seconds |
+| Magnetism speed | 400 px/s |
+
+**Magnetism system:**
+- Range increases with upgrades (GameManager.gem_magnetism_range)
+- Pull strength increases as gem gets closer
+- Visual line drawn to gem when attracted
+
+**Health gems:**
+- Pink color (vs green for XP)
+- Heal 10 HP on collect
+- No XP value
+- Dropped by Vampire passive (20% on kill)
+
+### BallxPit Expected Behavior
+
+Similar mechanics expected:
+- Gems/orbs drop from enemies
+- Magnetism upgrades pull from range
+- Some games have "collect all" abilities
+
+### Assessment
+
+**GoPit's gem system is solid:**
+- ✅ Auto-collection works
+- ✅ Magnetism upgrade meaningful
+- ✅ Health gem variant exists
+- ✅ Visual feedback (sparkle, glow when attracted)
+
+**Minor improvements:**
+- Vacuum effect on level-up (collect all on screen)
+- Gem size scaling with value (bigger = more XP)
+- "Critical gem" drop (rare, high XP)
+
+**Priority:** P4 (polish) - Current system works well.
