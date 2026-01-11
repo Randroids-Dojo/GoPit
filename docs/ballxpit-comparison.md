@@ -4470,3 +4470,89 @@ if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 
 Balls despawning if `y < -50` or `y > viewport_height + 50`
 
+
+---
+
+## Appendix AW: Music System Implementation (NEW)
+
+### Procedural Music Architecture
+
+GoPit uses **fully procedural audio** - no pre-recorded music files. Everything is generated in real-time.
+
+**Parameters:**
+- Sample Rate: 44100 Hz
+- BPM: 120
+- Beat Duration: 0.5 seconds
+- Bar Length: 4 beats
+
+### Music Layers
+
+| Layer | Volume | Purpose |
+|-------|--------|---------|
+| Bass | -8 dB | Root foundation |
+| Drums | -6 dB | Rhythm drive |
+| Melody | -10 dB | Occasional accents |
+
+### Patterns
+
+**Bass Pattern (8 beats):**
+```
+[0, 0, 7, 5, 0, 0, 3, 5]  # Semitones from A2 (110 Hz)
+```
+
+**Drum Pattern (8 beats):**
+```
+[1, 3, 2, 3, 1, 3, 2, 3]  # 1=kick, 2=snare, 3=hihat
+```
+
+### Intensity System
+
+```gdscript
+set_intensity(wave_number)  # Clamped 1.0-5.0
+# Bass: -12dB to -4dB
+# Drums: -10dB to -2dB
+# Melody appears at intensity >= 2.0 (20% chance per beat)
+```
+
+### Sound Synthesis
+
+**Kick Drum:**
+- Pitch sweep: 150Hz → 50Hz
+- Duration: 0.15s
+- Envelope: exponential decay
+
+**Snare:**
+- Noise + 200Hz tone
+- Duration: 0.12s
+
+**Hi-Hat:**
+- High-frequency noise only
+- Duration: 0.05s
+
+**Bass Notes:**
+- Sine + slight sawtooth
+- Sub-octave reinforcement
+- Duration: ~0.22s
+
+**Melody:**
+- Minor pentatonic scale
+- Two octaves above root
+- Sine with vibrato
+
+### BallxPit Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Audio type | Procedural | Pre-recorded (likely) |
+| Music style | Electronic/minimal | Unknown |
+| Adaptive intensity | Yes | Unknown |
+| File size | 0 bytes | Likely MB of audio |
+
+### Unique Approach
+
+GoPit's procedural audio is actually a **differentiator** - zero audio file dependencies, infinitely scalable, and technically interesting. However:
+
+1. [ ] **No biome-specific music** - Same music in all stages
+2. [ ] **No boss music** - No special track for boss fights
+3. [ ] **Limited variety** - Single pattern loops
+
