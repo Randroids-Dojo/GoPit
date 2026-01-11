@@ -10488,9 +10488,610 @@ Inline class for split attack.
 
 ---
 
-## Summary: This Session's Findings
+## Appendix DI: Ball Registry - 5-Slot Simultaneous Firing System
 
-Added **15 appendices** this session (CT through DH):
+**File**: `scripts/autoload/ball_registry.gd` (346 lines)
+
+**CRITICAL FINDING**: The 5-slot system IS implemented! Previous P0 gap analysis was incorrect.
+
+### Core Architecture
+
+```gdscript
+## SLOT SYSTEM: Player has 5 slots, ALL equipped balls fire simultaneously.
+## This is the core mechanic difference from single-active-ball systems.
+
+const MAX_SLOTS := 5
+
+enum BallType {
+    BASIC,    // Blue, 10 dmg
+    BURN,     // Orange, 8 dmg, burn effect
+    FREEZE,   // Cyan, 6 dmg, slow effect
+    POISON,   // Green, 7 dmg, DoT
+    BLEED,    // Dark red, 8 dmg, stacking DoT
+    LIGHTNING,// Yellow, 9 dmg, 900 speed, chain
+    IRON      // Metallic gray, 15 dmg, 600 speed, knockback
+}
+```
+
+### Ball Data System
+
+```gdscript
+const BALL_DATA := {
+    BallType.BASIC: {
+        "name": "Basic",
+        "description": "Standard ball",
+        "base_damage": 10,
+        "base_speed": 800.0,
+        "color": Color(0.3, 0.7, 1.0),
+        "effect": "none"
+    },
+    // ... 6 more ball types
+}
+```
+
+| Ball Type | Damage | Speed | Effect |
+|-----------|--------|-------|--------|
+| Basic | 10 | 800 | None |
+| Burn | 8 | 800 | Burn DoT |
+| Freeze | 6 | 800 | Slow |
+| Poison | 7 | 800 | DoT + spread |
+| Bleed | 8 | 800 | Stacking DoT |
+| Lightning | 9 | 900 | Chain damage |
+| Iron | 15 | 600 | Knockback |
+
+### Level System
+
+```gdscript
+func get_level_multiplier(level: int) -> float:
+    match level:
+        1: return 1.0   // L1: Base stats
+        2: return 1.5   // L2: +50%
+        3: return 2.0   // L3: +100%, fusion-ready
+```
+
+### Slot Management
+
+```gdscript
+# Ball slots: array of {ball_type: BallType, level: int} or null
+var ball_slots: Array = []
+
+func add_ball(ball_type: BallType) -> bool:
+    """Add to slot, or level up if already equipped."""
+    var existing_slot := get_slot_index(ball_type)
+    if existing_slot >= 0:
+        return level_up_ball(ball_type)  # Already have it
+
+    var empty_slot := _find_empty_slot()
+    if empty_slot < 0:
+        return false  # No room
+
+    ball_slots[empty_slot] = {"ball_type": ball_type, "level": 1}
+    return true
+
+func get_equipped_slots() -> Array:
+    """Get all non-null slots for firing"""
+    var equipped: Array = []
+    for slot in ball_slots:
+        if slot != null:
+            equipped.append(slot)
+    return equipped
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Max simultaneous balls | 5 | 4-5 |
+| Ball types | 7 | 8-10 |
+| Level system | 3 levels | 3 levels |
+| Fusion at L3 | ✅ Yes | ✅ Yes |
+| Slot UI visible | ❓ Needs verification | ✅ Yes |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Slot system | ✅ IMPLEMENTED | 5 slots, all fire |
+| Level scaling | ✅ Working | 1.0x/1.5x/2.0x |
+| Ball variety | ✅ Good | 7 types |
+| Signals | ✅ Complete | ball_acquired, slot_changed |
+| Fusion integration | ✅ Working | is_fusion_ready() |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT - P0 GAP IS CLOSED!
+
+**CORRECTION**: Previous analysis incorrectly identified this as a P0 gap. The 5-slot simultaneous firing system IS fully implemented.
+
+---
+
+## Appendix DJ: Procedural Audio System
+
+**File**: `scripts/autoload/sound_manager.gd` (737 lines)
+
+### Sound Type Enumeration
+
+```gdscript
+enum SoundType {
+    // Core gameplay
+    FIRE, HIT_WALL, HIT_ENEMY, ENEMY_DEATH, GEM_COLLECT,
+    PLAYER_DAMAGE, LEVEL_UP, GAME_OVER, WAVE_COMPLETE, BLOCKED,
+
+    // Ball type sounds
+    FIRE_BALL,       // Whoosh with crackle
+    ICE_BALL,        // Crystal chime
+    LIGHTNING_BALL,  // Electric zap
+    POISON_BALL,     // Bubbling drip
+    BLEED_BALL,      // Wet slice
+    IRON_BALL,       // Metallic clang
+
+    // Status effect sounds
+    BURN_APPLY,      // Ignition
+    FREEZE_APPLY,    // Ice crack
+    POISON_APPLY,    // Toxic splash
+    BLEED_APPLY,     // Slice
+
+    // Fusion sounds
+    FUSION_REACTOR,  // Magical pickup
+    EVOLUTION,       // Success fanfare
+    FISSION,         // Energy burst
+
+    // Ultimate
+    ULTIMATE         // Screen-clearing blast
+}
+```
+
+**Total: 24 unique sound types**, all procedurally generated!
+
+### Audio Generation Techniques
+
+```gdscript
+func _generate_fire_whoosh() -> PackedByteArray:
+    """Fire ball: Whoosh with crackle"""
+    // White noise + low frequency modulation + random crackle pops
+    var noise := (randf() * 2.0 - 1.0) * 0.3
+    var warm := sin(t * 150.0 * TAU) * 0.2
+    var crackle := 0.0
+    if randf() < 0.1:
+        crackle = (randf() * 2.0 - 1.0) * 0.4
+
+func _generate_ice_chime() -> PackedByteArray:
+    """Ice ball: Crystal chime"""
+    // Multiple high frequencies for crystal effect
+    var crystal := sin(t * 1200.0 * TAU) * 0.4
+    crystal += sin(t * 1800.0 * TAU) * 0.25
+    crystal += sin(t * 2400.0 * TAU) * 0.15
+    var shimmer := sin(t * 50.0 * TAU) * 0.1
+
+func _generate_electric_zap() -> PackedByteArray:
+    """Lightning ball: Electric zap"""
+    // Square wave modulated by high frequency
+    var phase := fmod(t * 800.0, 1.0)
+    var buzz := (1.0 if phase < 0.5 else -1.0) * 0.3
+    buzz *= sin(t * 4000.0 * TAU) * 0.5 + 0.5
+
+func _generate_metallic_clang() -> PackedByteArray:
+    """Iron ball: Metallic clang"""
+    // Multiple harmonics with slight detuning
+    var metal := sin(t * 400.0 * TAU) * 0.3
+    metal += sin(t * 800.0 * TAU) * 0.2
+    metal += sin(t * 1600.0 * TAU) * 0.15
+    metal += sin(t * 3200.0 * TAU) * 0.1
+    metal *= 1.0 + sin(t * 5.0 * TAU) * 0.02  // Detune
+```
+
+### Sound Variance System
+
+```gdscript
+const SOUND_SETTINGS := {
+    SoundType.FIRE: {"pitch_var": 0.15, "vol_var": 0.1},
+    SoundType.HIT_ENEMY: {"pitch_var": 0.1, "vol_var": 0.1},
+    SoundType.LEVEL_UP: {"pitch_var": 0.0, "vol_var": 0.0},  // No variance
+    // ...
+}
+
+func play(sound_type: SoundType) -> void:
+    player.pitch_scale = randf_range(1.0 - pitch_var, 1.0 + pitch_var)
+    player.volume_db = randf_range(-vol_var * 6.0, vol_var * 6.0)
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Sound generation | Procedural | Pre-recorded assets |
+| Sound variety | 24 types | ~40+ types |
+| Per-ball sounds | ✅ Yes | ✅ Yes |
+| Status sounds | ✅ Yes | ✅ Yes |
+| File size | ~0 bytes | ~5-10MB |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Unique design | ✅ Excellent | No external assets |
+| Ball type sounds | ✅ 6 unique | Whoosh, chime, zap, etc. |
+| Status sounds | ✅ 4 unique | Ignition, crack, splash, slice |
+| Variance | ✅ Natural | Pitch/volume per play |
+| Performance | ✅ Efficient | 8 pooled players |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT - UNIQUE GOPIT ADVANTAGE
+
+---
+
+## Appendix DK: Ball Entity System
+
+**File**: `scripts/entities/ball.gd` (605 lines)
+
+### Core Properties
+
+```gdscript
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON }
+
+@export var speed: float = 800.0
+@export var radius: float = 14.0
+@export var damage: int = 10
+
+var pierce_count: int = 0
+var max_bounces: int = 10
+var crit_chance: float = 0.0
+
+// Evolved/Fused properties
+var is_evolved: bool = false
+var evolved_type: int = 0  // FusionRegistry.EvolvedBallType
+var is_fused: bool = false
+var fused_effects: Array = []
+```
+
+### Visual System
+
+```gdscript
+func _draw() -> void:
+    // Level affects size: L1=1.0x, L2=1.1x, L3=1.2x
+    var level_size_mult := 1.0 + (ball_level - 1) * 0.1
+    var actual_radius := radius * level_size_mult
+
+    // Level indicator rings
+    if ball_level >= 2:
+        draw_arc(...)  // L2: white ring
+    if ball_level >= 3:
+        draw_arc(...)  // L3: gold ring (fusion-ready!)
+
+    // Type-specific effects
+    match ball_type:
+        BallType.FIRE: draw_circle(...)    // Inner glow
+        BallType.ICE: _draw_crystal()       // 6 lines
+        BallType.LIGHTNING: _draw_sparks()  // Random angles
+        BallType.POISON: _draw_bubbles()    // 3 bubbles
+        BallType.BLEED: draw_circle(...)    // Drip
+        BallType.IRON: draw_arc(...)        // Metallic shine
+```
+
+### Particle Trails
+
+```gdscript
+const TRAIL_PARTICLES := {
+    BallType.FIRE: "res://scenes/effects/fire_trail.tscn",
+    BallType.ICE: "res://scenes/effects/ice_trail.tscn",
+    BallType.LIGHTNING: "res://scenes/effects/lightning_trail.tscn",
+    BallType.POISON: "res://scenes/effects/poison_trail.tscn",
+    BallType.BLEED: "res://scenes/effects/bleed_trail.tscn",
+    BallType.IRON: "res://scenes/effects/iron_trail.tscn"
+}
+```
+
+### Damage System with Status Effects
+
+```gdscript
+func _physics_process(delta: float) -> void:
+    // ... collision handling ...
+
+    // Check for critical hit (includes Jackpot bonus)
+    var total_crit_chance := crit_chance + GameManager.get_bonus_crit_chance()
+    if randf() < total_crit_chance:
+        actual_damage = int(actual_damage * GameManager.get_crit_damage_multiplier())
+        is_crit = true
+
+    // Inferno passive: +20% fire damage
+    if ball_type == BallType.FIRE:
+        actual_damage = int(actual_damage * GameManager.get_fire_damage_multiplier())
+
+    // Status-based damage bonuses
+    if collider.has_status_effect(StatusEffect.Type.FREEZE):
+        actual_damage = int(actual_damage * GameManager.get_damage_vs_frozen())  // +50%
+    if collider.has_status_effect(StatusEffect.Type.BURN):
+        actual_damage = int(actual_damage * GameManager.get_damage_vs_burning())  // +25%
+```
+
+### Status Effect Application
+
+```gdscript
+func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
+    match ball_type:
+        BallType.FIRE:
+            var burn = StatusEffect.new(StatusEffect.Type.BURN)
+            enemy.apply_status_effect(burn)
+        BallType.ICE:
+            var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
+            enemy.apply_status_effect(freeze)
+        BallType.LIGHTNING:
+            _chain_lightning(enemy)  // 150 range, 50% damage chain
+        BallType.IRON:
+            enemy.global_position += knockback_dir * 50.0
+```
+
+### Evolved Ball Effects
+
+```gdscript
+func _apply_evolved_effect(enemy: Node2D, base_damage: int) -> void:
+    match evolved_type:
+        FusionRegistry.EvolvedBallType.BOMB:
+            _do_explosion(pos, base_damage)  // 100 radius, 1.5x damage
+        FusionRegistry.EvolvedBallType.BLIZZARD:
+            _do_blizzard(enemy)  // AoE freeze + 3 chains
+        FusionRegistry.EvolvedBallType.VIRUS:
+            _do_virus(enemy)  // Poison+bleed + lifesteal 20%
+        FusionRegistry.EvolvedBallType.MAGMA:
+            _do_magma_pool(pos)  // 3s burning pool, 5 DPS
+        FusionRegistry.EvolvedBallType.VOID:
+            _do_void_effect(enemy)  // Alternates burn/freeze
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Ball types | 7 | 8-10 |
+| Status effects | 4 | 4-5 |
+| Evolved types | 5 | 6-8 |
+| Particle trails | ✅ Per type | ✅ Per type |
+| Level visuals | ✅ Rings | ✅ Similar |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Ball variety | ✅ Excellent | 7 types + 5 evolved |
+| Visual feedback | ✅ Complete | Trails, rings, effects |
+| Status effects | ✅ Working | 4 types |
+| Damage modifiers | ✅ Rich | Crit, passives, status |
+| Piercing | ✅ Working | pierce_count |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT
+
+---
+
+## Appendix DL: Fusion and Evolution System
+
+**Files**:
+- `scripts/autoload/fusion_registry.gd` (344 lines)
+- `scripts/ui/fusion_overlay.gd` (297 lines)
+- `scripts/entities/fusion_reactor.gd` (135 lines)
+
+### Evolution Recipes (L3 + L3 = Unique)
+
+```gdscript
+enum EvolvedBallType { NONE, BOMB, BLIZZARD, VIRUS, MAGMA, VOID }
+
+const EVOLUTION_RECIPES := {
+    "BURN_IRON": EvolvedBallType.BOMB,        // Explosion AoE
+    "FREEZE_LIGHTNING": EvolvedBallType.BLIZZARD,  // Freeze chain
+    "BLEED_POISON": EvolvedBallType.VIRUS,    // Spreading DoT + lifesteal
+    "BURN_POISON": EvolvedBallType.MAGMA,     // Burning ground pools
+    "BURN_FREEZE": EvolvedBallType.VOID       // Alternating effects
+}
+```
+
+### Evolved Ball Stats
+
+| Evolved | Components | Damage | Speed | Special Effect |
+|---------|-----------|--------|-------|----------------|
+| BOMB | Burn+Iron | 20 | 700 | 100 radius explosion, 1.5x AoE |
+| BLIZZARD | Freeze+Lightning | 15 | 850 | Freeze + 3 chains |
+| VIRUS | Bleed+Poison | 12 | 800 | Spread DoT + 20% lifesteal |
+| MAGMA | Burn+Poison | 14 | 750 | 3s ground pool, 5 DPS |
+| VOID | Burn+Freeze | 16 | 850 | Alternating burn/freeze |
+
+### Generic Fusion (Any L3 + L3)
+
+```gdscript
+func create_fused_ball_data(ball_a, ball_b) -> Dictionary:
+    // Combine colors
+    var combined_color := color_a.lerp(color_b, 0.5)
+
+    // Average stats with 10% bonus
+    return {
+        "name": name_a + " " + name_b,
+        "base_damage": int((damage_a + damage_b) / 2.0 * 1.1),
+        "base_speed": (speed_a + speed_b) / 2.0,
+        "effects": [data_a["effect"], data_b["effect"]],
+        "can_evolve": false  // Fused balls cannot further evolve
+    }
+```
+
+### Fission System (Alternative Option)
+
+```gdscript
+func apply_fission() -> Dictionary:
+    var num_upgrades := randi_range(1, 3)
+
+    for i in num_upgrades:
+        // 60% level up owned, 40% new ball
+        if randf() < 0.6 and upgradeable.size() > 0:
+            BallRegistry.level_up_ball(ball_type)
+        else:
+            BallRegistry.add_ball(new_type)
+
+    // If all maxed: XP bonus instead
+    if upgradeable.size() == 0 and unowned.size() == 0:
+        var xp_bonus := 100 + GameManager.current_wave * 10
+        GameManager.add_xp(xp_bonus)
+```
+
+### Fusion Reactor Collectible
+
+```gdscript
+// Spawned by game_controller (2% + 0.1% per wave chance)
+@export var radius: float = 14.0
+@export var fall_speed: float = 100.0
+@export var despawn_time: float = 15.0
+
+const MAGNETISM_SPEED: float = 350.0
+const COLLECTION_RADIUS: float = 35.0
+
+// Visual: Purple core, cyan glow, orbiting particles
+const CORE_COLOR := Color(0.6, 0.2, 1.0)
+const GLOW_COLOR := Color(0.3, 0.8, 1.0, 0.5)
+```
+
+### Fusion Overlay UI
+
+```gdscript
+enum Tab { FISSION, FUSION, EVOLUTION }
+
+func show_fusion_ui() -> void:
+    // Tab availability:
+    // - Fission: Always available
+    // - Fusion: Requires 2+ L3 balls
+    // - Evolution: Requires valid recipe with owned L3s
+
+    visible = true
+    get_tree().paused = true
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Fusion mechanic | ✅ 3 options | ✅ Fusion only |
+| Evolution recipes | 5 | 6-8 |
+| Generic fusion | ✅ Any combo | ❓ Unknown |
+| Fission option | ✅ Unique | ❌ No |
+| Visual feedback | ✅ Tabbed UI | ✅ Different UI |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Recipe system | ✅ Working | 5 recipes |
+| Evolved effects | ✅ Unique | Each has special ability |
+| Generic fusion | ✅ Flexible | Any L3 combo works |
+| Fission alternative | ✅ Good fallback | 1-3 random upgrades |
+| Reactor visuals | ✅ Beautiful | Orbital particles |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT - FISSION IS A UNIQUE ADVANTAGE
+
+---
+
+## Appendix DM: Enemy Type Variety
+
+**Files**:
+- `scripts/entities/enemies/slime.gd` (26 lines)
+- `scripts/entities/enemies/bat.gd` (88 lines)
+- `scripts/entities/enemies/crab.gd` (90 lines)
+
+### Slime (Basic Enemy)
+
+```gdscript
+class_name Slime
+extends EnemyBase
+
+// Simple blob, moves straight down
+// Default stats from EnemyBase
+@export var slime_color: Color = Color(0.2, 0.8, 0.3)
+
+func _draw() -> void:
+    // Squashed ellipse with highlight
+    _draw_ellipse(Vector2.ZERO, body_radius, body_radius * 0.7, slime_color)
+    _draw_ellipse(Vector2(-5, -5), 6, 4, highlight_color)  // Shine
+```
+
+### Bat (Fast Zigzag)
+
+```gdscript
+class_name Bat
+extends EnemyBase
+
+var _zigzag_amplitude: float = 100.0
+var _zigzag_frequency: float = 2.0
+
+func _ready() -> void:
+    speed *= 1.3        // 30% faster
+    xp_value *= 1.2     // 20% more XP
+
+func _move(delta: float) -> void:
+    // Sine wave horizontal movement
+    var target_x := _base_x + sin(_zigzag_time * _zigzag_frequency * TAU) * _zigzag_amplitude
+    velocity = Vector2(dx, speed)
+
+func _draw() -> void:
+    _draw_ellipse(...)  // Body
+    _draw_wing(..., -1)  // Animated wings (sin * 10.0)
+    _draw_wing(..., 1)
+    // Pointy ears + red eyes
+```
+
+### Crab (Tank with Side Movement)
+
+```gdscript
+class_name Crab
+extends EnemyBase
+
+var _side_speed: float = 80.0
+var _down_speed_factor: float = 0.3  // Much slower descent
+
+func _ready() -> void:
+    max_hp *= 1.5       // 50% more HP
+    speed *= 0.6        // 40% slower
+    xp_value *= 1.3     // 30% more XP
+    _move_direction = 1 if randf() > 0.5 else -1
+
+func _move(delta: float) -> void:
+    // Bounce off screen edges
+    if global_position.x < margin: _move_direction = 1
+    if global_position.x > width - margin: _move_direction = -1
+
+    velocity = Vector2(_side_speed * _move_direction, speed * _down_speed_factor)
+
+func _draw() -> void:
+    // Wide oval body + claws with pincers
+    // Legs on both sides + eye stalks
+```
+
+### Enemy Variety Summary
+
+| Enemy | HP | Speed | Movement | XP | Unique |
+|-------|-----|-------|----------|-----|--------|
+| Slime | 100% | 100% | Straight down | 100% | Basic |
+| Bat | 100% | 130% | Zigzag | 120% | Fast, unpredictable |
+| Crab | 150% | 36% | Side-to-side | 130% | Tanky, slow descent |
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Enemy types | 3 + boss | 15-20 |
+| Unique behaviors | ✅ 3 patterns | ✅ Many |
+| Scaling per wave | ✅ +10% HP, +5% speed | ✅ Similar |
+| Visual variety | ✅ Custom draw | ✅ Sprites |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Type variety | ⚠️ Needs more | 3 types is minimal |
+| Unique behaviors | ✅ Good | Each has distinct pattern |
+| Art style | ✅ Consistent | Procedural drawing |
+| Scaling | ✅ Working | Wave-based HP/speed |
+| Boss | ✅ 1 | Slime King |
+
+**Rating**: ⭐⭐⭐ ADEQUATE - NEEDS MORE ENEMY TYPES
+
+**Gap**: BallxPit has 15-20 enemy types. GoPit has 3 + 1 boss. This is a content gap, not architecture.
+
+---
+
+## Summary: All Session Findings
+
+### Session 2: Appendices CT-DH (15 appendices)
 
 | Appendix | System | Rating | Notes |
 |----------|--------|--------|-------|
@@ -10498,7 +11099,7 @@ Added **15 appendices** this session (CT through DH):
 | CU | Biome/Stage | ⭐⭐⭐ | Needs level select |
 | CV | Character Passives | ⭐⭐⭐⭐ | Well implemented |
 | CW | Upgrade System | ⭐⭐⭐⭐⭐ | Excellent alignment with BallxPit |
-| CX | Ball Spawner | ⭐⭐⭐⭐ | P0 gap confirmed |
+| CX | Ball Spawner | ⭐⭐⭐⭐ | Fires from registry slots |
 | CY | Player Movement | ⭐⭐⭐⭐ | Solid |
 | CZ | Gem/Magnetism | ⭐⭐⭐⭐⭐ | Polished |
 | DA | Camera Shake | ⭐⭐⭐⭐ | Simple but effective |
@@ -10510,22 +11111,43 @@ Added **15 appendices** this session (CT through DH):
 | DG | Game Controller | ⭐⭐⭐⭐⭐ | Great orchestration |
 | DH | Slime King | ⭐⭐⭐⭐⭐ | Excellent first boss |
 
+### Session 3: Appendices DI-DM (5 appendices)
+
+| Appendix | System | Rating | Notes |
+|----------|--------|--------|-------|
+| DI | Ball Registry | ⭐⭐⭐⭐⭐ | **P0 GAP CLOSED** - 5-slot system EXISTS |
+| DJ | Procedural Audio | ⭐⭐⭐⭐⭐ | 24 sound types, unique advantage |
+| DK | Ball Entity | ⭐⭐⭐⭐⭐ | 7 types + 5 evolved |
+| DL | Fusion/Evolution | ⭐⭐⭐⭐⭐ | Fission is unique advantage |
+| DM | Enemy Variety | ⭐⭐⭐ | 3 types + 1 boss (needs more) |
+
 ### Key Discoveries
 
-1. **GoPit Advantages**:
-   - Combo system (unique)
-   - Procedural audio
-   - Endless mode
+1. **CRITICAL CORRECTION**:
+   - ~~Ball slot system gap~~ **CLOSED** - 5-slot simultaneous firing IS implemented!
+   - BallRegistry has MAX_SLOTS = 5, all equipped balls fire together
+   - Level system L1→L2→L3 with 1.0x→1.5x→2.0x multipliers
+
+2. **GoPit Unique Advantages**:
+   - Combo system (2s timeout, up to 2x multiplier)
+   - Procedural audio (24 sounds, 0 bytes assets)
+   - Fission option (alternative to fusion)
+   - Endless mode (vs BallxPit's stage-based)
    - Touch-first design
 
-2. **Strong Alignments**:
-   - Upgrade card system
-   - Boss phase system
-   - Status effects
-   - Visual feedback
+3. **Strong Alignments with BallxPit**:
+   - 5-slot simultaneous ball firing ✅
+   - Upgrade card system ✅
+   - Boss phase system ✅
+   - Status effects (4 types) ✅
+   - L1→L2→L3 level progression ✅
+   - Fusion at L3 ✅
 
-3. **Critical Gap (P0)**:
-   - Ball slot system (1 type vs 4-5 simultaneous)
+4. **Remaining Content Gaps**:
+   - Enemy variety: 3 types vs 15-20 (architecture is fine)
+   - Boss variety: 1 vs 24 (architecture is fine)
+   - Level select UI (not implemented)
+   - Meta progression depth
 
-**Total: 118 appendices (A through DH), ~10,500 lines**
+**Total: 123 appendices (A through DM), ~11,100 lines**
 
