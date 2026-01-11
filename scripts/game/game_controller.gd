@@ -635,6 +635,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if GameManager.current_state == GameManager.GameState.PLAYING:
 			try_catch_ball()
 
+	# Toggle game speed with R
+	if event.is_action_pressed("toggle_speed"):
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			GameManager.toggle_speed()
+
 
 func _input(event: InputEvent) -> void:
 	"""Handle touch/click input for ball catching in game area"""
