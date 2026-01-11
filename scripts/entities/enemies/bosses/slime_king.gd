@@ -111,6 +111,48 @@ func _draw_crown() -> void:
 	draw_colored_polygon(crown_points, crown_color)
 
 
+# === WEAK POINT SYSTEM ===
+
+const WEAK_POINT_MULTIPLIER: float = 2.0
+
+func take_damage_at_position(amount: int, hit_position: Vector2) -> void:
+	## Crown takes 2x damage as a weak point
+	var local_hit := to_local(hit_position)
+
+	if _is_crown_hit(local_hit):
+		# Weak point hit - 2x damage with visual feedback
+		var boosted_damage := int(amount * WEAK_POINT_MULTIPLIER)
+		take_damage(boosted_damage)
+		_flash_crown_hit()
+	else:
+		# Normal hit
+		take_damage(amount)
+
+
+func _is_crown_hit(local_pos: Vector2) -> bool:
+	## Check if the hit position is within the crown area
+	## Crown spans: x from -30 to 30, y from -body_radius*0.5 to -body_radius*0.5-30
+	var crown_top := -body_radius * 0.5 - 30  # Top of crown
+	var crown_bottom := -body_radius * 0.5     # Bottom of crown
+	var crown_width := 30.0                    # Half-width
+
+	return local_pos.y < crown_bottom and local_pos.y > crown_top - 10 and abs(local_pos.x) < crown_width
+
+
+func _flash_crown_hit() -> void:
+	## Visual feedback for hitting the weak point
+	var original_crown_color := crown_color
+	crown_color = Color(1.0, 1.0, 1.0)  # Flash white
+	queue_redraw()
+
+	var tween := create_tween()
+	tween.tween_interval(0.1)
+	tween.tween_callback(func():
+		crown_color = original_crown_color
+		queue_redraw()
+	)
+
+
 func _draw_eyes() -> void:
 	# Calculate eye direction toward player
 	var look_dir := Vector2.DOWN

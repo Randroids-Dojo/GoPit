@@ -127,6 +127,13 @@ func take_damage(amount: int) -> void:
 	_check_phase_transition()
 
 
+func take_damage_at_position(amount: int, hit_position: Vector2) -> void:
+	## Called when damage is dealt at a specific position (e.g., from a ball hit).
+	## Override in subclasses to implement weak point systems.
+	## Default behavior: ignore position and call regular take_damage.
+	take_damage(amount)
+
+
 func _flash_invulnerable() -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color(0.5, 0.5, 1.0), 0.05)

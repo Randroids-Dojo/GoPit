@@ -259,7 +259,10 @@ func _physics_process(delta: float) -> void:
 				# Ball type bonus damage/effects
 				_apply_ball_type_effect(collider, actual_damage)
 
-			if collider.has_method("take_damage"):
+			# Use position-based damage for weak point detection (e.g., boss crowns)
+			if collider.has_method("take_damage_at_position"):
+				collider.take_damage_at_position(actual_damage, collision.get_position())
+			elif collider.has_method("take_damage"):
 				collider.take_damage(actual_damage)
 
 			# Visual crit effect
