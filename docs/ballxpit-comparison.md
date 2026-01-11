@@ -13729,3 +13729,137 @@ The recommended priority is:
 | GoPit-s1j | Fix and re-enable tutorial | P2 |
 
 ### Total Open Issues from Research: 13+
+
+---
+
+## Appendix EZ: Damage Calculation Deep Dive
+
+### BallxPit Damage Formula
+
+**Base Damage:**
+- Starting character (Warrior, Strength 7, E scaling): 25-44 base damage
+- Ball damage = Base damage from ball type at level
+
+**Damage Multipliers (Multiplicative):**
+```
+Final Damage = Base × (1 + Amplification%) × Crit × Intelligence × Strength
+```
+
+**Damage Amplification (Enemies take more damage):**
+| Source | Effect | Max |
+|--------|--------|-----|
+| Radiation (Nuclear Bomb) | +10% per stack | +50% (5 stacks) |
+| Frostburn (Frozen Flame) | +25% flat | +25% |
+| Combined | Additive between sources | +75% |
+
+**Example Calculation:**
+- Base damage: 36
+- Radiation 5 stacks: +50%
+- Frostburn: +25%
+- Total amplification: 75%
+- Final: 36 × 1.75 = **63 damage**
+
+**Hemorrhage Threshold:**
+- Trigger: 12+ bleed stacks
+- Effect: 20% of enemy's current HP
+- Synergy: 20% × 1.75 (with amplification) = 35% current HP
+
+### GoPit Damage Formula
+
+**Base Damage:**
+```gdscript
+var actual_damage := damage  // Base from ball_spawner
+```
+
+**Damage Multipliers:**
+```gdscript
+// Critical hit
+if randf() < total_crit_chance:
+    actual_damage = int(actual_damage * GameManager.get_crit_damage_multiplier())
+    // Default: 2.0x, Jackpot passive: 3.0x
+
+// Fire damage (Inferno passive)
+if ball_type == BallType.FIRE:
+    actual_damage = int(actual_damage * GameManager.get_fire_damage_multiplier())
+    // Inferno: 1.2x (20% bonus)
+
+// Damage vs status effects
+if collider.has_status_effect(StatusEffect.Type.FREEZE):
+    actual_damage = int(actual_damage * GameManager.get_damage_vs_frozen())
+    // Shatter: 1.5x (50% bonus)
+
+if collider.has_status_effect(StatusEffect.Type.BURN):
+    actual_damage = int(actual_damage * GameManager.get_damage_vs_burning())
+    // Inferno: 1.25x (25% bonus)
+```
+
+### Status Effect Comparison
+
+| Effect | BallxPit | GoPit |
+|--------|----------|-------|
+| **Radiation** | +10%/stack (max 5) | Missing |
+| **Disease** | 8 stacks, 6s duration | Missing |
+| **Frostburn** | +25% damage taken | Missing |
+| **Burn** | Max 5 stacks | Max 1 stack |
+| **Freeze** | +25% damage taken | 50% slow only |
+| **Poison** | Max 8 stacks | Max 1 stack |
+| **Bleed** | Max 24 stacks, Hemorrhage at 12+ | Max 5 stacks |
+
+### GoPit Status Effect Details
+
+```gdscript
+Type.BURN:
+    duration = 3.0 * int_mult
+    damage_per_tick = 2.5  // 5 DPS
+    max_stacks = 1
+
+Type.FREEZE:
+    duration = 2.0 * int_mult
+    slow_multiplier = 0.5  // 50% slow
+    max_stacks = 1
+    // NO damage amplification!
+
+Type.POISON:
+    duration = 5.0 * int_mult
+    damage_per_tick = 1.5  // 3 DPS
+    max_stacks = 1
+
+Type.BLEED:
+    duration = INF  // Permanent
+    damage_per_tick = 1.0  // 2 DPS per stack
+    max_stacks = 5
+    // No Hemorrhage threshold!
+```
+
+### Gap Analysis
+
+| Mechanic | BallxPit | GoPit | Gap |
+|----------|----------|-------|-----|
+| Damage amplification | Yes (multiplicative) | No | CRITICAL |
+| Max bleed stacks | 24 | 5 | 5x |
+| Hemorrhage threshold | 20% HP at 12 stacks | None | Missing |
+| Freeze damage bonus | +25% | None | Missing |
+| Radiation/Disease | Yes | None | Missing |
+| Frostburn | Yes | None | Missing |
+| Stack scaling | Complex | Simple | SIGNIFICANT |
+
+### Recommendations
+
+1. **Add Damage Amplification System:**
+   - Enemies track amplification % from status effects
+   - Apply multiplicatively to incoming damage
+
+2. **Increase Bleed Max Stacks:**
+   - Change from 5 to 8-12
+   - Add Hemorrhage threshold at 8+ stacks
+
+3. **Add Freeze Damage Amplification:**
+   - Frozen enemies take +25% damage (not just slow)
+
+4. **Add Missing Status Effects:**
+   - Radiation: +10% damage taken per stack
+   - Frostburn: DoT + damage amplification
+
+Sources:
+- [Ball x Pit Advanced Mechanics Guide](https://ballxpit.org/guides/advanced-mechanics/)
+- [Steam Discussion: How Stats Work](https://steamcommunity.com/app/2062430/discussions/0/687489618510307449/)
