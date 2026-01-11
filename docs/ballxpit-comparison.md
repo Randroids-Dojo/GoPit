@@ -3517,7 +3517,7 @@ BallxPit likely has:
 | **Aim direction** | ✅ Yes | ✅ Yes | - |
 | **Bounce preview** | ❌ No | ✅ Yes | **HIGH** |
 | **Multi-bounce** | ❌ No | ✅ Maybe | MEDIUM |
-| **Ghost aim** | ✅ Yes | ❌ Unknown | - |
+| **Ghost aim** | ✅ Yes (trajectory line) | ❌ No (subtle gamepad assist only) | **GoPit advantage** |
 
 ### Why This Matters
 
@@ -9371,7 +9371,7 @@ match registry_type:
 | Balls per shot | 1 (base) + Multi Shot | 4-5 SLOTS ALWAYS |
 | Piercing | ✅ Upgrade | ✅ Upgrade |
 | Ricochet | ✅ Upgrade | ✅ Similar |
-| Ball limit | 30 | Unknown |
+| Ball limit | 30 | Not documented (60+ balls possible) |
 | Spread pattern | Fan | Fan |
 
 ### The P0 Gap Explained
