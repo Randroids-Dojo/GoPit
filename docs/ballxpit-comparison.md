@@ -2301,25 +2301,56 @@ speed *= min(2.0, 1.0 + (wave - 1) * 0.05)  // +5% speed (cap 2x)
 | 2-3 | 70% | 30% | 0% |
 | 4+ | 50% | 30% | 20% |
 
-### BallxPit Spawning (Expected)
+### BallxPit Spawning (Confirmed)
 
-- Formation spawns (lines, V-shapes)
-- Stage-specific enemy types
-- Wave patterns with gaps
-- Higher enemy variety
+**Research Sources:** [Boss Battle Guide](https://ballxpit.org/guides/boss-battle-guide/), [TheGamer Boss Ranking](https://www.thegamer.com/ball-x-pit-hardest-area-bosses-to-beat/)
+
+**Level Structure:**
+- 8 unique levels/biomes
+- Each level has: 2 mini-bosses + 1 final boss = 3 boss fights per level
+- Guaranteed Fusion upgrade after mini-bosses 1 and 2
+
+**Boss Fights Confirmed:**
+| Boss | Level | Mechanic |
+|------|-------|----------|
+| Skeleton King | Bone X Yard | Spawns adds, weak point on crown |
+| Shroom Swarm | Fungal Forest | Multi-enemy shared HP bar, formations |
+| Dragon Prince | Smoldering Depths | Low HP, fire attacks |
+| Twisted Serpent | Unknown | Multi-phase, layer destruction |
+| Lord of Owls | Unknown | Flying + enemy clusters |
+| Sabertooth | Unknown | Rectangular tiger monster |
+| Hydra Boss | Unknown | Multiple heads, final core phase |
+
+**Boss Patterns:**
+- Telegraphed attack patterns (spend 30s observing before attacking)
+- Adds/minion spawns during boss fights
+- Shroom Swarm: Forms rows, retreats, spawns mini-enemies
+- Skeleton King: Reduced bullet frequency during add spawns
+
+**Stage-Specific Enemies:**
+- Desert: Sandstorms, digging mechanics
+- Fungal Forest: Shrooms that push forward
+- Each biome has unique enemy behaviors
 
 ### GAPS
 
-| Feature | GoPit | BallxPit |
-|---------|-------|----------|
-| Spawn patterns | Random | Formations |
-| Stage enemies | Same all stages | Unique per stage |
-| Enemy variety | 3 types | 10+ types |
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| Spawn patterns | Random | Formations | P2 |
+| Stage enemies | Same all stages | Unique per biome | P3 |
+| Enemy variety | 3 types | 10+ types | P2 |
+| Mini-bosses | None | 2 per level | P2 |
+| Final bosses | 1 total | 8 (one per level) | P2 |
+| Boss phases | Limited | Multi-phase | P2 |
+| Add spawns | None | During boss fights | P2 |
 
 ### Recommendations
 
-1. [ ] **Add spawn formations** - Lines, V-shapes
-2. [ ] **Add stage-specific enemies** - Ice/fire variants
+1. [ ] **Add spawn formations** - Lines, V-shapes, clusters
+2. [ ] **Add stage-specific enemies** - Ice/fire/poison variants per biome
+3. [ ] **Add mini-boss system** - 2 mini-bosses before final boss per stage
+4. [ ] **Expand to 8 bosses** - One unique boss per stage
+5. [ ] **Add add-spawn during bosses** - Minions during boss fights
 
 ---
 
@@ -3187,3 +3218,173 @@ Consider adding rare temporary powerups:
 These would drop rarely (1-2% chance) and add excitement without fundamentally changing balance.
 
 **Note:** This is a "nice to have" - GoPit's current system is clean and functional. Adding pickups increases complexity.
+
+
+## Appendix AE: Tutorial and Onboarding (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/ui/tutorial_overlay.gd`
+
+**Tutorial Steps:**
+1. MOVE - "Drag LEFT joystick to MOVE"
+2. AIM - "Drag RIGHT joystick to AIM"
+3. FIRE - "Tap FIRE to shoot!"
+4. HIT - "Hit enemies before they reach you!"
+5. COMPLETE - Save state, fade out
+
+**Features:**
+- Step-by-step hints with highlight rings
+- Pulse animation on highlighted controls
+- Saves completion to user settings
+- Only shows on first play
+
+**Current Status:** DISABLED (line 107-108)
+```gdscript
+# EMERGENCY: Tutorial disabled by default due to input blocking bug
+return true  # Treat as completed (skip tutorial)
+```
+
+### BallxPit Expected Behavior
+
+Mobile games typically have:
+- Interactive tutorials that pause gameplay
+- Pop-up tips during first few levels
+- Progressive feature unlocks with explanations
+- "Did you know?" hints
+
+### Assessment
+
+**GoPit's tutorial is adequate** once the input blocking bug is fixed. The step-by-step approach is standard and effective.
+
+**Recommendation:** Fix the mouse_filter input blocking bug (P2) and re-enable tutorial.
+
+
+## Appendix AF: Aim/Trajectory System (NEW)
+
+### GoPit Current Implementation
+
+**Location:** `scripts/input/aim_line.gd`
+
+**Features:**
+- Dashed line showing aim direction
+- Max length: 400 pixels
+- Ghost state when joystick released (fades to 30% alpha)
+- Updates in real-time with joystick input
+
+**What it DOESN'T have:**
+- Bounce prediction (where ball will reflect)
+- Multiple bounce preview
+- Collision preview with enemies
+
+**Code:**
+```gdscript
+# aim_line.gd - simple straight line
+func _update_line(start_pos: Vector2) -> void:
+    # Creates dashed line in current_direction
+    # NO bounce simulation
+```
+
+### BallxPit Expected Behavior
+
+BallxPit likely has:
+- **Bounce preview** - Shows where ball will reflect off walls
+- **Multiple bounces** - Shows 2-3 bounces ahead
+- **Hit preview** - Maybe highlights enemies in trajectory
+
+### GAP ANALYSIS
+
+| Feature | GoPit | BallxPit (Expected) | Impact |
+|---------|-------|---------------------|--------|
+| **Aim direction** | ✅ Yes | ✅ Yes | - |
+| **Bounce preview** | ❌ No | ✅ Yes | **HIGH** |
+| **Multi-bounce** | ❌ No | ✅ Maybe | MEDIUM |
+| **Ghost aim** | ✅ Yes | ❌ Unknown | - |
+
+### Why This Matters
+
+1. **Skill ceiling** - Bounce preview enables skilled bank shots
+2. **Strategy** - Plan ricochets to hit enemies behind cover
+3. **Satisfaction** - Predict and execute complex shots
+4. **Learning** - Helps players understand ball physics
+
+### Recommendations
+
+**P1 Priority** (important for skill expression):
+
+```gdscript
+# Proposed trajectory prediction
+func _calculate_trajectory() -> Array[Vector2]:
+    var points: Array[Vector2] = []
+    var pos := start_position
+    var dir := aim_direction
+    var bounces := 0
+    var max_bounces := 2
+    
+    while bounces <= max_bounces:
+        # Raycast to find wall collision
+        var result := space_state.intersect_ray(query)
+        if result:
+            points.append(result.position)
+            dir = dir.bounce(result.normal)
+            pos = result.position
+            bounces += 1
+        else:
+            points.append(pos + dir * max_length)
+            break
+    
+    return points
+```
+
+**Visual treatment:**
+- First segment: Bright white dashed line
+- Second bounce: Slightly dimmer
+- Third bounce: Faint outline
+
+
+## Appendix AG: Ultimate Ability System (NEW)
+
+### GoPit Current Implementation
+
+**Locations:**
+- `scripts/ui/ultimate_button.gd` - UI with charge ring
+- `scripts/effects/ultimate_blast.gd` - Effect execution
+- `scripts/autoload/game_manager.gd` - Charge tracking
+
+**How it works:**
+1. **Charge mechanic:** Builds from kills (CHARGE_PER_KILL in GameManager)
+2. **UI:** Ring fills up, pulses when ready
+3. **Activation:** Tap button when charged
+4. **Effect:** Screen flash + camera shake + kill ALL enemies
+
+**Code summary:**
+```gdscript
+# ultimate_blast.gd
+func execute() -> void:
+    _play_sound()
+    _create_flash()      # White screen overlay
+    _shake_camera()      # Big shake (25.0 intensity)
+    _kill_all_enemies()  # 9999 damage to all
+```
+
+### BallxPit Comparison
+
+**Unknown if BallxPit has ultimates.** Many similar games have:
+- Screen-clear abilities (common)
+- Character-specific ultimates (varies)
+- Item-based bombs (common)
+
+### Assessment
+
+**GoPit's ultimate is solid:**
+- Clear charging feedback (ring fills)
+- Satisfying activation (flash + shake)
+- Powerful effect (clear screen)
+- Strategic save-or-use decisions
+
+**Potential enhancements:**
+- Character-specific ultimates (Pyro = fire explosion, Frost = freeze all)
+- Partial charge use (50% for smaller effect)
+- Combo with ball slots (all balls fire at once?)
+
+**Priority:** P3 (optional polish) - Current system works well.
