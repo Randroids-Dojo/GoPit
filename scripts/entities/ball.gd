@@ -85,8 +85,8 @@ func _spawn_particle_trail() -> void:
 		_particle_trail.queue_free()
 		_particle_trail = null
 
-	# No trail for normal balls or baby balls
-	if ball_type == BallType.NORMAL or is_baby_ball:
+	# No trail for normal balls
+	if ball_type == BallType.NORMAL:
 		return
 
 	# Get preloaded trail scene for this type

@@ -85,3 +85,66 @@ async def test_leadership_upgrade_exists(game):
 
     # Check that UPGRADE_DATA has LEADERSHIP
     # This is tested indirectly - if the game runs without errors, the upgrade exists
+
+
+BALL_REGISTRY = "/root/BallRegistry"
+
+
+@pytest.mark.asyncio
+async def test_baby_ball_inherits_type_from_slot(game):
+    """Baby balls should inherit ball type from active slots."""
+    # Stop spawner to control timing
+    await game.call(PATHS["baby_spawner"], "stop")
+    await asyncio.sleep(0.3)
+
+    # Add BURN ball (type 1) to slots
+    await game.call(BALL_REGISTRY, "add_ball", [1])
+
+    # Get filled slots to verify (non-empty slots)
+    filled_slots = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_slots) == 2, f"Should have 2 filled slots (BASIC + BURN), got {len(filled_slots)}"
+
+    # Get initial ball count
+    initial_count = await game.call(PATHS["balls"], "get_child_count")
+
+    # Manually trigger baby ball spawn
+    await game.call(PATHS["baby_spawner"], "_spawn_baby_ball")
+    await asyncio.sleep(0.2)
+
+    # Verify ball was spawned
+    final_count = await game.call(PATHS["balls"], "get_child_count")
+    assert final_count > initial_count, "Baby ball should spawn with slot inheritance"
+
+    # Restart spawner
+    await game.call(PATHS["baby_spawner"], "start")
+
+
+@pytest.mark.asyncio
+async def test_baby_ball_cycles_through_slots(game):
+    """Baby balls should cycle through active ball slots."""
+    # Stop spawner
+    await game.call(PATHS["baby_spawner"], "stop")
+    await asyncio.sleep(0.2)
+
+    # Add multiple ball types to slots
+    await game.call(BALL_REGISTRY, "add_ball", [1])  # BURN
+    await game.call(BALL_REGISTRY, "add_ball", [2])  # FREEZE
+
+    # Verify we have 3 filled slots now (BASIC + BURN + FREEZE)
+    filled_slots = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_slots) == 3, f"Should have 3 filled slots, got {len(filled_slots)}"
+
+    # Get initial count
+    initial_count = await game.call(PATHS["balls"], "get_child_count")
+
+    # Spawn multiple baby balls - one for each slot type
+    for _ in range(3):
+        await game.call(PATHS["baby_spawner"], "_spawn_baby_ball")
+        await asyncio.sleep(0.1)
+
+    # Verify balls were spawned
+    final_count = await game.call(PATHS["balls"], "get_child_count")
+    assert final_count >= initial_count + 3, f"Should have spawned 3 baby balls, spawned {final_count - initial_count}"
+
+    # Restart spawner
+    await game.call(PATHS["baby_spawner"], "start")
