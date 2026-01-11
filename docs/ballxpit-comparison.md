@@ -8602,13 +8602,201 @@ This is the **P0 fundamental difference** identified earlier.
 
 ---
 
+## Appendix CR: Enemy Spawning and Variety
+
+### BallxPit Enemy System
+
+**Enemy Types:**
+- 20+ unique enemy types
+- Ranged and melee variants
+- Boss minions
+- Elite variants (stronger versions)
+
+**Spawning Patterns:**
+- Wave-based with set compositions
+- Pattern formations (lines, circles)
+- Progressive difficulty per wave
+
+### GoPit Enemy System
+
+**Implementation (enemy_spawner.gd):**
+
+**3 Enemy Types:**
+```gdscript
+var slime_scene: PackedScene  // Basic, straight down
+var bat_scene: PackedScene    // Faster, zigzag movement
+var crab_scene: PackedScene   // Tanky, side-to-side
+
+func _choose_enemy_type() -> PackedScene:
+    var wave: int = GameManager.current_wave
+
+    // Wave 1: Only slimes
+    if wave <= 1:
+        return slime_scene
+
+    // Wave 2-3: Introduce bats (30% chance)
+    if wave <= 3:
+        if randf() < 0.3:
+            return bat_scene
+        return slime_scene
+
+    // Wave 4+: All enemy types
+    // 50% slime, 30% bat, 20% crab
+```
+
+**Enemy Properties:**
+| Enemy | HP | Speed | XP | Behavior |
+|-------|-----|-------|-----|----------|
+| Slime | 1x | 1x | 1x | Straight down |
+| Bat | 1x | 1.3x | 1.2x | Zigzag pattern |
+| Crab | 1.5x | 0.6x | 1.3x | Side-to-side |
+
+**Spawn Mechanics:**
+```gdscript
+@export var spawn_interval: float = 2.0
+@export var spawn_variance: float = 0.5  // ±0.5s random
+@export var burst_chance: float = 0.1   // 10% burst
+@export var burst_count_min: int = 2
+@export var burst_count_max: int = 3
+```
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Enemy types | 3 | 20+ |
+| Movement patterns | 3 | Many |
+| Burst spawning | ✅ | ✅ |
+| Wave progression | ✅ | ✅ |
+| Spawn variance | ✅ | ✅ |
+| Ranged enemies | ❌ | ✅ |
+| Elite variants | ❌ | ✅ |
+| Formation patterns | ❌ | ✅ |
+
+### What GoPit Does Well
+
+- ✅ Progressive introduction (slime → bat → crab)
+- ✅ Distinct movement patterns per type
+- ✅ Burst spawning for intensity
+- ✅ Stat differentiation (HP, speed, XP)
+- ✅ Random spawn variance
+
+### Gaps
+
+1. **Variety**: 3 types vs 20+
+2. **Ranged**: No shooting enemies
+3. **Formations**: No coordinated patterns
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 5+ enemy types | Ranged, fast, split |
+| **P2** | Add elite variants | Stronger versions |
+| **P3** | Add formation spawning | Patterns like lines |
+
+**GoPit has functional enemy spawning - needs more variety.**
+
+---
+
+## Appendix CS: Input System (Touch-First Design)
+
+### BallxPit Input
+
+**PC/Console focus:**
+- WASD movement
+- Mouse aim
+- Click/button to fire
+- Controller support
+
+### GoPit Input System
+
+**Touch-First Architecture:**
+
+**Virtual Joystick (virtual_joystick.gd):**
+```gdscript
+@export var base_radius: float = 80.0
+@export var knob_radius: float = 30.0
+@export var dead_zone: float = 0.05  // 5% dead zone
+
+func _gui_input(event: InputEvent) -> void:
+    // Handles both mouse and touch
+    if event is InputEventMouseButton:
+        // Mouse input
+    elif event is InputEventScreenTouch:
+        // Touch input with index tracking
+    elif event is InputEventScreenDrag:
+        // Drag with multitouch support
+```
+
+**Aim Line (aim_line.gd):**
+```gdscript
+@export var max_length: float = 400.0
+@export var dash_length: float = 20.0
+@export var gap_length: float = 10.0
+
+// Ghost state when released (fades to gray)
+func hide_line() -> void:
+    // Fade to ghost color instead of hiding
+    tween.tween_property(self, "default_color", ghost_color, 0.2)
+```
+
+**Fire Button (fire_button.gd):**
+```gdscript
+@export var cooldown_duration: float = 0.5
+var autofire_enabled: bool = false
+
+func _try_fire() -> void:
+    // Apply character speed multiplier
+    cooldown_timer = cooldown_duration / GameManager.character_speed_mult
+
+func _on_blocked() -> void:
+    _shake_button()   // Physical feedback
+    _flash_red()      // Visual feedback
+    SoundManager.play(SoundManager.SoundType.BLOCKED)
+```
+
+### Input Features
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Touch joystick | ✅ | ❌ (PC focus) |
+| Mouse support | ✅ | ✅ |
+| Autofire toggle | ✅ | ❌ |
+| Aim line preview | ✅ | ✅ |
+| Ghost aim (persistent) | ✅ | ❌ |
+| Cooldown visual | ✅ Arc fill | ✅ |
+| Blocked feedback | ✅ Shake + flash | ⚠️ |
+| Dead zone | ✅ 5% | N/A |
+
+### GoPit ADVANTAGE: Touch-First
+
+**Mobile-native design:**
+1. **Dual joystick layout** - Move + Aim
+2. **Touch multitouch support** - Handles multiple fingers
+3. **Autofire toggle** - Fire continuously
+4. **Ghost aim line** - Shows last direction
+5. **Visual cooldown arc** - Clear feedback
+6. **Blocked feedback** - Shake + flash + sound
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add keyboard support | WASD fallback |
+| **P3** | Add controller support | Gamepad input |
+
+**GoPit's touch-first input is a DESIGN ADVANTAGE for mobile!**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **101 appendices** (A through CQ)
+- **103 appendices** (A through CS)
 - **91 open beads** tracking all gaps
-- **9,000+ lines** of comparison
+- **9,300+ lines** of comparison
 
 ### The #1 Fundamental Difference
 
