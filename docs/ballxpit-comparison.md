@@ -1,11 +1,11 @@
 # BallxPit vs GoPit Comparison Analysis
 
-> **Document Version**: 3.5
+> **Document Version**: 3.6
 > **Last Updated**: January 11, 2026
 > **Status**: Comprehensive Analysis Complete + Code Verification (167 Appendices, 14,111 lines)
 > **Related Epic**: GoPit-68o
 > **Iterations**: 148 Ralph Wiggum analysis passes
-> **Verification Results**: 12 prematurely-closed beads reopened (see Critical Gaps section)
+> **Verification Results**: 13 prematurely-closed beads reopened (see Critical Gaps section)
 
 This document provides a detailed comparison between the real **Ball x Pit** game (by Kenny Sun / Devolver Digital) and our implementation **GoPit**. The goal is to identify differences and alignment opportunities.
 
@@ -131,7 +131,8 @@ BallxPit crossed **1 million sales** and announced 3 free content updates for 20
 > - Bleed on-hit: `status_effect.gd:47-51` only has DoT, no on-hit bonus damage
 > - Level select: No `level_select.tscn` exists; `stage_manager.gd` auto-progresses from stage 0
 > - Freeze damage amp: `status_effect.gd:36-41` FREEZE has no `damage_amplification` property, only slow_multiplier
-> - **Beads reopened (12 total)**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5, GoPit-ay9, GoPit-2wz, GoPit-kslj, GoPit-v0j, GoPit-b1l, GoPit-9m2
+> - Stacking caps: `status_effect.gd` shows BURN=1, POISON=1, BLEED=5 (claimed BURN=5, POISON=8, BLEED=24)
+> - **Beads reopened (13 total)**: GoPit-gdj, GoPit-hfi, GoPit-r1r, GoPit-2ep, GoPit-7n5, GoPit-ay9, GoPit-2wz, GoPit-kslj, GoPit-v0j, GoPit-b1l, GoPit-9m2, GoPit-yj0r
 
 ### Key Findings from Research
 
