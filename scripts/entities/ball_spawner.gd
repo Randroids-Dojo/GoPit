@@ -42,6 +42,11 @@ func set_aim_direction(direction: Vector2) -> void:
 		current_aim_direction = direction.normalized()
 
 
+func set_aim_direction_xy(x: float, y: float) -> void:
+	"""Set aim direction using separate x, y components (for automation tests)"""
+	set_aim_direction(Vector2(x, y))
+
+
 func can_fire() -> bool:
 	"""Check if player has balls available to fire (return mechanic)"""
 	return balls_in_flight < max_balls

@@ -61,7 +61,7 @@ async def test_ball_returns_at_bottom_of_screen(game):
     await asyncio.sleep(2.0)
 
     # Fire a ball aimed downward (toward bottom of screen)
-    await game.call(BALL_SPAWNER, "set_aim_direction", [{"x": 0, "y": 1, "_type": "Vector2"}])
+    await game.call(BALL_SPAWNER, "set_aim_direction_xy", [0.0, 1.0])
     await wait_for_fire_ready(game)
     await game.click(FIRE_BUTTON)
 
@@ -69,8 +69,8 @@ async def test_ball_returns_at_bottom_of_screen(game):
     in_flight_after = await game.call(BALL_SPAWNER, "get_balls_in_flight")
     assert in_flight_after > 0, "Should have ball in flight after firing"
 
-    # Wait for ball to reach bottom and return
-    await asyncio.sleep(2.0)
+    # Wait for ball to reach bottom and return (extra time for CI)
+    await asyncio.sleep(4.0)
 
     # Balls in flight should decrease as balls return
     final_in_flight = await game.call(BALL_SPAWNER, "get_balls_in_flight")
