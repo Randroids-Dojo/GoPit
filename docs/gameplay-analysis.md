@@ -10,7 +10,7 @@ Track progress with [x] marks:
 
 - [x] Ball damage per level (L1=10, L2=?, L3=?)
 - [x] Ball speed per level
-- [ ] Fire cooldown / rate
+- [x] Fire cooldown / rate
 - [ ] Bounce damage scaling (+X% per bounce?)
 - [ ] Enemy base HP (slime, bat, crab)
 - [ ] Enemy HP scaling per wave
@@ -180,3 +180,85 @@ Track progress with [x] marks:
 2. **Add more speed variants** - Could add "fast" effect balls like Haste
 
 **Recommendation**: Keep current system. The Iron ball's 25% slower speed with high damage mirrors BallxPit's heavy ball concept. Lightning as the "fast" ball provides variety. Consider adding more speed variants when introducing new ball types.
+
+---
+
+### 3. Fire Cooldown / Rate
+**Iteration**: 3 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Steam Discussion: What does fire rate do?](https://steamcommunity.com/app/2062430/discussions/0/624436409752895957/)
+- [Steam Discussion: Does anything reduce cooldown on balls?](https://steamcommunity.com/app/2062430/discussions/0/595162996671518864/)
+- [Steam Discussion: Attack speed](https://steamcommunity.com/app/2062430/discussions/0/624436409752955709/)
+
+**Key Findings**:
+- Fire rate = how many balls you can "dump out per second from the queue"
+- Fire rate is a **multiplier** to arbitrary base (same as other stats)
+- **2x fire rate passive** creates highest potential DPS in the game
+- Some balls have specific cooldowns (Dark ball: 3 second cooldown)
+- Fire rate most useful when balls return quickly (short range focus firing)
+- Stats: HP, damage, baby balls, ball speed, move speed, crit %, fire rate, AoE, status power, passive power
+
+**Cooldown Reduction**:
+- Cooldown reduction items exist
+- Attack speed stat reduces ball shooting cooldown
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_fire_cooldown.py`
+
+**Base Values**:
+- Base Cooldown: **0.5 seconds**
+- Base Fire Rate: **2.0 balls/second**
+- All equipped balls fire simultaneously
+
+**Fire Rate with Character Speed Modifier**:
+| Speed Mult | Cooldown | Fire Rate |
+|------------|----------|-----------|
+| 1.0x | 0.50s | 2.0 balls/s |
+| 1.25x | 0.40s | 2.5 balls/s |
+| 1.5x | 0.33s | 3.0 balls/s |
+| 2.0x | 0.25s | 4.0 balls/s |
+
+**Permanent Upgrade: Rapid Fire**:
+- Effect: -0.1s cooldown per level
+- Max Levels: 5
+- Cost: 200 Pit Coins (doubles per level)
+
+| Level | Cooldown | Fire Rate |
+|-------|----------|-----------|
+| 0 | 0.5s | 2.0 balls/s |
+| 1 | 0.4s | 2.5 balls/s |
+| 2 | 0.3s | 3.3 balls/s |
+| 3 | 0.2s | 5.0 balls/s |
+| 4 | 0.1s | 10.0 balls/s |
+| 5 | 0.1s | 10.0 balls/s (capped) |
+
+**Features**:
+- Autofire toggle (auto-fires when ready)
+- Cooldown shared across all ball slots
+- Character passives modify speed mult
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Fire Rate System | Multiplier-based | Fixed cooldown (0.5s) | Similar result |
+| Max Upgrade | 2x fire rate passive | 10 balls/s (0.1s cap) | GoPit has ceiling |
+| Special Cooldowns | Some balls (Dark: 3s) | None (uniform) | GoPit simpler |
+| Multi-Ball | Balls queue, fire in sequence | All slots fire simultaneously | **Different!** |
+
+#### Alignment Recommendation
+
+**Priority**: P2 (Medium)
+
+**Key Difference**: GoPit fires all equipped balls simultaneously, while BallxPit queues balls and fires them in sequence. This is a fundamental mechanic difference.
+
+**Options**:
+1. **Keep current** - Simultaneous fire is satisfying, simpler to understand
+2. **Add ball-specific cooldowns** - Could differentiate balls more (Dark = slower but powerful)
+3. **Align to BallxPit** - Add ball queue system (significant rework)
+
+**Recommendation**: Keep simultaneous fire system - it's more visceral and fun. Consider adding ball-specific cooldown modifiers for future special balls (similar to Dark ball's 3s cooldown in BallxPit).
