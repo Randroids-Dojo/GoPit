@@ -7,9 +7,16 @@ BALLS_CONTAINER = "/root/Game/GameArea/Balls"
 FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
 
 
+async def reset_ball_registry(game):
+    """Reset BallRegistry to clean state for testing."""
+    await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Give time for state to settle
+
+
 @pytest.mark.asyncio
 async def test_ball_registry_initialized(game):
     """BallRegistry should be initialized with a BASIC ball at L1."""
+    await reset_ball_registry(game)
     # Check that BallRegistry autoload exists
     registry = await game.get_node(BALL_REGISTRY)
     assert registry is not None, "BallRegistry autoload should exist"
@@ -26,6 +33,7 @@ async def test_ball_registry_initialized(game):
 @pytest.mark.asyncio
 async def test_ball_level_up(game):
     """Balls should be able to level up from L1 to L2 to L3."""
+    await reset_ball_registry(game)
     # Get initial level
     basic_level = await game.call(BALL_REGISTRY, "get_ball_level", [0])
     assert basic_level == 1, "Should start at L1"
@@ -48,6 +56,7 @@ async def test_ball_level_up(game):
 @pytest.mark.asyncio
 async def test_cant_level_past_3(game):
     """Balls at L3 cannot be leveled further."""
+    await reset_ball_registry(game)
     # Level up to L3
     await game.call(BALL_REGISTRY, "level_up_ball", [0])
     await game.call(BALL_REGISTRY, "level_up_ball", [0])
@@ -67,6 +76,7 @@ async def test_cant_level_past_3(game):
 @pytest.mark.asyncio
 async def test_level_affects_damage(game):
     """Higher levels should increase damage."""
+    await reset_ball_registry(game)
     # Get L1 damage
     l1_damage = await game.call(BALL_REGISTRY, "get_damage", [0])
 
@@ -92,6 +102,7 @@ async def test_level_affects_damage(game):
 @pytest.mark.asyncio
 async def test_level_affects_speed(game):
     """Higher levels should increase speed."""
+    await reset_ball_registry(game)
     # Get L1 speed
     l1_speed = await game.call(BALL_REGISTRY, "get_speed", [0])
 
@@ -111,6 +122,7 @@ async def test_level_affects_speed(game):
 @pytest.mark.asyncio
 async def test_add_new_ball_type(game):
     """Adding a new ball type should add it to owned balls."""
+    await reset_ball_registry(game)
     # Check BURN (type 1) is not owned
     burn_level = await game.call(BALL_REGISTRY, "get_ball_level", [1])
     assert burn_level == 0, "BURN should not be owned initially"
@@ -126,6 +138,7 @@ async def test_add_new_ball_type(game):
 @pytest.mark.asyncio
 async def test_fusion_ready_at_l3(game):
     """L3 balls should be marked as fusion ready."""
+    await reset_ball_registry(game)
     # BASIC ball starts at L1, not fusion ready
     is_ready = await game.call(BALL_REGISTRY, "is_fusion_ready", [0])
     assert is_ready == False, "L1 ball should not be fusion ready"
@@ -144,6 +157,7 @@ async def test_fusion_ready_at_l3(game):
 @pytest.mark.asyncio
 async def test_fired_ball_has_correct_level(game):
     """Fired balls should have the correct level from registry."""
+    await reset_ball_registry(game)
     # Level up BASIC to L2
     await game.call(BALL_REGISTRY, "level_up_ball", [0])
 
@@ -168,6 +182,7 @@ async def test_fired_ball_has_correct_level(game):
 @pytest.mark.asyncio
 async def test_get_unowned_ball_types(game):
     """Should correctly return ball types not yet owned."""
+    await reset_ball_registry(game)
     # Get unowned types (should be 12: all except BASIC which is auto-added on game start)
     # Ball types: BASIC, BURN, FREEZE, POISON, BLEED, LIGHTNING, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE
     unowned = await game.call(BALL_REGISTRY, "get_unowned_ball_types")
@@ -184,6 +199,7 @@ async def test_get_unowned_ball_types(game):
 @pytest.mark.asyncio
 async def test_get_upgradeable_balls(game):
     """Should return balls that can still be leveled up."""
+    await reset_ball_registry(game)
     # Initially BASIC is upgradeable
     upgradeable = await game.call(BALL_REGISTRY, "get_upgradeable_balls")
     assert len(upgradeable) >= 1, "Should have at least one upgradeable ball"

@@ -159,6 +159,11 @@ func _ready() -> void:
 
 
 func _reset_for_new_run() -> void:
+	reset()
+
+
+func reset() -> void:
+	"""Reset the registry to initial state (for new runs and tests)"""
 	owned_evolved_balls.clear()
 	owned_fused_balls.clear()
 	active_evolved_type = EvolvedBallType.NONE

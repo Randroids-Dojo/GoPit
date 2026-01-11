@@ -1,6 +1,7 @@
-[gd_scene load_steps=23 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=24 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/ui/passive_slots_display.gd" id="24_passive_slots"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
 [ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
 [ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
@@ -188,6 +189,22 @@ offset_bottom = 11.5
 grow_vertical = 2
 text = "Lv.1"
 vertical_alignment = 1
+
+[node name="PassiveSlotsDisplay" type="HBoxContainer" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -130.0
+offset_top = -280.0
+offset_right = 130.0
+offset_bottom = -220.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+script = ExtResource("24_passive_slots")
 
 [node name="ComboLabel" type="Label" parent="UI/HUD"]
 layout_mode = 1
