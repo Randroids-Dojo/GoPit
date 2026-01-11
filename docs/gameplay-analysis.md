@@ -12,7 +12,7 @@ Track progress with [x] marks:
 - [x] Ball speed per level
 - [x] Fire cooldown / rate
 - [x] Bounce damage scaling (+X% per bounce?)
-- [ ] Enemy base HP (slime, bat, crab)
+- [x] Enemy base HP (slime, bat, crab)
 - [ ] Enemy HP scaling per wave
 - [ ] Enemy speed scaling per wave
 - [ ] XP per gem (base value)
@@ -337,3 +337,76 @@ if _bounce_count > max_bounces:
 4. **Increase max bounces** - Allow more bounces to enable the strategy
 
 **Recommendation**: Implement bounce damage scaling as a **character passive** (similar to BallxPit's Repentant). This adds strategic depth without changing default gameplay. Also consider increasing max_bounces from 10 to 20-30 to allow diagonal shot strategies.
+
+---
+
+### 5. Enemy Base HP
+**Iteration**: 5 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Ball X Pit Wiki | Fandom](https://ballpit.fandom.com/wiki/Ball_X_Pit_Wiki)
+- [Ball x Pit Wiki](https://ballxpit.org/)
+
+**Key Findings**:
+- **No specific enemy HP values documented** in wikis
+- Wikis focus on character stats, ball evolutions, builds
+- Enemy HP appears to scale with progression
+- BallxPit has various enemy types (slimes, bats, etc.)
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_enemy_hp.py`
+
+**Base HP by Enemy Type**:
+| Enemy | Base HP | Speed | XP | Notes |
+|-------|---------|-------|-----|-------|
+| Slime | 10 | 1.0x | 1.0x | Default stats |
+| Bat | 10 | 1.3x | 1.2x | Fast, zigzag movement |
+| Crab | 15 | 0.6x | 1.3x | Tanky (1.5x HP), slow |
+
+**HP with Wave Scaling (+10% per wave)**:
+| Wave | Slime | Bat | Crab |
+|------|-------|-----|------|
+| 1 | 10 | 10 | 15 |
+| 2 | 11 | 11 | 16 |
+| 3 | 12 | 12 | 18 |
+| 5 | 14 | 14 | 21 |
+| 10 | 19 | 19 | 28 |
+| 20 | 29 | 29 | 43 |
+
+**Hits to Kill (10 damage Basic Ball)**:
+| Wave | Slime | Bat | Crab |
+|------|-------|-----|------|
+| 1 | 1 | 1 | 2 |
+| 2 | 2 | 2 | 2 |
+| 5 | 2 | 2 | 3 |
+| 10 | 2 | 2 | 3 |
+
+**Enemy Design Philosophy**:
+- Simple HP values (10-15 base)
+- Variety through HP/speed tradeoffs
+- Crab: tankier but slower (requires more hits)
+- Bat: same HP but faster (harder to hit)
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Base HP Range | Unknown | 10-15 | GoPit values reasonable |
+| Enemy Variety | Multiple types | 3 types (Slime, Bat, Crab) | Room for expansion |
+| HP/Speed Tradeoff | Presumed | Crab=tanky/slow, Bat=normal/fast | Aligned concept |
+
+#### Alignment Recommendation
+
+**Priority**: P3 (Low)
+
+**Assessment**: Without BallxPit enemy HP data, hard to compare directly. GoPit's simple HP values (10-15) seem reasonable for mobile game pacing. Enemy variety through HP/speed tradeoffs is standard design.
+
+**Options**:
+1. **Keep current** - Simple values work for fast-paced mobile gameplay
+2. **Add more enemy types** - Could add armored/shielded variants
+3. **Add elemental weaknesses** - Fire enemies weak to ice, etc.
+
+**Recommendation**: Keep current HP values. Focus on adding more enemy types for variety rather than adjusting base HP. Consider elemental weakness system for future depth.
