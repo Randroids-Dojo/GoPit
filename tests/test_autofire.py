@@ -5,12 +5,12 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_autofire_initially_disabled(game):
-    """Test that autofire is disabled by default."""
+async def test_autofire_initially_enabled(game):
+    """Test that autofire is enabled by default for smoother gameplay."""
     fire_btn = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
 
     autofire = await game.get_property(fire_btn, "autofire_enabled")
-    assert autofire is False, "Autofire should be disabled by default"
+    assert autofire is True, "Autofire should be enabled by default"
 
 
 @pytest.mark.asyncio
@@ -18,19 +18,19 @@ async def test_toggle_autofire_method(game):
     """Test that toggle_autofire method toggles the state."""
     fire_btn = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
 
-    # Initially off
+    # Initially on (default)
     autofire = await game.get_property(fire_btn, "autofire_enabled")
-    assert autofire is False
-
-    # Toggle on
-    await game.call(fire_btn, "toggle_autofire")
-    autofire = await game.get_property(fire_btn, "autofire_enabled")
-    assert autofire is True, "Autofire should be enabled after toggle"
+    assert autofire is True
 
     # Toggle off
     await game.call(fire_btn, "toggle_autofire")
     autofire = await game.get_property(fire_btn, "autofire_enabled")
-    assert autofire is False, "Autofire should be disabled after second toggle"
+    assert autofire is False, "Autofire should be disabled after toggle"
+
+    # Toggle on
+    await game.call(fire_btn, "toggle_autofire")
+    autofire = await game.get_property(fire_btn, "autofire_enabled")
+    assert autofire is True, "Autofire should be enabled after second toggle"
 
 
 @pytest.mark.asyncio

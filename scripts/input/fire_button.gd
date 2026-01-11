@@ -16,7 +16,7 @@ signal autofire_toggled(enabled: bool)
 
 var is_ready: bool = true
 var cooldown_timer: float = 0.0
-var autofire_enabled: bool = false
+var autofire_enabled: bool = true  # Default ON for smoother gameplay
 var _shake_tween: Tween
 
 
