@@ -5452,5 +5452,240 @@ Main Menu → Character Select → Game (always stage 1)
 
 - **GoPit-26ll**: Add 4 more stages (P2)
 - **GoPit-kohr**: Implement meta-progression city builder (P3)
-- Needs new bead: Level select screen implementation
+- **GoPit-ptho**: Level select screen implementation (P2)
+- **GoPit-euwy**: Gear currency system (P2)
+
+---
+
+## Appendix BI: Fission/Fusion/Evolution Deep Comparison (NEW)
+
+Research sources:
+- [Deltia's Gaming - Fission, Fusion, Evolution Guide](https://deltiasgaming.com/ball-x-pit-fission-fusion-and-evolution-guide/)
+- [Steam Community - Fission Chances Discussion](https://steamcommunity.com/app/2062430/discussions/0/595163560549971834/)
+- [Ball X Pit Wiki - Balls](https://ballpit.fandom.com/wiki/Balls)
+
+### BallxPit Equipment Slot System
+
+**8 Equipment Slots Total:**
+| Slot Type | Count | Max Level | Notes |
+|-----------|-------|-----------|-------|
+| Ball slots | 4 | L3 | Different ball types fired SIMULTANEOUSLY |
+| Perk slots | 4 | L3 | Passive abilities |
+
+This is the **fundamental architecture difference** - BallxPit fires 4 ball types at once, GoPit fires 1.
+
+### BallxPit Fission (Confirmed Details)
+
+**From Deltia's Gaming:**
+> "Fission serves the primary purpose of randomly upgrading any of your currently equipped balls or perks by one level. There is a maximum cap of five items you can upgrade through a single Fission."
+
+**Key Mechanics:**
+```
+FISSION MECHANICS:
+┌───────────────────────────────────────────────────────────┐
+│  • Upgrades balls AND/OR perks (8 slots total)            │
+│  • Random 1-5 upgrades per Fission                        │
+│  • Each upgrade = +1 level (max L3)                       │
+│  • Number depends on: slot count × current levels         │
+│  • If all 8 slots maxed → Fission option DISAPPEARS       │
+│  • Only reappears after Fusion/Evolution frees a slot     │
+└───────────────────────────────────────────────────────────┘
+```
+
+**Candle Maker Building Upgrades:**
+- Default range: 1-5 upgrades
+- Upgrade 1: Range becomes 2-5
+- Upgrade 2: Range becomes 3-5
+
+### BallxPit Fusion (Confirmed Details)
+
+**From Deltia's Gaming:**
+> "Fusion is the process of combining two balls and their properties to create something entirely new, unique, and more powerful. The requirement for this is that both balls must be at their maximum level of 3. Once the balls are fused, they can no longer be used for fusion again."
+
+**Key Mechanics:**
+- Requires: 2 balls at L3
+- Creates: New fused ball with combined properties
+- Result: Fused ball CANNOT be fused again
+- Opens: One slot (2 L3 balls → 1 fused ball)
+
+### BallxPit Evolution (Confirmed Details)
+
+**From Deltia's Gaming:**
+> "Evolution is used to combine two balls to create a new evolved ball. What differentiates this from Fusion is that you cannot combine any two balls at random. Both balls need to be compatible and at their maximum level of 3."
+
+**Key Differences: Fusion vs Evolution:**
+| Aspect | Fusion | Evolution |
+|--------|--------|-----------|
+| Ball requirement | Any 2 L3 balls | Specific recipe |
+| Result | Combined properties | New unique ball |
+| Slot effect | Frees 1 slot | Frees 1 slot |
+| Total recipes | Any combo | 42 specific recipes |
+
+### GoPit Implementation Analysis
+
+**Fission (fusion_registry.gd:304-334):**
+```gdscript
+func apply_fission() -> Dictionary:
+    # Random number of upgrades (1-3)  ← WRONG: Should be 1-5
+    var num_upgrades := randi_range(1, 3)
+
+    for i in num_upgrades:
+        # 60% chance to level up owned ball, 40% chance new ball
+        # NOTE: No perk upgrades - only balls
+```
+
+**Critical Gaps:**
+| Aspect | GoPit | BallxPit | Status |
+|--------|-------|----------|--------|
+| **Upgrade range** | 1-3 | 1-5 | **WRONG** |
+| **Upgrades perks** | No | Yes | **MISSING** |
+| **Ball slots** | 1 active | 4 simultaneous | **CRITICAL** |
+| **When all maxed** | Gives XP | Option hidden | Different |
+| **Building upgrades** | N/A | Candle Maker | **MISSING** |
+
+**Fusion Implementation:**
+- ✅ Requires 2 L3 balls
+- ✅ Creates combined ball with both effects
+- ⚠️ Single active ball (not 4 slots)
+
+**Evolution Implementation:**
+- ✅ Recipe-based combinations
+- ✅ Creates unique evolved balls
+- ❌ Only 4 evolved types vs BallxPit's 42
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P0** | Implement 4-ball slot system | Core architecture change |
+| **P1** | Increase fission range to 1-5 | Match BallxPit |
+| **P2** | Add perk system | 4 perk slots, fission upgrades them |
+| **P2** | Add 38+ more evolved balls | Match BallxPit's 42 |
+| **P3** | Add Candle Maker building | Improves fission range |
+
+---
+
+## Appendix BJ: Fast Mode and Difficulty Scaling (NEW)
+
+Research sources:
+- [Ball x Pit Fast Mode Guide](https://ballxpit.org/guides/fast-mode/)
+- [New Game Plus Guide](https://ballxpit.org/guides/new-game-plus/)
+- [Steam Community - Speed Scaling](https://steamcommunity.com/app/2062430/discussions/0/624436409752945056/)
+
+### BallxPit Speed/Difficulty System
+
+**4 Speed Tiers (toggleable mid-game):**
+| Speed | Multiplier | Spawn Rate | Loot Quality | Run Time |
+|-------|------------|------------|--------------|----------|
+| Normal | 1.0x | Standard | Standard | 15-20 min |
+| Fast | 1.5x | Faster | +25% | 10-13 min |
+| Fast+2 | 2.5x | Aggressive | +50% | 8-10 min |
+| Fast+3 | 4.0x+ | Overwhelming | +100% | 6-8 min |
+
+**Toggle Controls:**
+- PS5: R1
+- Xbox: RB
+- PC: R key
+
+**Strategic Speed Switching:**
+```
+RECOMMENDED SPEED STRATEGY:
+┌───────────────────────────────────────────────────────────┐
+│  Waves 1-10:  Speed 3 (farming easy waves quickly)        │
+│  Waves 10-15: Speed 2 (moderate difficulty)               │
+│  Boss waves:  Speed 1 (reaction time for dodging)         │
+│  Laser sections: Speed 1 (precision needed)               │
+└───────────────────────────────────────────────────────────┘
+```
+
+### New Game Plus Scaling
+
+- All enemies: +50% HP
+- All enemies: +50% damage
+- Scales exponentially in late-game
+
+### GoPit Current Difficulty System
+
+**No speed toggle system.**
+
+```gdscript
+# game_manager.gd
+var character_speed_mult: float = 1.0  # Affects character only, not game
+
+# Difficulty scales implicitly via wave count
+# No player-controllable speed/difficulty setting
+```
+
+### Comparison Table
+
+| Feature | GoPit | BallxPit | Gap |
+|---------|-------|----------|-----|
+| **Speed toggle** | None | 4 levels (R key) | **MISSING** |
+| **Loot scaling** | None | +25% to +100% | **MISSING** |
+| **Risk/reward** | Fixed | Player choice | **MISSING** |
+| **NG+ mode** | None | +50% HP/damage | **MISSING** |
+| **Mid-game adjustment** | None | Dynamic switching | **MISSING** |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add speed toggle (1x, 1.5x, 2x) | Core gameplay feature |
+| **P2** | Scale loot with speed | Risk/reward balance |
+| **P2** | Add NG+ mode | Post-victory challenge |
+
+---
+
+## Appendix BK: Status Effect Stacking Mechanics (NEW)
+
+Research sources:
+- [Advanced Mechanics Guide](https://ballxpit.org/guides/advanced-mechanics/)
+
+### BallxPit Status Effect Stack Caps
+
+| Effect | Max Stacks | Damage Amp | Notes |
+|--------|------------|------------|-------|
+| Radiation | 5 | +10%/stack | +50% total at max |
+| Frostburn | 4 | +25% flat | Not per stack |
+| Bleed | 24 | N/A | Hemorrhage at 12+ |
+| Burn | 5 | N/A | DoT |
+| Poison | 8 | N/A | DoT |
+| Disease | 8 | N/A | DoT, 6s duration |
+
+**Hemorrhage Mechanic (Critical):**
+```
+At 12+ bleed stacks:
+→ Triggers Hemorrhage explosion
+→ Deals 20% of enemy's CURRENT HP as damage
+→ More valuable on full-health targets
+→ Stacks with damage amplification (+75% amp = 35% current HP)
+```
+
+### Damage Amplification Math
+
+```
+Nuclear Bomb (radiation): +50% damage taken
+Frozen Flame (frostburn): +25% damage taken
+Combined: +75% amplification
+
+Example: 36 base damage × 1.75 = 63 damage
+Applies to ALL damage sources including DoTs
+```
+
+### GoPit Status Effect Gaps
+
+| Mechanic | BallxPit | GoPit | Status |
+|----------|----------|-------|--------|
+| **Stack caps** | Defined per effect | None | **MISSING** |
+| **Damage amp (Freeze)** | +25% | None | **GoPit-efld** |
+| **Radiation** | +10%/stack | N/A | **MISSING** |
+| **Hemorrhage** | 20% HP at 12 stacks | None | **MISSING** |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Add Freeze damage amp | GoPit-efld |
+| **P2** | Add stack caps | Prevent infinite stacking |
+| **P2** | Add Hemorrhage | 12+ bleed = % HP damage |
 
