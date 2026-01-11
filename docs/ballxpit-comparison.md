@@ -8847,3 +8847,944 @@ This affects everything: builds, combos, fission value, strategic depth.
 
 **Comparison complete. 82 beads ready for implementation.**
 
+---
+
+## Appendix CT: Game State and Progression System
+
+**Source**: `scripts/autoload/game_manager.gd` (467 lines)
+
+### Game States
+
+GoPit has 6 game states:
+```gdscript
+enum GameState { MENU, PLAYING, LEVEL_UP, PAUSED, GAME_OVER, VICTORY }
+```
+
+| State | Description |
+|-------|-------------|
+| MENU | Character select / main menu |
+| PLAYING | Active gameplay |
+| LEVEL_UP | Card selection overlay (pauses game) |
+| PAUSED | Pause menu open |
+| GAME_OVER | Run ended (death) |
+| VICTORY | Completed all 4 stages |
+
+### XP and Leveling System
+
+```gdscript
+func _calculate_xp_requirement(level: int) -> int:
+    return 100 + (level - 1) * 50
+
+// Level 1: 100 XP
+// Level 2: 150 XP
+// Level 3: 200 XP
+// Level 10: 550 XP
+```
+
+**XP Sources:**
+- Enemy kills (base XP × combo multiplier × XP multiplier)
+- Gem collection
+
+**Comparison to BallxPit:**
+- BallxPit uses gear/star system for permanent progression
+- GoPit's XP is per-run only (like roguelite)
+- BallxPit has level select with increasing difficulty stars
+
+### Combo System (GoPit Unique)
+
+```gdscript
+const COMBO_TIMEOUT := 2.0  # seconds to maintain combo
+var combo_count: int = 0    # Current combo count
+var combo_timer: float = 0.0
+
+func get_combo_multiplier() -> float:
+    if combo_count >= 10: return 2.0
+    if combo_count >= 5:  return 1.5
+    return 1.0
+```
+
+**Combo breaks on:**
+- Player taking damage
+- 2 seconds without a kill
+
+**GoPit ADVANTAGE**: BallxPit doesn't have a combo system. This adds strategic depth.
+
+### Ultimate Ability System
+
+```gdscript
+const ULTIMATE_CHARGE_MAX: float = 100.0
+var ultimate_charge: float = 0.0
+
+func add_ultimate_charge(amount: float) -> void
+func use_ultimate() -> bool
+func is_ultimate_ready() -> bool
+```
+
+- Ultimate charges from kills/damage
+- Visual ring indicator in HUD
+- Pulses when ready
+
+**Comparison**: BallxPit has character-specific ultimate abilities. GoPit's implementation is simpler but functional.
+
+### Session Stats Tracked
+
+```gdscript
+var stats := {
+    "enemies_killed": 0,
+    "balls_fired": 0,
+    "damage_dealt": 0,
+    "gems_collected": 0,
+    "time_survived": 0.0
+}
+```
+
+### High Score Persistence
+
+```gdscript
+const HIGH_SCORE_PATH := "user://highscore.save"
+var high_score_wave: int = 0
+var high_score_level: int = 0
+var total_victories: int = 0
+```
+
+Saved as JSON. Simple but effective.
+
+### Assessment
+
+| Aspect | GoPit | BallxPit | Notes |
+|--------|-------|----------|-------|
+| Game states | 6 | Similar | Functional |
+| XP system | Per-run | Permanent | Different design |
+| Combo system | ✅ YES | ❌ NO | **GoPit advantage** |
+| Ultimate | Generic | Per-character | Room to expand |
+| Stats | 5 tracked | More detailed | Adequate |
+
+**Rating**: ⭐⭐⭐⭐ SOLID FOUNDATION
+
+---
+
+## Appendix CU: Biome/Stage System
+
+**Source**: `scripts/autoload/stage_manager.gd` (82 lines)
+
+### Four Biomes
+
+| # | Name | Background | Wall | Theme |
+|---|------|------------|------|-------|
+| 1 | The Pit | Dark purple | Blue-gray | Starting area |
+| 2 | Frozen Depths | Dark blue | Ice blue | Cold theme |
+| 3 | Burning Sands | Brown-red | Orange | Fire theme |
+| 4 | Final Descent | Dark crimson | Blood red | Final boss |
+
+### Stage Structure
+
+```gdscript
+var waves_before_boss: int = 10  # Same for all biomes
+
+// 4 stages × 10 waves = 40 waves to victory
+// Plus 4 boss fights
+```
+
+### Boss Wave Detection
+
+```gdscript
+func is_boss_wave() -> bool:
+    if not current_biome:
+        return false
+    return wave_in_stage >= current_biome.waves_before_boss
+```
+
+### Stage Progression Flow
+
+```
+Stage 1: The Pit (10 waves) → Boss → Stage Complete
+Stage 2: Frozen Depths (10 waves) → Boss → Stage Complete
+Stage 3: Burning Sands (10 waves) → Boss → Stage Complete
+Stage 4: Final Descent (10 waves) → Final Boss → VICTORY
+```
+
+### Endless Mode
+
+After victory, player can choose "Continue" for endless mode:
+```gdscript
+func enable_endless_mode() -> void:
+    is_endless_mode = true
+    current_state = GameState.PLAYING
+```
+
+**GoPit ADVANTAGE**: BallxPit community has requested endless mode!
+
+### Biome Resource Structure
+
+```gdscript
+class_name Biome
+extends Resource
+
+@export var biome_name: String
+@export var background_color: Color
+@export var wall_color: Color
+@export var waves_before_boss: int = 10
+
+# Future: hazards, enemy variants, music
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Total stages | 4 | 24+ (6 worlds × 4+ levels) |
+| Waves per stage | 10 | 3-5 per level |
+| Level select | ❌ No | ✅ Yes with stars |
+| Difficulty stars | ❌ No | ⭐⭐⭐ per level |
+| World themes | 4 biomes | 6+ worlds |
+| Endless mode | ✅ Yes | ❌ No (requested!) |
+
+### What's Missing
+
+1. **Level Select Screen** - BallxPit lets you replay any unlocked level
+2. **Star/Gear System** - Difficulty scaling per level
+3. **Biome-Specific Hazards** - Lava pools, ice patches, etc.
+4. **Biome-Specific Enemies** - Ice slimes in Frozen Depths, etc.
+
+### Assessment
+
+| Aspect | Status | Priority |
+|--------|--------|----------|
+| Basic progression | ✅ Working | - |
+| Visual themes | ✅ Implemented | - |
+| Boss wave trigger | ✅ Working | - |
+| Level select | ❌ Missing | P1 |
+| Difficulty scaling | ❌ Missing | P1 |
+| Biome hazards | ❌ Missing | P2 |
+
+**Rating**: ⭐⭐⭐ FUNCTIONAL BUT NEEDS EXPANSION
+
+---
+
+## Appendix CV: Character Passives Deep Dive
+
+**Source**: `scripts/autoload/game_manager.gd`, `resources/characters/*.tres`
+
+### Six Character Passives
+
+| Character | Passive | Effect | Starting Ball |
+|-----------|---------|--------|---------------|
+| Rookie | Quick Learner | +10% XP gain | Normal (0) |
+| Pyro | Inferno | +20% fire dmg, +25% vs burning | Fire (1) |
+| Frost Mage | Shatter | +50% vs frozen, +30% freeze duration | Ice (2) |
+| Gambler | Jackpot | 3x crit (vs 2x), +15% crit chance | Lightning (3) |
+| Tactician | Squad Leader | +2 baby balls, +30% baby spawn rate | Normal (0) |
+| Vampire | Lifesteal | 5% heal on dmg, 20% health gem chance | Normal (0) |
+
+### Passive Implementation
+
+All passives have dedicated getter methods:
+
+```gdscript
+func get_xp_multiplier() -> float:
+    if active_passive == Passive.QUICK_LEARNER: return 1.1
+    return 1.0
+
+func get_crit_damage_multiplier() -> float:
+    if active_passive == Passive.JACKPOT: return 3.0
+    return 2.0
+
+func get_bonus_crit_chance() -> float:
+    if active_passive == Passive.JACKPOT: return 0.15
+    return 0.0
+
+func get_fire_damage_multiplier() -> float:
+    if active_passive == Passive.INFERNO: return 1.2
+    return 1.0
+
+func get_damage_vs_burning() -> float:
+    if active_passive == Passive.INFERNO: return 1.25
+    return 1.0
+
+func get_damage_vs_frozen() -> float:
+    if active_passive == Passive.SHATTER: return 1.5
+    return 1.0
+
+func get_freeze_duration_bonus() -> float:
+    if active_passive == Passive.SHATTER: return 1.3
+    return 1.0
+
+func get_lifesteal_percent() -> float:
+    if active_passive == Passive.LIFESTEAL: return 0.05
+    return 0.0
+
+func get_health_gem_chance() -> float:
+    if active_passive == Passive.LIFESTEAL: return 0.2
+    return 0.0
+
+func get_extra_baby_balls() -> int:
+    if active_passive == Passive.SQUAD_LEADER: return 2
+    return 0
+
+func get_baby_ball_rate_bonus() -> float:
+    if active_passive == Passive.SQUAD_LEADER: return 0.3
+    return 0.0
+```
+
+### Character Stats System
+
+Six stats affect gameplay:
+
+```gdscript
+var max_hp = int(100 * character.endurance)        # HP pool
+var character_damage_mult = character.strength     # Damage dealt
+var character_speed_mult = character.speed         # Ball speed
+var character_crit_mult = character.dexterity      # Crit chance
+var character_leadership_mult = character.leadership  # Baby ball strength
+var character_intelligence_mult = character.intelligence  # Status effect duration
+```
+
+### Character Stat Ranges
+
+| Character | END | STR | LDR | SPD | DEX | INT |
+|-----------|-----|-----|-----|-----|-----|-----|
+| Rookie | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| Pyro | 0.8 | 1.4 | 0.9 | 1.0 | 1.0 | 0.9 |
+| Frost Mage | 0.9 | 0.9 | 1.0 | 0.9 | 0.8 | 1.5 |
+| Gambler | 0.8 | 1.0 | 0.9 | 1.1 | 1.6 | 0.8 |
+| Tactician | 1.1 | 0.8 | 1.6 | 0.9 | 0.9 | 1.1 |
+| Vampire | 1.5 | 1.0 | 0.8 | 1.0 | 1.0 | 0.9 |
+
+### Unlock System
+
+```gdscript
+is_unlocked = true          # Most characters
+unlock_requirement = ""     # No requirement
+
+// Vampire is locked:
+is_unlocked = false
+unlock_requirement = "Survive to wave 20"
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Characters | 6 | 16 |
+| Passives per character | 1 | 1 (but different system) |
+| Unlockable passives | 0 | 59! |
+| Stats system | 6 stats | Similar |
+| Starting ball | ✅ Yes | ✅ Yes |
+| Unlock requirements | Simple | Complex achievements |
+
+### The "59 Passives" Gap
+
+BallxPit has 59 unlockable passives that can be equipped by ANY character:
+- Some are character-specific unlocks
+- Some are achievement-based
+- Creates massive build variety
+
+GoPit's 6 fixed passives are character-locked. This is a major difference.
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Passive implementation | ✅ Clean | Well-designed getters |
+| Character variety | ⚠️ Okay | 6 is a start |
+| Passive variety | ❌ Limited | 6 vs 59 |
+| Synergy potential | ⚠️ Some | Pyro+Fire, Frost+Ice |
+| Unlock system | ⚠️ Basic | Only 1 locked character |
+
+**Rating**: ⭐⭐⭐⭐ WELL IMPLEMENTED, NEEDS MORE CONTENT
+
+---
+
+## Appendix CW: Upgrade System (Level-Up Cards)
+
+**Source**: `scripts/ui/level_up_overlay.gd` (312 lines)
+
+### Three Card Types
+
+```gdscript
+enum CardType {
+    PASSIVE,      # Traditional stat upgrades
+    NEW_BALL,     # Acquire a new ball type
+    LEVEL_UP_BALL # Level up an owned ball (L1->L2 or L2->L3)
+}
+```
+
+### Eleven Passive Upgrades
+
+| Upgrade | Effect | Max Stacks |
+|---------|--------|------------|
+| Power Up | +5 Ball Damage | 10 |
+| Quick Fire | -0.1s Cooldown | 4 |
+| Vitality | +25 Max HP | 10 |
+| Multi Shot | +1 Ball per shot | 3 |
+| Velocity | +100 Ball Speed | 5 |
+| Piercing | Pierce +1 enemy | 3 |
+| Ricochet | +5 wall bounces | 4 |
+| Critical Hit | +10% crit chance | 5 |
+| Magnetism | Gems attracted | 3 |
+| Heal | Restore 30 HP | 99 |
+| Leadership | +20% Baby Ball rate | 5 |
+
+### Card Generation Logic
+
+```gdscript
+func _randomize_cards() -> void:
+    var pool: Array[Dictionary] = []
+
+    # 1. Add unowned ball types
+    var unowned := BallRegistry.get_unowned_ball_types()
+    for ball_type in unowned:
+        pool.append({"card_type": CardType.NEW_BALL, "ball_type": ball_type})
+
+    # 2. Add upgradeable balls (below L3)
+    var upgradeable := BallRegistry.get_upgradeable_balls()
+    for ball_type in upgradeable:
+        pool.append({"card_type": CardType.LEVEL_UP_BALL, "ball_type": ball_type})
+
+    # 3. Add passives not at max stacks
+    for upgrade_type in UPGRADE_DATA:
+        if current_stacks < max_stacks:
+            pool.append({"card_type": CardType.PASSIVE, "upgrade_type": upgrade_type})
+
+    pool.shuffle()
+    _available_cards = pool.slice(0, 3)  # Show 3 cards
+```
+
+### Ball Level-Up Effects
+
+| Level | Bonus | Special |
+|-------|-------|---------|
+| L1 | Base stats | - |
+| L2 | +50% damage & speed | White ring indicator |
+| L3 | +100% stats total | Gold ring (Fusion ready!) |
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Passive upgrades | 11 | Similar count |
+| Ball acquisition | ✅ Card-based | ✅ Also card-based |
+| Ball leveling | ✅ L1→L2→L3 | ✅ Similar |
+| Stack limits | ✅ Per-upgrade | ✅ Similar |
+| Card choice | 3 options | 3 options |
+
+**Key Alignment**: This is very similar to BallxPit's roguelike upgrade system!
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Passive variety | ✅ Good | 11 upgrades |
+| Ball integration | ✅ Excellent | Acquire & level balls |
+| Stack tracking | ✅ Working | Shows count |
+| Card generation | ✅ Smart | Filters maxed upgrades |
+| Upgrade application | ✅ Clean | Direct method calls |
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT IMPLEMENTATION
+
+---
+
+## Appendix CX: Ball Spawner and Firing Mechanics
+
+**Source**: `scripts/entities/ball_spawner.gd` (176 lines)
+
+### Core Firing Properties
+
+```gdscript
+var ball_damage: int = 10     # Base damage
+var ball_speed: float = 800.0 # Base speed
+var ball_count: int = 1       # Balls per shot (Multi Shot upgrade)
+var ball_spread: float = 0.15 # Radians between multi-shot balls
+var pierce_count: int = 0     # Enemies to pierce through
+var max_bounces: int = 10     # Wall bounces before despawn
+var crit_chance: float = 0.0  # Critical hit chance
+var max_balls: int = 30       # Simultaneous ball limit
+```
+
+### Multi-Shot Implementation
+
+```gdscript
+func fire() -> void:
+    _enforce_ball_limit(ball_count)
+
+    for i in range(ball_count):
+        var spread_offset: float = 0.0
+        if ball_count > 1:
+            spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
+
+        var dir := current_aim_direction.rotated(spread_offset)
+        _spawn_ball(dir)
+```
+
+With Multi Shot x3: Fires 3 balls in a fan pattern.
+
+### Ball Limit Enforcement
+
+```gdscript
+func _enforce_ball_limit(balls_to_add: int) -> void:
+    var need_to_remove := balls_to_add - available_slots
+
+    if need_to_remove > 0:
+        # Despawn oldest balls first
+        for i in range(need_to_remove):
+            var oldest := balls_container.get_child(0)
+            oldest.despawn()
+```
+
+**Design Decision**: FIFO despawn prevents screen clutter.
+
+### BallRegistry Integration
+
+```gdscript
+if BallRegistry:
+    var active_type: int = BallRegistry.active_ball_type
+    ball.damage = BallRegistry.get_damage(active_type) + _damage_bonus
+    ball.speed = BallRegistry.get_speed(active_type) + _speed_bonus
+    ball.ball_level = BallRegistry.get_ball_level(active_type)
+    ball.set_ball_type(_registry_to_ball_type(active_type))
+```
+
+Bonus stats from upgrades stack with registry base stats.
+
+### BallRegistry Type Mapping
+
+```gdscript
+// BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6
+// ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
+
+match registry_type:
+    0: return 0  # BASIC -> NORMAL
+    1: return 1  # BURN -> FIRE
+    2: return 2  # FREEZE -> ICE
+    3: return 4  # POISON -> POISON (index differs!)
+    4: return 5  # BLEED -> BLEED
+    5: return 3  # LIGHTNING -> LIGHTNING (index differs!)
+    6: return 6  # IRON -> IRON
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Balls per shot | 1 (base) + Multi Shot | 4-5 SLOTS ALWAYS |
+| Piercing | ✅ Upgrade | ✅ Upgrade |
+| Ricochet | ✅ Upgrade | ✅ Similar |
+| Ball limit | 30 | Unknown |
+| Spread pattern | Fan | Fan |
+
+### The P0 Gap Explained
+
+```
+╔════════════════════════════════════════════════════════════════════════╗
+║  GOPIT:     1 ball type fires at a time                                ║
+║             [Normal] → fires 1-4 normal balls                          ║
+║                                                                        ║
+║  BALLXPIT:  4-5 ball types fire SIMULTANEOUSLY                         ║
+║             [Fire][Ice][Poison][Lightning][Normal] → 5 balls together  ║
+╚════════════════════════════════════════════════════════════════════════╝
+```
+
+GoPit's "Multi Shot" adds more balls of the SAME type.
+BallxPit's slot system fires DIFFERENT types together.
+
+This is the fundamental mechanical difference.
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Base firing | ✅ Working | Clean implementation |
+| Multi-shot | ✅ Working | Fan spread |
+| Piercing | ✅ Working | Per-ball pierce count |
+| Ball limit | ✅ Smart | FIFO despawn |
+| Registry integration | ✅ Clean | Type mapping works |
+| Slot system | ❌ MISSING | P0 priority |
+
+**Rating**: ⭐⭐⭐⭐ SOLID, BUT MISSING BALL SLOTS
+
+---
+
+## Appendix CY: Player Movement System
+
+**Source**: `scripts/entities/player.gd` (81 lines)
+
+### Movement Properties
+
+```gdscript
+@export var move_speed: float = 300.0
+@export var player_radius: float = 35.0
+@export var body_color: Color = Color(0.3, 0.7, 1.0, 0.9)
+@export var outline_color: Color = Color(0.5, 0.9, 1.0, 1.0)
+
+var movement_input: Vector2 = Vector2.ZERO
+var last_aim_direction: Vector2 = Vector2.UP
+```
+
+### Movement Implementation
+
+```gdscript
+func _physics_process(_delta: float) -> void:
+    # Apply movement with character speed multiplier
+    var effective_speed := move_speed * GameManager.character_speed_mult
+    velocity = movement_input * effective_speed
+    move_and_slide()
+
+    # Clamp to bounds
+    position.x = clampf(position.x, bounds_min.x, bounds_max.x)
+    position.y = clampf(position.y, bounds_min.y, bounds_max.y)
+
+    # Track last direction for aiming
+    if movement_input.length() > 0.1:
+        last_aim_direction = movement_input.normalized()
+```
+
+### Character Speed Integration
+
+Speed is multiplied by `GameManager.character_speed_mult`:
+- Rookie: 1.0× (300 px/s)
+- Gambler: 1.1× (330 px/s)
+- Frost Mage: 0.9× (270 px/s)
+
+### Damage Handling
+
+```gdscript
+func take_damage(amount: int) -> void:
+    damaged.emit(amount)
+    GameManager.take_damage(amount)
+    _flash_damage()
+
+func _flash_damage() -> void:
+    modulate = Color(1.5, 0.5, 0.5)  # Red flash
+    var tween := create_tween()
+    tween.tween_property(self, "modulate", original, 0.2)
+```
+
+**Plus**: Combo resets on damage (in GameManager).
+
+### Custom Drawing
+
+```gdscript
+func _draw() -> void:
+    draw_circle(Vector2.ZERO, player_radius, body_color)
+    draw_arc(Vector2.ZERO, player_radius, 0, TAU, 32, outline_color, 2.0)
+
+    # Direction indicator
+    var indicator_length := player_radius * 0.6
+    draw_line(Vector2.ZERO, last_aim_direction * indicator_length, outline_color, 3.0)
+```
+
+Simple but effective visual design.
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Movement type | Free roam | Free roam |
+| Bounds | Soft clamp | Similar |
+| Damage feedback | Red flash + shake | Similar |
+| Visual style | Circle + direction | Similar |
+| I-frames | ❌ None | ? Unknown |
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Movement | ✅ Smooth | CharacterBody2D |
+| Bounds | ✅ Working | Soft clamp |
+| Damage | ✅ Working | Flash + shake |
+| Drawing | ✅ Clean | Procedural |
+| Character integration | ✅ Working | Speed multiplier |
+
+**Rating**: ⭐⭐⭐⭐ SOLID IMPLEMENTATION
+
+---
+
+## Appendix CZ: Gem and Magnetism System
+
+**Source**: `scripts/entities/gem.gd` (120 lines)
+
+### Gem Properties
+
+```gdscript
+@export var xp_value: int = 10
+@export var gem_color: Color = Color(0.2, 0.9, 0.5)  # Green
+@export var radius: float = 14.0
+@export var fall_speed: float = 150.0
+@export var sparkle_speed: float = 3.0
+@export var despawn_time: float = 10.0
+
+const MAGNETISM_SPEED: float = 400.0
+const COLLECTION_RADIUS: float = 40.0
+const HEALTH_GEM_HEAL: int = 10
+```
+
+### Two Gem Types
+
+| Type | Color | Effect |
+|------|-------|--------|
+| XP Gem | Green | Grants 10 XP |
+| Health Gem | Pink/Red | Heals 10 HP, no XP |
+
+### Magnetism System
+
+```gdscript
+func _process(delta: float) -> void:
+    var magnetism_range := GameManager.gem_magnetism_range
+
+    if magnetism_range > 0 and _player:
+        var distance := global_position.distance_to(_player.global_position)
+
+        if distance < magnetism_range:
+            _being_attracted = true
+            var direction := (_player.global_position - global_position).normalized()
+            # Speed increases as gem gets closer
+            var pull_strength := 1.0 - (distance / magnetism_range)
+            var current_speed := lerpf(fall_speed, MAGNETISM_SPEED, pull_strength)
+            global_position += direction * current_speed * delta
+```
+
+Magnetism upgrade adds +200 range per stack (max 3 = 600 range).
+
+### Visual Effects
+
+```gdscript
+func _draw() -> void:
+    # Sparkle effect
+    var sparkle := (sin(_time * sparkle_speed) + 1.0) * 0.5
+    var current_color := gem_color.lightened(sparkle * 0.3)
+
+    # Glow when attracted
+    if _being_attracted:
+        draw_circle(Vector2.ZERO, radius * 1.5, Color(0.5, 1.0, 0.5, 0.2))
+
+    # Diamond shape
+    var points := [Vector2(0, -radius), Vector2(radius * 0.7, 0),
+                   Vector2(0, radius), Vector2(-radius * 0.7, 0)]
+    draw_colored_polygon(points, current_color)
+
+    # Highlight sparkle
+    draw_circle(Vector2(-2, -2), 2, highlight_color)
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| XP gems | ✅ Yes | ✅ Yes |
+| Health gems | ✅ Yes | ✅ Yes |
+| Magnetism | ✅ Upgradeable | ✅ Similar |
+| Visual effects | ✅ Sparkle + glow | Similar |
+| Despawn | 10 seconds | ? Unknown |
+
+### Assessment
+
+**Rating**: ⭐⭐⭐⭐⭐ EXCELLENT - Well-polished gem system
+
+---
+
+## Appendix DA: Camera Shake System
+
+**Source**: `scripts/effects/camera_shake.gd` (43 lines)
+
+### Implementation
+
+```gdscript
+extends Node
+## CameraShake autoload - provides global screen shake functionality
+
+var _camera: Camera2D
+var shake_intensity: float = 0.0
+var shake_decay: float = 5.0
+
+func shake(intensity: float = 10.0, decay: float = 5.0) -> void:
+    shake_intensity = maxf(shake_intensity, intensity)
+    shake_decay = decay
+
+func _process(delta: float) -> void:
+    if shake_intensity > 0:
+        _camera.offset = Vector2(
+            randf_range(-shake_intensity, shake_intensity),
+            randf_range(-shake_intensity, shake_intensity)
+        )
+        shake_intensity = lerpf(shake_intensity, 0.0, shake_decay * delta)
+```
+
+### Shake Triggers
+
+| Event | Intensity | Decay |
+|-------|-----------|-------|
+| Player damage | 15.0 | 3.0 |
+| Boss phase change | 10.0 | 5.0 |
+| Boss defeat | 20.0 | 10.0 |
+| Enemy death | 3.0 | 5.0 |
+
+### Features
+
+- **Stacking**: Uses `maxf()` so multiple shakes don't cancel
+- **Auto-find camera**: Finds camera in "game_camera" group
+- **Smooth decay**: Linear interpolation to 0
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Screen shake | ✅ Yes | ✅ Yes |
+| Intensity scaling | ✅ Per-event | Similar |
+| Global autoload | ✅ Yes | Likely |
+
+### Assessment
+
+**Rating**: ⭐⭐⭐⭐ SOLID - Simple but effective
+
+---
+
+## Appendix DB: Boss System
+
+**Source**: `scripts/entities/enemies/boss_base.gd` (352 lines), `scripts/ui/boss_hp_bar.gd` (173 lines)
+
+### Boss Phase System
+
+```gdscript
+enum BossPhase { INTRO, PHASE_1, PHASE_2, PHASE_3, DEFEATED }
+enum AttackState { IDLE, TELEGRAPH, ATTACKING, COOLDOWN }
+
+@export var phase_thresholds: Array[float] = [1.0, 0.66, 0.33, 0.0]
+// Phase 1: 100%-66% HP
+// Phase 2: 66%-33% HP
+// Phase 3: 33%-0% HP
+```
+
+### Boss State Machine
+
+```
+┌───────────┐
+│   INTRO   │ (2s, invulnerable)
+└─────┬─────┘
+      ▼
+┌───────────┐
+│  PHASE_1  │ ←─── Basic attacks only
+└─────┬─────┘
+      ▼ (at 66% HP)
+┌───────────┐
+│  PHASE_2  │ ←─── Basic + Special attacks
+└─────┬─────┘
+      ▼ (at 33% HP)
+┌───────────┐
+│  PHASE_3  │ ←─── Basic + Special + Rage attacks
+└─────┬─────┘
+      ▼ (at 0% HP)
+┌───────────┐
+│ DEFEATED  │ (death animation, cleanup)
+└───────────┘
+```
+
+### Attack Pattern System
+
+```gdscript
+var phase_attacks: Dictionary = {
+    BossPhase.PHASE_1: ["basic"],
+    BossPhase.PHASE_2: ["basic", "special"],
+    BossPhase.PHASE_3: ["basic", "special", "rage"]
+}
+
+func _select_next_attack() -> void:
+    var available_attacks: Array = phase_attacks.get(current_phase, ["basic"])
+    _current_attack = available_attacks[randi() % available_attacks.size()]
+    attack_state = AttackState.TELEGRAPH
+    _telegraph_timer = telegraph_duration
+```
+
+### Attack Telegraph System
+
+```gdscript
+@export var telegraph_duration: float = 1.0
+
+func _show_attack_telegraph(attack_name: String) -> void:
+    attack_started.emit(attack_name)
+
+    // Default: flash warning color
+    var tween := create_tween().set_loops(int(telegraph_duration / 0.3))
+    tween.tween_property(self, "modulate", Color(1.5, 0.5, 0.5), 0.15)
+    tween.tween_property(self, "modulate", Color.WHITE, 0.15)
+```
+
+**GoPit STRENGTH**: Attack telegraphs give players time to react - matches BallxPit!
+
+### Phase Transition
+
+```gdscript
+func _start_phase_transition(new_phase: BossPhase) -> void:
+    is_invulnerable = true  // Brief invulnerability
+    _transition_timer = phase_transition_duration  // 1.5s
+
+    // Visual feedback
+    CameraShake.shake(10.0, 5.0)
+    var tween := create_tween().set_loops(3)
+    tween.tween_property(self, "modulate", Color(2.0, 2.0, 2.0), 0.1)
+    tween.tween_property(self, "modulate", Color.WHITE, 0.1)
+```
+
+### Boss HP Bar
+
+```gdscript
+// Features:
+// - Boss name display
+// - HP bar with current/max values
+// - Phase markers (colored circles)
+// - Animate in/out
+// - Flash on phase change
+// - Green flash on defeat
+```
+
+### Add Spawning
+
+```gdscript
+func spawn_adds(enemy_scene: PackedScene, count: int, spread: float = 100.0) -> Array[EnemyBase]:
+    var spawned: Array[EnemyBase] = []
+    for i in count:
+        var enemy := enemy_scene.instantiate() as EnemyBase
+        var offset := Vector2(randf_range(-spread, spread), randf_range(-spread, spread))
+        enemy.global_position = global_position + offset
+        enemies_container.add_child(enemy)
+        spawned.append(enemy)
+    return spawned
+```
+
+### Comparison to BallxPit
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Boss phases | 3 (+ intro/defeat) | 2-3 per boss |
+| Attack telegraph | ✅ 1.0s warning | ✅ Similar |
+| Phase invulnerability | ✅ Brief | ✅ Similar |
+| Add spawning | ✅ Supported | ✅ Common |
+| Boss HP bar | ✅ With phases | ✅ Similar |
+| Unique bosses | 1 (framework) | 24 |
+
+### What's Implemented
+
+1. **BossBase** - Complete framework for creating bosses
+2. **Phase system** - 3 phases with HP thresholds
+3. **Attack patterns** - Configurable per phase
+4. **Telegraph system** - Visual warnings before attacks
+5. **HP bar UI** - With phase markers
+
+### What's Missing
+
+1. **Specific bosses** - Only framework exists, no SlimeKing, etc.
+2. **Unique attack patterns** - Need per-boss implementations
+3. **Boss arena changes** - No environmental hazards
+4. **Mini-bosses** - BallxPit has elite enemies
+
+### Assessment
+
+| Aspect | Status | Notes |
+|--------|--------|-------|
+| Framework | ✅ Excellent | Very extensible |
+| Phase system | ✅ Working | 3 phases |
+| Attack telegraph | ✅ Working | 1s warning |
+| HP bar | ✅ Working | Phase markers |
+| Boss variety | ❌ None | Only framework |
+
+**Rating**: ⭐⭐⭐⭐ EXCELLENT FRAMEWORK, NEEDS CONTENT
+
