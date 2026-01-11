@@ -5,9 +5,16 @@ import pytest
 GAME_MANAGER = "/root/GameManager"
 
 
+async def reset_game_manager(game):
+    """Reset GameManager to clean state for testing."""
+    await game.call(GAME_MANAGER, "reset")
+    await asyncio.sleep(0.1)
+
+
 @pytest.mark.asyncio
 async def test_speed_tier_starts_at_normal(game):
     """Game should start at normal speed (tier 0)."""
+    await reset_game_manager(game)
     tier = await game.call(GAME_MANAGER, "get_speed_tier")
     assert tier == 0, "Should start at speed tier 0 (Normal)"
 
@@ -15,6 +22,7 @@ async def test_speed_tier_starts_at_normal(game):
 @pytest.mark.asyncio
 async def test_toggle_speed_cycles_tiers(game):
     """toggle_speed should cycle through all tiers."""
+    await reset_game_manager(game)
     # Start at Normal (0)
     initial_tier = await game.call(GAME_MANAGER, "get_speed_tier")
     assert initial_tier == 0, "Should start at Normal"
@@ -43,6 +51,7 @@ async def test_toggle_speed_cycles_tiers(game):
 @pytest.mark.asyncio
 async def test_set_speed_tier(game):
     """set_speed_tier should set specific tier."""
+    await reset_game_manager(game)
     # Set to Fast+2
     await game.call(GAME_MANAGER, "set_speed_tier", [2])
     tier = await game.call(GAME_MANAGER, "get_speed_tier")
@@ -57,6 +66,7 @@ async def test_set_speed_tier(game):
 @pytest.mark.asyncio
 async def test_speed_tier_name(game):
     """get_speed_tier_name should return correct name."""
+    await reset_game_manager(game)
     # Normal
     await game.call(GAME_MANAGER, "set_speed_tier", [0])
     name = await game.call(GAME_MANAGER, "get_speed_tier_name")
@@ -71,6 +81,7 @@ async def test_speed_tier_name(game):
 @pytest.mark.asyncio
 async def test_speed_multiplier(game):
     """get_speed_multiplier should return correct value."""
+    await reset_game_manager(game)
     # Normal = 1.0x
     await game.call(GAME_MANAGER, "set_speed_tier", [0])
     mult = await game.call(GAME_MANAGER, "get_speed_multiplier")
@@ -95,6 +106,7 @@ async def test_speed_multiplier(game):
 @pytest.mark.asyncio
 async def test_loot_multiplier(game):
     """get_loot_multiplier should return correct bonus."""
+    await reset_game_manager(game)
     # Normal = 1.0x (no bonus)
     await game.call(GAME_MANAGER, "set_speed_tier", [0])
     loot = await game.call(GAME_MANAGER, "get_loot_multiplier")
@@ -119,6 +131,7 @@ async def test_loot_multiplier(game):
 @pytest.mark.asyncio
 async def test_speed_tier_clamps_to_valid_range(game):
     """set_speed_tier should clamp to valid range 0-3."""
+    await reset_game_manager(game)
     # Try to set beyond max
     await game.call(GAME_MANAGER, "set_speed_tier", [99])
     tier = await game.call(GAME_MANAGER, "get_speed_tier")

@@ -497,6 +497,11 @@ func advance_wave() -> void:
 
 
 func _reset_stats() -> void:
+	reset()
+
+
+func reset() -> void:
+	"""Reset game state (for new runs and tests)"""
 	player_hp = max_hp
 	current_wave = 1
 	current_xp = 0

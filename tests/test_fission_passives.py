@@ -6,9 +6,16 @@ FUSION_REGISTRY = "/root/FusionRegistry"
 GAME_MANAGER = "/root/GameManager"
 
 
+async def reset_fusion_registry(game):
+    """Reset FusionRegistry to clean state for testing."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+
 @pytest.mark.asyncio
 async def test_passive_stacks_start_at_zero(game):
     """All passive stacks should start at 0."""
+    await reset_fusion_registry(game)
     # PassiveType.DAMAGE = 0
     stacks = await game.call(FUSION_REGISTRY, "get_passive_stacks", [0])
     assert stacks == 0, "DAMAGE stacks should start at 0"
@@ -21,6 +28,7 @@ async def test_passive_stacks_start_at_zero(game):
 @pytest.mark.asyncio
 async def test_apply_passive_increases_stacks(game):
     """apply_passive should increment the stack count."""
+    await reset_fusion_registry(game)
     # Apply DAMAGE passive (type 0)
     result = await game.call(FUSION_REGISTRY, "apply_passive", [0])
     assert result is True, "apply_passive should return true on success"
@@ -37,6 +45,7 @@ async def test_apply_passive_increases_stacks(game):
 @pytest.mark.asyncio
 async def test_passive_max_stacks(game):
     """Passives should respect max_stacks limit."""
+    await reset_fusion_registry(game)
     # PassiveType.MULTI_SHOT = 3, max_stacks = 3
     max_stacks = await game.call(FUSION_REGISTRY, "get_passive_max_stacks", [3])
     assert max_stacks == 3, "MULTI_SHOT should have max_stacks of 3"
@@ -58,6 +67,7 @@ async def test_passive_max_stacks(game):
 @pytest.mark.asyncio
 async def test_get_available_passives(game):
     """get_available_passives should return passives below max stacks."""
+    await reset_fusion_registry(game)
     # Initially all 10 passives should be available
     available = await game.call(FUSION_REGISTRY, "get_available_passives")
     assert len(available) == 10, "All 10 passives should be available initially"
@@ -75,6 +85,7 @@ async def test_get_available_passives(game):
 @pytest.mark.asyncio
 async def test_passive_name_and_description(game):
     """get_passive_name and get_passive_description should return correct values."""
+    await reset_fusion_registry(game)
     # PassiveType.DAMAGE = 0
     name = await game.call(FUSION_REGISTRY, "get_passive_name", [0])
     assert name == "Power Up", "DAMAGE passive should be named 'Power Up'"
@@ -90,6 +101,7 @@ async def test_passive_name_and_description(game):
 @pytest.mark.asyncio
 async def test_apply_fission_can_include_passives(game):
     """apply_fission should sometimes include passive upgrades."""
+    await reset_fusion_registry(game)
     # Run fission multiple times and check for passive upgrades
     found_passive = False
     for _ in range(20):  # Run enough times to statistically expect passives
@@ -108,6 +120,8 @@ async def test_apply_fission_can_include_passives(game):
 @pytest.mark.asyncio
 async def test_apply_passive_max_hp_increases_hp(game):
     """MAX_HP passive should increase max_hp and heal."""
+    await reset_fusion_registry(game)
+    await game.call(GAME_MANAGER, "reset")
     initial_max_hp = await game.get_property(GAME_MANAGER, "max_hp")
 
     # Apply MAX_HP passive (type 2)
@@ -120,6 +134,8 @@ async def test_apply_passive_max_hp_increases_hp(game):
 @pytest.mark.asyncio
 async def test_apply_passive_magnetism_increases_range(game):
     """MAGNETISM passive should increase gem_magnetism_range."""
+    await reset_fusion_registry(game)
+    await game.call(GAME_MANAGER, "reset")
     initial_range = await game.get_property(GAME_MANAGER, "gem_magnetism_range")
 
     # Apply MAGNETISM passive (type 8)
