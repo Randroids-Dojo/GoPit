@@ -31,13 +31,17 @@ func show_stage_complete(stage: int) -> void:
 
 	title_label.text = "STAGE COMPLETE!"
 	stage_label.text = stage_name + " cleared!"
-	continue_button.text = "Continue"
+	continue_button.text = "Return to Menu"
 
-	# Hide stats and endless button for stage complete
+	# Show stats for stage complete (each stage is a full run)
 	if stats_container:
-		stats_container.visible = false
+		stats_container.visible = true
+		_update_stats()
+
+	# Show endless button as option to continue playing
 	if endless_button:
-		endless_button.visible = false
+		endless_button.visible = true
+		endless_button.text = "Continue Playing"
 
 	_show()
 
@@ -86,20 +90,15 @@ func _on_continue_pressed() -> void:
 	visible = false
 	get_tree().paused = false
 
-	if _is_victory:
-		# Restart the game
-		get_tree().reload_current_scene()
-	else:
-		# Advance to next stage
-		StageManager.complete_stage()
+	# Each stage is a run - return to menu after completion
+	# This applies to both stage complete and victory
+	get_tree().reload_current_scene()
 
 
 func _on_endless_pressed() -> void:
 	visible = false
 	get_tree().paused = false
 
-	# Enable endless mode and continue playing
-	GameManager.enable_endless_mode()
-
-	# Resume enemy spawning
+	# Continue to next stage (optional - extends the run)
+	# This allows players to keep playing through multiple stages
 	StageManager.complete_stage()

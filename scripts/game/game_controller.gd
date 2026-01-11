@@ -417,14 +417,17 @@ func _on_boss_wave_reached(stage: int) -> void:
 	_spawn_boss(stage)
 
 
-func _on_stage_completed(stage: int) -> void:
-	# Record stage completion for progression unlocks
-	if MetaManager:
-		MetaManager.record_stage_cleared(stage + 1)  # stage is 0-indexed, cleared is 1-indexed
+func _on_stage_completed(_stage: int) -> void:
+	# This is called when player chooses "Continue Playing" to extend the run
+	# Stage progress is already recorded in _on_boss_defeated
 
 	# Resume enemy spawning for next stage
 	if enemy_spawner:
 		enemy_spawner.start_spawning()
+
+	# Resume baby ball spawner
+	if baby_ball_spawner:
+		baby_ball_spawner.start()
 
 
 func _on_game_won() -> void:
@@ -512,6 +515,11 @@ func _on_boss_defeated() -> void:
 	# Hide boss HP bar
 	if boss_hp_bar:
 		boss_hp_bar.hide_boss()
+
+	# Record stage completion immediately (before showing overlay)
+	# This ensures progress is saved even if player returns to menu
+	if MetaManager:
+		MetaManager.record_stage_cleared(StageManager.current_stage + 1)  # stage is 0-indexed, cleared is 1-indexed
 
 	# Wait a moment then show stage complete
 	await get_tree().create_timer(1.5).timeout
