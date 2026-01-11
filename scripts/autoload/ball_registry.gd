@@ -17,7 +17,8 @@ enum BallType {
 	DISEASE,
 	FROSTBURN,
 	WIND,
-	GHOST
+	GHOST,
+	VAMPIRE
 }
 
 const BALL_DATA := {
@@ -116,6 +117,14 @@ const BALL_DATA := {
 		"base_speed": 900.0,
 		"color": Color(0.7, 0.7, 0.9, 0.6),  # Semi-transparent purple
 		"effect": "ghost"
+	},
+	BallType.VAMPIRE: {
+		"name": "Vampire",
+		"description": "Lifesteal on hit",
+		"base_damage": 9,
+		"base_speed": 800.0,
+		"color": Color(0.5, 0.1, 0.3),  # Dark crimson
+		"effect": "vampire"
 	}
 }
 
