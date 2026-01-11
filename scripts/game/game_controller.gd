@@ -45,6 +45,10 @@ var viewport_height: float = 1280.0
 var enemies_killed_this_wave: int = 0
 var enemies_per_wave: int = 5
 
+# Keyboard input tracking
+var _keyboard_aim_direction: Vector2 = Vector2.ZERO
+var _last_keyboard_aim: Vector2 = Vector2.UP  # Default aim upward
+
 
 func _ready() -> void:
 	viewport_height = get_viewport_rect().size.y
@@ -361,6 +365,7 @@ func _on_ultimate_activated() -> void:
 
 func _process(_delta: float) -> void:
 	_cleanup_offscreen_balls()
+	_handle_keyboard_input()
 
 
 func _notification(what: int) -> void:
@@ -531,3 +536,75 @@ func _on_boss_defeated() -> void:
 func _on_boss_enemy_died(_enemy: Node) -> void:
 	"""Boss died signal handler - record kill"""
 	GameManager.record_enemy_kill()
+
+
+# ============================================================================
+# KEYBOARD INPUT HANDLING
+# ============================================================================
+
+func _handle_keyboard_input() -> void:
+	"""Handle continuous keyboard input for movement and aiming"""
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
+	# Get movement direction from WASD
+	var move_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if move_dir.length() > 0.1:
+		if player and player.has_method("set_movement_input"):
+			player.set_movement_input(move_dir)
+	else:
+		# Only clear if no joystick is also providing input
+		# Check if move joystick is not being used
+		if move_joystick and not move_joystick.is_dragging:
+			if player and player.has_method("set_movement_input"):
+				player.set_movement_input(Vector2.ZERO)
+
+	# Get aim direction from arrow keys
+	var aim_dir := Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
+	if aim_dir.length() > 0.1:
+		_keyboard_aim_direction = aim_dir.normalized()
+		_last_keyboard_aim = _keyboard_aim_direction
+
+		# Set aim direction on ball spawner
+		if ball_spawner:
+			ball_spawner.set_aim_direction(_keyboard_aim_direction)
+
+		# Show aim line from player position
+		if aim_line and player:
+			aim_line.show_line(_keyboard_aim_direction, player.global_position)
+	else:
+		# When no aim keys pressed, hide aim line (unless joystick is active)
+		if aim_joystick and not aim_joystick.is_dragging:
+			if _keyboard_aim_direction.length() > 0:
+				_keyboard_aim_direction = Vector2.ZERO
+				if aim_line:
+					aim_line.hide_line()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	"""Handle discrete keyboard actions (fire, ultimate, toggle auto, mute)"""
+
+	# Fire with Space (when autofire is off)
+	if event.is_action_pressed("fire"):
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			if fire_button and fire_button.can_fire():
+				# If no aim direction, use last known aim or default up
+				if ball_spawner and _last_keyboard_aim.length() > 0:
+					ball_spawner.set_aim_direction(_last_keyboard_aim)
+				fire_button._try_fire()
+
+	# Ultimate with E
+	if event.is_action_pressed("ultimate"):
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			if ultimate_button:
+				ultimate_button._try_activate()
+
+	# Toggle autofire with Tab
+	if event.is_action_pressed("toggle_auto"):
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			if fire_button:
+				fire_button.toggle_autofire()
+
+	# Toggle mute with M (works anytime)
+	if event.is_action_pressed("toggle_mute"):
+		SoundManager.toggle_mute()

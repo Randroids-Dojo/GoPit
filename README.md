@@ -138,12 +138,25 @@ See [docs/testing.md](docs/testing.md) for detailed API documentation.
 
 - [Testing Setup](docs/testing.md) - PlayGodot automated testing
 - [UI Best Practices](docs/godot-ui-best-practices.md) - Godot UI/UX guidelines
+- [Input Best Practices](docs/godot-input-best-practices.md) - Keyboard and touch input guidelines
 - [Known Issues](docs/known-issues.md) - Current limitations and workarounds
 
 ## Controls
 
-- **Left side**: Virtual joystick to aim
-- **Right side**: Fire button (with cooldown)
+### Touch/Mobile
+- **Left side**: Virtual joystick for movement
+- **Right side**: Fire button (with autofire) and aim joystick
+
+### Keyboard
+| Action | Key |
+|--------|-----|
+| Move | WASD |
+| Aim | Arrow Keys |
+| Fire | Space |
+| Ultimate | E |
+| Toggle Auto | Tab |
+| Mute | M |
+| Pause | Escape |
 
 ## License
 
