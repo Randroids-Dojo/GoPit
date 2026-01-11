@@ -6727,11 +6727,95 @@ BallxPit has a specific stat priority:
 
 ---
 
+## Appendix BX: Baby Ball Mechanics Comparison
+
+Research sources:
+- [Balls Wiki](https://ballpit.fandom.com/wiki/Balls)
+- [Character Unlock Guide](https://ballxpit.org/guides/character-unlock-guide/)
+
+### BallxPit Baby Ball System
+
+**Core Concept:** Baby balls are white, basic projectiles that provide passive DPS. Leadership stat affects both count and damage.
+
+**Baby Ball Generation Methods:**
+
+| Special Ball | Generation Trigger | Amount |
+|-------------|-------------------|--------|
+| **Brood Mother** | On hit | 25% chance → 1 ball |
+| **Egg Sac** | On hit | 2-4 balls |
+| **Maggot** | On infested enemy death | 1-2 balls |
+| **Overgrowth** | On detonation | Multiple |
+| **Bandage** (item) | On heal | Baby balls released |
+
+**Baby Ball Specialist Characters:**
+- **Empty Nester**: No baby balls - fires multiple copies of special balls instead
+- **Baby Ball Character**: Unlocked via Cozy Home Blueprint, starts with Brood Mother
+
+### GoPit Baby Ball System
+
+**Current Implementation:** (`scripts/entities/baby_ball_spawner.gd`)
+
+```gdscript
+# Timer-based auto-spawner
+@export var base_spawn_interval: float = 2.0
+@export var baby_ball_damage_multiplier: float = 0.5
+@export var baby_ball_scale: float = 0.6
+
+# Leadership affects spawn rate
+var rate = base_spawn_interval / (1.0 + leadership_bonus)
+```
+
+**GoPit Features:**
+- Timer-based spawn (every 2s base)
+- Leadership stat reduces interval
+- 50% damage of main balls
+- Auto-targets nearest enemy
+- Silent fire (no audio spam)
+
+### System Comparison
+
+| Aspect | GoPit | BallxPit |
+|--------|-------|----------|
+| Spawn Method | Timer-based | **Event-based** (hit/kill) |
+| Leadership Effect | Spawn rate only | Count + damage |
+| Generation Sources | 1 (spawner) | 5+ (special balls) |
+| Skill Expression | Low (passive) | High (ball choice) |
+| Swarm Builds | ❌ Not possible | ✅ Core strategy |
+| Inherit Ball Effects | ❌ No | ✅ Yes (Holy Laser, etc.) |
+
+### The Inheritance Problem
+
+**BallxPit's killer feature:** Baby balls inherit special ball effects.
+
+```
+Maggot + Holy Laser Evolution:
+  → Enemy dies from Maggot
+  → Spawns 1-2 baby balls
+  → Baby balls have Holy Laser
+  → Each baby ball fires cross lasers
+  → Screen fills with lasers
+```
+
+**GoPit:** Baby balls are always plain damage balls.
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add event-based baby ball spawning | On-hit, on-kill triggers |
+| **P2** | Add baby ball inheritance | Baby balls get parent's effect |
+| **P2** | Add swarm-focused special balls | Brood Mother, Egg Sac equivalents |
+| **P3** | Add Leadership → damage scaling | Match BallxPit formula |
+
+**GoPit has the foundation - needs event-based triggers and effect inheritance.**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **81 appendices** (A through BW)
+- **82 appendices** (A through BX)
 - **82 open beads** tracking all gaps
 - **6,500+ lines** of comparison
 
