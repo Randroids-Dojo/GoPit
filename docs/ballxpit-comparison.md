@@ -6415,3 +6415,133 @@ BallxPit uses its **core mechanic everywhere**:
 | **P2** | Add 2 mini-bosses per stage | Match structure |
 | **P3** | Consider ball-based meta UI | Thematic consistency |
 
+---
+
+## Appendix BS: Shop and Currency Systems (NEW)
+
+Research sources:
+- [BallxPit Harvest Guide](https://ballxpit.org/guides/harvest-guide/)
+- [BallxPit Resource Farming](https://ballxpit.org/guides/resource-farming/)
+- [Deltia's Gold Mine Guide](https://deltiasgaming.com/ball-x-pit-gold-mine-guide/)
+
+### BallxPit Economy Overview
+
+**Four Core Resources:**
+
+| Resource | Earning Method | Spending | Priority |
+|----------|----------------|----------|----------|
+| **Gold** | Gold Mines (7 optimal) | Buildings, Market purchases, upgrades | **PRIMARY** |
+| **Wheat** | Wheat Fields (3-5) | Early construction, character houses | Early game |
+| **Wood** | Forests (2-3) | All construction (10-50+ per building) | Mid game |
+| **Stone** | Quarries (2-4) | Upgrades, S-Rank stat buildings (300-500) | Late game |
+
+**Economy Phases:**
+- **Early (Waves 1-15):** Wheat/Wood/Stone farming, first gold mines
+- **Mid (Waves 15-30):** Gold priority (7 mines = 1,500+ gold/harvest), Market unlocked
+- **Late (Waves 30+):** Gold = ONLY currency, 13-16 chars on mines, 25K-35K gold/hour
+
+**The Market:**
+- Unlocks mid-game (500 gold + resources)
+- Transforms economy: buy any resource with gold
+- Makes wheat/wood/stone farming obsolete
+
+### In-Run Currency: XP Only
+
+**BallxPit has NO in-run shop:**
+- Upgrades from level-ups (XP → choose upgrade)
+- Fusion Reactors dropped by enemies
+- Guaranteed Fusion after stage bosses
+- No vendor, no in-run purchases
+
+### GoPit Economy
+
+**Single Currency: Pit Coins**
+- Earned: `wave * 10 + level * 25`
+
+**Permanent Upgrades (5 total):**
+| Upgrade | Effect | Max Level |
+|---------|--------|-----------|
+| Pit Armor | +10 HP | 5 |
+| Ball Power | +2 damage | 5 |
+| Rapid Fire | -0.05s cooldown | 5 |
+| Coin Magnet | +10% coins | 4 |
+| Head Start | Start at level X | 3 |
+
+### CRITICAL GAPS
+
+| Feature | GoPit | BallxPit | Priority |
+|---------|-------|----------|----------|
+| **Resource variety** | 1 (coins) | 4 (gold/wheat/wood/stone) | P2 |
+| **Meta upgrades** | 5 types | 70+ buildings | **CRITICAL** |
+| **Harvest system** | None | Full minigame | P2 |
+| **Market building** | None | Currency conversion | P3 |
+| **In-run shop** | None | None | ✅ Aligned |
+| **XP → Level-up** | Yes | Yes | ✅ Aligned |
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Expand meta upgrades | 15-20 permanent upgrades |
+| **P2** | Add resource variety | 2-3 resource types |
+| **P3** | Add harvest minigame | Between-run engagement |
+
+---
+
+## Appendix BT: FINAL EXECUTIVE SUMMARY
+
+### Documentation Status
+
+- **78 appendices** (A through BS)
+- **82 open beads** tracking all gaps
+- **6,500+ lines** of comparison
+
+### The #1 Fundamental Difference
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  BALLXPIT: Fires 4-5 ball types SIMULTANEOUSLY per shot          ║
+║  GOPIT:    Fires 1 ball type per shot                            ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+This affects everything: builds, combos, fission value, strategic depth.
+
+### Priority Summary
+
+| Priority | Key Items | Beads |
+|----------|-----------|-------|
+| **P0** | Ball slot system | GoPit-6zk |
+| **P1** | Passive system, gear req, fission fix, bounce damage | ~10 |
+| **P2** | Speed toggle, characters, balls, mini-bosses | ~30 |
+| **P3+** | Achievements, city builder, saves | ~40 |
+
+### Scale Gap
+
+| System | GoPit | BallxPit | Gap |
+|--------|-------|----------|-----|
+| Ball slots | 1 | 4-5 | **CRITICAL** |
+| Passives | 0 | 59 | -59 |
+| Characters | 6 | 16 | -10 |
+| Bosses | 1 | 24 | -23 |
+| Buildings | 0 | 70+ | -70+ |
+
+### What GoPit Does Well
+
+✅ Procedural music/sound (unique)
+✅ Touch-first mobile design
+✅ Clean UI and effects
+✅ Solid foundation for expansion
+
+### Recommended Implementation Order
+
+1. **Ball slot system** (P0) ← Start here
+2. **Ball return mechanic** (P1)
+3. **Passive system** (P1)
+4. **Level select + gears** (P1)
+5. **More content** (P2+)
+
+---
+
+**Comparison complete. 82 beads ready for implementation.**
+
