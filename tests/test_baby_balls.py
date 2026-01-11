@@ -100,9 +100,9 @@ async def test_baby_ball_inherits_type_from_slot(game):
     # Add BURN ball (type 1) to slots
     await game.call(BALL_REGISTRY, "add_ball", [1])
 
-    # Get active slots to verify
-    active_slots = await game.call(BALL_REGISTRY, "get_active_slots")
-    assert len(active_slots) == 2, f"Should have 2 active slots (BASIC + BURN), got {len(active_slots)}"
+    # Get filled slots to verify (non-empty slots)
+    filled_slots = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_slots) == 2, f"Should have 2 filled slots (BASIC + BURN), got {len(filled_slots)}"
 
     # Get initial ball count
     initial_count = await game.call(PATHS["balls"], "get_child_count")
@@ -130,9 +130,9 @@ async def test_baby_ball_cycles_through_slots(game):
     await game.call(BALL_REGISTRY, "add_ball", [1])  # BURN
     await game.call(BALL_REGISTRY, "add_ball", [2])  # FREEZE
 
-    # Verify we have 3 slots now (BASIC + BURN + FREEZE)
-    active_slots = await game.call(BALL_REGISTRY, "get_active_slots")
-    assert len(active_slots) == 3, f"Should have 3 active slots, got {len(active_slots)}"
+    # Verify we have 3 filled slots now (BASIC + BURN + FREEZE)
+    filled_slots = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_slots) == 3, f"Should have 3 filled slots, got {len(filled_slots)}"
 
     # Get initial count
     initial_count = await game.call(PATHS["balls"], "get_child_count")

@@ -320,8 +320,8 @@ func apply_fission() -> Dictionary:
 		result["xp_bonus"] = xp_bonus
 		return result
 
-	# Random number of upgrades (1-3)
-	var num_upgrades := randi_range(1, 3)
+	# Random number of upgrades (1-5, matching BallxPit)
+	var num_upgrades := randi_range(1, 5)
 
 	for i in num_upgrades:
 		# 60% chance to level up owned ball, 40% chance new ball

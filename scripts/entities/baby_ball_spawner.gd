@@ -111,7 +111,7 @@ func _apply_slot_inheritance(ball: Node) -> void:
 	if not BallRegistry:
 		return
 
-	var active_slots := BallRegistry.get_active_slots()
+	var active_slots := BallRegistry.get_filled_slots()
 	if active_slots.is_empty():
 		return
 

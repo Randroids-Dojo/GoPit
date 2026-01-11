@@ -146,6 +146,41 @@ node = await game.get_node("/root/Game")
 await asyncio.sleep(0.5)
 ```
 
+### CRITICAL: No Infinite Loops in Tests
+
+**NEVER write `while` loops without timeouts in tests.** Infinite loops will hang CI for hours.
+
+```python
+# BAD - will hang forever if condition never met
+is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+while not is_ready:
+    await asyncio.sleep(0.1)
+    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+
+# GOOD - always use a timeout helper
+async def wait_for_fire_ready(game, timeout=5.0):
+    """Wait for fire button with timeout."""
+    elapsed = 0
+    while elapsed < timeout:
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+        if is_ready:
+            return True
+        await asyncio.sleep(0.1)
+        elapsed += 0.1
+    return False
+
+# Usage:
+ready = await wait_for_fire_ready(game)
+assert ready, "Fire button should become ready within timeout"
+```
+
+**Also remember:** When autofire is ON (the default), the fire button is constantly firing. You MUST call `set_autofire(False)` before waiting for the button to be ready:
+
+```python
+await game.call(FIRE_BUTTON, "set_autofire", [False])
+ready = await wait_for_fire_ready(game)
+```
+
 ### Pre-Commit Checklist
 
 Before committing ANY code changes:

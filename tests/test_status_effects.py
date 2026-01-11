@@ -30,6 +30,18 @@ async def get_enemy_hp(game, enemy_path: str) -> int:
         return -1
 
 
+async def wait_for_fire_ready(game, timeout: float = 5.0) -> bool:
+    """Wait for fire button to be ready with timeout."""
+    elapsed = 0
+    while elapsed < timeout:
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+        if is_ready:
+            return True
+        await asyncio.sleep(0.1)
+        elapsed += 0.1
+    return False
+
+
 async def get_enemy_speed(game, enemy_path: str) -> float:
     """Get current speed of an enemy."""
     try:
@@ -153,12 +165,12 @@ async def test_bleed_can_stack(game):
 @pytest.mark.asyncio
 async def test_ball_types_match_status_effects(game):
     """Verify ball types align with status effect types."""
-    # Fire a ball and check the mapping works
+    # Disable autofire so we can control firing
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+
     # Wait for button to be ready
-    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-    while not is_ready:
-        await asyncio.sleep(0.1)
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    ready = await wait_for_fire_ready(game)
+    assert ready, "Fire button should become ready within timeout"
 
     # Fire a ball
     await game.click(FIRE_BUTTON)
