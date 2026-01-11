@@ -10,6 +10,7 @@ const SAVE_PATH := "user://meta.save"
 var pit_coins: int = 0
 var total_runs: int = 0
 var best_wave: int = 0
+var highest_stage_cleared: int = 0  # 0 = none, 1 = The Pit, etc.
 var unlocked_upgrades: Dictionary = {}  # upgrade_id -> level
 
 # Permanent upgrade bonuses (applied at run start)
@@ -49,6 +50,16 @@ func record_run_end(wave: int, _level: int) -> void:
 	if wave > best_wave:
 		best_wave = wave
 	save_data()
+
+
+func record_stage_cleared(stage_index: int) -> void:
+	if stage_index > highest_stage_cleared:
+		highest_stage_cleared = stage_index
+		save_data()
+
+
+func get_highest_stage_cleared() -> int:
+	return highest_stage_cleared
 
 
 func get_upgrade_level(upgrade_id: String) -> int:
@@ -96,6 +107,7 @@ func save_data() -> void:
 		"coins": pit_coins,
 		"runs": total_runs,
 		"best_wave": best_wave,
+		"highest_stage": highest_stage_cleared,
 		"upgrades": unlocked_upgrades
 	}
 
@@ -121,6 +133,7 @@ func load_data() -> void:
 		pit_coins = data.get("coins", 0)
 		total_runs = data.get("runs", 0)
 		best_wave = data.get("best_wave", 0)
+		highest_stage_cleared = data.get("highest_stage", 0)
 		unlocked_upgrades = data.get("upgrades", {})
 		coins_changed.emit(pit_coins)
 
@@ -129,6 +142,7 @@ func reset_data() -> void:
 	pit_coins = 0
 	total_runs = 0
 	best_wave = 0
+	highest_stage_cleared = 0
 	unlocked_upgrades = {}
 	bonus_hp = 0
 	bonus_damage = 0.0

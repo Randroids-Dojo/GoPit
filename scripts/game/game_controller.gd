@@ -19,6 +19,7 @@ extends Node2D
 @onready var tutorial_overlay: CanvasLayer = $UI/TutorialOverlay
 @onready var danger_indicator: Control = $UI/DangerIndicator
 @onready var character_select: CanvasLayer = $UI/CharacterSelect
+@onready var level_select: CanvasLayer = $UI/LevelSelect
 @onready var background: ColorRect = $Background
 @onready var left_wall: StaticBody2D = $GameArea/Walls/LeftWall
 @onready var right_wall: StaticBody2D = $GameArea/Walls/RightWall
@@ -106,12 +107,18 @@ func _ready() -> void:
 	# Connect character select
 	if character_select:
 		character_select.character_selected.connect(_on_character_selected)
-		# Skip character select in headless mode (for testing)
-		if DisplayServer.get_name() == "headless":
-			GameManager.start_game()
-		else:
-			# Show character select for normal gameplay
-			character_select.show_select()
+
+	# Connect level select
+	if level_select:
+		level_select.stage_selected.connect(_on_stage_selected)
+
+	# Start game flow
+	# Skip character/level select in headless mode (for testing)
+	if DisplayServer.get_name() == "headless":
+		GameManager.start_game()
+	elif character_select:
+		# Show character select for normal gameplay
+		character_select.show_select()
 	else:
 		# Fallback: auto-start if no character select
 		GameManager.start_game()
@@ -129,6 +136,19 @@ func _on_character_selected(character: Resource) -> void:
 		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
 		# Set starting ball type
 		ball_spawner.set_ball_type(GameManager.character_starting_ball)
+
+	# Show level select (or start game if no level select)
+	if level_select:
+		level_select.show_select()
+	else:
+		GameManager.start_game()
+
+
+func _on_stage_selected(stage_index: int) -> void:
+	# Set starting stage in StageManager
+	if StageManager:
+		StageManager.current_stage = stage_index
+		StageManager._apply_biome()
 
 	# Start the game
 	GameManager.start_game()
@@ -397,7 +417,11 @@ func _on_boss_wave_reached(stage: int) -> void:
 	_spawn_boss(stage)
 
 
-func _on_stage_completed(_stage: int) -> void:
+func _on_stage_completed(stage: int) -> void:
+	# Record stage completion for progression unlocks
+	if MetaManager:
+		MetaManager.record_stage_cleared(stage + 1)  # stage is 0-indexed, cleared is 1-indexed
+
 	# Resume enemy spawning for next stage
 	if enemy_spawner:
 		enemy_spawner.start_spawning()
