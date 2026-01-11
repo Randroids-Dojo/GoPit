@@ -4789,3 +4789,70 @@ if distance < magnetism_range:
 2. [ ] **No gem magnet auto-pickup** - Always requires proximity
 3. [ ] **Limited gem variety** - Only XP and health
 
+
+---
+
+## Appendix BB: Game Over and Run Statistics (NEW)
+
+### Game Over Display
+
+**Stats Shown:**
+| Stat | Description |
+|------|-------------|
+| Level | Player level reached |
+| Wave | Wave number reached |
+| Enemies | Total enemies killed |
+| Damage | Total damage dealt |
+| Gems | Gems collected |
+| Time | MM:SS survived |
+| Best Wave | High score wave |
+| Best Level | High score level |
+| Coins | Pit Coins earned this run |
+
+### High Score Tracking
+
+```gdscript
+if GameManager.current_wave >= GameManager.high_score_wave:
+    best_text = " (NEW BEST!)"
+```
+
+### Coins Earned Formula
+
+```gdscript
+earned = wave * 10 + level * 25
+# Example: Wave 10, Level 5 = 100 + 125 = 225 coins
+```
+
+### Post-Game Options
+
+1. **Shop Button** → Opens MetaShop for permanent upgrades
+2. **Restart Button** → Reloads scene, returns to character select
+
+### Run Stats Tracked
+
+```gdscript
+GameManager.stats = {
+    "enemies_killed": int,
+    "damage_dealt": int,
+    "gems_collected": int,
+    "time_survived": float,
+    "balls_fired": int
+}
+```
+
+### Persistence
+
+| Data | Where Stored |
+|------|--------------|
+| High scores | GameManager (runtime) |
+| Pit Coins | MetaManager → user://meta.save |
+| Total runs | MetaManager → user://meta.save |
+| Best wave | MetaManager → user://meta.save |
+
+### Missing Features
+
+1. [ ] **No detailed stats history** - Only current run + best
+2. [ ] **No achievement unlocks** - No milestones shown (GoPit-mno)
+3. [ ] **No leaderboard** - No global or friend rankings
+4. [ ] **No replay option** - Can't watch run replay
+
