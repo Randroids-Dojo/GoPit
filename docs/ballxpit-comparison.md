@@ -8240,13 +8240,146 @@ func _show_announcement(wave: int) -> void:
 
 ---
 
+## Appendix CO: Fusion/Fission/Evolution System (Strong Implementation!)
+
+### BallxPit System
+
+**Three mechanics:**
+1. **Fission**: Break down balls for random upgrades
+2. **Fusion**: Combine any two L3 balls
+3. **Evolution**: Specific recipes create unique balls
+
+**Key Feature**: Fusion Reactor pickup triggers choice.
+
+### GoPit System
+
+**Implementation (fusion_overlay.gd + fusion_registry.gd):**
+
+**Three tabs in Fusion UI:**
+```gdscript
+enum Tab { FISSION, FUSION, EVOLUTION }
+
+func show_fusion_ui() -> void:
+    """Called when player collects a Fusion Reactor"""
+    _selected_balls.clear()
+    _update_tab_availability()
+    _on_tab_pressed(Tab.FISSION)  // Default to Fission
+    visible = true
+    get_tree().paused = true
+```
+
+**Fission (Random Upgrades):**
+```gdscript
+func apply_fission() -> Dictionary:
+    // Random number of upgrades (1-3)
+    var num_upgrades := randi_range(1, 3)
+
+    for i in num_upgrades:
+        // 60% chance to level up owned ball, 40% chance new ball
+        if upgradeable.size() > 0 and randf() < 0.6:
+            BallRegistry.level_up_ball(ball_type)
+        elif unowned.size() > 0:
+            BallRegistry.add_ball(ball_type)
+
+    // If all maxed, give XP bonus
+    if upgradeable.size() == 0 and unowned.size() == 0:
+        var xp_bonus := 100 + GameManager.current_wave * 10
+        GameManager.add_xp(xp_bonus)
+```
+
+**Evolution Recipes (5 defined):**
+```gdscript
+enum EvolvedBallType {
+    NONE,
+    BOMB,      // Burn + Iron
+    BLIZZARD,  // Freeze + Lightning
+    VIRUS,     // Poison + Bleed
+    MAGMA,     // Burn + Poison
+    VOID       // Burn + Freeze
+}
+
+const EVOLUTION_RECIPES := {
+    "BURN_IRON": EvolvedBallType.BOMB,
+    "FREEZE_LIGHTNING": EvolvedBallType.BLIZZARD,
+    "BLEED_POISON": EvolvedBallType.VIRUS,
+    "BURN_POISON": EvolvedBallType.MAGMA,
+    "BURN_FREEZE": EvolvedBallType.VOID
+}
+```
+
+**Evolved Ball Stats:**
+| Ball | Recipe | Effect |
+|------|--------|--------|
+| Bomb | Burn + Iron | AoE explosion (1.5x dmg, 100px) |
+| Blizzard | Freeze + Lightning | Chain freeze (3 enemies, 2s) |
+| Virus | Poison + Bleed | Spreading DoT + 20% lifesteal |
+| Magma | Burn + Poison | Ground pools (3s, 5 DPS) |
+| Void | Burn + Freeze | Alternating effects |
+
+**Generic Fusion:**
+```gdscript
+func create_fused_ball_data(ball_a, ball_b) -> Dictionary:
+    // Combine colors
+    var combined_color := color_a.lerp(color_b, 0.5)
+
+    // Average stats with 10% bonus
+    var damage := int((damage_a + damage_b) / 2.0 * 1.1)
+
+    return {
+        "name": name_a + " " + name_b,
+        "effects": [effect_a, effect_b],
+        "can_evolve": false  // Fused balls cannot further evolve
+    }
+```
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Fusion Reactor trigger | ✅ | ✅ |
+| Fission option | ✅ 1-3 upgrades | ✅ |
+| Generic fusion | ✅ Any 2 L3s | ✅ |
+| Evolution recipes | 5 recipes | 10-15+ |
+| Recipe UI | ✅ Shows availability | ✅ |
+| XP fallback | ✅ If all maxed | ⚠️ |
+| Ball consumption | ✅ | ✅ |
+| Combined effects | ✅ Both effects | ✅ |
+
+### Strong Alignment!
+
+**GoPit's fusion system is well-architected:**
+- ✅ Three distinct options (Fission/Fusion/Evolution)
+- ✅ Clear tab-based UI
+- ✅ Ball selection grid with colors
+- ✅ Preview before confirming
+- ✅ Recipe availability checking
+- ✅ XP fallback for maxed runs
+
+### Gaps
+
+1. **Recipe quantity**: 5 vs 10-15+ evolutions
+2. **UI polish**: Could show more visual feedback
+3. **Sound variety**: Uses generic level_up sound
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 10+ more recipes | More evolved ball types |
+| **P3** | Add fusion animation | Visual feedback |
+| **P3** | Add specific sounds | Fission/Fusion/Evolution |
+
+**GoPit's fusion system is WELL-IMPLEMENTED and closely matches BallxPit!**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **98 appendices** (A through CN)
+- **99 appendices** (A through CO)
 - **91 open beads** tracking all gaps
-- **8,300+ lines** of comparison
+- **8,600+ lines** of comparison
 
 ### The #1 Fundamental Difference
 
