@@ -7697,13 +7697,556 @@ var phase_attacks: Dictionary = {
 
 ---
 
+## Appendix CI: Character System Comparison
+
+### BallxPit Character System
+
+**16 Playable Characters:**
+- All have unique starting balls
+- All have unique passives
+- Unlock through achievements/progression
+- Character-specific builds emerge from passives
+
+**Key Character Passives:**
+| Character | Passive | Effect |
+|-----------|---------|--------|
+| Wings | Speed Boost | +30% move speed |
+| Tank | Armor | +50% HP, -10% speed |
+| Sniper | Precision | +30% crit, slower fire |
+| Berserker | Rage | +damage when low HP |
+| Healer | Regen | HP regen over time |
+
+**Unlock System:**
+- Most unlock via achievements
+- Some via stage completion
+- Some via "meet X condition Y times"
+
+### GoPit Character System
+
+**Implementation (character_select.gd):**
+```gdscript
+const CHARACTER_PATHS := [
+    "res://resources/characters/rookie.tres",
+    "res://resources/characters/pyro.tres",
+    "res://resources/characters/frost_mage.tres",
+    "res://resources/characters/tactician.tres",
+    "res://resources/characters/gambler.tres",
+    "res://resources/characters/vampire.tres"
+]
+
+# Stat display (4 core stats)
+hp_bar.value = character.endurance
+dmg_bar.value = character.strength
+spd_bar.value = character.speed
+crit_bar.value = character.dexterity
+```
+
+**6 Characters:**
+| Character | Starting Ball | Passive |
+|-----------|---------------|---------|
+| Rookie | Basic | None (beginner-friendly) |
+| Pyro | Fire | +Fire damage |
+| Frost Mage | Ice | +Freeze duration |
+| Tactician | Lightning | +Crit chance |
+| Gambler | Random | Random bonuses |
+| Vampire | Bleed | Life steal |
+
+**Lock/Unlock:**
+```gdscript
+locked_overlay.visible = not character.is_unlocked
+if not character.is_unlocked:
+    lock_label.text = "LOCKED\n" + character.unlock_requirement
+```
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Character count | 6 | 16 |
+| Unique passives | ✅ | ✅ |
+| Starting balls | ✅ | ✅ |
+| Stat display | ✅ 4 stats | ✅ |
+| Lock/unlock | ✅ | ✅ |
+| Achievement unlocks | ⚠️ Basic | ✅ Complex |
+| Build synergies | ⚠️ Limited | ✅ Deep |
+
+### What GoPit Does Well
+
+- ✅ Clean stat bar visualization
+- ✅ Locked overlay with unlock requirements
+- ✅ Character-specific starting balls
+- ✅ Each has unique passive
+
+### Gaps
+
+1. **Quantity**: 6 vs 16 characters
+2. **Passive depth**: Simple stat bonuses vs transformative abilities
+3. **Achievement integration**: Basic vs complex
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 10 more characters | Match BallxPit count |
+| **P2** | Add transformative passives | Not just stat bonuses |
+| **P3** | Add achievement unlocks | Complex unlock conditions |
+
+**GoPit has solid character foundation - needs more variety and depth.**
+
+---
+
+## Appendix CJ: Meta Progression System
+
+### BallxPit Meta System
+
+**City Building:**
+- 70+ building types
+- Buildings provide permanent bonuses
+- Unlocked progressively
+- Resource management (lumber, ore, etc.)
+
+**Permanent Upgrades:**
+- Starting HP bonus
+- Starting damage bonus
+- Starting passive slots
+- Unlock new ball types permanently
+
+**Currency:**
+- Gold earned per run
+- Scales with wave reached
+- Spent in city buildings
+
+### GoPit Meta System
+
+**Implementation (meta_shop.gd + permanent_upgrades.gd):**
+```gdscript
+static var UPGRADES: Dictionary = {
+    "hp": UpgradeData.new("hp", "Pit Armor", "Increase starting HP",
+        "🛡️", 100, 2.0, 5, "+%d0 HP"),
+    "damage": UpgradeData.new("damage", "Ball Power", "Increase ball damage",
+        "💥", 150, 2.0, 5, "+%d damage per hit"),
+    "fire_rate": UpgradeData.new("fire_rate", "Rapid Fire", "Decrease fire cooldown",
+        "⚡", 200, 2.0, 5, "-%d.0%ds cooldown"),
+    "coin_bonus": UpgradeData.new("coin_bonus", "Coin Magnet", "Earn more Pit Coins",
+        "🪙", 250, 2.5, 4, "+%d0%% coins"),
+    "starting_level": UpgradeData.new("starting_level", "Head Start", "Start at higher level",
+        "🚀", 500, 3.0, 3, "Start at level %d")
+}
+```
+
+**Features:**
+- 5 permanent upgrades
+- Pit Coins currency
+- Exponential cost scaling
+- Max levels per upgrade
+
+**Currency Earning (game_over_overlay.gd):**
+```gdscript
+_coins_earned = MetaManager.earn_coins(GameManager.current_wave, GameManager.player_level)
+coins_label.text = "+%d Pit Coins (Total: %d)" % [_coins_earned, MetaManager.pit_coins]
+```
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Currency | ✅ Pit Coins | ✅ Gold |
+| Permanent upgrades | 5 | 20+ |
+| Cost scaling | ✅ Exponential | ✅ |
+| City builder | ❌ None | ✅ 70+ buildings |
+| Resource types | 1 | 4+ |
+| Visual progression | ❌ Just shop | ✅ City grows |
+
+### What GoPit Does Well
+
+- ✅ Clean shop UI with card layout
+- ✅ Clear upgrade descriptions
+- ✅ Exponential cost scaling prevents rushing
+- ✅ Coin bonus upgrade for compounding
+
+### Gaps
+
+1. **Scale**: 5 upgrades vs 20+
+2. **Visual**: No city/base building
+3. **Variety**: Only stat upgrades
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P2** | Add 15+ more upgrades | Starting abilities, passives |
+| **P3** | Add base builder | Visual progression |
+| **P3** | Add resource variety | Multiple currencies |
+
+**GoPit has functional meta progression - lacks scale and visual appeal of city builder.**
+
+---
+
+## Appendix CK: Audio System (GoPit Advantage!)
+
+### BallxPit Audio
+
+**Music:**
+- Pre-composed tracks per biome
+- Static background music
+- Changes with boss fights
+
+**Sound Effects:**
+- Standard game SFX
+- Pre-recorded audio files
+
+### GoPit Audio System
+
+**UNIQUE: Procedural Sound Effects (sound_manager.gd):**
+```gdscript
+enum SoundType {
+    FIRE, HIT_WALL, HIT_ENEMY, ENEMY_DEATH, GEM_COLLECT,
+    PLAYER_DAMAGE, LEVEL_UP, GAME_OVER, WAVE_COMPLETE, BLOCKED,
+    // Ball type sounds
+    FIRE_BALL, ICE_BALL, LIGHTNING_BALL, POISON_BALL, BLEED_BALL, IRON_BALL,
+    // Status effect sounds
+    BURN_APPLY, FREEZE_APPLY, POISON_APPLY, BLEED_APPLY,
+    // Fusion sounds
+    FUSION_REACTOR, EVOLUTION, FISSION,
+    // Ultimate
+    ULTIMATE
+}
+```
+
+**24 procedurally generated sound types!**
+
+Examples:
+- `_generate_fire_whoosh()` - Noise + crackle
+- `_generate_ice_chime()` - Crystal harmonics
+- `_generate_electric_zap()` - Square wave modulation
+- `_generate_metallic_clang()` - Multiple harmonics
+
+**UNIQUE: Procedural Music (music_manager.gd):**
+```gdscript
+const BPM := 120.0
+var _bass_pattern: Array[int] = [0, 0, 7, 5, 0, 0, 3, 5]
+var _drum_pattern: Array[int] = [1, 3, 2, 3, 1, 3, 2, 3]
+
+func _on_beat() -> void:
+    _play_bass(_bass_pattern[beat_index])
+    _play_drum(drum_type)  // Kick, snare, or hihat
+    if current_intensity >= 2.0 and randf() < 0.2:
+        _play_melody_note()  // Minor pentatonic
+```
+
+**Features:**
+- Bass pattern with root note modulation
+- Drum kit (kick, snare, hihat)
+- Melody with minor pentatonic scale
+- **Intensity scaling with wave number**
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| SFX system | ✅ 24 procedural | ✅ Pre-recorded |
+| Music system | ✅ Procedural | ✅ Pre-composed |
+| Unique sounds | ✅ Never repeats | ❌ Same samples |
+| Intensity scaling | ✅ Wave-based | ❌ Static |
+| File size | ✅ Minimal (~0KB) | ❌ Large audio files |
+| Per-ball sounds | ✅ 6 types | ❌ Generic |
+| Per-effect sounds | ✅ 4 types | ❌ Generic |
+
+### GoPit ADVANTAGE
+
+This is a **UNIQUE FEATURE** that BallxPit doesn't have:
+1. **Zero audio file dependencies** - all procedural
+2. **Infinite variation** - pitch/volume variance per play
+3. **Intensity adaptation** - music gets intense with waves
+4. **Ball-specific audio** - each ball type has unique sound
+5. **Status-specific audio** - burn, freeze, poison, bleed
+
+### Audio Settings
+
+```gdscript
+var master_volume: float = 1.0
+var sfx_volume: float = 1.0
+var music_volume: float = 1.0
+var is_muted: bool = false
+```
+
+- ✅ Persistent settings
+- ✅ Per-bus volume control
+- ✅ Mute toggle
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add biome-specific music | Different root notes/patterns |
+| **P3** | Add boss music mode | Different drum pattern |
+
+**GoPit's procedural audio is a UNIQUE ADVANTAGE over BallxPit!**
+
+---
+
+## Appendix CL: Game Over and Run Stats
+
+### BallxPit End-of-Run
+
+**Stats Shown:**
+- Wave reached
+- Time survived
+- Enemies killed
+- Total damage
+- Gold earned
+- Achievements unlocked
+
+**Post-Game Options:**
+- Return to menu
+- Quick restart
+- View detailed stats
+- Share score
+
+### GoPit End-of-Run
+
+**Implementation (game_over_overlay.gd):**
+```gdscript
+stats_label.text = """Enemies: %d
+Damage: %d
+Gems: %d
+Time: %d:%02d
+Best Wave: %d | Best Level: %d""" % [
+    GameManager.stats["enemies_killed"],
+    GameManager.stats["damage_dealt"],
+    GameManager.stats["gems_collected"],
+    minutes, seconds,
+    GameManager.high_score_wave,
+    GameManager.high_score_level
+]
+
+coins_label.text = "+%d Pit Coins (Total: %d)" % [_coins_earned, MetaManager.pit_coins]
+```
+
+**Stats Tracked:**
+- Wave reached
+- Level reached
+- Time survived
+- Enemies killed
+- Damage dealt
+- Gems collected
+- Pit Coins earned
+
+**Post-Game Options:**
+- Shop button (meta shop)
+- Restart button
+
+### Comparison
+
+| Feature | GoPit | BallxPit |
+|---------|-------|----------|
+| Wave reached | ✅ | ✅ |
+| Time survived | ✅ | ✅ |
+| Enemies killed | ✅ | ✅ |
+| Damage dealt | ✅ | ✅ |
+| Gems/Gold | ✅ | ✅ |
+| High score tracking | ✅ Best wave/level | ✅ |
+| Shop access | ✅ From game over | ✅ |
+| Quick restart | ✅ | ✅ |
+| Achievements | ❌ None | ✅ |
+| Share score | ❌ None | ✅ |
+
+### What GoPit Does Well
+
+- ✅ Clean stats display
+- ✅ High score tracking with "NEW BEST!" indicator
+- ✅ Shop access from game over
+- ✅ Pit Coins earned displayed
+
+### Gaps
+
+1. **Achievements**: No achievement system
+2. **Social**: No score sharing
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add achievements | Run-based achievements |
+| **P3** | Add share feature | Screenshot/leaderboard |
+
+**GoPit has functional game over screen - needs achievements for engagement.**
+
+---
+
+## Appendix CM: HUD and UI Layout
+
+### BallxPit HUD
+
+**Elements:**
+- HP bar (top left)
+- Wave/stage indicator
+- Currency counter
+- Ball queue display (shows next balls)
+- Passive slots with icons
+- Speed toggle button
+- Pause button
+
+**Layout Philosophy:**
+- Minimal during gameplay
+- Key info at glance
+- Ball queue is prominent
+
+### GoPit HUD
+
+**Implementation (hud.gd):**
+```gdscript
+@onready var hp_bar: ProgressBar = $TopBar/HPBar
+@onready var hp_label: Label = $TopBar/HPBar/HPLabel
+@onready var wave_label: Label = $TopBar/WaveLabel
+@onready var mute_button: Button = $TopBar/MuteButton
+@onready var pause_button: Button = $TopBar/PauseButton
+@onready var xp_bar: ProgressBar = $XPBarContainer/XPBar
+@onready var level_label: Label = $XPBarContainer/LevelLabel
+@onready var combo_label: Label = $ComboLabel
+```
+
+**Elements:**
+- HP bar with numeric display
+- Wave counter (shows stage + wave)
+- XP bar with level
+- Combo indicator
+- Mute toggle (speaker icon)
+- Pause button
+
+**Features:**
+```gdscript
+func _update_wave() -> void:
+    var stage_name := StageManager.get_stage_name()
+    var wave_in_stage := StageManager.wave_in_stage
+    wave_label.text = "%s %d/%d" % [stage_name, wave_in_stage, waves_before_boss]
+```
+
+### Comparison
+
+| Element | GoPit | BallxPit |
+|---------|-------|----------|
+| HP bar | ✅ With numbers | ✅ |
+| Wave indicator | ✅ Stage+wave | ✅ |
+| XP/Level display | ✅ | ✅ |
+| Ball queue | ❌ None | ✅ |
+| Passive icons | ❌ None | ✅ |
+| Speed toggle | ❌ None | ✅ |
+| Mute button | ✅ | ✅ |
+| Pause button | ✅ | ✅ |
+
+### What GoPit Does Well
+
+- ✅ Clean, minimal layout
+- ✅ HP shows both bar and numbers
+- ✅ Wave shows stage context
+- ✅ XP progress visible
+
+### Gaps
+
+1. **Ball queue**: No visibility of upcoming balls
+2. **Passive display**: No passive icons shown
+3. **Speed control**: No speed toggle UI
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P1** | Add ball queue UI | Show next 4-5 balls |
+| **P2** | Add passive icons | Show active upgrades |
+| **P2** | Add speed toggle | 3-speed control |
+
+**GoPit has clean HUD - needs ball queue for slot-based firing.**
+
+---
+
+## Appendix CN: Combo System (GoPit Feature!)
+
+### BallxPit Combo
+
+Limited combo mechanics - focus is on builds, not combos.
+
+### GoPit Combo System
+
+**Implementation (hud.gd + game_manager):**
+```gdscript
+func _on_combo_changed(combo: int, multiplier: float) -> void:
+    if combo >= 2:
+        combo_label.visible = true
+        combo_label.text = "%dx COMBO!" % combo
+        if multiplier > 1.0:
+            combo_label.text += " (%.1fx XP)" % multiplier
+
+        # Color based on multiplier
+        if multiplier >= 2.0:
+            combo_label.modulate = Color(1.0, 0.3, 0.3)  # Red for max
+        elif multiplier >= 1.5:
+            combo_label.modulate = Color(1.0, 0.8, 0.2)  # Yellow
+        else:
+            combo_label.modulate = Color.WHITE
+
+        # Pop animation
+        combo_label.scale = Vector2(1.3, 1.3)
+        tween.tween_property(combo_label, "scale", Vector2.ONE, 0.15)
+```
+
+**Features:**
+- Combo counter starts at 2
+- XP multiplier bonus (up to 2.0x)
+- Visual color coding:
+  - White: 1.0x-1.5x
+  - Yellow: 1.5x-2.0x
+  - Red: 2.0x+ (max)
+- Pop animation on increase
+
+### GoPit ADVANTAGE
+
+This is a **UNIQUE FEATURE** that enhances gameplay:
+1. **Rewards rapid kills** - encourages aggressive play
+2. **XP multiplier** - faster leveling with skill
+3. **Visual feedback** - satisfying color changes
+4. **Animation** - juice for player actions
+
+### Wave Announcement
+
+**Implementation (wave_announcement.gd):**
+```gdscript
+func _show_announcement(wave: int) -> void:
+    wave_label.text = "WAVE %d" % wave
+    visible = true
+
+    var tween := create_tween()
+    // Fade in and scale up
+    tween.tween_property(wave_label, "modulate:a", 1.0, 0.2)
+    tween.parallel().tween_property(wave_label, "scale", Vector2(1.2, 1.2), 0.2)
+    // Hold
+    tween.tween_interval(0.8)
+    // Fade out and scale down
+    tween.tween_property(wave_label, "modulate:a", 0.0, 0.3)
+```
+
+- ✅ Animated wave announcements
+- ✅ Scale + fade effects
+- ✅ Non-intrusive timing
+
+### Recommendations
+
+| Priority | Change | Description |
+|----------|--------|-------------|
+| **P3** | Add combo decay timer | Visual countdown |
+| **P3** | Add combo milestone sounds | Audio feedback |
+
+**GoPit's combo system is a UNIQUE FEATURE that adds depth to gameplay!**
+
+---
+
 ## Appendix BT: FINAL EXECUTIVE SUMMARY
 
 ### Documentation Status
 
-- **92 appendices** (A through CH)
+- **98 appendices** (A through CN)
 - **91 open beads** tracking all gaps
-- **6,500+ lines** of comparison
+- **8,300+ lines** of comparison
 
 ### The #1 Fundamental Difference
 
