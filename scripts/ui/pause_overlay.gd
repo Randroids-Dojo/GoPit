@@ -1,10 +1,11 @@
 extends CanvasLayer
-## Pause menu overlay with mute toggle
+## Pause menu overlay with mute and screen shake toggles
 
 signal resumed
 signal quit_requested
 
 @onready var mute_button: Button = $DimBackground/Panel/VBoxContainer/MuteButton
+@onready var screen_shake_button: Button = $DimBackground/Panel/VBoxContainer/ScreenShakeButton
 @onready var resume_button: Button = $DimBackground/Panel/VBoxContainer/ResumeButton
 @onready var quit_button: Button = $DimBackground/Panel/VBoxContainer/QuitButton
 
@@ -21,9 +22,13 @@ func _ready() -> void:
 	if mute_button:
 		mute_button.pressed.connect(_on_mute_pressed)
 		_update_mute_button()
+	if screen_shake_button:
+		screen_shake_button.pressed.connect(_on_screen_shake_pressed)
+		_update_screen_shake_button()
 
-	# Listen for mute state changes
+	# Listen for state changes
 	SoundManager.mute_changed.connect(_on_mute_changed)
+	CameraShake.screen_shake_changed.connect(_on_screen_shake_changed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -47,6 +52,7 @@ func _pause() -> void:
 	visible = true
 	GameManager.pause_game()
 	_update_mute_button()
+	_update_screen_shake_button()
 
 
 func _resume() -> void:
@@ -80,3 +86,19 @@ func _update_mute_button() -> void:
 			mute_button.text = "Sound: OFF"
 		else:
 			mute_button.text = "Sound: ON"
+
+
+func _on_screen_shake_pressed() -> void:
+	CameraShake.toggle_screen_shake()
+
+
+func _on_screen_shake_changed(_enabled: bool) -> void:
+	_update_screen_shake_button()
+
+
+func _update_screen_shake_button() -> void:
+	if screen_shake_button:
+		if CameraShake.screen_shake_enabled:
+			screen_shake_button.text = "Screen Shake: ON"
+		else:
+			screen_shake_button.text = "Screen Shake: OFF"
