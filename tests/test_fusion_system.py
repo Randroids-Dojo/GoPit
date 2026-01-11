@@ -331,16 +331,20 @@ async def test_fission_returns_upgrades_or_coins(game):
 
 @pytest.mark.asyncio
 async def test_fission_upgrades_are_valid(game):
-    """Fission upgrades should have valid action types."""
+    """Fission upgrades should have valid action types (balls AND passives)."""
     result = await game.call(
         "/root/FusionRegistry",
         "apply_fission"
     )
     for upgrade in result.get("upgrades", []):
         assert "action" in upgrade, "Upgrade should have action"
-        assert upgrade["action"] in ["level_up", "new_ball"], \
+        assert upgrade["action"] in ["level_up", "new_ball", "passive"], \
             f"Invalid action: {upgrade['action']}"
-        assert "ball_type" in upgrade, "Upgrade should have ball_type"
+        # Ball upgrades have ball_type, passive upgrades have passive_type
+        if upgrade["action"] in ["level_up", "new_ball"]:
+            assert "ball_type" in upgrade, "Ball upgrade should have ball_type"
+        elif upgrade["action"] == "passive":
+            assert "passive_type" in upgrade, "Passive upgrade should have passive_type"
 
 
 # ============================================================================

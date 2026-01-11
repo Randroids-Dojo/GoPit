@@ -163,6 +163,7 @@ func _reset_for_new_run() -> void:
 	owned_fused_balls.clear()
 	active_evolved_type = EvolvedBallType.NONE
 	active_fused_id = ""
+	passive_stacks.clear()
 
 
 # ===== EVOLUTION (Specific Recipes) =====
@@ -365,7 +366,7 @@ func get_all_fused_ids() -> Array[String]:
 # ===== FISSION (Random Upgrades) =====
 
 func apply_fission() -> Dictionary:
-	"""Apply fission effect - random upgrades or Pit Coins if all maxed"""
+	"""Apply fission effect - random upgrades (balls AND passives) or Pit Coins if all maxed"""
 	var result := {
 		"type": "fission",
 		"upgrades": [],
@@ -375,8 +376,12 @@ func apply_fission() -> Dictionary:
 	# Check what can be upgraded
 	var upgradeable := BallRegistry.get_upgradeable_balls()
 	var unowned := BallRegistry.get_unowned_ball_types()
+	var available_passives := get_available_passives()
 
-	if upgradeable.size() == 0 and unowned.size() == 0:
+	var has_ball_upgrades := upgradeable.size() > 0 or unowned.size() > 0
+	var has_passive_upgrades := available_passives.size() > 0
+
+	if not has_ball_upgrades and not has_passive_upgrades:
 		# All maxed - give Pit Coins (meta currency)
 		var coin_bonus := 50 + GameManager.current_wave * 5
 		MetaManager.pit_coins += coin_bonus
@@ -388,8 +393,19 @@ func apply_fission() -> Dictionary:
 	var num_upgrades := randi_range(1, 5)
 
 	for i in num_upgrades:
-		# 60% chance to level up owned ball, 40% chance new ball
-		if upgradeable.size() > 0 and (unowned.size() == 0 or randf() < 0.6):
+		# Refresh available passives list each iteration
+		available_passives = get_available_passives()
+		has_passive_upgrades = available_passives.size() > 0
+
+		# 40% chance for passive upgrade if available, 60% chance for ball upgrade
+		var roll := randf()
+		if has_passive_upgrades and (not has_ball_upgrades or roll < 0.4):
+			# Apply random passive upgrade
+			var passive_type: PassiveType = available_passives.pick_random()
+			apply_passive(passive_type)
+			result["upgrades"].append({"action": "passive", "passive_type": passive_type})
+		elif upgradeable.size() > 0 and (unowned.size() == 0 or randf() < 0.6):
+			# Level up owned ball
 			var ball_type: BallRegistry.BallType = upgradeable.pick_random()
 			BallRegistry.level_up_ball(ball_type)
 			result["upgrades"].append({"action": "level_up", "ball_type": ball_type})
@@ -397,6 +413,7 @@ func apply_fission() -> Dictionary:
 			if BallRegistry.get_ball_level(ball_type) >= 3:
 				upgradeable.erase(ball_type)
 		elif unowned.size() > 0:
+			# Add new ball
 			var ball_type: BallRegistry.BallType = unowned.pick_random()
 			BallRegistry.add_ball(ball_type)
 			result["upgrades"].append({"action": "new_ball", "ball_type": ball_type})
@@ -404,4 +421,177 @@ func apply_fission() -> Dictionary:
 			# Add to upgradeable since it starts at L1
 			upgradeable.append(ball_type)
 
+		# Update ball upgrade availability
+		has_ball_upgrades = upgradeable.size() > 0 or unowned.size() > 0
+
 	return result
+
+
+# ===== PASSIVE UPGRADES (for Fission) =====
+
+enum PassiveType {
+	DAMAGE,
+	FIRE_RATE,
+	MAX_HP,
+	MULTI_SHOT,
+	BALL_SPEED,
+	PIERCING,
+	RICOCHET,
+	CRITICAL,
+	MAGNETISM,
+	LEADERSHIP
+}
+
+const PASSIVE_DATA := {
+	PassiveType.DAMAGE: {
+		"name": "Power Up",
+		"description": "+5 Ball Damage",
+		"max_stacks": 10
+	},
+	PassiveType.FIRE_RATE: {
+		"name": "Quick Fire",
+		"description": "-0.1s Cooldown",
+		"max_stacks": 4
+	},
+	PassiveType.MAX_HP: {
+		"name": "Vitality",
+		"description": "+25 Max HP",
+		"max_stacks": 10
+	},
+	PassiveType.MULTI_SHOT: {
+		"name": "Multi Shot",
+		"description": "+1 Ball per shot",
+		"max_stacks": 3
+	},
+	PassiveType.BALL_SPEED: {
+		"name": "Velocity",
+		"description": "+100 Ball Speed",
+		"max_stacks": 5
+	},
+	PassiveType.PIERCING: {
+		"name": "Piercing",
+		"description": "Pierce +1 enemy",
+		"max_stacks": 3
+	},
+	PassiveType.RICOCHET: {
+		"name": "Ricochet",
+		"description": "+5 wall bounces",
+		"max_stacks": 4
+	},
+	PassiveType.CRITICAL: {
+		"name": "Critical Hit",
+		"description": "+10% crit chance",
+		"max_stacks": 5
+	},
+	PassiveType.MAGNETISM: {
+		"name": "Magnetism",
+		"description": "Gems attracted",
+		"max_stacks": 3
+	},
+	PassiveType.LEADERSHIP: {
+		"name": "Leadership",
+		"description": "+20% Baby Ball rate",
+		"max_stacks": 5
+	}
+}
+
+# Passive stacks for current run
+var passive_stacks: Dictionary = {}  # PassiveType -> int
+
+
+func get_passive_stacks(passive_type: PassiveType) -> int:
+	"""Get current stack count for a passive"""
+	return passive_stacks.get(passive_type, 0)
+
+
+func get_passive_max_stacks(passive_type: PassiveType) -> int:
+	"""Get max stacks for a passive"""
+	return PASSIVE_DATA.get(passive_type, {}).get("max_stacks", 99)
+
+
+func get_passive_name(passive_type: PassiveType) -> String:
+	"""Get display name for a passive"""
+	return PASSIVE_DATA.get(passive_type, {}).get("name", "Unknown")
+
+
+func get_passive_description(passive_type: PassiveType) -> String:
+	"""Get description for a passive"""
+	return PASSIVE_DATA.get(passive_type, {}).get("description", "")
+
+
+func get_available_passives() -> Array[PassiveType]:
+	"""Get all passives that haven't reached max stacks"""
+	var available: Array[PassiveType] = []
+	for passive_type in PASSIVE_DATA:
+		var current: int = passive_stacks.get(passive_type, 0)
+		var max_stack: int = PASSIVE_DATA[passive_type].get("max_stacks", 99)
+		if current < max_stack:
+			available.append(passive_type)
+	return available
+
+
+func apply_passive(passive_type: PassiveType) -> bool:
+	"""Apply a passive upgrade. Returns true if successful."""
+	var current: int = passive_stacks.get(passive_type, 0)
+	var max_stack: int = PASSIVE_DATA.get(passive_type, {}).get("max_stacks", 99)
+
+	if current >= max_stack:
+		return false
+
+	passive_stacks[passive_type] = current + 1
+
+	# Apply the actual effect
+	match passive_type:
+		PassiveType.DAMAGE:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("increase_damage"):
+				ball_spawner.increase_damage(5)
+		PassiveType.FIRE_RATE:
+			var fire_button := _get_fire_button()
+			if fire_button and "cooldown_duration" in fire_button:
+				fire_button.cooldown_duration = maxf(0.1, fire_button.cooldown_duration - 0.1)
+		PassiveType.MAX_HP:
+			GameManager.max_hp += 25
+			GameManager.heal(25)
+		PassiveType.MULTI_SHOT:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_multi_shot"):
+				ball_spawner.add_multi_shot()
+		PassiveType.BALL_SPEED:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("increase_speed"):
+				ball_spawner.increase_speed(100)
+		PassiveType.PIERCING:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_piercing"):
+				ball_spawner.add_piercing(1)
+		PassiveType.RICOCHET:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_ricochet"):
+				ball_spawner.add_ricochet(5)
+		PassiveType.CRITICAL:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_crit_chance"):
+				ball_spawner.add_crit_chance(0.1)
+		PassiveType.MAGNETISM:
+			GameManager.gem_magnetism_range += 200.0
+		PassiveType.LEADERSHIP:
+			GameManager.add_leadership(0.2)
+
+	return true
+
+
+func _get_ball_spawner() -> Node:
+	"""Get ball spawner node from tree"""
+	var tree := Engine.get_main_loop()
+	if tree is SceneTree:
+		return tree.get_first_node_in_group("ball_spawner")
+	return null
+
+
+func _get_fire_button() -> Node:
+	"""Get fire button node from tree"""
+	var tree := Engine.get_main_loop()
+	if tree is SceneTree:
+		return tree.get_first_node_in_group("fire_button")
+	return null
