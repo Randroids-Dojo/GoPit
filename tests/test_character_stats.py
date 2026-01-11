@@ -29,6 +29,15 @@ async def test_speed_mult_affects_player_movement(game):
 @pytest.mark.asyncio
 async def test_speed_mult_affects_fire_rate(game):
     """Verify character speed multiplier affects fire button cooldown."""
+    # Disable autofire so we can control timing
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+
+    # Wait for fire button to be ready (may be on cooldown from autofire)
+    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+
     # Get fire button cooldown duration
     cooldown_duration = await game.get_property(FIRE_BUTTON, "cooldown_duration")
     assert cooldown_duration > 0, "Fire button should have a cooldown duration"
@@ -170,6 +179,14 @@ async def test_all_stat_multipliers_have_defaults(game):
     ball_spawner_node = await game.get_node(BALL_SPAWNER)
     assert ball_spawner_node is not None, "Ball spawner should exist with default stats"
 
-    # Fire button should be functional
+    # Disable autofire and wait for button to be ready
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+
+    # Wait for fire button to be ready (may be on cooldown from autofire)
     is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+
+    # Fire button should be functional
     assert is_ready is True, "Fire button should be ready with default stats"

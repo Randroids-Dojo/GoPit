@@ -115,6 +115,15 @@ def report():
 @pytest.mark.asyncio
 async def test_fire_button_cooldown(game, report):
     """Test that fire button cooldown state transitions correctly."""
+    # Disable autofire so we control timing
+    await game.call(PATHS["fire_button"], "set_autofire", [False])
+
+    # Wait for fire button to be ready (may be on cooldown from autofire)
+    is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
+
     # Initially button should be ready
     is_ready_initial = await game.get_property(PATHS["fire_button"], "is_ready")
     assert is_ready_initial, "Fire button should start ready"
@@ -250,6 +259,15 @@ async def test_ball_wall_bounce(game, report):
 @pytest.mark.asyncio
 async def test_ball_despawn_offscreen(game, report):
     """Test balls despawn when going off screen."""
+    # Disable autofire so we control when balls spawn
+    await game.call(PATHS["fire_button"], "set_autofire", [False])
+
+    # Wait for fire button to be ready (may be on cooldown from autofire)
+    is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(PATHS["fire_button"], "is_ready")
+
     # Stop baby ball spawner to prevent auto-spawned balls from affecting count
     baby_spawner_path = "/root/Game/GameArea/BabyBallSpawner"
     await game.call(baby_spawner_path, "stop")

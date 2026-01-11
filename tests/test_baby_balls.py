@@ -7,6 +7,7 @@ PATHS = {
     "baby_spawner": "/root/Game/GameArea/BabyBallSpawner",
     "player": "/root/Game/GameArea/Player",
     "enemies": "/root/Game/GameArea/Enemies",
+    "fire_button": "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton",
 }
 
 
@@ -33,10 +34,16 @@ async def test_baby_balls_spawn_automatically(game):
 @pytest.mark.asyncio
 async def test_baby_ball_spawner_can_stop(game):
     """Baby ball spawner should stop when stop() is called."""
+    # Disable autofire so it doesn't spawn balls during this test
+    await game.call(PATHS["fire_button"], "set_autofire", [False])
+
     # Stop the spawner
     await game.call(PATHS["baby_spawner"], "stop")
 
-    # Get ball count
+    # Wait a moment for any in-flight balls to settle
+    await asyncio.sleep(0.5)
+
+    # Get ball count after stopping
     initial_count = await game.call(PATHS["balls"], "get_child_count")
 
     # Wait for potential spawns
@@ -46,7 +53,8 @@ async def test_baby_ball_spawner_can_stop(game):
     # Ball count should not increase significantly (may decrease as balls despawn)
     assert final_count <= initial_count + 1, "No new baby balls should spawn when stopped"
 
-    # Restart for other tests
+    # Re-enable autofire and restart for other tests
+    await game.call(PATHS["fire_button"], "set_autofire", [True])
     await game.call(PATHS["baby_spawner"], "start")
 
 

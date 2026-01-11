@@ -14,13 +14,18 @@ async def test_fire_once(game):
     game_node = await game.get_node(GAME)
     assert game_node is not None, "Game scene should be loaded"
 
-    # Get initial ball count (should be 0)
+    # Disable autofire so we can test manual firing
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+
+    # Wait for fire button to be ready (may be on cooldown from autofire)
+    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+
+    # Get initial ball count
     balls_before = await game.call(BALLS_CONTAINER, "get_child_count")
     print(f"Balls before firing: {balls_before}")
-
-    # Verify button is ready
-    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-    assert is_ready, "Fire button should be ready"
 
     # Click the fire button
     await game.click(FIRE_BUTTON)
@@ -38,16 +43,14 @@ async def test_fire_once(game):
 @pytest.mark.asyncio
 async def test_fire_with_aim(game):
     """Fire a ball while aiming in a direction."""
-    # Get the aim controller to set aim direction
-    aim_controller = "/root/Game/GameController"
-    joystick = "/root/Game/UI/HUD/InputContainer/HBoxContainer/JoystickContainer/VirtualJoystick"
+    # Disable autofire so we can test manual firing
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
 
-    # Set aim direction via joystick (if it has an aim_direction property)
-    # For now, just verify we can fire - aim testing requires joystick input simulation
-
-    # Verify button is ready
+    # Wait for fire button to be ready (may be on cooldown from autofire)
     is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-    assert is_ready, "Fire button should be ready"
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
 
     # Click the fire button
     await game.click(FIRE_BUTTON)
@@ -61,6 +64,15 @@ async def test_fire_with_aim(game):
 @pytest.mark.asyncio
 async def test_fire_multiple(game):
     """Fire multiple balls and verify they spawn correctly."""
+    # Disable autofire so we control when balls fire
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+
+    # Wait for fire button to be ready (may be on cooldown from autofire)
+    is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+    while not is_ready:
+        await asyncio.sleep(0.1)
+        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
+
     # Fire 3 balls
     for i in range(3):
         # Wait for cooldown if needed

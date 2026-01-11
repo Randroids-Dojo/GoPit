@@ -201,13 +201,15 @@ async def test_shatter_freeze_duration_bonus(game):
 
 
 @pytest.mark.asyncio
-async def test_default_damage_vs_frozen_is_one(game):
-    """Without Shatter, damage vs frozen should be 1.0x."""
+async def test_default_damage_vs_frozen_is_baseline(game):
+    """Without Shatter, damage vs frozen should be 1.25x (baseline frozen bonus)."""
     success = await select_and_start_with_character(game, "Pyro")
     assert success, "Should be able to select Pyro"
 
     frozen_mult = await game.call(GAME_MANAGER, "get_damage_vs_frozen")
-    assert abs(frozen_mult - 1.0) < 0.01, f"Default damage vs frozen should be 1x, got {frozen_mult}"
+    # Baseline: frozen enemies take +25% damage (1.25x)
+    # With Shatter passive: +50% (1.5x)
+    assert abs(frozen_mult - 1.25) < 0.01, f"Baseline damage vs frozen should be 1.25x, got {frozen_mult}"
 
 
 # ============================================================================
