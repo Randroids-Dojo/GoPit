@@ -25,8 +25,8 @@ Track progress with [x] marks:
 - [x] Status effect: Bleed damage/duration
 - [x] Boss HP (Slime King)
 - [x] Boss weak point damage multiplier
-- [ ] Baby ball damage (% of parent)
-- [ ] Baby ball spawn interval
+- [x] Baby ball damage (% of parent)
+- [x] Baby ball spawn interval
 - [ ] Magnetism range per upgrade level
 
 ---
@@ -785,3 +785,79 @@ Formula: `100 + (level - 1) * 50`
 3. **Add aerial boss** - Requires specific balls/timing
 
 **Recommendation**: Implement **weak point system** for Slime King (crown = 2x damage). This adds skill expression and reward for precise aiming. Future bosses should have unique weak point locations.
+
+---
+
+### 11. Baby Ball Mechanics (Damage & Spawn)
+**Iteration**: 11 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [How do stats work - Steam Discussion](https://steamcommunity.com/app/2062430/discussions/0/687489618510307449/)
+- [Leadership stat discussion](https://steamcommunity.com/app/2062430/discussions/0/595162925303336512/)
+
+**Key Findings**:
+- **Leadership stat** affects baby ball count and damage
+- Base damage: 11-17 at Leadership 4
+- Baby balls **block specials in firing queue** (can reduce DPS)
+- High leadership can flood queue, hurting overall damage
+- Empty Nester character: no baby balls, fires multiple specials
+- War Horn/Midnight Oil + Fireball synergizes with baby ball damage
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_baby_ball_mechanics.py`
+
+**Base Values**:
+| Setting | Value |
+|---------|-------|
+| Spawn Interval | 2.0s |
+| Damage Multiplier | 50% of parent |
+| Visual Scale | 60% |
+| Min Interval | 0.3s |
+
+**Baby Ball Damage (50% of parent)**:
+| Parent Ball | Parent Damage | Baby Damage |
+|-------------|---------------|-------------|
+| Basic (L1) | 10 | 5 |
+| Basic (L2) | 15 | 7 |
+| Basic (L3) | 20 | 10 |
+| Iron (L3) | 30 | 15 |
+
+**Spawn Rate Modifiers**:
+- Leadership bonus: Reduces interval
+- Character leadership mult: Varies
+- Speed mult: Faster = faster spawns
+- Squad Leader passive: +30% rate
+- Minimum interval: 0.3s cap
+
+**Spawn Rate Examples**:
+| Modifiers | Interval | Rate |
+|-----------|----------|------|
+| Base | 1.00s | 1.0/s |
+| 1.5x speed | 0.67s | 1.5/s |
+| Squad Leader | 0.87s | 1.1/s |
+| Max combined | 0.30s | 3.3/s |
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Damage System | Leadership stat | 50% of parent | GoPit simpler |
+| Spawn System | Count-based queue | Timer-based auto | **Different!** |
+| Queue Issues | Blocks specials | N/A (separate) | GoPit avoids issue |
+| Damage Range | 11-17 base | 5-15 | Similar range |
+
+#### Alignment Recommendation
+
+**Priority**: P3 (Low)
+
+**Assessment**: GoPit's simpler baby ball system avoids BallxPit's queue-flooding issue. The 50% damage multiplier is easy to understand.
+
+**Options**:
+1. **Keep current** - Simple, effective, no queue issues
+2. **Add Leadership damage scaling** - Baby damage scales with stat
+3. **Add queue system** - Would match BallxPit but add complexity
+
+**Recommendation**: Keep current system. The timer-based spawn with 50% damage is intuitive and avoids the queue-flooding problem that BallxPit players complain about.
