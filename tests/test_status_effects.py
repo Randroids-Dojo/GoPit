@@ -165,7 +165,9 @@ async def test_bleed_can_stack(game):
 @pytest.mark.asyncio
 async def test_ball_types_match_status_effects(game):
     """Verify ball types align with status effect types."""
-    # Fire a ball and check the mapping works
+    # Disable autofire so we can control firing
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+
     # Wait for button to be ready
     ready = await wait_for_fire_ready(game)
     assert ready, "Fire button should become ready within timeout"
