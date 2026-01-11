@@ -23,8 +23,8 @@ Track progress with [x] marks:
 - [x] Status effect: Freeze slow %/duration
 - [x] Status effect: Poison damage/duration
 - [x] Status effect: Bleed damage/duration
-- [ ] Boss HP (Slime King)
-- [ ] Boss weak point damage multiplier
+- [x] Boss HP (Slime King)
+- [x] Boss weak point damage multiplier
 - [ ] Baby ball damage (% of parent)
 - [ ] Baby ball spawn interval
 - [ ] Magnetism range per upgrade level
@@ -714,3 +714,74 @@ Formula: `100 + (level - 1) * 50`
 4. **Add Hemorrhage mechanic** - 10+ bleed stacks = HP% burst
 
 **Recommendation**: Keep streamlined status system for mobile. Consider adding **Freeze damage amp (+25%)** for Shatter synergy. For a future "Bleeder" character, implement Hemorrhage-style mechanic (high bleed stacks = burst damage).
+
+---
+
+### 10. Boss Mechanics (HP & Weak Points)
+**Iteration**: 10 | **Date**: 2026-01-11
+
+#### BallxPit (Web Research)
+
+**Sources**:
+- [Ball x Pit Boss Battle Guide](https://ballxpit.org/guides/boss-battle-guide/)
+- [All Main Bosses Ranked](https://www.thegamer.com/ball-x-pit-hardest-area-bosses-to-beat/)
+
+**Key Findings**:
+- **Weak point system**: Bosses have hit zones (Skull King's crown)
+- Must hit specific part for maximum damage
+- Pass-through attacks can hit weak points from front
+- **8+ boss types** across stages
+- Aerial bosses (Lord of Owls) require special tactics
+- Best boss killers: Black Hole, Holy Laser, Nosferatu
+
+#### GoPit (PlayGodot Measurement)
+
+**Test**: `tests/analysis/test_boss_mechanics.py`
+
+**Slime King Stats**:
+| Stat | Value |
+|------|-------|
+| Max HP | 500 |
+| XP Value | 100 |
+| Slam Damage | 30 |
+| Body Radius | 60 px |
+
+**Phase System**:
+| Phase | HP Range | Attacks |
+|-------|----------|---------|
+| Intro | 500 (inv) | None |
+| Phase 1 | 500-330 | slam, summon |
+| Phase 2 | 330-165 | slam, summon, split |
+| Phase 3 | 165-0 | slam, summon, rage |
+
+**Timings**:
+- Intro Duration: 2.0s (invulnerable)
+- Phase Transition: 1.5s (invulnerable)
+- Attack Cooldown: 2.5s
+- Telegraph Duration: 1.0s
+
+**Weak Points**: **NOT IMPLEMENTED** - uniform damage everywhere
+
+#### Comparison
+
+| Aspect | BallxPit | GoPit | Notes |
+|--------|----------|-------|-------|
+| Weak Points | Yes (crown, etc.) | No | **Gap!** |
+| Phase System | Yes | Yes (3 phases) | **Aligned** |
+| Invulnerable Phases | Unknown | Yes | GoPit clear |
+| Boss Variety | 8+ stages | 1 boss | **Gap!** |
+
+#### Alignment Recommendation
+
+**Priority**: P1 (High) - Missing weak points
+
+**Key Gaps**:
+1. No weak point system - reduces skill expression
+2. Only 1 boss type - limits content variety
+
+**Options**:
+1. **Add weak point hitbox** - Crown deals 2x damage
+2. **Add more bosses** - Different attack patterns per stage
+3. **Add aerial boss** - Requires specific balls/timing
+
+**Recommendation**: Implement **weak point system** for Slime King (crown = 2x damage). This adds skill expression and reward for precise aiming. Future bosses should have unique weak point locations.
