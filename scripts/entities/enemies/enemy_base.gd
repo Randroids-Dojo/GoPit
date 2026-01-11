@@ -65,6 +65,8 @@ func _scale_with_wave() -> void:
 	var wave := GameManager.current_wave
 	# Scale HP: +10% per wave
 	max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
+	# Apply post-boss HP spike (~3x per boss defeated)
+	max_hp = int(max_hp * StageManager.get_post_boss_hp_multiplier())
 	# Scale speed: +5% per wave (capped at 2x)
 	speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
 	# Scale XP: +5% per wave
