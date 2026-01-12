@@ -674,6 +674,10 @@ text = "Sound: ON"
 layout_mode = 2
 text = "Screen Shake: ON"
 
+[node name="HitboxButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Show Hitbox: OFF"
+
 [node name="QuitButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Quit"

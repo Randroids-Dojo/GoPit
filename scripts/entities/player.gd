@@ -55,6 +55,15 @@ func _draw() -> void:
 	# Draw direction indicator
 	var indicator_length := player_radius * 0.6
 	draw_line(Vector2.ZERO, last_aim_direction * indicator_length, outline_color, 3.0)
+	# Draw hitbox indicator when enabled (helps with precise dodging)
+	if GameManager.show_hitbox:
+		# Draw a bright red circle showing exact collision area
+		var hitbox_color := Color(1.0, 0.2, 0.2, 0.8)
+		draw_arc(Vector2.ZERO, player_radius, 0, TAU, 32, hitbox_color, 3.0)
+		# Draw crosshair at center
+		var cross_size := 8.0
+		draw_line(Vector2(-cross_size, 0), Vector2(cross_size, 0), hitbox_color, 2.0)
+		draw_line(Vector2(0, -cross_size), Vector2(0, cross_size), hitbox_color, 2.0)
 
 
 func set_movement_input(direction: Vector2) -> void:

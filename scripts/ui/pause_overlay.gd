@@ -6,6 +6,7 @@ signal quit_requested
 
 @onready var mute_button: Button = $DimBackground/Panel/VBoxContainer/MuteButton
 @onready var screen_shake_button: Button = $DimBackground/Panel/VBoxContainer/ScreenShakeButton
+@onready var hitbox_button: Button = $DimBackground/Panel/VBoxContainer/HitboxButton
 @onready var resume_button: Button = $DimBackground/Panel/VBoxContainer/ResumeButton
 @onready var quit_button: Button = $DimBackground/Panel/VBoxContainer/QuitButton
 
@@ -25,6 +26,9 @@ func _ready() -> void:
 	if screen_shake_button:
 		screen_shake_button.pressed.connect(_on_screen_shake_pressed)
 		_update_screen_shake_button()
+	if hitbox_button:
+		hitbox_button.pressed.connect(_on_hitbox_pressed)
+		_update_hitbox_button()
 
 	# Listen for state changes
 	SoundManager.mute_changed.connect(_on_mute_changed)
@@ -53,6 +57,7 @@ func _pause() -> void:
 	GameManager.pause_game()
 	_update_mute_button()
 	_update_screen_shake_button()
+	_update_hitbox_button()
 
 
 func _resume() -> void:
@@ -102,3 +107,20 @@ func _update_screen_shake_button() -> void:
 			screen_shake_button.text = "Screen Shake: ON"
 		else:
 			screen_shake_button.text = "Screen Shake: OFF"
+
+
+func _on_hitbox_pressed() -> void:
+	GameManager.show_hitbox = not GameManager.show_hitbox
+	_update_hitbox_button()
+	# Force player to redraw with new hitbox setting
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		player.queue_redraw()
+
+
+func _update_hitbox_button() -> void:
+	if hitbox_button:
+		if GameManager.show_hitbox:
+			hitbox_button.text = "Show Hitbox: ON"
+		else:
+			hitbox_button.text = "Show Hitbox: OFF"

@@ -99,6 +99,9 @@ var is_boss_fight: bool = false  # Auto-magnet during boss fights
 # Boss fight auto-magnet range (QoL feature from BallxPit)
 const BOSS_MAGNET_RANGE: float = 2000.0
 
+# Display settings (QoL features)
+var show_hitbox: bool = false  # Show player hitbox outline for precise dodging
+
 # Passive stats (from slot-based passive system)
 var armor_percent: float = 0.0  # Damage reduction
 var thorns_percent: float = 0.0  # Damage reflect
