@@ -13,6 +13,8 @@ signal baby_ball_spawned(ball: Node2D)
 @export var base_max_babies: int = 3
 ## Extra baby balls per point of Leadership bonus
 @export var leadership_baby_multiplier: float = 2.0
+## Damage bonus per point of Leadership (0.15 = +15% per point)
+@export var leadership_damage_per_point: float = 0.15
 
 var balls_container: Node2D
 var _spawn_timer: Timer
@@ -84,6 +86,12 @@ func get_current_baby_count() -> int:
 	return count
 
 
+func get_leadership_damage_bonus() -> float:
+	"""Returns the Leadership damage bonus multiplier (1.0 = no bonus)"""
+	var char_mult: float = GameManager.character_leadership_mult
+	return 1.0 + (_leadership_bonus * char_mult * leadership_damage_per_point)
+
+
 func _spawn_baby_ball() -> void:
 	if not _player:
 		return
@@ -111,6 +119,7 @@ func _spawn_baby_ball() -> void:
 	_apply_slot_inheritance(ball)
 
 	# Baby balls deal reduced damage based on inherited type
+	# Leadership bonus adds +15% damage per point (char_mult scales this)
 	var base_damage: int = 10
 	if BallRegistry and ball.registry_type >= 0:
 		base_damage = BallRegistry.get_damage(ball.registry_type)
@@ -118,7 +127,9 @@ func _spawn_baby_ball() -> void:
 		var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
 		if ball_spawner and "ball_damage" in ball_spawner:
 			base_damage = ball_spawner.ball_damage
-	ball.damage = int(base_damage * baby_ball_damage_multiplier)
+	var char_mult: float = GameManager.character_leadership_mult
+	var leadership_damage_bonus: float = 1.0 + (_leadership_bonus * char_mult * leadership_damage_per_point)
+	ball.damage = int(base_damage * baby_ball_damage_multiplier * leadership_damage_bonus)
 
 	# Set direction toward nearest enemy
 	var direction := _get_target_direction()
