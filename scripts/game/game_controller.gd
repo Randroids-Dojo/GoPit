@@ -32,6 +32,9 @@ var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 # NOTE: Boss scenes use load() not preload() to avoid class resolution issues during import
 # See boss_base.gd for detailed explanation of Godot's class loading order problem
 var slime_king_scene: PackedScene
+var frost_wyrm_scene: PackedScene
+var sand_golem_scene: PackedScene
+var void_lord_scene: PackedScene
 
 # Boss tracking
 var _current_boss: Node = null
@@ -549,15 +552,27 @@ func _spawn_boss(stage: int) -> void:
 	# Lazy load boss scenes only when needed (avoids class resolution issues during import)
 	if not slime_king_scene:
 		slime_king_scene = load("res://scenes/entities/enemies/bosses/slime_king.tscn")
+	if not frost_wyrm_scene:
+		frost_wyrm_scene = load("res://scenes/entities/enemies/bosses/frost_wyrm.tscn")
+	if not sand_golem_scene:
+		sand_golem_scene = load("res://scenes/entities/enemies/bosses/sand_golem.tscn")
+	if not void_lord_scene:
+		void_lord_scene = load("res://scenes/entities/enemies/bosses/void_lord.tscn")
 
 	var boss_scene: PackedScene = null
 
 	# Select boss based on stage
 	match stage:
-		0:  # The Pit
+		0:  # The Pit - Slime King
 			boss_scene = slime_king_scene
+		1:  # Frozen Depths - Frost Wyrm
+			boss_scene = frost_wyrm_scene
+		2:  # Burning Sands - Sand Golem
+			boss_scene = sand_golem_scene
+		3:  # Final Descent - Void Lord
+			boss_scene = void_lord_scene
 		_:
-			# Fallback to Slime King for other stages (placeholder)
+			# Fallback to Slime King
 			boss_scene = slime_king_scene
 
 	if not boss_scene:

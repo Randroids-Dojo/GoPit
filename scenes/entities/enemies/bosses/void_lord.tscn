@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://void_lord_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/bosses/void_lord.gd" id="1_lord"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lord"]
+radius = 70.0
+
+[node name="VoidLord" type="CharacterBody2D" groups=["boss", "enemies"]]
+collision_layer = 4
+collision_mask = 18
+script = ExtResource("1_lord")
+max_hp = 1000
+speed = 35.0
+damage_to_player = 40
+xp_value = 300
+boss_name = "Void Lord"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_lord")
