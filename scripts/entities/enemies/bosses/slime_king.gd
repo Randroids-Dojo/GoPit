@@ -129,6 +129,11 @@ func take_damage_at_position(amount: int, hit_position: Vector2) -> void:
 		take_damage(amount)
 
 
+func take_damage_at_position_xy(amount: int, hit_x: float, hit_y: float) -> void:
+	## Test-friendly version that accepts separate coordinates
+	take_damage_at_position(amount, Vector2(hit_x, hit_y))
+
+
 func _is_crown_hit(local_pos: Vector2) -> bool:
 	## Check if the hit position is within the crown area
 	## Crown spans: x from -30 to 30, y from -body_radius*0.5 to -body_radius*0.5-30
@@ -141,6 +146,8 @@ func _is_crown_hit(local_pos: Vector2) -> bool:
 
 func _flash_crown_hit() -> void:
 	## Visual feedback for hitting the weak point
+	SoundManager.play(SoundManager.SoundType.WEAK_POINT_HIT)
+
 	var original_crown_color := crown_color
 	crown_color = Color(1.0, 1.0, 1.0)  # Flash white
 	queue_redraw()

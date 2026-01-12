@@ -494,6 +494,26 @@ func _on_fusion_reactor_collected(_reactor: Node2D) -> void:
 		fusion_overlay.show_fusion_ui()
 
 
+func spawn_test_boss() -> String:
+	"""Spawn a Slime King boss for testing. Returns the boss path (for PlayGodot)."""
+	if not slime_king_scene:
+		slime_king_scene = load("res://scenes/entities/enemies/bosses/slime_king.tscn")
+
+	var boss = slime_king_scene.instantiate()
+
+	# Get container (may be null if @onready hasn't run yet)
+	var container := enemies_container
+	if not container:
+		container = get_node_or_null("GameArea/Enemies")
+	if not container:
+		push_error("spawn_test_boss: Could not find enemies container")
+		return ""
+
+	container.add_child(boss)
+	# Return path as string since PlayGodot can't serialize Node references
+	return boss.get_path()
+
+
 func _spawn_boss(stage: int) -> void:
 	"""Spawn the appropriate boss for the current stage"""
 	# Lazy load boss scenes only when needed (avoids class resolution issues during import)
