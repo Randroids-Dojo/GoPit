@@ -107,6 +107,19 @@ func _spawn_swarm_group() -> EnemyBase:
 
 
 func _choose_enemy_type() -> PackedScene:
+	# Get enemy types from current biome
+	var biome: Biome = StageManager.current_biome
+	if biome and biome.enemy_scenes.size() > 0:
+		# Pick randomly from biome's enemy list
+		var idx: int = randi() % biome.enemy_scenes.size()
+		return biome.enemy_scenes[idx]
+
+	# Fallback: wave-based logic if biome has no enemy list
+	return _fallback_enemy_choice()
+
+
+func _fallback_enemy_choice() -> PackedScene:
+	"""Fallback wave-based enemy selection (used if biome.enemy_scenes is empty)"""
 	var wave: int = GameManager.current_wave
 
 	# Wave 1: Only slimes
@@ -131,23 +144,7 @@ func _choose_enemy_type() -> PackedScene:
 		else:
 			return swarm_scene
 
-	# Wave 6: Add archers
-	if wave <= 6:
-		var roll: float = randf()
-		if roll < 0.3:
-			return slime_scene
-		elif roll < 0.45:
-			return bat_scene
-		elif roll < 0.6:
-			return crab_scene
-		elif roll < 0.75:
-			return swarm_scene
-		elif roll < 0.9:
-			return archer_scene
-		else:
-			return golem_scene
-
-	# Wave 7+: All enemy types including bombers
+	# Wave 6+: All types
 	var roll: float = randf()
 	if roll < 0.2:
 		return slime_scene

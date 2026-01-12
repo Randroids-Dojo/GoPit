@@ -1,6 +1,9 @@
-[gd_resource type="Resource" script_class="Biome" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Biome" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/slime.tscn" id="2_slime"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/bat.tscn" id="3_bat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/golem.tscn" id="4_golem"]
 
 [resource]
 script = ExtResource("1_biome")
@@ -8,3 +11,4 @@ biome_name = "Frozen Depths"
 background_color = Color(0.08, 0.15, 0.25, 1)
 wall_color = Color(0.3, 0.5, 0.7, 1)
 waves_before_boss = 10
+enemy_scenes = [ExtResource("2_slime"), ExtResource("3_bat"), ExtResource("4_golem")]
