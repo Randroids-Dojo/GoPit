@@ -30,7 +30,9 @@ async def test_ball_wall_bounce(game, report):
         await asyncio.sleep(0.1)
 
     await game.click(PATHS["fire_button"])
-    await asyncio.sleep(0.1)
+
+    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(0.5)
 
     # Get ball initial position
     balls = await game.call(PATHS["balls"], "get_child_count")
@@ -70,7 +72,9 @@ async def test_ball_despawn_offscreen(game, report):
 
     # Fire straight up
     await game.click(PATHS["fire_button"])
-    await asyncio.sleep(0.1)
+
+    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(0.5)
 
     balls_initial = await game.call(PATHS["balls"], "get_child_count")
     assert balls_initial >= 1, "Should have at least 1 ball after firing"

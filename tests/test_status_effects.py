@@ -174,7 +174,9 @@ async def test_ball_types_match_status_effects(game):
 
     # Fire a ball
     await game.click(FIRE_BUTTON)
-    await asyncio.sleep(0.2)
+
+    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(0.5)
 
     # Verify ball spawned (confirms ball.gd still works with our changes)
     balls = await game.call(BALLS_CONTAINER, "get_child_count")

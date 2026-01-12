@@ -2,11 +2,13 @@ extends Node2D
 ## Spawns balls in the aimed direction when fire is triggered
 ## Now integrates with BallRegistry for ball types and levels
 ## Ball Return Mechanic: Balls return when reaching bottom of screen
+## Queue System: Balls queue up and fire in sequence at fire_rate
 
 signal ball_spawned(ball: Node2D)
 signal ball_returned  # Emitted when a ball returns to player
 signal ball_caught  # Emitted when a ball is caught (active play bonus)
 signal balls_available_changed(available: bool)  # For fire button UI
+signal queue_changed(queue_size: int, max_size: int)  # For queue UI
 
 @export var ball_scene: PackedScene
 @export var spawn_offset: float = 30.0
@@ -31,11 +33,32 @@ var _speed_bonus: float = 0.0
 var balls_in_flight: int = 0
 var _previous_available: bool = true
 
+# Queue-based firing system (like BallxPit)
+# Balls enter a queue and fire one at a time at fire_rate speed
+# Each entry is {type: BallType, spread: float}
+var _fire_queue: Array[Dictionary] = []
+var fire_rate: float = 3.0  # Balls per second (queue drain speed)
+var max_queue_size: int = 20  # Prevent infinite stacking
+var _fire_timer: float = 0.0  # Timer for queue drain
+
 
 func _ready() -> void:
 	add_to_group("ball_spawner")
 	if ball_scene == null:
 		ball_scene = preload("res://scenes/entities/ball.tscn")
+
+
+func _process(delta: float) -> void:
+	# Drain the fire queue at fire_rate speed
+	if _fire_queue.is_empty():
+		return
+
+	_fire_timer += delta
+	var fire_interval: float = 1.0 / fire_rate
+
+	while _fire_timer >= fire_interval and not _fire_queue.is_empty():
+		_fire_timer -= fire_interval
+		_fire_from_queue()
 
 
 func set_aim_direction(direction: Vector2) -> void:
@@ -74,12 +97,7 @@ func fire() -> void:
 	if slot_balls.is_empty():
 		slot_balls = [BallRegistry.active_ball_type if BallRegistry else 0]
 
-	# Enforce ball limit by despawning oldest balls
-	# Total balls = slot_balls.size() * ball_count (multi-shot per slot)
-	var total_balls_to_spawn: int = slot_balls.size() * ball_count
-	_enforce_ball_limit(total_balls_to_spawn)
-
-	# Fire all slot ball types simultaneously
+	# Add all ball types to the queue (they'll fire in sequence)
 	for slot_ball_type in slot_balls:
 		# Each slot fires ball_count balls (multi-shot)
 		for i in range(ball_count):
@@ -87,11 +105,60 @@ func fire() -> void:
 			var spread_offset: float = 0.0
 			if ball_count > 1:
 				spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
-
-			var dir := current_aim_direction.rotated(spread_offset)
-			_spawn_ball_typed(dir, slot_ball_type)
+			_add_to_queue(slot_ball_type, spread_offset)
 
 	SoundManager.play(SoundManager.SoundType.FIRE)
+
+
+func _add_to_queue(ball_type: int, spread: float = 0.0) -> bool:
+	"""Add a ball to the fire queue. Returns false if queue is full."""
+	if _fire_queue.size() >= max_queue_size:
+		return false
+
+	_fire_queue.append({"type": ball_type, "spread": spread})
+	queue_changed.emit(_fire_queue.size(), max_queue_size)
+	return true
+
+
+func _fire_from_queue() -> void:
+	"""Fire one ball from the queue."""
+	if _fire_queue.is_empty():
+		return
+
+	# Check ball availability (return mechanic)
+	if not can_fire():
+		return
+
+	var entry: Dictionary = _fire_queue.pop_front()
+	queue_changed.emit(_fire_queue.size(), max_queue_size)
+
+	var ball_type: int = entry.get("type", 0)
+	var spread: float = entry.get("spread", 0.0)
+
+	# Apply spread offset to current aim direction
+	var dir := current_aim_direction.rotated(spread)
+
+	# Enforce ball limit before spawning
+	_enforce_ball_limit(1)
+
+	_spawn_ball_typed(dir, ball_type)
+
+
+func get_queue_size() -> int:
+	"""Get current queue size."""
+	return _fire_queue.size()
+
+
+func get_max_queue_size() -> int:
+	"""Get maximum queue size."""
+	return max_queue_size
+
+
+func clear_queue() -> void:
+	"""Clear the fire queue."""
+	_fire_queue.clear()
+	_fire_timer = 0.0
+	queue_changed.emit(0, max_queue_size)
 
 
 func _enforce_ball_limit(balls_to_add: int) -> void:

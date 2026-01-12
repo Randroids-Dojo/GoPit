@@ -111,7 +111,9 @@ async def test_fired_ball_has_correct_properties(game):
     """Verify fired balls inherit correct stats from spawner and multipliers."""
     # Fire a ball
     await game.click(FIRE_BUTTON)
-    await asyncio.sleep(0.1)
+
+    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(0.5)
 
     # Get the spawned ball
     ball_count = await game.call(BALLS, "get_child_count")
