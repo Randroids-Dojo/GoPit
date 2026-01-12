@@ -53,6 +53,32 @@ const SPEED_TIER_DATA := {
 }
 var current_speed_tier: SpeedTier = SpeedTier.NORMAL
 
+# Difficulty level system (like BallxPit's Fast+N)
+# Level 1 = Normal, Level 2 = Fast, Level 3-10 = Fast+1 through Fast+8
+# Each level increases enemy stats by DIFFICULTY_SCALE_PER_LEVEL compound
+const MAX_DIFFICULTY_LEVEL: int = 10
+const DIFFICULTY_SCALE_PER_LEVEL: float = 1.5  # 1.5x compound per level
+const DIFFICULTY_XP_BONUS_PER_LEVEL: float = 0.15  # +15% XP per level above 1
+const DIFFICULTY_SPAWN_RATE_PER_LEVEL: float = 0.2  # +20% spawn rate per level
+
+# Difficulty level names for UI
+const DIFFICULTY_NAMES := {
+	1: "Normal",
+	2: "Fast",
+	3: "Fast+",
+	4: "Fast+2",
+	5: "Fast+3",
+	6: "Fast+4",
+	7: "Fast+5",
+	8: "Fast+6",
+	9: "Fast+7",
+	10: "Fast+8"
+}
+
+signal difficulty_level_changed(new_level: int)
+
+var selected_difficulty_level: int = 1  # 1-10, selected before run starts
+
 var current_state: GameState = GameState.MENU:
 	set(value):
 		if value != current_state:
@@ -319,7 +345,7 @@ func return_to_menu() -> void:
 
 
 func add_xp(amount: int) -> void:
-	var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier() * get_loot_multiplier())
+	var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier() * get_loot_multiplier() * get_difficulty_xp_multiplier())
 	current_xp += final_xp
 	if current_xp >= xp_to_next_level:
 		trigger_level_up()
@@ -523,6 +549,65 @@ func get_speed_multiplier() -> float:
 func get_loot_multiplier() -> float:
 	## Returns loot multiplier based on speed tier (higher speed = more loot)
 	return SPEED_TIER_DATA[current_speed_tier]["loot"]
+
+
+# === Difficulty Level System ===
+
+func set_difficulty_level(level: int) -> void:
+	## Set the difficulty level for the next run (1-10)
+	level = clampi(level, 1, MAX_DIFFICULTY_LEVEL)
+	if selected_difficulty_level != level:
+		selected_difficulty_level = level
+		difficulty_level_changed.emit(level)
+
+
+func get_difficulty_level() -> int:
+	## Returns the selected difficulty level (1-10)
+	return selected_difficulty_level
+
+
+func get_difficulty_name() -> String:
+	## Returns the name for the current difficulty level
+	return DIFFICULTY_NAMES.get(selected_difficulty_level, "Unknown")
+
+
+func get_difficulty_enemy_hp_multiplier() -> float:
+	## Returns HP multiplier for enemies based on difficulty level
+	## Level 1 = 1.0x, Level 2 = 1.5x, Level 3 = 2.25x, etc.
+	if selected_difficulty_level <= 1:
+		return 1.0
+	return pow(DIFFICULTY_SCALE_PER_LEVEL, selected_difficulty_level - 1)
+
+
+func get_difficulty_enemy_damage_multiplier() -> float:
+	## Returns damage multiplier for enemies based on difficulty level
+	## Same scaling as HP multiplier
+	return get_difficulty_enemy_hp_multiplier()
+
+
+func get_difficulty_spawn_rate_multiplier() -> float:
+	## Returns spawn rate multiplier based on difficulty level
+	## Level 1 = 1.0x, each level adds 20% more spawns
+	if selected_difficulty_level <= 1:
+		return 1.0
+	return 1.0 + (DIFFICULTY_SPAWN_RATE_PER_LEVEL * (selected_difficulty_level - 1))
+
+
+func get_difficulty_xp_multiplier() -> float:
+	## Returns XP multiplier based on difficulty level
+	## Level 1 = 1.0x, each level adds 15% more XP (caps at 2.35x at level 10)
+	if selected_difficulty_level <= 1:
+		return 1.0
+	return 1.0 + (DIFFICULTY_XP_BONUS_PER_LEVEL * (selected_difficulty_level - 1))
+
+
+func is_difficulty_unlocked(level: int, stage_index: int) -> bool:
+	## Check if a difficulty level is unlocked for a stage
+	## Level 1 always unlocked, higher levels require beating previous level
+	if level <= 1:
+		return true
+	# Must have beaten previous level on this stage to unlock next
+	return MetaManager.has_beaten_difficulty(stage_index, level - 1)
 
 
 func advance_wave() -> void:

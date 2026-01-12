@@ -31,6 +31,11 @@ var unlocked_characters: Array = []  # List of unlocked character names
 var stage_completions: Dictionary = {}
 const GEARS_PER_STAGE: int = 2  # Need 2 unique character completions to unlock next
 
+# Difficulty completion tracking (like BallxPit's Fast+N system)
+# Format: {character_name: {stage_index: highest_difficulty_beaten}}
+# Cascading: beating difficulty N counts as beating 1..N
+var difficulty_completions: Dictionary = {}
+
 # Lifetime stats (accumulated across all runs)
 var lifetime_kills: int = 0
 var lifetime_gems: int = 0
@@ -175,6 +180,76 @@ func get_characters_who_cleared_stage(stage_index: int) -> Array:
 	if stage_index not in stage_completions:
 		return []
 	return stage_completions[stage_index].duplicate()
+
+
+# =============================================================================
+# DIFFICULTY COMPLETION TRACKING
+# =============================================================================
+
+func record_difficulty_completion(character_name: String, stage_index: int, difficulty_level: int) -> bool:
+	"""Record a stage completion at a specific difficulty level.
+	Returns true if this is a new highest difficulty for this character/stage.
+	Cascading: beating level N counts as beating 1..N."""
+	# Initialize character dict if needed
+	if character_name not in difficulty_completions:
+		difficulty_completions[character_name] = {}
+
+	var char_data: Dictionary = difficulty_completions[character_name]
+
+	# Convert stage_index to string for JSON compatibility
+	var stage_key := str(stage_index)
+
+	# Check if this is a new high
+	var current_highest: int = char_data.get(stage_key, 0)
+	if difficulty_level <= current_highest:
+		return false  # Already beaten this or higher
+
+	# New record!
+	char_data[stage_key] = difficulty_level
+	difficulty_completions[character_name] = char_data
+
+	# Also record stage completion for gear system if first time
+	record_stage_completion(stage_index, character_name)
+
+	save_data()
+	return true
+
+
+func get_highest_difficulty_beaten(character_name: String, stage_index: int) -> int:
+	"""Get the highest difficulty level beaten by a character on a stage.
+	Returns 0 if never beaten."""
+	if character_name not in difficulty_completions:
+		return 0
+
+	var char_data: Dictionary = difficulty_completions[character_name]
+	var stage_key := str(stage_index)
+	return char_data.get(stage_key, 0)
+
+
+func has_beaten_difficulty(stage_index: int, difficulty_level: int) -> bool:
+	"""Check if ANY character has beaten a specific difficulty on a stage.
+	Used for unlocking higher difficulty levels."""
+	for character_name in difficulty_completions:
+		var highest := get_highest_difficulty_beaten(character_name, stage_index)
+		if highest >= difficulty_level:
+			return true
+	return false
+
+
+func get_highest_difficulty_for_stage(stage_index: int) -> int:
+	"""Get the highest difficulty beaten by ANY character on a stage."""
+	var highest: int = 0
+	for character_name in difficulty_completions:
+		var char_highest := get_highest_difficulty_beaten(character_name, stage_index)
+		if char_highest > highest:
+			highest = char_highest
+	return highest
+
+
+func get_difficulty_completion_matrix() -> Dictionary:
+	"""Get the full completion matrix for UI display.
+	Returns: {character_name: {stage_index: highest_difficulty}}"""
+	return difficulty_completions.duplicate(true)
 
 
 func get_upgrade_level(upgrade_id: String) -> int:
@@ -398,6 +473,7 @@ func save_data() -> void:
 		"upgrades": unlocked_upgrades,
 		"unlocked_characters": unlocked_characters,
 		"stage_completions": stage_completions,
+		"difficulty_completions": difficulty_completions,
 		"lifetime_kills": lifetime_kills,
 		"lifetime_gems": lifetime_gems,
 		"lifetime_damage": lifetime_damage,
@@ -430,6 +506,7 @@ func load_data() -> void:
 		unlocked_upgrades = data.get("upgrades", {})
 		unlocked_characters = data.get("unlocked_characters", [])
 		stage_completions = data.get("stage_completions", {})
+		difficulty_completions = data.get("difficulty_completions", {})
 		lifetime_kills = data.get("lifetime_kills", 0)
 		lifetime_gems = data.get("lifetime_gems", 0)
 		lifetime_damage = data.get("lifetime_damage", 0)
@@ -445,6 +522,7 @@ func reset_data() -> void:
 	unlocked_upgrades = {}
 	unlocked_characters = []
 	stage_completions = {}
+	difficulty_completions = {}
 	lifetime_kills = 0
 	lifetime_gems = 0
 	lifetime_damage = 0
