@@ -16,7 +16,9 @@ async def test_level_select_exists(game):
 
 @pytest.mark.asyncio
 async def test_level_select_initially_hidden(game):
-    """LevelSelect should be hidden by default."""
+    """LevelSelect should be hidden by default after _ready()."""
+    # Wait for node to fully initialize (race condition in CI)
+    await asyncio.sleep(0.2)
     visible = await game.get_property(LEVEL_SELECT, "visible")
     assert visible is False, "LevelSelect should be hidden initially"
 
