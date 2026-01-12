@@ -1,9 +1,17 @@
 extends Node
 ## Ball Registry - tracks owned ball types and their levels for the current run
 ## Ball levels: L1 (base) -> L2 (+50% stats) -> L3 (+100% stats, fusion-ready)
+##
+## Speed System:
+## - BASE_BALL_SPEED defines the standard speed (px/s)
+## - Each ball type has a speed_multiplier (e.g., 1.0 = normal, 0.75 = slow/heavy)
+## - Level multipliers stack on top: final_speed = BASE × type_mult × level_mult
 
 signal ball_acquired(ball_type: BallType)
 signal ball_leveled_up(ball_type: BallType, new_level: int)
+
+## Base speed constant - all ball speeds are multipliers of this value
+const BASE_BALL_SPEED: float = 800.0
 
 enum BallType {
 	BASIC,
@@ -26,7 +34,7 @@ const BALL_DATA := {
 		"name": "Basic",
 		"description": "Standard ball",
 		"base_damage": 10,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.3, 0.7, 1.0),  # Blue
 		"effect": "none"
 	},
@@ -34,7 +42,7 @@ const BALL_DATA := {
 		"name": "Burn",
 		"description": "Sets enemies on fire",
 		"base_damage": 8,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(1.0, 0.5, 0.1),  # Orange
 		"effect": "burn"
 	},
@@ -42,7 +50,7 @@ const BALL_DATA := {
 		"name": "Freeze",
 		"description": "Slows enemies",
 		"base_damage": 6,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.5, 0.9, 1.0),  # Cyan
 		"effect": "freeze"
 	},
@@ -50,7 +58,7 @@ const BALL_DATA := {
 		"name": "Poison",
 		"description": "Damage over time",
 		"base_damage": 7,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.4, 0.9, 0.2),  # Green
 		"effect": "poison"
 	},
@@ -58,7 +66,7 @@ const BALL_DATA := {
 		"name": "Bleed",
 		"description": "Stacking damage",
 		"base_damage": 8,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.9, 0.2, 0.3),  # Dark red
 		"effect": "bleed"
 	},
@@ -66,7 +74,7 @@ const BALL_DATA := {
 		"name": "Lightning",
 		"description": "Chain damage",
 		"base_damage": 9,
-		"base_speed": 900.0,
+		"speed_multiplier": 1.125,  # Fast (900/800)
 		"color": Color(1.0, 1.0, 0.3),  # Yellow
 		"effect": "lightning"
 	},
@@ -74,7 +82,7 @@ const BALL_DATA := {
 		"name": "Iron",
 		"description": "High damage, knockback",
 		"base_damage": 15,
-		"base_speed": 600.0,
+		"speed_multiplier": 0.75,  # Slow, heavy (600/800)
 		"color": Color(0.7, 0.7, 0.75),  # Metallic gray
 		"effect": "knockback"
 	},
@@ -82,7 +90,7 @@ const BALL_DATA := {
 		"name": "Radiation",
 		"description": "Amplifies all damage",
 		"base_damage": 6,
-		"base_speed": 850.0,
+		"speed_multiplier": 1.0625,  # Slightly fast (850/800)
 		"color": Color(0.5, 1.0, 0.2),  # Toxic yellow-green
 		"effect": "radiation"
 	},
@@ -90,7 +98,7 @@ const BALL_DATA := {
 		"name": "Disease",
 		"description": "Stacking DoT",
 		"base_damage": 7,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.6, 0.3, 0.8),  # Sickly purple
 		"effect": "disease"
 	},
@@ -98,7 +106,7 @@ const BALL_DATA := {
 		"name": "Frostburn",
 		"description": "Slow + damage amp",
 		"base_damage": 8,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.3, 0.6, 1.0),  # Pale frost blue
 		"effect": "frostburn"
 	},
@@ -106,7 +114,7 @@ const BALL_DATA := {
 		"name": "Wind",
 		"description": "Pass-through + slow",
 		"base_damage": 5,
-		"base_speed": 1000.0,  # Fast like wind
+		"speed_multiplier": 1.25,  # Fast like wind (1000/800)
 		"color": Color(0.8, 1.0, 0.8),  # Light green-white (airy)
 		"effect": "wind"
 	},
@@ -114,7 +122,7 @@ const BALL_DATA := {
 		"name": "Ghost",
 		"description": "Pass-through all",
 		"base_damage": 4,
-		"base_speed": 900.0,
+		"speed_multiplier": 1.125,  # Fast (900/800)
 		"color": Color(0.7, 0.7, 0.9, 0.6),  # Semi-transparent purple
 		"effect": "ghost"
 	},
@@ -122,7 +130,7 @@ const BALL_DATA := {
 		"name": "Vampire",
 		"description": "Lifesteal on hit",
 		"base_damage": 9,
-		"base_speed": 800.0,
+		"speed_multiplier": 1.0,  # Standard speed
 		"color": Color(0.5, 0.1, 0.3),  # Dark crimson
 		"effect": "vampire"
 	}
@@ -237,12 +245,20 @@ func get_damage(ball_type: BallType) -> int:
 
 
 func get_speed(ball_type: BallType) -> float:
-	"""Get speed for a ball type at its current level"""
+	"""Get speed for a ball type at its current level.
+	Formula: BASE_BALL_SPEED × speed_multiplier × level_multiplier"""
 	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
 	var level := get_ball_level(ball_type)
 	if level == 0:
 		level = 1
-	return data["base_speed"] * get_level_multiplier(level)
+	var speed_mult: float = data.get("speed_multiplier", 1.0)
+	return BASE_BALL_SPEED * speed_mult * get_level_multiplier(level)
+
+
+func get_speed_multiplier(ball_type: BallType) -> float:
+	"""Get the raw speed multiplier for a ball type (without level scaling)"""
+	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
+	return data.get("speed_multiplier", 1.0)
 
 
 func get_color(ball_type: BallType) -> Color:
