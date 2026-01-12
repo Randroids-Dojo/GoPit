@@ -68,18 +68,19 @@ async def test_passive_max_stacks(game):
 async def test_get_available_passives(game):
     """get_available_passives should return passives below max stacks."""
     await reset_fusion_registry(game)
-    # Initially all 10 passives should be available
+    # Initially only 4 passives available (limited by slot count)
+    # because we have 4 slots and 20 passives, only 4 can be equipped
     available = await game.call(FUSION_REGISTRY, "get_available_passives")
-    assert len(available) == 10, "All 10 passives should be available initially"
+    # With slot system: all 20 passives available when slots empty
+    assert len(available) == 20, "All 20 passives should be available with empty slots"
 
-    # Max out MULTI_SHOT (type 3, max_stacks 3)
-    for _ in range(3):
-        await game.call(FUSION_REGISTRY, "apply_passive", [3])
+    # Fill all 4 slots
+    for passive_type in [0, 1, 2, 3]:  # DAMAGE, FIRE_RATE, MAX_HP, MULTI_SHOT
+        await game.call(FUSION_REGISTRY, "apply_passive", [passive_type])
 
-    # Now only 9 should be available
+    # Now only 4 passives available (the 4 that are equipped and can level up)
     available = await game.call(FUSION_REGISTRY, "get_available_passives")
-    assert len(available) == 9, "9 passives should be available after maxing one"
-    assert 3 not in available, "MULTI_SHOT should not be in available list"
+    assert len(available) == 4, "Only 4 equipped passives available when slots full"
 
 
 @pytest.mark.asyncio
@@ -143,3 +144,78 @@ async def test_apply_passive_magnetism_increases_range(game):
 
     new_range = await game.get_property(GAME_MANAGER, "gem_magnetism_range")
     assert new_range == initial_range + 200.0, "MAGNETISM passive should add 200 range"
+
+
+# Tests for new passives (10-19)
+
+
+@pytest.mark.asyncio
+async def test_new_passive_armor(game):
+    """ARMOR passive should increase armor_percent."""
+    await reset_fusion_registry(game)
+    await game.call(GAME_MANAGER, "reset")
+    initial = await game.get_property(GAME_MANAGER, "armor_percent")
+    assert initial == 0.0, "Armor should start at 0"
+
+    # Apply ARMOR passive (type 10)
+    await game.call(FUSION_REGISTRY, "apply_passive", [10])
+    armor = await game.get_property(GAME_MANAGER, "armor_percent")
+    assert armor == 0.05, "ARMOR passive should add 5% damage reduction"
+
+
+@pytest.mark.asyncio
+async def test_new_passive_dodge(game):
+    """DODGE passive should increase dodge_chance."""
+    await reset_fusion_registry(game)
+    await game.call(GAME_MANAGER, "reset")
+    initial = await game.get_property(GAME_MANAGER, "dodge_chance")
+    assert initial == 0.0, "Dodge chance should start at 0"
+
+    # Apply DODGE passive (type 17)
+    await game.call(FUSION_REGISTRY, "apply_passive", [17])
+    dodge = await game.get_property(GAME_MANAGER, "dodge_chance")
+    assert dodge == 0.05, "DODGE passive should add 5% dodge chance"
+
+
+@pytest.mark.asyncio
+async def test_new_passive_double_xp(game):
+    """DOUBLE_XP passive should increase xp_multiplier."""
+    await reset_fusion_registry(game)
+    await game.call(GAME_MANAGER, "reset")
+    initial = await game.get_property(GAME_MANAGER, "xp_multiplier")
+    assert initial == 1.0, "XP multiplier should start at 1.0"
+
+    # Apply DOUBLE_XP passive (type 13)
+    await game.call(FUSION_REGISTRY, "apply_passive", [13])
+    mult = await game.get_property(GAME_MANAGER, "xp_multiplier")
+    assert mult == 1.25, "DOUBLE_XP passive should add 25% XP"
+
+
+@pytest.mark.asyncio
+async def test_new_passive_name(game):
+    """New passives should have correct names."""
+    await reset_fusion_registry(game)
+    # ARMOR = 10
+    name = await game.call(FUSION_REGISTRY, "get_passive_name", [10])
+    assert name == "Armor", "ARMOR passive should be named 'Armor'"
+
+    # THORNS = 11
+    name = await game.call(FUSION_REGISTRY, "get_passive_name", [11])
+    assert name == "Thorns", "THORNS passive should be named 'Thorns'"
+
+    # LIFE_STEAL = 18
+    name = await game.call(FUSION_REGISTRY, "get_passive_name", [18])
+    assert name == "Vampirism", "LIFE_STEAL passive should be named 'Vampirism'"
+
+    # SPREAD_SHOT = 19
+    name = await game.call(FUSION_REGISTRY, "get_passive_name", [19])
+    assert name == "Scatter", "SPREAD_SHOT passive should be named 'Scatter'"
+
+
+@pytest.mark.asyncio
+async def test_total_passive_count(game):
+    """There should be 20 total passives."""
+    await reset_fusion_registry(game)
+    # Get all available passives (should be 20 with empty slots)
+    available = await game.call(FUSION_REGISTRY, "get_available_passives")
+    assert len(available) == 20, "Should have 20 passives total"

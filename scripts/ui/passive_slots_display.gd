@@ -17,20 +17,31 @@ const CATEGORY_COLORS := {
 
 # Map passives to categories
 const PASSIVE_CATEGORIES := {
-	# Offensive
+	# Offensive (original)
 	0: "offensive",  # DAMAGE
 	4: "offensive",  # BALL_SPEED
 	7: "offensive",  # CRITICAL
-	# Defensive
+	# Defensive (original)
 	2: "defensive",  # MAX_HP
-	# Utility
+	# Utility (original)
 	1: "utility",    # FIRE_RATE
 	3: "utility",    # MULTI_SHOT
 	5: "utility",    # PIERCING
 	6: "utility",    # RICOCHET
 	8: "utility",    # MAGNETISM
-	# Summoner
+	# Summoner (original)
 	9: "summoner",   # LEADERSHIP
+	# New passives (10-19)
+	10: "defensive",  # ARMOR
+	11: "defensive",  # THORNS
+	12: "defensive",  # HEALTH_REGEN
+	13: "utility",    # DOUBLE_XP
+	14: "offensive",  # KNOCKBACK
+	15: "offensive",  # AREA_DAMAGE
+	16: "offensive",  # STATUS_DURATION
+	17: "defensive",  # DODGE
+	18: "offensive",  # LIFE_STEAL
+	19: "offensive",  # SPREAD_SHOT
 }
 
 

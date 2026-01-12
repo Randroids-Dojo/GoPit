@@ -436,6 +436,7 @@ func apply_fission() -> Dictionary:
 # ===== PASSIVE UPGRADES (for Fission) =====
 
 enum PassiveType {
+	# Original 10 passives
 	DAMAGE,
 	FIRE_RATE,
 	MAX_HP,
@@ -445,7 +446,18 @@ enum PassiveType {
 	RICOCHET,
 	CRITICAL,
 	MAGNETISM,
-	LEADERSHIP
+	LEADERSHIP,
+	# New 10 passives (20 total)
+	ARMOR,
+	THORNS,
+	HEALTH_REGEN,
+	DOUBLE_XP,
+	KNOCKBACK,
+	AREA_DAMAGE,
+	STATUS_DURATION,
+	DODGE,
+	LIFE_STEAL,
+	SPREAD_SHOT
 }
 
 const PASSIVE_DATA := {
@@ -498,6 +510,57 @@ const PASSIVE_DATA := {
 		"name": "Leadership",
 		"description": "+20% Baby Ball rate",
 		"max_stacks": 5
+	},
+	# New 10 passives
+	PassiveType.ARMOR: {
+		"name": "Armor",
+		"description": "-5% damage taken",
+		"max_stacks": 5
+	},
+	PassiveType.THORNS: {
+		"name": "Thorns",
+		"description": "Reflect 10% damage",
+		"max_stacks": 3
+	},
+	PassiveType.HEALTH_REGEN: {
+		"name": "Regeneration",
+		"description": "+1 HP/second",
+		"max_stacks": 5
+	},
+	PassiveType.DOUBLE_XP: {
+		"name": "Wisdom",
+		"description": "+25% XP gain",
+		"max_stacks": 4
+	},
+	PassiveType.KNOCKBACK: {
+		"name": "Force",
+		"description": "+50% knockback",
+		"max_stacks": 3
+	},
+	PassiveType.AREA_DAMAGE: {
+		"name": "Blast Radius",
+		"description": "+20% AoE size",
+		"max_stacks": 5
+	},
+	PassiveType.STATUS_DURATION: {
+		"name": "Lingering",
+		"description": "+25% status duration",
+		"max_stacks": 4
+	},
+	PassiveType.DODGE: {
+		"name": "Evasion",
+		"description": "+5% dodge chance",
+		"max_stacks": 5
+	},
+	PassiveType.LIFE_STEAL: {
+		"name": "Vampirism",
+		"description": "Heal 3% damage dealt",
+		"max_stacks": 5
+	},
+	PassiveType.SPREAD_SHOT: {
+		"name": "Scatter",
+		"description": "+10° spread angle",
+		"max_stacks": 3
 	}
 }
 
@@ -666,6 +729,35 @@ func _apply_passive_effect(passive_type: PassiveType) -> void:
 			GameManager.gem_magnetism_range += 200.0
 		PassiveType.LEADERSHIP:
 			GameManager.add_leadership(0.2)
+		# New passives
+		PassiveType.ARMOR:
+			GameManager.armor_percent += 0.05  # 5% damage reduction per level
+		PassiveType.THORNS:
+			GameManager.thorns_percent += 0.10  # 10% reflect per level
+		PassiveType.HEALTH_REGEN:
+			GameManager.health_regen += 1.0  # 1 HP/sec per level
+		PassiveType.DOUBLE_XP:
+			GameManager.xp_multiplier += 0.25  # 25% more XP per level
+		PassiveType.KNOCKBACK:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_knockback"):
+				ball_spawner.add_knockback(0.5)  # 50% per level
+		PassiveType.AREA_DAMAGE:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_aoe_size"):
+				ball_spawner.add_aoe_size(0.2)  # 20% per level
+		PassiveType.STATUS_DURATION:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_status_duration"):
+				ball_spawner.add_status_duration(0.25)  # 25% per level
+		PassiveType.DODGE:
+			GameManager.dodge_chance += 0.05  # 5% per level
+		PassiveType.LIFE_STEAL:
+			GameManager.life_steal_percent += 0.03  # 3% per level
+		PassiveType.SPREAD_SHOT:
+			var ball_spawner := _get_ball_spawner()
+			if ball_spawner and ball_spawner.has_method("add_spread_angle"):
+				ball_spawner.add_spread_angle(10.0)  # 10 degrees per level
 
 
 func _get_ball_spawner() -> Node:
