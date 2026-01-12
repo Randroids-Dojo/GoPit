@@ -32,7 +32,8 @@ var _dots: Array[ColorRect] = []
 @onready var portrait: ColorRect = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/PortraitContainer/Portrait
 @onready var portrait_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/PortraitContainer/Portrait/PortraitLabel
 @onready var hp_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/HPStat/Bar
-@onready var dmg_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/DMGStat/Bar
+@onready var str_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/DMGStat/Bar
+@onready var str_grade_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/DMGStat/GradeLabel
 @onready var spd_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/SPDStat/Bar
 @onready var crit_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/CRITStat/Bar
 @onready var passive_name_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer/PassiveName
@@ -127,7 +128,8 @@ func _update_display() -> void:
 
 	# Update stat bars
 	hp_bar.value = character.endurance
-	dmg_bar.value = character.strength
+	str_bar.value = character.base_strength  # Show actual Strength value (5-15)
+	str_grade_label.text = character.get_strength_scaling_grade()  # Show scaling grade (S/A/B/C/D/E)
 	spd_bar.value = character.speed
 	crit_bar.value = character.dexterity
 
