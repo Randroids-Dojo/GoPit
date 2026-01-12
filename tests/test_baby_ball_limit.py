@@ -92,3 +92,32 @@ async def test_baby_ball_limit_respected(game):
 
     # Should not exceed max
     assert count <= max_babies, f"Baby count ({count}) should not exceed max ({max_babies})"
+
+
+@pytest.mark.asyncio
+async def test_leadership_damage_bonus_method_exists(game):
+    """Baby ball spawner should have get_leadership_damage_bonus method."""
+    has_method = await game.call(BABY_BALL_SPAWNER, "has_method", ["get_leadership_damage_bonus"])
+    assert has_method, "BabyBallSpawner should have get_leadership_damage_bonus method"
+
+
+@pytest.mark.asyncio
+async def test_leadership_damage_bonus_is_one_without_leadership(game):
+    """With no leadership bonus, damage bonus should be 1.0 (no bonus)."""
+    await game.call(BABY_BALL_SPAWNER, "set_leadership", [0.0])
+    bonus = await game.call(BABY_BALL_SPAWNER, "get_leadership_damage_bonus")
+    assert abs(bonus - 1.0) < 0.01, f"Damage bonus should be 1.0 with no leadership, got {bonus}"
+
+
+@pytest.mark.asyncio
+async def test_leadership_increases_damage_bonus(game):
+    """Leadership bonus should increase baby ball damage."""
+    # Get baseline with 0 leadership
+    await game.call(BABY_BALL_SPAWNER, "set_leadership", [0.0])
+    base_bonus = await game.call(BABY_BALL_SPAWNER, "get_leadership_damage_bonus")
+
+    # Increase leadership
+    await game.call(BABY_BALL_SPAWNER, "set_leadership", [1.0])
+    increased_bonus = await game.call(BABY_BALL_SPAWNER, "get_leadership_damage_bonus")
+
+    assert increased_bonus > base_bonus, f"Leadership should increase damage bonus (was {base_bonus}, now {increased_bonus})"
