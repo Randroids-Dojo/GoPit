@@ -9,6 +9,7 @@ signal ball_returned  # Emitted when a ball returns to player
 signal ball_caught  # Emitted when a ball is caught (active play bonus)
 signal balls_available_changed(available: bool)  # For fire button UI
 signal queue_changed(queue_size: int, max_size: int)  # For queue UI
+signal cooldown_changed(ball_type: int, remaining: float)  # For cooldown UI
 
 @export var ball_scene: PackedScene
 @export var spawn_offset: float = 30.0
@@ -40,6 +41,10 @@ var _fire_queue: Array[Dictionary] = []
 var fire_rate: float = 2.0  # Base balls per second (overridden by character stat)
 var max_queue_size: int = 20  # Prevent infinite stacking
 var _fire_timer: float = 0.0  # Timer for queue drain
+
+# Ball-specific cooldowns (per-type, not global)
+# Tracks game time when each ball type was last fired
+var _last_fired: Dictionary = {}  # BallType -> timestamp (in seconds)
 
 
 func _ready() -> void:
@@ -107,16 +112,24 @@ func fire() -> void:
 		slot_balls = [BallRegistry.active_ball_type if BallRegistry else 0]
 
 	# Add all ball types to the queue (they'll fire in sequence)
+	# Skip balls that are on cooldown
+	var added_any: bool = false
 	for slot_ball_type in slot_balls:
+		# Skip this ball type if on cooldown
+		if is_on_cooldown(slot_ball_type):
+			continue
+
 		# Each slot fires ball_count balls (multi-shot)
 		for i in range(ball_count):
 			# Calculate spread offset for multi-shot
 			var spread_offset: float = 0.0
 			if ball_count > 1:
 				spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
-			_add_to_queue(slot_ball_type, spread_offset)
+			if _add_to_queue(slot_ball_type, spread_offset):
+				added_any = true
 
-	SoundManager.play(SoundManager.SoundType.FIRE)
+	if added_any:
+		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
 func _add_to_queue(ball_type: int, spread: float = 0.0) -> bool:
@@ -143,6 +156,9 @@ func _fire_from_queue() -> void:
 
 	var ball_type: int = entry.get("type", 0)
 	var spread: float = entry.get("spread", 0.0)
+
+	# Record fire time for cooldown tracking
+	_record_fire_time(ball_type)
 
 	# Apply spread offset to current aim direction
 	var dir := current_aim_direction.rotated(spread)
@@ -173,6 +189,53 @@ func clear_queue() -> void:
 	_fire_queue.clear()
 	_fire_timer = 0.0
 	queue_changed.emit(0, max_queue_size)
+
+
+func is_on_cooldown(ball_type: int) -> float:
+	"""Check if a ball type is on cooldown. Returns 1.0 (on cooldown) or 0.0 (ready)."""
+	if not BallRegistry:
+		return 0.0
+	var cooldown: float = BallRegistry.get_cooldown(ball_type)
+	if cooldown <= 0.0:
+		return 0.0
+	# Use string key for consistent dictionary lookup across remote calls
+	var key := str(ball_type)
+	var last_time: float = _last_fired.get(key, -999.0)
+	var current_time: float = Time.get_ticks_msec() / 1000.0
+	if (current_time - last_time) < cooldown:
+		return 1.0
+	return 0.0
+
+
+func get_remaining_cooldown(ball_type: int) -> float:
+	"""Get remaining cooldown time for a ball type (0.0 if ready)."""
+	if not BallRegistry:
+		return 0.0
+	var cooldown: float = BallRegistry.get_cooldown(ball_type)
+	if cooldown <= 0.0:
+		return 0.0
+	# Use string key for consistent dictionary lookup across remote calls
+	var key := str(ball_type)
+	var last_time: float = _last_fired.get(key, -999.0)
+	var current_time: float = Time.get_ticks_msec() / 1000.0
+	var elapsed: float = current_time - last_time
+	return maxf(0.0, cooldown - elapsed)
+
+
+func _record_fire_time(ball_type: int) -> void:
+	"""Record the fire timestamp for a ball type."""
+	# Use string key for consistent dictionary lookup across remote calls
+	var key := str(ball_type)
+	_last_fired[key] = Time.get_ticks_msec() / 1000.0
+	if BallRegistry:
+		var cooldown: float = BallRegistry.get_cooldown(ball_type)
+		if cooldown > 0.0:
+			cooldown_changed.emit(ball_type, cooldown)
+
+
+func reset_cooldowns() -> void:
+	"""Reset all cooldowns (for new game/run)."""
+	_last_fired.clear()
 
 
 func _enforce_ball_limit(balls_to_add: int) -> void:
