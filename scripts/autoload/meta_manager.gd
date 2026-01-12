@@ -4,6 +4,7 @@ extends Node
 signal coins_changed(new_amount: int)
 signal upgrade_purchased(upgrade_id: String, new_level: int)
 signal character_unlocked(character_name: String)
+signal achievement_unlocked(achievement_id: String, reward: int)
 
 const SAVE_PATH := "user://meta.save"
 
@@ -29,6 +30,36 @@ var unlocked_characters: Array = []  # List of unlocked character names
 # Format: {stage_index: [character_name, character_name, ...]}
 var stage_completions: Dictionary = {}
 const GEARS_PER_STAGE: int = 2  # Need 2 unique character completions to unlock next
+
+# Lifetime stats (accumulated across all runs)
+var lifetime_kills: int = 0
+var lifetime_gems: int = 0
+var lifetime_damage: int = 0
+
+# Achievement system
+var unlocked_achievements: Array = []  # List of achievement IDs
+
+# Achievement definitions: id -> {name, description, condition_type, value, reward}
+const ACHIEVEMENTS := {
+	# First steps
+	"first_run": {"name": "Baby Steps", "desc": "Complete your first run", "type": "runs", "value": 1, "reward": 50},
+	"first_kill": {"name": "First Blood", "desc": "Kill your first enemy", "type": "kills", "value": 1, "reward": 25},
+	# Progress milestones
+	"wave_10": {"name": "Getting Warmed Up", "desc": "Reach wave 10", "type": "wave", "value": 10, "reward": 100},
+	"wave_25": {"name": "Veteran", "desc": "Reach wave 25", "type": "wave", "value": 25, "reward": 250},
+	"wave_50": {"name": "Pit Master", "desc": "Reach wave 50", "type": "wave", "value": 50, "reward": 500},
+	"beat_stage_1": {"name": "Escape The Pit", "desc": "Clear The Pit", "type": "stage", "value": 1, "reward": 200},
+	"beat_stage_2": {"name": "Thaw Out", "desc": "Clear Frozen Depths", "type": "stage", "value": 2, "reward": 300},
+	"beat_stage_3": {"name": "Cool Down", "desc": "Clear Burning Sands", "type": "stage", "value": 3, "reward": 400},
+	"beat_stage_4": {"name": "Conqueror", "desc": "Clear Final Descent", "type": "stage", "value": 4, "reward": 1000},
+	# Grinder achievements
+	"kills_100": {"name": "Centurion", "desc": "Kill 100 enemies total", "type": "kills", "value": 100, "reward": 100},
+	"kills_1000": {"name": "Slayer", "desc": "Kill 1,000 enemies total", "type": "kills", "value": 1000, "reward": 500},
+	"gems_500": {"name": "Gem Collector", "desc": "Collect 500 gems total", "type": "gems", "value": 500, "reward": 150},
+	"gems_5000": {"name": "Treasure Hunter", "desc": "Collect 5,000 gems total", "type": "gems", "value": 5000, "reward": 750},
+	"runs_10": {"name": "Persistent", "desc": "Complete 10 runs", "type": "runs", "value": 10, "reward": 200},
+	"runs_50": {"name": "Dedicated", "desc": "Complete 50 runs", "type": "runs", "value": 50, "reward": 500},
+}
 
 # Permanent upgrade bonuses (applied at run start)
 var bonus_hp: int = 0
@@ -62,13 +93,19 @@ func can_afford(amount: int) -> bool:
 	return pit_coins >= amount
 
 
-func record_run_end(wave: int, _level: int) -> void:
+func record_run_end(wave: int, _level: int, kills: int = 0, gems: int = 0, damage: int = 0) -> void:
 	total_runs += 1
 	if wave > best_wave:
 		best_wave = wave
+	# Accumulate lifetime stats
+	lifetime_kills += kills
+	lifetime_gems += gems
+	lifetime_damage += damage
 	save_data()
 	# Check if any new characters can be unlocked
 	check_unlock_conditions()
+	# Check for new achievements
+	check_achievements()
 
 
 func record_stage_cleared(stage_index: int) -> void:
@@ -250,6 +287,108 @@ func get_unlock_progress(character_name: String) -> Dictionary:
 	}
 
 
+# =============================================================================
+# ACHIEVEMENT SYSTEM
+# =============================================================================
+
+func add_lifetime_stats(kills: int, gems: int, damage: int) -> void:
+	"""Add session stats to lifetime totals. Called at end of each run."""
+	lifetime_kills += kills
+	lifetime_gems += gems
+	lifetime_damage += damage
+	save_data()
+
+
+func check_achievements() -> Array:
+	"""Check all achievements and unlock any newly earned.
+	Returns array of newly unlocked achievement IDs."""
+	var newly_unlocked: Array = []
+
+	for achievement_id in ACHIEVEMENTS:
+		if is_achievement_unlocked(achievement_id):
+			continue  # Already unlocked
+
+		var achievement: Dictionary = ACHIEVEMENTS[achievement_id]
+		var is_met := false
+
+		match achievement["type"]:
+			"runs":
+				is_met = total_runs >= achievement["value"]
+			"wave":
+				is_met = best_wave >= achievement["value"]
+			"stage":
+				is_met = highest_stage_cleared >= achievement["value"]
+			"kills":
+				is_met = lifetime_kills >= achievement["value"]
+			"gems":
+				is_met = lifetime_gems >= achievement["value"]
+
+		if is_met:
+			unlock_achievement(achievement_id)
+			newly_unlocked.append(achievement_id)
+
+	return newly_unlocked
+
+
+func is_achievement_unlocked(achievement_id: String) -> bool:
+	"""Check if an achievement is unlocked."""
+	return achievement_id in unlocked_achievements
+
+
+func unlock_achievement(achievement_id: String) -> void:
+	"""Unlock an achievement and award its reward."""
+	if achievement_id in unlocked_achievements:
+		return  # Already unlocked
+
+	if achievement_id not in ACHIEVEMENTS:
+		return  # Invalid achievement
+
+	unlocked_achievements.append(achievement_id)
+	var reward: int = ACHIEVEMENTS[achievement_id]["reward"]
+	pit_coins += reward
+	coins_changed.emit(pit_coins)
+	achievement_unlocked.emit(achievement_id, reward)
+	save_data()
+
+
+func get_achievement_data(achievement_id: String) -> Dictionary:
+	"""Get achievement definition data."""
+	return ACHIEVEMENTS.get(achievement_id, {})
+
+
+func get_all_achievements() -> Array:
+	"""Get list of all achievement IDs."""
+	return ACHIEVEMENTS.keys()
+
+
+func get_achievement_progress(achievement_id: String) -> Dictionary:
+	"""Get progress toward an achievement.
+	Returns {current: int, required: int, is_unlocked: bool}."""
+	if achievement_id not in ACHIEVEMENTS:
+		return {}
+
+	var achievement: Dictionary = ACHIEVEMENTS[achievement_id]
+	var current: int = 0
+
+	match achievement["type"]:
+		"runs":
+			current = total_runs
+		"wave":
+			current = best_wave
+		"stage":
+			current = highest_stage_cleared
+		"kills":
+			current = lifetime_kills
+		"gems":
+			current = lifetime_gems
+
+	return {
+		"current": current,
+		"required": achievement["value"],
+		"is_unlocked": is_achievement_unlocked(achievement_id)
+	}
+
+
 func save_data() -> void:
 	var data := {
 		"coins": pit_coins,
@@ -258,7 +397,11 @@ func save_data() -> void:
 		"highest_stage": highest_stage_cleared,
 		"upgrades": unlocked_upgrades,
 		"unlocked_characters": unlocked_characters,
-		"stage_completions": stage_completions
+		"stage_completions": stage_completions,
+		"lifetime_kills": lifetime_kills,
+		"lifetime_gems": lifetime_gems,
+		"lifetime_damage": lifetime_damage,
+		"unlocked_achievements": unlocked_achievements
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -287,6 +430,10 @@ func load_data() -> void:
 		unlocked_upgrades = data.get("upgrades", {})
 		unlocked_characters = data.get("unlocked_characters", [])
 		stage_completions = data.get("stage_completions", {})
+		lifetime_kills = data.get("lifetime_kills", 0)
+		lifetime_gems = data.get("lifetime_gems", 0)
+		lifetime_damage = data.get("lifetime_damage", 0)
+		unlocked_achievements = data.get("unlocked_achievements", [])
 		coins_changed.emit(pit_coins)
 
 
@@ -298,6 +445,10 @@ func reset_data() -> void:
 	unlocked_upgrades = {}
 	unlocked_characters = []
 	stage_completions = {}
+	lifetime_kills = 0
+	lifetime_gems = 0
+	lifetime_damage = 0
+	unlocked_achievements = []
 	bonus_hp = 0
 	bonus_damage = 0.0
 	bonus_fire_rate = 0.0

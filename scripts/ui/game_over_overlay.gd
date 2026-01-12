@@ -26,9 +26,15 @@ func _ready() -> void:
 
 
 func _on_game_over() -> void:
-	# Record run end and earn coins
+	# Record run end with session stats and earn coins
 	if MetaManager:
-		MetaManager.record_run_end(GameManager.current_wave, GameManager.player_level)
+		MetaManager.record_run_end(
+			GameManager.current_wave,
+			GameManager.player_level,
+			GameManager.stats["enemies_killed"],
+			GameManager.stats["gems_collected"],
+			GameManager.stats["damage_dealt"]
+		)
 		_coins_earned = MetaManager.earn_coins(GameManager.current_wave, GameManager.player_level)
 
 	_update_stats()
