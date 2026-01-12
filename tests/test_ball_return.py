@@ -40,7 +40,9 @@ async def test_ball_spawner_tracks_balls_in_flight(game):
     # Fire once
     await wait_for_fire_ready(game)
     await game.click(FIRE_BUTTON)
-    await asyncio.sleep(0.2)
+
+    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(0.5)
 
     # Balls in flight should increase
     after_fire = await game.call(BALL_SPAWNER, "get_balls_in_flight")
@@ -64,6 +66,9 @@ async def test_ball_returns_at_bottom_of_screen(game):
     await game.call(BALL_SPAWNER, "set_aim_direction_xy", [0.0, 1.0])
     await wait_for_fire_ready(game)
     await game.click(FIRE_BUTTON)
+
+    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(0.5)
 
     # Get balls in flight immediately after
     in_flight_after = await game.call(BALL_SPAWNER, "get_balls_in_flight")
