@@ -69,6 +69,14 @@ var player_level: int = 1
 var gem_magnetism_range: float = 0.0
 var leadership: float = 0.0  # Affects baby ball spawn rate
 
+# Passive stats (from slot-based passive system)
+var armor_percent: float = 0.0  # Damage reduction
+var thorns_percent: float = 0.0  # Damage reflect
+var health_regen: float = 0.0  # HP per second
+var xp_multiplier: float = 1.0  # XP gain multiplier
+var dodge_chance: float = 0.0  # Chance to avoid damage
+var life_steal_percent: float = 0.0  # Heal from damage dealt
+
 # Ultimate ability system
 const ULTIMATE_CHARGE_MAX: float = 100.0
 const CHARGE_PER_KILL: float = 10.0
@@ -511,6 +519,13 @@ func reset() -> void:
 	leadership = 0.0
 	is_endless_mode = false
 	ultimate_charge = 0.0
+	# Reset passive stats
+	armor_percent = 0.0
+	thorns_percent = 0.0
+	health_regen = 0.0
+	xp_multiplier = 1.0
+	dodge_chance = 0.0
+	life_steal_percent = 0.0
 	# Reset speed tier
 	current_speed_tier = SpeedTier.NORMAL
 	Engine.time_scale = 1.0
