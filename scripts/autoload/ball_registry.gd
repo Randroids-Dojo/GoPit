@@ -27,7 +27,8 @@ enum BallType {
 	WIND,
 	GHOST,
 	VAMPIRE,
-	BROOD_MOTHER
+	BROOD_MOTHER,
+	DARK
 }
 
 const BALL_DATA := {
@@ -156,6 +157,15 @@ const BALL_DATA := {
 		"cooldown": 0.3,  # Moderate cooldown - spawns babies so shouldn't be too fast
 		"color": Color(0.8, 0.5, 0.9),  # Lavender/pink
 		"effect": "brood"
+	},
+	BallType.DARK: {
+		"name": "Dark",
+		"description": "3x damage, self-destructs on hit",
+		"base_damage": 10,
+		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.5,  # Cooldown since it's high risk/reward
+		"color": Color(0.15, 0.05, 0.2),  # Very dark purple
+		"effect": "dark"
 	}
 }
 
