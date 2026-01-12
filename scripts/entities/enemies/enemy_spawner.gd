@@ -17,6 +17,14 @@ signal enemy_died(enemy: EnemyBase)
 # Enemy variety
 var bat_scene: PackedScene = preload("res://scenes/entities/enemies/bat.tscn")
 var crab_scene: PackedScene = preload("res://scenes/entities/enemies/crab.tscn")
+var golem_scene: PackedScene = preload("res://scenes/entities/enemies/golem.tscn")
+var swarm_scene: PackedScene = preload("res://scenes/entities/enemies/swarm.tscn")
+var archer_scene: PackedScene = preload("res://scenes/entities/enemies/archer.tscn")
+var bomber_scene: PackedScene = preload("res://scenes/entities/enemies/bomber.tscn")
+
+# Swarm spawn settings
+const SWARM_GROUP_SIZE_MIN: int = 3
+const SWARM_GROUP_SIZE_MAX: int = 5
 
 var _spawn_timer: Timer
 var _screen_width: float
@@ -61,6 +69,10 @@ func spawn_enemy() -> EnemyBase:
 		push_warning("EnemySpawner: No enemy scene available")
 		return null
 
+	# Swarms spawn in groups
+	if scene == swarm_scene:
+		return _spawn_swarm_group()
+
 	var enemy: EnemyBase = scene.instantiate()
 	var spawn_x := randf_range(spawn_margin, _screen_width - spawn_margin)
 	enemy.global_position = Vector2(spawn_x, spawn_y_offset)
@@ -69,6 +81,29 @@ func spawn_enemy() -> EnemyBase:
 	get_parent().add_child(enemy)
 	enemy_spawned.emit(enemy)
 	return enemy
+
+
+func _spawn_swarm_group() -> EnemyBase:
+	"""Spawn a group of swarm enemies close together."""
+	var group_size := randi_range(SWARM_GROUP_SIZE_MIN, SWARM_GROUP_SIZE_MAX)
+	var center_x := randf_range(spawn_margin + 50, _screen_width - spawn_margin - 50)
+	var first_enemy: EnemyBase = null
+
+	for i in range(group_size):
+		var enemy: EnemyBase = swarm_scene.instantiate()
+		# Spread them in a small cluster
+		var offset_x := randf_range(-40, 40)
+		var offset_y := randf_range(-30, 30)
+		enemy.global_position = Vector2(center_x + offset_x, spawn_y_offset + offset_y)
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+
+		if i == 0:
+			first_enemy = enemy
+
+	return first_enemy
 
 
 func _choose_enemy_type() -> PackedScene:
@@ -84,14 +119,50 @@ func _choose_enemy_type() -> PackedScene:
 			return bat_scene
 		return slime_scene
 
-	# Wave 4+: All enemy types
+	# Wave 4-5: Add crabs and swarms
+	if wave <= 5:
+		var roll: float = randf()
+		if roll < 0.4:
+			return slime_scene
+		elif roll < 0.65:
+			return bat_scene
+		elif roll < 0.85:
+			return crab_scene
+		else:
+			return swarm_scene
+
+	# Wave 6: Add archers
+	if wave <= 6:
+		var roll: float = randf()
+		if roll < 0.3:
+			return slime_scene
+		elif roll < 0.45:
+			return bat_scene
+		elif roll < 0.6:
+			return crab_scene
+		elif roll < 0.75:
+			return swarm_scene
+		elif roll < 0.9:
+			return archer_scene
+		else:
+			return golem_scene
+
+	# Wave 7+: All enemy types including bombers
 	var roll: float = randf()
-	if roll < 0.5:
+	if roll < 0.2:
 		return slime_scene
-	elif roll < 0.8:
+	elif roll < 0.35:
 		return bat_scene
-	else:
+	elif roll < 0.48:
 		return crab_scene
+	elif roll < 0.6:
+		return swarm_scene
+	elif roll < 0.72:
+		return archer_scene
+	elif roll < 0.85:
+		return bomber_scene
+	else:
+		return golem_scene
 
 
 func _on_spawn_timer_timeout() -> void:
