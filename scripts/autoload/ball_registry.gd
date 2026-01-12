@@ -26,7 +26,8 @@ enum BallType {
 	FROSTBURN,
 	WIND,
 	GHOST,
-	VAMPIRE
+	VAMPIRE,
+	BROOD_MOTHER
 }
 
 const BALL_DATA := {
@@ -146,6 +147,14 @@ const BALL_DATA := {
 		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.5, 0.1, 0.3),  # Dark crimson
 		"effect": "vampire"
+	},
+	BallType.BROOD_MOTHER: {
+		"name": "Brood Mother",
+		"description": "Spawns babies on hit",
+		"base_damage": 6,
+		"speed_multiplier": 0.875,  # Slower, heavy with babies (700/800)
+		"color": Color(0.8, 0.5, 0.9),  # Lavender/pink
+		"effect": "brood"
 	}
 }
 

@@ -9,7 +9,7 @@ signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 signal caught  # Emitted when ball is caught by player (active play bonus)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -96,6 +96,8 @@ func _apply_ball_type_visuals() -> void:
 			modulate.a = 0.6  # Make ball semi-transparent
 		BallType.VAMPIRE:
 			ball_color = Color(0.5, 0.1, 0.3)  # Dark crimson
+		BallType.BROOD_MOTHER:
+			ball_color = Color(0.8, 0.5, 0.9)  # Lavender/pink
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -568,6 +570,46 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 			enemy.modulate = Color(0.5, 0.1, 0.3)
 			var tween := enemy.create_tween()
 			tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+
+		BallType.BROOD_MOTHER:
+			# Brood Mother: Spawn a baby ball on hit
+			_spawn_brood_baby(enemy.global_position)
+			# Visual brood spawn effect
+			enemy.modulate = Color(0.8, 0.5, 0.9)
+			var tween := enemy.create_tween()
+			tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+
+
+func _spawn_brood_baby(spawn_pos: Vector2) -> void:
+	"""Spawn a small baby ball from the Brood Mother ball"""
+	var ball_scene := preload("res://scenes/entities/ball.tscn")
+	var baby: Node2D
+
+	# Get from pool if available
+	if PoolManager:
+		baby = PoolManager.get_ball()
+	else:
+		baby = ball_scene.instantiate()
+
+	baby.position = spawn_pos
+	baby.scale = Vector2(0.5, 0.5)  # Smaller than regular baby balls
+	baby.is_baby_ball = true
+	baby.damage = int(damage * 0.3)  # 30% of parent damage
+
+	# Inherit brood mother type
+	if baby.has_method("set_ball_type"):
+		baby.set_ball_type(BallType.BROOD_MOTHER)
+
+	# Random direction (spread pattern)
+	var random_angle := randf_range(0, TAU)
+	baby.direction = Vector2.from_angle(random_angle)
+
+	# Add to game
+	var balls_container := get_tree().get_first_node_in_group("balls_container")
+	if balls_container:
+		balls_container.add_child(baby)
+	else:
+		get_parent().add_child(baby)
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:

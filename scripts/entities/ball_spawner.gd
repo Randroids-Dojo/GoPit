@@ -320,8 +320,10 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 
 func _registry_to_ball_type(registry_type: int) -> int:
 	"""Map BallRegistry.BallType to ball.gd BallType enum"""
-	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6
-	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
+	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6,
+	#               RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13
+	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6,
+	#          RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13
 	match registry_type:
 		0: return 0  # BASIC -> NORMAL
 		1: return 1  # BURN -> FIRE
@@ -330,6 +332,13 @@ func _registry_to_ball_type(registry_type: int) -> int:
 		4: return 5  # BLEED -> BLEED
 		5: return 3  # LIGHTNING -> LIGHTNING
 		6: return 6  # IRON -> IRON
+		7: return 7  # RADIATION -> RADIATION
+		8: return 8  # DISEASE -> DISEASE
+		9: return 9  # FROSTBURN -> FROSTBURN
+		10: return 10  # WIND -> WIND
+		11: return 11  # GHOST -> GHOST
+		12: return 12  # VAMPIRE -> VAMPIRE
+		13: return 13  # BROOD_MOTHER -> BROOD_MOTHER
 	return 0
 
 
