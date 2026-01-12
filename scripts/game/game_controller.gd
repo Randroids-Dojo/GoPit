@@ -261,14 +261,11 @@ func _spawn_gem(pos: Vector2, xp_value: int) -> void:
 	gem._player = get_tree().get_first_node_in_group("player")
 
 
-func _on_gem_collected(gem: Node2D) -> void:
-	var xp_value: int = 10
-	if gem.has_method("get_xp_value"):
-		xp_value = gem.get_xp_value()
-	GameManager.add_xp(xp_value)
+func _on_gem_collected(_gem: Node2D) -> void:
+	# Gems no longer give XP - XP is awarded on kill instead
+	# Gems still give ultimate charge and count toward stats
 	GameManager.record_gem_collected()
 	GameManager.add_ultimate_charge(GameManager.CHARGE_PER_GEM)
-	_show_xp_text(gem.global_position, xp_value)
 
 
 func _check_wave_progress() -> void:

@@ -649,7 +649,9 @@ func reset() -> void:
 
 
 func _calculate_xp_requirement(level: int) -> int:
-	return 100 + (level - 1) * 50
+	# XP is now 1 per kill, so curve is in kills
+	# Level 1: 10 kills, Level 2: 15 kills, etc.
+	return 10 + (level - 1) * 5
 
 
 func _on_state_changed(old_state: GameState, new_state: GameState) -> void:
