@@ -68,6 +68,8 @@ func _ready() -> void:
 	_base_speed = speed
 	_setup_collision()
 	add_to_group("boss")
+	# Enable auto-magnet during boss fights (QoL from BallxPit)
+	GameManager.is_boss_fight = true
 	_start_intro()
 
 
@@ -202,6 +204,8 @@ func _defeat() -> void:
 	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 
 	boss_defeated.emit()
+	# Disable auto-magnet after boss fight ends
+	GameManager.is_boss_fight = false
 
 	# Death animation then cleanup
 	var tween := create_tween()
