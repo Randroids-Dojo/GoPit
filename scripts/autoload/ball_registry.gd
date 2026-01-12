@@ -153,6 +153,7 @@ const BALL_DATA := {
 		"description": "Spawns babies on hit",
 		"base_damage": 6,
 		"speed_multiplier": 0.875,  # Slower, heavy with babies (700/800)
+		"cooldown": 0.3,  # Moderate cooldown - spawns babies so shouldn't be too fast
 		"color": Color(0.8, 0.5, 0.9),  # Lavender/pink
 		"effect": "brood"
 	}
