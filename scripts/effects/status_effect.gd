@@ -41,6 +41,7 @@ func _configure() -> void:
 			damage_per_tick = 0.0
 			slow_multiplier = 0.5  # 50% slow
 			max_stacks = 1  # Freeze doesn't stack - refreshes duration
+			damage_amp_per_stack = 0.25  # Frozen enemies take +25% damage (BallxPit)
 		Type.POISON:
 			duration = 5.0 * int_mult
 			damage_per_tick = 1.5  # 3 DPS base, scales with stacks
