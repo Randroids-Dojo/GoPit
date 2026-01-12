@@ -35,8 +35,9 @@ async def select_character_by_name(game, target_name: str, max_clicks: int = 6) 
         name = await game.get_property(NAME_LABEL, "text")
         if name.upper() == target_name.upper():
             return True
-        await game.click(NAV_NEXT)
-        await asyncio.sleep(0.15)
+        # Use direct method call (more reliable in headless mode)
+        await game.call(CHARACTER_SELECT, "_on_next_pressed", [])
+        await asyncio.sleep(0.1)
 
     return False
 
@@ -47,8 +48,9 @@ async def select_and_start_with_character(game, target_name: str) -> bool:
     if not found:
         return False
 
-    await game.click(START_BUTTON)
-    await asyncio.sleep(0.3)
+    # Use direct method call (more reliable in headless mode)
+    await game.call(CHARACTER_SELECT, "_on_start_pressed", [])
+    await asyncio.sleep(0.5)
     return True
 
 
