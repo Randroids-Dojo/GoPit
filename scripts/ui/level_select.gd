@@ -50,10 +50,14 @@ func _load_stages() -> void:
 
 
 func _load_progress() -> void:
-	# Load from MetaManager if available
+	# Gear-based unlock system: count unlocked stages based on gear requirements
 	if MetaManager:
-		_unlocked_stages = MetaManager.get_highest_stage_cleared() + 1
-		_unlocked_stages = clampi(_unlocked_stages, 1, _stages.size())
+		_unlocked_stages = 1  # First stage always unlocked
+		for i in range(1, _stages.size()):
+			if MetaManager.is_stage_unlocked_by_gears(i):
+				_unlocked_stages = i + 1
+			else:
+				break
 
 
 func _create_dots() -> void:
@@ -134,10 +138,16 @@ func _update_display() -> void:
 		else:
 			_dots[i].color = Color(0.3, 0.3, 0.3)  # Locked
 
-	# Update locked overlay
+	# Update locked overlay with gear info
 	locked_overlay.visible = not is_unlocked
 	if not is_unlocked:
-		lock_label.text = "LOCKED\nBeat " + _stages[_current_index - 1].biome_name + " first"
+		var prev_gears := MetaManager.get_stage_gears(_current_index - 1) if MetaManager else 0
+		var needed := MetaManager.GEARS_PER_STAGE if MetaManager else 2
+		lock_label.text = "LOCKED\nGears: %d/%d\nBeat %s with %d characters" % [
+			prev_gears, needed,
+			_stages[_current_index - 1].biome_name,
+			needed - prev_gears
+		]
 
 	# Update start button
 	start_button.disabled = not is_unlocked

@@ -545,7 +545,13 @@ func _on_boss_defeated() -> void:
 	# Record stage completion immediately (before showing overlay)
 	# This ensures progress is saved even if player returns to menu
 	if MetaManager:
-		MetaManager.record_stage_cleared(StageManager.current_stage + 1)  # stage is 0-indexed, cleared is 1-indexed
+		# Record with character name for gear system (stage is 0-indexed)
+		var character_name: String = "Unknown"
+		if GameManager.selected_character:
+			character_name = GameManager.selected_character.character_name
+		MetaManager.record_stage_completion(StageManager.current_stage, character_name)
+		# Also record for backwards compatibility
+		MetaManager.record_stage_cleared(StageManager.current_stage + 1)  # cleared is 1-indexed
 
 	# Wait a moment then show stage complete
 	await get_tree().create_timer(1.5).timeout

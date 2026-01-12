@@ -25,6 +25,11 @@ var highest_stage_cleared: int = 0  # 0 = none, 1 = The Pit, etc.
 var unlocked_upgrades: Dictionary = {}  # upgrade_id -> level
 var unlocked_characters: Array = []  # List of unlocked character names
 
+# Gear system - each stage×character completion = 1 gear
+# Format: {stage_index: [character_name, character_name, ...]}
+var stage_completions: Dictionary = {}
+const GEARS_PER_STAGE: int = 2  # Need 2 unique character completions to unlock next
+
 # Permanent upgrade bonuses (applied at run start)
 var bonus_hp: int = 0
 var bonus_damage: float = 0.0
@@ -74,6 +79,65 @@ func record_stage_cleared(stage_index: int) -> void:
 
 func get_highest_stage_cleared() -> int:
 	return highest_stage_cleared
+
+
+# =============================================================================
+# GEAR UNLOCK SYSTEM
+# =============================================================================
+
+func record_stage_completion(stage_index: int, character_name: String) -> bool:
+	"""Record a stage completion with a specific character.
+	Returns true if this is a new gear earned (first time this character beat this stage)."""
+	# Initialize stage array if needed
+	if stage_index not in stage_completions:
+		stage_completions[stage_index] = []
+
+	# Check if this character already beat this stage
+	if character_name in stage_completions[stage_index]:
+		return false  # Already earned this gear
+
+	# New gear earned!
+	stage_completions[stage_index].append(character_name)
+
+	# Also update highest_stage_cleared for backwards compatibility
+	if stage_index > highest_stage_cleared:
+		highest_stage_cleared = stage_index
+
+	save_data()
+	return true
+
+
+func get_stage_gears(stage_index: int) -> int:
+	"""Get number of gears earned for a stage (unique character completions)."""
+	if stage_index not in stage_completions:
+		return 0
+	return stage_completions[stage_index].size()
+
+
+func get_total_gears() -> int:
+	"""Get total gears earned across all stages."""
+	var total: int = 0
+	for stage_index in stage_completions:
+		total += stage_completions[stage_index].size()
+	return total
+
+
+func is_stage_unlocked_by_gears(stage_index: int) -> bool:
+	"""Check if a stage is unlocked based on gear requirements.
+	Stage 0 (The Pit) is always unlocked.
+	Each subsequent stage requires GEARS_PER_STAGE gears from the previous stage."""
+	if stage_index == 0:
+		return true  # First stage always unlocked
+
+	var prev_stage_gears := get_stage_gears(stage_index - 1)
+	return prev_stage_gears >= GEARS_PER_STAGE
+
+
+func get_characters_who_cleared_stage(stage_index: int) -> Array:
+	"""Get list of characters who have cleared a specific stage."""
+	if stage_index not in stage_completions:
+		return []
+	return stage_completions[stage_index].duplicate()
 
 
 func get_upgrade_level(upgrade_id: String) -> int:
@@ -193,7 +257,8 @@ func save_data() -> void:
 		"best_wave": best_wave,
 		"highest_stage": highest_stage_cleared,
 		"upgrades": unlocked_upgrades,
-		"unlocked_characters": unlocked_characters
+		"unlocked_characters": unlocked_characters,
+		"stage_completions": stage_completions
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -221,6 +286,7 @@ func load_data() -> void:
 		highest_stage_cleared = data.get("highest_stage", 0)
 		unlocked_upgrades = data.get("upgrades", {})
 		unlocked_characters = data.get("unlocked_characters", [])
+		stage_completions = data.get("stage_completions", {})
 		coins_changed.emit(pit_coins)
 
 
@@ -231,6 +297,7 @@ func reset_data() -> void:
 	highest_stage_cleared = 0
 	unlocked_upgrades = {}
 	unlocked_characters = []
+	stage_completions = {}
 	bonus_hp = 0
 	bonus_damage = 0.0
 	bonus_fire_rate = 0.0
