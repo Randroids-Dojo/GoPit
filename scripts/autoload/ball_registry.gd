@@ -225,12 +225,15 @@ func get_level_multiplier(level: int) -> float:
 
 
 func get_damage(ball_type: BallType) -> int:
-	"""Get damage for a ball type at its current level"""
-	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
+	"""Get damage for a ball type at its current level.
+	All ball types use character Strength for base damage.
+	Ball level multipliers still apply."""
 	var level := get_ball_level(ball_type)
 	if level == 0:
 		level = 1
-	return int(data["base_damage"] * get_level_multiplier(level))
+	# Use character Strength as base damage (not per-ball-type)
+	var base_damage: int = GameManager.get_character_strength()
+	return int(base_damage * get_level_multiplier(level))
 
 
 func get_speed(ball_type: BallType) -> float:
