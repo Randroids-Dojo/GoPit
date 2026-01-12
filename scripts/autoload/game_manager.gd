@@ -178,6 +178,19 @@ func record_gem_collected() -> void:
 	stats["gems_collected"] += 1
 
 
+func get_character_strength() -> int:
+	"""Get the character's Strength stat at current player level.
+	This is the base damage for all ball types (not per-ball-type damage).
+	Uses the new base_strength + scaling system from Character resource."""
+	if selected_character == null:
+		return 10  # Default base damage when no character selected
+	# Use the new get_strength_at_level method from Character resource
+	if selected_character.has_method("get_strength_at_level"):
+		return selected_character.get_strength_at_level(player_level)
+	# Fallback for old characters without the method
+	return int(10 * character_damage_mult)
+
+
 func set_character(character: Resource) -> void:
 	if character == null:
 		_reset_character_stats()

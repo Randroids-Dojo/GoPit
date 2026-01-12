@@ -141,8 +141,8 @@ func _on_character_selected(character: Resource) -> void:
 
 	# Apply character stats to ball spawner
 	if ball_spawner:
-		# Apply damage multiplier
-		ball_spawner.ball_damage = int(10 * GameManager.character_damage_mult)
+		# Apply Strength-based damage (all balls use character Strength)
+		ball_spawner.ball_damage = GameManager.get_character_strength()
 		# Apply crit multiplier
 		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
 		# Set starting ball type
