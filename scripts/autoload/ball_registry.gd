@@ -35,6 +35,7 @@ const BALL_DATA := {
 		"description": "Standard ball",
 		"base_damage": 10,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.3, 0.7, 1.0),  # Blue
 		"effect": "none"
 	},
@@ -43,6 +44,7 @@ const BALL_DATA := {
 		"description": "Sets enemies on fire",
 		"base_damage": 8,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(1.0, 0.5, 0.1),  # Orange
 		"effect": "burn"
 	},
@@ -51,6 +53,7 @@ const BALL_DATA := {
 		"description": "Slows enemies",
 		"base_damage": 6,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.5, 0.9, 1.0),  # Cyan
 		"effect": "freeze"
 	},
@@ -59,6 +62,7 @@ const BALL_DATA := {
 		"description": "Damage over time",
 		"base_damage": 7,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.4, 0.9, 0.2),  # Green
 		"effect": "poison"
 	},
@@ -67,6 +71,7 @@ const BALL_DATA := {
 		"description": "Stacking damage",
 		"base_damage": 8,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.9, 0.2, 0.3),  # Dark red
 		"effect": "bleed"
 	},
@@ -75,6 +80,7 @@ const BALL_DATA := {
 		"description": "Chain damage",
 		"base_damage": 9,
 		"speed_multiplier": 1.125,  # Fast (900/800)
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(1.0, 1.0, 0.3),  # Yellow
 		"effect": "lightning"
 	},
@@ -83,6 +89,7 @@ const BALL_DATA := {
 		"description": "High damage, knockback",
 		"base_damage": 15,
 		"speed_multiplier": 0.75,  # Slow, heavy (600/800)
+		"cooldown": 0.5,  # 0.5s cooldown - slow but powerful
 		"color": Color(0.7, 0.7, 0.75),  # Metallic gray
 		"effect": "knockback"
 	},
@@ -91,6 +98,7 @@ const BALL_DATA := {
 		"description": "Amplifies all damage",
 		"base_damage": 6,
 		"speed_multiplier": 1.0625,  # Slightly fast (850/800)
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.5, 1.0, 0.2),  # Toxic yellow-green
 		"effect": "radiation"
 	},
@@ -99,6 +107,7 @@ const BALL_DATA := {
 		"description": "Stacking DoT",
 		"base_damage": 7,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.6, 0.3, 0.8),  # Sickly purple
 		"effect": "disease"
 	},
@@ -107,6 +116,7 @@ const BALL_DATA := {
 		"description": "Slow + damage amp",
 		"base_damage": 8,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.3, 0.6, 1.0),  # Pale frost blue
 		"effect": "frostburn"
 	},
@@ -115,6 +125,7 @@ const BALL_DATA := {
 		"description": "Pass-through + slow",
 		"base_damage": 5,
 		"speed_multiplier": 1.25,  # Fast like wind (1000/800)
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.8, 1.0, 0.8),  # Light green-white (airy)
 		"effect": "wind"
 	},
@@ -123,6 +134,7 @@ const BALL_DATA := {
 		"description": "Pass-through all",
 		"base_damage": 4,
 		"speed_multiplier": 1.125,  # Fast (900/800)
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.7, 0.7, 0.9, 0.6),  # Semi-transparent purple
 		"effect": "ghost"
 	},
@@ -131,6 +143,7 @@ const BALL_DATA := {
 		"description": "Lifesteal on hit",
 		"base_damage": 9,
 		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.0,  # No cooldown
 		"color": Color(0.5, 0.1, 0.3),  # Dark crimson
 		"effect": "vampire"
 	}
@@ -259,6 +272,12 @@ func get_speed_multiplier(ball_type: BallType) -> float:
 	"""Get the raw speed multiplier for a ball type (without level scaling)"""
 	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
 	return data.get("speed_multiplier", 1.0)
+
+
+func get_cooldown(ball_type: BallType) -> float:
+	"""Get cooldown time in seconds for a ball type (0.0 = no cooldown)"""
+	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
+	return data.get("cooldown", 0.0)
 
 
 func get_color(ball_type: BallType) -> Color:
