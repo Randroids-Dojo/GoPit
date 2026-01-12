@@ -73,14 +73,15 @@ async def test_ball_despawn_offscreen(game, report):
     # Fire straight up
     await game.click(PATHS["fire_button"])
 
-    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
-    await asyncio.sleep(0.5)
+    # Wait for ball to spawn from queue (fire_rate=2 means ~0.5s per ball)
+    await asyncio.sleep(0.7)
 
     balls_initial = await game.call(PATHS["balls"], "get_child_count")
     assert balls_initial >= 1, "Should have at least 1 ball after firing"
 
     # Wait for ball to go off top of screen (800 speed, ~1280 height = ~1.6s)
-    await asyncio.sleep(2.0)
+    # Extra time for CI environment
+    await asyncio.sleep(3.0)
 
     balls_after = await game.call(PATHS["balls"], "get_child_count")
     assert balls_after < balls_initial, "Ball should despawn when off screen"

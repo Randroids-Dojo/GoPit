@@ -37,7 +37,7 @@ var _previous_available: bool = true
 # Balls enter a queue and fire one at a time at fire_rate speed
 # Each entry is {type: BallType, spread: float}
 var _fire_queue: Array[Dictionary] = []
-var fire_rate: float = 3.0  # Balls per second (queue drain speed)
+var fire_rate: float = 2.0  # Base balls per second (overridden by character stat)
 var max_queue_size: int = 20  # Prevent infinite stacking
 var _fire_timer: float = 0.0  # Timer for queue drain
 
@@ -54,11 +54,20 @@ func _process(delta: float) -> void:
 		return
 
 	_fire_timer += delta
-	var fire_interval: float = 1.0 / fire_rate
+	# Use character fire rate if available, otherwise fall back to base rate
+	var effective_fire_rate: float = _get_effective_fire_rate()
+	var fire_interval: float = 1.0 / effective_fire_rate
 
 	while _fire_timer >= fire_interval and not _fire_queue.is_empty():
 		_fire_timer -= fire_interval
 		_fire_from_queue()
+
+
+func _get_effective_fire_rate() -> float:
+	"""Get the effective fire rate based on character stats."""
+	if GameManager:
+		return GameManager.get_character_fire_rate()
+	return fire_rate
 
 
 func set_aim_direction(direction: Vector2) -> void:
@@ -152,6 +161,11 @@ func get_queue_size() -> int:
 func get_max_queue_size() -> int:
 	"""Get maximum queue size."""
 	return max_queue_size
+
+
+func get_effective_fire_rate() -> float:
+	"""Get effective fire rate (for UI and tests)."""
+	return _get_effective_fire_rate()
 
 
 func clear_queue() -> void:

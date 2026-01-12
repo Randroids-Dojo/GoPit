@@ -108,10 +108,12 @@ async def test_queue_respects_max_size(game):
 
 
 @pytest.mark.asyncio
-async def test_fire_rate_default(game):
-    """Default fire_rate should be 3 balls per second."""
-    fire_rate = await game.get_property(BALL_SPAWNER, "fire_rate")
-    assert fire_rate == 3.0, f"Default fire_rate should be 3.0, got {fire_rate}"
+async def test_fire_rate_from_character(game):
+    """Fire rate should come from character stat."""
+    # Get effective fire rate (uses character stat)
+    effective_rate = await game.call(BALL_SPAWNER, "get_effective_fire_rate")
+    assert effective_rate >= 1.0, f"Effective fire_rate should be at least 1.0, got {effective_rate}"
+    assert effective_rate <= 5.0, f"Effective fire_rate should be reasonable, got {effective_rate}"
 
 
 @pytest.mark.asyncio
@@ -133,8 +135,8 @@ async def test_balls_spawn_in_sequence(game):
     # Fire to add to queue
     await game.call(BALL_SPAWNER, "fire")
 
-    # Wait for first ball to spawn (at fire_rate = 3, first fires at ~0.33s)
-    await asyncio.sleep(0.4)
+    # Wait for first ball to spawn (at fire_rate = 2, first fires at ~0.5s)
+    await asyncio.sleep(0.7)
 
     # Should have at least one more ball
     ball_count = await game.call(BALLS, "get_child_count")

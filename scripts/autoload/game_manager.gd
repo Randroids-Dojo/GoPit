@@ -191,6 +191,19 @@ func get_character_strength() -> int:
 	return int(10 * character_damage_mult)
 
 
+func get_character_fire_rate() -> float:
+	"""Get the character's fire rate stat at current player level.
+	This determines how fast balls leave the queue (balls per second).
+	Uses the base_fire_rate + scaling system from Character resource."""
+	if selected_character == null:
+		return 2.0  # Default fire rate when no character selected
+	# Use the get_fire_rate_at_level method from Character resource
+	if selected_character.has_method("get_fire_rate_at_level"):
+		return selected_character.get_fire_rate_at_level(player_level)
+	# Fallback for old characters without the method
+	return 2.0
+
+
 func set_character(character: Resource) -> void:
 	if character == null:
 		_reset_character_stats()

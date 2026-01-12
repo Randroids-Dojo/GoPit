@@ -19,7 +19,7 @@ const SCALING_MULTIPLIERS := {
 	StatScaling.E: 0.03,  # +3% per level
 }
 
-## Stats (relative to 1.0 baseline for multipliers, absolute for base_strength)
+## Stats (relative to 1.0 baseline for multipliers, absolute for base values)
 @export_group("Stats")
 @export_range(0.5, 2.0, 0.1) var endurance: float = 1.0  ## HP multiplier
 @export_range(5, 15, 1) var base_strength: int = 8       ## Base damage value (absolute)
@@ -29,6 +29,8 @@ const SCALING_MULTIPLIERS := {
 @export_range(0.5, 2.0, 0.1) var speed: float = 1.0      ## Movement speed
 @export_range(0.5, 2.0, 0.1) var dexterity: float = 1.0  ## Crit chance multiplier
 @export_range(0.5, 2.0, 0.1) var intelligence: float = 1.0  ## Effect duration multiplier
+@export_range(1.0, 4.0, 0.5) var base_fire_rate: float = 2.0  ## Base balls per second
+@export var fire_rate_scaling: StatScaling = StatScaling.C  ## Fire rate growth per level
 
 @export_group("Abilities")
 @export var starting_ball: int = 0  ## BallRegistry.BallType enum value
@@ -113,5 +115,34 @@ func get_strength_scaling_grade() -> String:
 func get_scaling_description() -> String:
 	var grade := get_strength_scaling_grade()
 	var mult: float = SCALING_MULTIPLIERS.get(strength_scaling, 0.08)
+	var percent := int(mult * 100)
+	return "%s (+%d%%/lvl)" % [grade, percent]
+
+
+## Calculate fire rate at a given level based on scaling grade
+func get_fire_rate_at_level(level: int) -> float:
+	if level <= 1:
+		return base_fire_rate
+	var scaling_mult: float = SCALING_MULTIPLIERS.get(fire_rate_scaling, 0.08)
+	var level_bonus: float = base_fire_rate * scaling_mult * (level - 1)
+	return base_fire_rate + level_bonus
+
+
+## Get the fire rate scaling grade as a display string (S/A/B/C/D/E)
+func get_fire_rate_scaling_grade() -> String:
+	match fire_rate_scaling:
+		StatScaling.S: return "S"
+		StatScaling.A: return "A"
+		StatScaling.B: return "B"
+		StatScaling.C: return "C"
+		StatScaling.D: return "D"
+		StatScaling.E: return "E"
+		_: return "?"
+
+
+## Get fire rate scaling description for UI
+func get_fire_rate_scaling_description() -> String:
+	var grade := get_fire_rate_scaling_grade()
+	var mult: float = SCALING_MULTIPLIERS.get(fire_rate_scaling, 0.08)
 	var percent := int(mult * 100)
 	return "%s (+%d%%/lvl)" % [grade, percent]

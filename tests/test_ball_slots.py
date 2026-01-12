@@ -93,7 +93,9 @@ async def test_multi_slot_fires_multiple_types(game):
 
     # Fire
     await game.click(FIRE_BUTTON)
-    await asyncio.sleep(0.3)
+
+    # Wait for queue to drain (fire_rate=2, 0.5s per ball, 2 slots = 1s+ to spawn all)
+    await asyncio.sleep(1.5)
 
     # Check that multiple balls spawned (one per slot)
     ball_count_after = await game.call(BALLS_CONTAINER, "get_child_count")
