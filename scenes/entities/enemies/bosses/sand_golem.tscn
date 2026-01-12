@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://sand_golem_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/bosses/sand_golem.gd" id="1_golem"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_golem"]
+radius = 50.0
+height = 140.0
+
+[node name="SandGolem" type="CharacterBody2D" groups=["boss", "enemies"]]
+collision_layer = 4
+collision_mask = 18
+script = ExtResource("1_golem")
+max_hp = 800
+speed = 30.0
+damage_to_player = 35
+xp_value = 200
+boss_name = "Sand Golem"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_golem")

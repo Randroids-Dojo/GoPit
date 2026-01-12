@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://frost_wyrm_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/bosses/frost_wyrm.gd" id="1_wyrm"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wyrm"]
+radius = 30.0
+height = 150.0
+
+[node name="FrostWyrm" type="CharacterBody2D" groups=["boss", "enemies"]]
+collision_layer = 4
+collision_mask = 18
+script = ExtResource("1_wyrm")
+max_hp = 600
+speed = 40.0
+damage_to_player = 20
+xp_value = 150
+boss_name = "Frost Wyrm"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_wyrm")
