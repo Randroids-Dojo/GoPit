@@ -189,9 +189,9 @@ func _apply_evolved_fused_inheritance(ball: Node) -> void:
 func _registry_to_ball_type(registry_type: int) -> int:
 	"""Map BallRegistry.BallType to ball.gd BallType enum"""
 	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6,
-	#               RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13
+	#               RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13, DARK=14
 	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6,
-	#          RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13
+	#          RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13, DARK=14
 	match registry_type:
 		0: return 0  # BASIC -> NORMAL
 		1: return 1  # BURN -> FIRE
@@ -207,6 +207,7 @@ func _registry_to_ball_type(registry_type: int) -> int:
 		11: return 11  # GHOST -> GHOST
 		12: return 12  # VAMPIRE -> VAMPIRE
 		13: return 13  # BROOD_MOTHER -> BROOD_MOTHER
+		14: return 14  # DARK -> DARK
 	return 0
 
 

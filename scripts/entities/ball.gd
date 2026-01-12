@@ -9,7 +9,7 @@ signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 signal caught  # Emitted when ball is caught by player (active play bonus)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -98,6 +98,8 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.5, 0.1, 0.3)  # Dark crimson
 		BallType.BROOD_MOTHER:
 			ball_color = Color(0.8, 0.5, 0.9)  # Lavender/pink
+		BallType.DARK:
+			ball_color = Color(0.15, 0.05, 0.2)  # Very dark purple
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -261,6 +263,10 @@ func _physics_process(delta: float) -> void:
 			# Inferno passive: +20% fire damage
 			if ball_type == BallType.FIRE:
 				actual_damage = int(actual_damage * GameManager.get_fire_damage_multiplier())
+
+			# Dark ball: 3x damage (high risk, high reward - self-destructs on hit)
+			if ball_type == BallType.DARK:
+				actual_damage = actual_damage * 3
 
 			# Check for status-based damage bonuses
 			if collider.has_method("has_status_effect"):
@@ -576,40 +582,17 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 			_spawn_brood_baby(enemy.global_position)
 			# Visual brood spawn effect
 			enemy.modulate = Color(0.8, 0.5, 0.9)
+			var brood_tween := enemy.create_tween()
+			brood_tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
+
+		BallType.DARK:
+			# Dark: Self-destruct on hit (damage multiplier applied elsewhere)
+			# Dark explosion visual effect
+			enemy.modulate = Color(0.3, 0.0, 0.4)
 			var tween := enemy.create_tween()
-			tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
-
-
-func _spawn_brood_baby(spawn_pos: Vector2) -> void:
-	"""Spawn a small baby ball from the Brood Mother ball"""
-	var ball_scene := preload("res://scenes/entities/ball.tscn")
-	var baby: Node2D
-
-	# Get from pool if available
-	if PoolManager:
-		baby = PoolManager.get_ball()
-	else:
-		baby = ball_scene.instantiate()
-
-	baby.position = spawn_pos
-	baby.scale = Vector2(0.5, 0.5)  # Smaller than regular baby balls
-	baby.is_baby_ball = true
-	baby.damage = int(damage * 0.3)  # 30% of parent damage
-
-	# Inherit brood mother type
-	if baby.has_method("set_ball_type"):
-		baby.set_ball_type(BallType.BROOD_MOTHER)
-
-	# Random direction (spread pattern)
-	var random_angle := randf_range(0, TAU)
-	baby.direction = Vector2.from_angle(random_angle)
-
-	# Add to game
-	var balls_container := get_tree().get_first_node_in_group("balls_container")
-	if balls_container:
-		balls_container.add_child(baby)
-	else:
-		get_parent().add_child(baby)
+			tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
+			# Self-destruct after hit
+			call_deferred("despawn")
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
@@ -657,6 +640,38 @@ func _draw_lightning_arc(from: Vector2, to: Vector2) -> void:
 	var tween := line.create_tween()
 	tween.tween_property(line, "modulate:a", 0.0, 0.15)
 	tween.tween_callback(line.queue_free)
+
+
+func _spawn_brood_baby(spawn_pos: Vector2) -> void:
+	"""Spawn a small baby ball from the Brood Mother ball"""
+	var ball_scene := preload("res://scenes/entities/ball.tscn")
+	var baby: Node2D
+
+	# Get from pool if available
+	if PoolManager:
+		baby = PoolManager.get_ball()
+	else:
+		baby = ball_scene.instantiate()
+
+	baby.position = spawn_pos
+	baby.scale = Vector2(0.5, 0.5)  # Smaller than regular baby balls
+	baby.is_baby_ball = true
+	baby.damage = int(damage * 0.3)  # 30% of parent damage
+
+	# Inherit brood mother type
+	if baby.has_method("set_ball_type"):
+		baby.set_ball_type(BallType.BROOD_MOTHER)
+
+	# Random direction (spread pattern)
+	var random_angle := randf_range(0, TAU)
+	baby.direction = Vector2.from_angle(random_angle)
+
+	# Add to game
+	var balls_container := get_tree().get_first_node_in_group("balls_container")
+	if balls_container:
+		balls_container.add_child(baby)
+	else:
+		get_parent().add_child(baby)
 
 
 func _apply_evolved_effect(enemy: Node2D, base_damage: int) -> void:
