@@ -26,6 +26,7 @@
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 [ext_resource type="Script" path="res://scripts/ui/ultimate_button.gd" id="22_ultimate"]
 [ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
+[ext_resource type="Script" path="res://scripts/ui/slot_display.gd" id="slot_display"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -260,6 +261,11 @@ layout_mode = 2
 size_flags_horizontal = 2
 alignment = 1
 theme_override_constants/separation = 5
+
+[node name="SlotDisplay" type="HBoxContainer" parent="UI/HUD/InputContainer/HBoxContainer/FireButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("slot_display")
 
 [node name="AutoToggle" type="Button" parent="UI/HUD/InputContainer/HBoxContainer/FireButtonContainer"]
 custom_minimum_size = Vector2(60, 30)
