@@ -514,6 +514,36 @@ func spawn_test_boss() -> String:
 	return boss.get_path()
 
 
+func spawn_test_enemy(scene_path: String) -> String:
+	"""Spawn a specific enemy type for testing. Returns the enemy path (for PlayGodot)."""
+	var scene: PackedScene = load(scene_path)
+	if not scene:
+		push_error("spawn_test_enemy: Could not load scene at " + scene_path)
+		return ""
+
+	var enemy = scene.instantiate()
+
+	# Get container
+	var container := enemies_container
+	if not container:
+		container = get_node_or_null("GameArea/Enemies")
+	if not container:
+		push_error("spawn_test_enemy: Could not find enemies container")
+		return ""
+
+	# Position enemy on screen
+	enemy.global_position = Vector2(360, 200)
+
+	container.add_child(enemy)
+	# Return path as string since PlayGodot can't serialize Node references
+	return enemy.get_path()
+
+
+func get_enemy_spawner_path() -> String:
+	"""Return the enemy spawner path for testing."""
+	return "/root/Game/GameArea/Enemies/EnemySpawner"
+
+
 func _spawn_boss(stage: int) -> void:
 	"""Spawn the appropriate boss for the current stage"""
 	# Lazy load boss scenes only when needed (avoids class resolution issues during import)
