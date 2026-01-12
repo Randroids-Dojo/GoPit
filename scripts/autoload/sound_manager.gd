@@ -67,7 +67,9 @@ enum SoundType {
 	EVOLUTION,       # Success fanfare
 	FISSION,         # Energy burst
 	# Ultimate ability
-	ULTIMATE         # Screen-clearing blast
+	ULTIMATE,        # Screen-clearing blast
+	# Combat feedback
+	WEAK_POINT_HIT   # Critical weak point hit (boss crown, etc.)
 }
 
 # Per-sound pitch/volume variance settings
@@ -99,7 +101,9 @@ const SOUND_SETTINGS := {
 	SoundType.EVOLUTION: {"pitch_var": 0.0, "vol_var": 0.0},
 	SoundType.FISSION: {"pitch_var": 0.1, "vol_var": 0.1},
 	# Ultimate
-	SoundType.ULTIMATE: {"pitch_var": 0.0, "vol_var": 0.0}
+	SoundType.ULTIMATE: {"pitch_var": 0.0, "vol_var": 0.0},
+	# Combat feedback
+	SoundType.WEAK_POINT_HIT: {"pitch_var": 0.1, "vol_var": 0.05}
 }
 
 
@@ -292,6 +296,9 @@ func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
 		# Ultimate
 		SoundType.ULTIMATE:
 			data = _generate_ultimate_blast_sound()
+		# Combat feedback
+		SoundType.WEAK_POINT_HIT:
+			data = _generate_weak_point_hit()
 
 	wav.data = data
 	return wav
@@ -731,6 +738,46 @@ func _generate_ultimate_blast_sound() -> PackedByteArray:
 		var rumble := sin(t * 60.0 * TAU) * 0.15
 
 		var sample := (tone + noise + rumble) * envelope * 0.25
+		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
+
+	return data
+
+
+# ============================================================================
+# Combat Feedback Sounds
+# ============================================================================
+
+func _generate_weak_point_hit() -> PackedByteArray:
+	"""Weak point hit: Satisfying critical hit sound - high impact with sparkle"""
+	var samples := int(SAMPLE_RATE * 0.25)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in samples:
+		var t := float(i) / SAMPLE_RATE
+		var progress := float(i) / samples
+
+		# Sharp attack, medium decay
+		var envelope: float
+		if progress < 0.05:
+			envelope = progress / 0.05
+		else:
+			envelope = pow(1.0 - (progress - 0.05) / 0.95, 1.2)
+
+		# High-pitched hit with metallic ring
+		var freq := lerpf(1500.0, 800.0, progress)
+		var hit := sin(t * freq * TAU) * 0.4
+		hit += sin(t * freq * 2.5 * TAU) * 0.2  # Harmonic for brightness
+
+		# Sparkle/shimmer overlay
+		var sparkle := sin(t * 3000.0 * TAU) * sin(t * 40.0 * TAU) * 0.15
+
+		# Impact punch at the start
+		var punch := 0.0
+		if progress < 0.1:
+			punch = sin(t * 200.0 * TAU) * (1.0 - progress / 0.1) * 0.3
+
+		var sample := (hit + sparkle + punch) * envelope * 0.25
 		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
 
 	return data
