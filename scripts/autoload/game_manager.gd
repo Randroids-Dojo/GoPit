@@ -24,6 +24,7 @@ signal leadership_changed(new_value: float)
 signal ultimate_ready
 signal ultimate_used
 signal ultimate_charge_changed(current: float, max_val: float)
+signal damage_dodged  # Emitted when player dodges an attack
 
 # Combo system
 var combo_count: int = 0
@@ -45,6 +46,7 @@ var xp_to_next_level: int = 100
 var player_level: int = 1
 var gem_magnetism_range: float = 0.0
 var leadership: float = 0.0  # Affects baby ball spawn rate
+var dodge_chance: float = 0.0  # Chance to dodge attacks (Eye of the Beholder)
 
 # Ultimate ability system
 const ULTIMATE_CHARGE_MAX: float = 100.0
@@ -62,7 +64,7 @@ var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
 # Passive ability flags (set based on selected character)
-enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL }
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, EYE_OF_BEHOLDER }
 var active_passive: Passive = Passive.NONE
 
 # High score persistence
@@ -167,7 +169,8 @@ const VALID_PASSIVES := {
 	"Jackpot": Passive.JACKPOT,
 	"Inferno": Passive.INFERNO,
 	"Squad Leader": Passive.SQUAD_LEADER,
-	"Lifesteal": Passive.LIFESTEAL
+	"Lifesteal": Passive.LIFESTEAL,
+	"Eye of the Beholder": Passive.EYE_OF_BEHOLDER
 }
 
 
@@ -263,6 +266,13 @@ func add_xp(amount: int) -> void:
 
 
 func take_damage(amount: int) -> void:
+	# Check dodge chance (Eye of the Beholder passive)
+	var total_dodge := get_dodge_chance()
+	if total_dodge > 0 and randf() < total_dodge:
+		# Dodged the attack
+		damage_dodged.emit()
+		return
+
 	player_hp = max(0, player_hp - amount)
 	SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
 	player_damaged.emit(amount)
@@ -398,6 +408,14 @@ func get_baby_ball_rate_bonus() -> float:
 	return 0.0
 
 
+func get_dodge_chance() -> float:
+	## Returns dodge chance (Eye of the Beholder: 10% + any bonus from dodge_chance var)
+	var base_dodge := 0.0
+	if active_passive == Passive.EYE_OF_BEHOLDER:
+		base_dodge = 0.10  # 10% base dodge chance
+	return base_dodge + dodge_chance
+
+
 func advance_wave() -> void:
 	current_wave += 1
 	wave_changed.emit(current_wave)
@@ -411,6 +429,7 @@ func _reset_stats() -> void:
 	xp_to_next_level = _calculate_xp_requirement(player_level)
 	gem_magnetism_range = 0.0
 	leadership = 0.0
+	dodge_chance = 0.0
 	is_endless_mode = false
 	ultimate_charge = 0.0
 	# Reset session stats

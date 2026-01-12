@@ -91,6 +91,7 @@ func _ready() -> void:
 	GameManager.game_started.connect(_on_game_started)
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.player_damaged.connect(_on_player_damaged)
+	GameManager.damage_dodged.connect(_on_damage_dodged)
 	GameManager.leadership_changed.connect(_on_leadership_changed)
 
 	# Connect to stage manager for biome changes
@@ -159,6 +160,13 @@ func _on_game_over() -> void:
 func _on_player_damaged(_amount: int) -> void:
 	if damage_vignette:
 		damage_vignette.flash()
+
+
+func _on_damage_dodged() -> void:
+	# Show "Dodged!" text at player position
+	if player:
+		var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+		DamageNumber.spawn_text(self, player.position, "Dodged!", Color(0.5, 1.0, 0.5))  # Green "Dodged!" text
 
 
 func _on_player_zone_body_entered(_body: Node2D) -> void:

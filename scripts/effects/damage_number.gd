@@ -49,6 +49,11 @@ func reset() -> void:
 
 
 static func spawn(parent: Node, pos: Vector2, value: int, text_color: Color = Color.WHITE, prefix: String = "") -> void:
+	spawn_text(parent, pos, prefix + str(value), text_color)
+
+
+static func spawn_text(parent: Node, pos: Vector2, display_text: String, text_color: Color = Color.WHITE) -> void:
+	"""Spawn floating text (for damage numbers, 'Dodged!', etc.)"""
 	var label: Label
 
 	# Get from pool if available
@@ -58,7 +63,7 @@ static func spawn(parent: Node, pos: Vector2, value: int, text_color: Color = Co
 		var scene := preload("res://scenes/effects/damage_number.tscn")
 		label = scene.instantiate()
 
-	label.text = prefix + str(value)
+	label.text = display_text
 	label.position = pos + Vector2(randf_range(-10, 10), randf_range(-10, 10))
 	label.modulate = text_color
 	label.z_index = 100
