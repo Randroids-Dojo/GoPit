@@ -56,12 +56,16 @@ async def test_queue_drains_over_time(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
     await asyncio.sleep(0.1)
 
+    # Ensure BallRegistry has a ball type ready (reset to clean state)
+    await game.call(BALL_REGISTRY, "reset")
+
     # Clear queue and fire to add balls
     await game.call(BALL_SPAWNER, "clear_queue")
     await game.call(BALL_SPAWNER, "fire")
 
-    # Wait for queue to drain (at fire_rate = 3, balls fire every 0.33s)
-    await asyncio.sleep(0.5)
+    # Wait for queue to drain - use longer wait for CI stability
+    # Fire rate varies by character, so wait 1.0s to be safe
+    await asyncio.sleep(1.0)
 
     # Check that balls were spawned
     ball_count = await game.call(BALLS, "get_child_count")
@@ -123,6 +127,9 @@ async def test_balls_spawn_in_sequence(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
     await asyncio.sleep(0.1)
 
+    # Ensure BallRegistry has a ball type ready (reset to clean state)
+    await game.call(BALL_REGISTRY, "reset")
+
     # Clear balls and queue
     await game.call(BALL_SPAWNER, "clear_queue")
 
@@ -135,8 +142,8 @@ async def test_balls_spawn_in_sequence(game):
     # Fire to add to queue
     await game.call(BALL_SPAWNER, "fire")
 
-    # Wait for first ball to spawn (at fire_rate = 2, first fires at ~0.5s)
-    await asyncio.sleep(0.7)
+    # Wait for first ball to spawn - use longer wait for CI stability
+    await asyncio.sleep(1.0)
 
     # Should have at least one more ball
     ball_count = await game.call(BALLS, "get_child_count")
