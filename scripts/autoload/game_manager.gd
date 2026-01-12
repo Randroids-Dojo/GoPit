@@ -94,6 +94,10 @@ var xp_to_next_level: int = 100
 var player_level: int = 1
 var gem_magnetism_range: float = 0.0
 var leadership: float = 0.0  # Affects baby ball spawn rate
+var is_boss_fight: bool = false  # Auto-magnet during boss fights
+
+# Boss fight auto-magnet range (QoL feature from BallxPit)
+const BOSS_MAGNET_RANGE: float = 2000.0
 
 # Passive stats (from slot-based passive system)
 var armor_percent: float = 0.0  # Damage reduction
@@ -628,6 +632,7 @@ func reset() -> void:
 	xp_to_next_level = _calculate_xp_requirement(player_level)
 	gem_magnetism_range = 0.0
 	leadership = 0.0
+	is_boss_fight = false
 	is_endless_mode = false
 	ultimate_charge = 0.0
 	# Reset passive stats

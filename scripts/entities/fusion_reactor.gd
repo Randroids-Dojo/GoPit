@@ -45,9 +45,11 @@ func _process(delta: float) -> void:
 		_collect()
 		return
 
-	# Check for magnetism toward player
+	# Check for magnetism toward player (auto-magnet during boss fights)
 	_being_attracted = false
 	var magnetism_range := GameManager.gem_magnetism_range
+	if GameManager.is_boss_fight:
+		magnetism_range = GameManager.BOSS_MAGNET_RANGE
 	if magnetism_range > 0 and _player:
 		var distance_to_player := global_position.distance_to(_player.global_position)
 		# Reactors have larger magnetism range than gems
