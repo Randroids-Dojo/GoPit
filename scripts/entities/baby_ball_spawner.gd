@@ -9,6 +9,11 @@ signal baby_ball_spawned(ball: Node2D)
 @export var baby_ball_damage_multiplier: float = 0.5
 @export var baby_ball_scale: float = 0.6
 
+## Maximum baby balls on screen (Leadership increases this limit)
+@export var base_max_babies: int = 3
+## Extra baby balls per point of Leadership bonus
+@export var leadership_baby_multiplier: float = 2.0
+
 var balls_container: Node2D
 var _spawn_timer: Timer
 var _player: Node2D
@@ -61,12 +66,36 @@ func _update_spawn_rate() -> void:
 	_spawn_timer.wait_time = maxf(0.3, rate)
 
 
+func get_max_baby_balls() -> int:
+	"""Returns max baby balls based on Leadership stat"""
+	var char_mult: float = GameManager.character_leadership_mult
+	var extra_from_passive: int = GameManager.get_extra_baby_balls()  # Squad Leader: +2
+	var leadership_extra: int = int(_leadership_bonus * char_mult * leadership_baby_multiplier)
+	return base_max_babies + leadership_extra + extra_from_passive
+
+
+func get_current_baby_count() -> int:
+	"""Returns count of active baby balls on screen"""
+	var container: Node = balls_container if balls_container else get_parent()
+	var count: int = 0
+	for child in container.get_children():
+		if child.get("is_baby_ball") == true:
+			count += 1
+	return count
+
+
 func _spawn_baby_ball() -> void:
 	if not _player:
 		return
 
 	if GameManager.current_state != GameManager.GameState.PLAYING:
 		return
+
+	# Check baby ball limit based on Leadership
+	var current_count: int = get_current_baby_count()
+	var max_count: int = get_max_baby_balls()
+	if current_count >= max_count:
+		return  # At capacity, wait for some babies to despawn
 
 	# Get ball from pool if available, otherwise instantiate
 	var ball: Node
