@@ -1,6 +1,10 @@
-[gd_resource type="Resource" script_class="Biome" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Biome" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/crab.tscn" id="2_crab"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/swarm.tscn" id="3_swarm"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/archer.tscn" id="4_archer"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/bomber.tscn" id="5_bomber"]
 
 [resource]
 script = ExtResource("1_biome")
@@ -8,3 +12,4 @@ biome_name = "Burning Sands"
 background_color = Color(0.2, 0.1, 0.05, 1)
 wall_color = Color(0.6, 0.35, 0.15, 1)
 waves_before_boss = 10
+enemy_scenes = [ExtResource("2_crab"), ExtResource("3_swarm"), ExtResource("4_archer"), ExtResource("5_bomber")]

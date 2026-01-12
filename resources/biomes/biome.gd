@@ -9,7 +9,10 @@ extends Resource
 ## Waves in this stage before boss
 @export var waves_before_boss: int = 10
 
-## Future: enemy variants, hazards, music
+## Enemy types that spawn in this biome (paths to scenes)
+## If empty, spawner uses default all-enemy logic
+@export var enemy_scenes: Array[PackedScene] = []
+
+## Future: hazards, music
 # @export var hazard_scenes: Array[PackedScene]
-# @export var enemy_variants: Dictionary
 # @export var music_track: AudioStream

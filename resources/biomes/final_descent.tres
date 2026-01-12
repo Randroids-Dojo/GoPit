@@ -1,6 +1,13 @@
-[gd_resource type="Resource" script_class="Biome" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="Biome" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/slime.tscn" id="2_slime"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/bat.tscn" id="3_bat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/crab.tscn" id="4_crab"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/golem.tscn" id="5_golem"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/swarm.tscn" id="6_swarm"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/archer.tscn" id="7_archer"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/bomber.tscn" id="8_bomber"]
 
 [resource]
 script = ExtResource("1_biome")
@@ -8,3 +15,4 @@ biome_name = "Final Descent"
 background_color = Color(0.12, 0.02, 0.08, 1)
 wall_color = Color(0.4, 0.1, 0.15, 1)
 waves_before_boss = 10
+enemy_scenes = [ExtResource("2_slime"), ExtResource("3_bat"), ExtResource("4_crab"), ExtResource("5_golem"), ExtResource("6_swarm"), ExtResource("7_archer"), ExtResource("8_bomber")]
