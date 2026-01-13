@@ -421,16 +421,8 @@ func catch() -> bool:
 		return false
 
 	caught.emit()
-	# Visual catch effect
 	_show_catch_effect()
-	# Return to pool
-	if has_meta("pooled") and PoolManager:
-		reset()
-		set_physics_process(false)
-		hide()
-		PoolManager.release_ball(self)
-	else:
-		queue_free()
+	queue_free()
 	return true
 
 
