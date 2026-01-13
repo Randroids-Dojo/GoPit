@@ -5,6 +5,7 @@ extends Node2D
 @onready var balls_container: Node2D = $GameArea/Balls
 @onready var enemies_container: Node2D = $GameArea/Enemies
 @onready var gems_container: Node2D = $GameArea/Gems
+@onready var hazards_container: Node2D = $GameArea/Hazards
 @onready var enemy_spawner: EnemySpawner = $GameArea/Enemies/EnemySpawner
 @onready var player_zone: Area2D = $GameArea/PlayerZone
 @onready var player: CharacterBody2D = $GameArea/Player
@@ -275,6 +276,8 @@ func _on_game_over() -> void:
 		for enemy in enemies_container.get_children():
 			if enemy is EnemyBase:
 				enemy.queue_free()
+	# Clear hazards
+	_clear_hazards()
 	# Clear the mid-run session save (run ended)
 	MetaManager.clear_session()
 
@@ -508,6 +511,9 @@ func _on_biome_changed(biome: Biome) -> void:
 	if right_wall:
 		_set_wall_color(right_wall, biome.wall_color)
 
+	# Spawn environmental hazards for this biome
+	_spawn_biome_hazards(biome)
+
 
 func _set_wall_color(wall: StaticBody2D, color: Color) -> void:
 	# Walls don't have visual by default, add ColorRect if needed
@@ -519,6 +525,70 @@ func _set_wall_color(wall: StaticBody2D, color: Color) -> void:
 		visual.position = Vector2(-10, -640)
 		wall.add_child(visual)
 	visual.color = color
+
+
+func _spawn_biome_hazards(biome: Biome) -> void:
+	"""Spawn environmental hazards for the current biome."""
+	# Clear existing hazards
+	_clear_hazards()
+
+	# Check if biome has hazards configured
+	if not biome.hazard_scene or biome.hazard_count <= 0:
+		return
+
+	# Ensure hazards container exists
+	if not hazards_container:
+		hazards_container = Node2D.new()
+		hazards_container.name = "Hazards"
+		$GameArea.add_child(hazards_container)
+
+	# Define spawn bounds (game area excluding HUD and player starting area)
+	var spawn_min := Vector2(80, 350)
+	var spawn_max := Vector2(640, 900)
+
+	# Spawn hazards at random positions
+	for i in range(biome.hazard_count):
+		var hazard: Node2D = biome.hazard_scene.instantiate()
+		var pos := _get_random_hazard_position(spawn_min, spawn_max)
+		hazard.position = pos
+		hazards_container.add_child(hazard)
+
+
+func _clear_hazards() -> void:
+	"""Remove all existing hazards."""
+	if not hazards_container:
+		return
+
+	for child in hazards_container.get_children():
+		child.queue_free()
+
+
+func _get_random_hazard_position(min_pos: Vector2, max_pos: Vector2) -> Vector2:
+	"""Get a random position for hazard placement, avoiding overlap with existing hazards."""
+	var attempts := 10
+	var min_distance := 120.0  # Minimum distance between hazards
+
+	for _i in range(attempts):
+		var x := randf_range(min_pos.x, max_pos.x)
+		var y := randf_range(min_pos.y, max_pos.y)
+		var candidate := Vector2(x, y)
+
+		# Check distance from existing hazards
+		var valid := true
+		if hazards_container:
+			for existing in hazards_container.get_children():
+				if existing.position.distance_to(candidate) < min_distance:
+					valid = false
+					break
+
+		if valid:
+			return candidate
+
+	# Fallback: return random position even if overlapping
+	return Vector2(
+		randf_range(min_pos.x, max_pos.x),
+		randf_range(min_pos.y, max_pos.y)
+	)
 
 
 func _on_boss_wave_reached(stage: int) -> void:

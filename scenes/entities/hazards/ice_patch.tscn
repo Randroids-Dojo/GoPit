@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://ice_patch_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/hazards/ice_patch.gd" id="1_script"]
+
+[node name="IcePatch" type="Area2D"]
+collision_layer = 0
+collision_mask = 16
+script = ExtResource("1_script")

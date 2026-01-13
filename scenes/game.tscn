@@ -79,6 +79,8 @@ slime_scene = ExtResource("7_slime")
 
 [node name="Gems" type="Node2D" parent="GameArea" groups=["gems_container"]]
 
+[node name="Hazards" type="Node2D" parent="GameArea" groups=["hazards_container"]]
+
 [node name="Player" parent="GameArea" instance=ExtResource("16_player")]
 position = Vector2(360, 1000)
 

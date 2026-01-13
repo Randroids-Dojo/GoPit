@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://fire_vent_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/hazards/fire_vent.gd" id="1_script"]
+
+[node name="FireVent" type="Area2D"]
+collision_layer = 0
+collision_mask = 16
+script = ExtResource("1_script")
