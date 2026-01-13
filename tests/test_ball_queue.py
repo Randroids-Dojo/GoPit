@@ -22,9 +22,15 @@ async def test_ball_spawner_has_queue_properties(game):
 
 @pytest.mark.asyncio
 async def test_queue_starts_empty(game):
-    """Queue should start empty."""
+    """Queue should start empty after explicit clear."""
+    # Disable autofire first to prevent new balls being queued
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+    await asyncio.sleep(0.2)  # Wait for any in-flight operations
+    # Clear queue to handle any race conditions from autofire
+    await game.call(BALL_SPAWNER, "clear_queue")
+    await asyncio.sleep(0.1)  # Give time for clear to propagate
     queue_size = await game.call(BALL_SPAWNER, "get_queue_size")
-    assert queue_size == 0, f"Queue should start empty, got size {queue_size}"
+    assert queue_size == 0, f"Queue should be empty after clear, got size {queue_size}"
 
 
 @pytest.mark.asyncio

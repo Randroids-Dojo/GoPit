@@ -684,11 +684,27 @@ func apply_passive(passive_type: PassiveType) -> bool:
 		var slot_idx: int = get_passive_slot_index(passive_type)
 		if slot_idx >= 0:
 			passive_slots[slot_idx]["level"] += 1
+			var new_level: int = passive_slots[slot_idx]["level"]
 			_apply_passive_effect(passive_type)
 			passive_slots_changed.emit()
+
+			# Check if passive reached L3 - trigger passive evolution unlock
+			if new_level >= MAX_PASSIVE_LEVEL:
+				_try_unlock_passive_evolution(passive_type)
+
 			return true
 
 	return false  # Already at max level
+
+
+func _try_unlock_passive_evolution(passive_type: PassiveType) -> void:
+	"""Try to unlock a passive evolution when a passive reaches L3."""
+	var evolution_id := MetaManager.try_unlock_evolution_for_passive(passive_type)
+	if not evolution_id.is_empty():
+		# Emit signal for UI notification
+		var evolution_data: PassiveEvolutions.EvolutionData = PassiveEvolutions.get_evolution(evolution_id)
+		if evolution_data:
+			print("Passive Evolution Unlocked: %s!" % evolution_data.name)
 
 
 func _apply_passive_effect(passive_type: PassiveType) -> void:
