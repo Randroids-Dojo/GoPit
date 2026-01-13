@@ -364,9 +364,6 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			direction = Vector2.ZERO
 
-			# Save catch position BEFORE moving offscreen
-			var catch_pos := global_position
-
 			# Disable everything
 			set_physics_process(false)
 			set_process(false)
@@ -380,12 +377,31 @@ func _physics_process(delta: float) -> void:
 			# Emit caught signal (allows spawner to reload)
 			caught.emit()
 
-			# Show effect at original catch position
-			_show_catch_effect_at(catch_pos)
-
 			# Use call_deferred for cleanup to ensure it happens
 			call_deferred("queue_free")
 			return
+
+	# FALLBACK: Proximity-based catch if collision detection missed
+	# This catches edge cases where the ball passes through the player
+	if _bounce_count > 0:  # Only after at least one bounce
+		var player_pos := _get_player_position()
+		var dist_to_player := global_position.distance_to(player_pos)
+		if dist_to_player < 45.0:  # Close to player
+			var to_player: Vector2 = (player_pos - global_position).normalized()
+			var moving_toward: bool = direction.dot(to_player) > -0.3  # Generous threshold
+			if moving_toward:
+				# Catch the ball
+				velocity = Vector2.ZERO
+				direction = Vector2.ZERO
+				set_physics_process(false)
+				set_process(false)
+				collision_layer = 0
+				collision_mask = 0
+				global_position = Vector2(-9999, -9999)
+				hide()
+				caught.emit()
+				call_deferred("queue_free")
+				return
 
 
 func _show_crit_effect() -> void:
