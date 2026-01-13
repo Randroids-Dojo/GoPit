@@ -343,15 +343,15 @@ func _do_beam_attack() -> void:
 			if not is_instance_valid(self):
 				return
 			# Update beam direction
-			var t := float(i) / tick_count
+			var t: float = float(i) / tick_count
 			var current_angle: float = lerpf(start_angle, end_angle, t)
 			_beam_target = global_position + Vector2(cos(current_angle), sin(current_angle)) * 500
 
 			# Check if player is in beam path
 			if _player and is_instance_valid(_player):
-				var to_player := _player.global_position - global_position
-				var beam_dir := (_beam_target - global_position).normalized()
-				var player_dir := to_player.normalized()
+				var to_player: Vector2 = _player.global_position - global_position
+				var beam_dir: Vector2 = (_beam_target - global_position).normalized()
+				var player_dir: Vector2 = to_player.normalized()
 				var angle_diff: float = absf(beam_dir.angle_to(player_dir))
 
 				if angle_diff < 0.2 and to_player.length() < 600:
