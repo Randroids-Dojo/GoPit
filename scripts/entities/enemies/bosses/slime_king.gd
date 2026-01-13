@@ -115,18 +115,18 @@ func _draw_crown() -> void:
 
 const WEAK_POINT_MULTIPLIER: float = 2.0
 
-func take_damage_at_position(amount: int, hit_position: Vector2) -> void:
+func take_damage_at_position(amount: int, hit_position: Vector2, is_crit: bool = false) -> void:
 	## Crown takes 2x damage as a weak point
 	var local_hit := to_local(hit_position)
 
 	if _is_crown_hit(local_hit):
 		# Weak point hit - 2x damage with visual feedback
 		var boosted_damage := int(amount * WEAK_POINT_MULTIPLIER)
-		take_damage(boosted_damage)
+		take_damage(boosted_damage, is_crit)
 		_flash_crown_hit()
 	else:
 		# Normal hit
-		take_damage(amount)
+		take_damage(amount, is_crit)
 
 
 func take_damage_at_position_xy(amount: int, hit_x: float, hit_y: float) -> void:

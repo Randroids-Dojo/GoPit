@@ -123,7 +123,7 @@ var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
 # Passive ability flags (set based on selected character)
-enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER }
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER }
 var active_passive: Passive = Passive.NONE
 
 # High score persistence
@@ -310,7 +310,8 @@ const VALID_PASSIVES := {
 	"Inferno": Passive.INFERNO,
 	"Squad Leader": Passive.SQUAD_LEADER,
 	"Lifesteal": Passive.LIFESTEAL,
-	"Bounce Master": Passive.BOUNCE_MASTER
+	"Bounce Master": Passive.BOUNCE_MASTER,
+	"Executioner": Passive.EXECUTIONER
 }
 
 
@@ -573,6 +574,15 @@ func get_bounce_damage_multiplier() -> float:
 	## Returns 0.0 if no bounce scaling passive, 0.05 = +5% damage per bounce
 	if active_passive == Passive.BOUNCE_MASTER:
 		return 0.05
+	return 0.0
+
+
+func get_execute_threshold() -> float:
+	## Returns the HP threshold for execute mechanic (Executioner: 20%)
+	## Execute: Critical hits on enemies below this HP% = instant kill
+	## Returns 0.0 if no execute passive, 0.20 = 20% HP threshold
+	if active_passive == Passive.EXECUTIONER:
+		return 0.20
 	return 0.0
 
 

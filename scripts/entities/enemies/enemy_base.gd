@@ -10,6 +10,7 @@ signal entered_danger_zone
 signal left_danger_zone
 signal status_effect_applied(enemy: EnemyBase, effect_type: int)
 signal hemorrhage_triggered(enemy: EnemyBase, damage: int)
+signal executed(enemy: EnemyBase)  # Emitted when execute mechanic kills the enemy
 
 enum State { DESCENDING, WARNING, ATTACKING, DEAD }
 
@@ -147,9 +148,19 @@ func _draw() -> void:
 	pass
 
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, is_crit: bool = false) -> void:
 	# Apply damage amplification from status effects (Radiation, Frostburn)
 	var amplified_amount := _apply_damage_amplification(amount)
+
+	# Execute mechanic: Crits on low-HP enemies = instant kill
+	if is_crit:
+		var execute_threshold := GameManager.get_execute_threshold()
+		if execute_threshold > 0:
+			var hp_percent := float(hp) / float(max_hp)
+			if hp_percent < execute_threshold:
+				_execute_kill()
+				return
+
 	hp -= amplified_amount
 	took_damage.emit(self, amplified_amount)
 	GameManager.record_damage_dealt(amplified_amount)
@@ -209,6 +220,48 @@ func _die() -> void:
 	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
 	died.emit(self)
 	queue_free()
+
+
+func _execute_kill() -> void:
+	"""Execute mechanic: Instant kill when crit hits low-HP enemy"""
+	if current_state == State.DEAD:
+		return
+
+	# Record the damage (remaining HP)
+	GameManager.record_damage_dealt(hp)
+
+	# Visual and audio feedback
+	_show_execute_effect()
+
+	# Signal execution
+	executed.emit(self)
+
+	# Set HP to 0 (will trigger _die via setter)
+	hp = 0
+
+
+func _show_execute_effect() -> void:
+	"""Dramatic visual/audio for execute kill"""
+	# Big screen shake for impact
+	CameraShake.shake(15.0, 8.0)
+
+	# Play distinctive sound
+	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
+
+	# Spawn 'EXECUTE' text
+	var scene_root := get_tree().current_scene
+	var DamageNumber := preload("res://scripts/effects/damage_number.gd")
+	DamageNumber.spawn_text(
+		scene_root,
+		global_position + Vector2(0, -40),
+		"EXECUTE",
+		Color(0.9, 0.1, 0.1)  # Dark red
+	)
+
+	# Flash enemy dark red before death
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+	modulate = Color(1.5, 0.2, 0.2)
 
 
 func _spawn_health_gem() -> void:
