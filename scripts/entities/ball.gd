@@ -9,7 +9,7 @@ signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 signal caught  # Emitted when ball is caught by player (active play bonus)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK, CELL, CHARM }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK, CELL, CHARM, LASER }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -108,6 +108,8 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.2, 0.8, 0.7)  # Teal/aqua
 		BallType.CHARM:
 			ball_color = Color(1.0, 0.4, 0.8)  # Pink/magenta
+		BallType.LASER:
+			ball_color = Color(1.0, 0.1, 0.1)  # Bright red
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -625,6 +627,14 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 			var charm_tween := enemy.create_tween()
 			charm_tween.tween_property(enemy, "modulate", Color(1.0, 0.5, 0.85), 0.3)
 
+		BallType.LASER:
+			# Laser: Row/column AoE damage - fire beam in direction of travel
+			_fire_laser_beam(enemy, _base_damage)
+			# Visual laser hit effect
+			enemy.modulate = Color(1.0, 0.3, 0.3)
+			var laser_tween := enemy.create_tween()
+			laser_tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
+
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
 	var chain_range: float = 150.0
@@ -671,6 +681,85 @@ func _draw_lightning_arc(from: Vector2, to: Vector2) -> void:
 	var tween := line.create_tween()
 	tween.tween_property(line, "modulate:a", 0.0, 0.15)
 	tween.tween_callback(line.queue_free)
+
+
+func _fire_laser_beam(hit_enemy: Node2D, base_damage: int) -> void:
+	"""Fire a laser beam that damages enemies in a row or column.
+	Beam direction is based on ball's current movement direction."""
+	var beam_length: float = 600.0  # How far the beam extends
+	var beam_width: float = 40.0  # Width of damage corridor
+	var beam_damage: int = int(base_damage * 0.7)  # 70% damage for beam hits
+
+	# Determine beam direction - use dominant axis (horizontal or vertical)
+	var beam_dir: Vector2
+	if abs(direction.x) > abs(direction.y):
+		# More horizontal movement - fire horizontal beam
+		beam_dir = Vector2(sign(direction.x) if direction.x != 0 else 1.0, 0.0)
+	else:
+		# More vertical movement - fire vertical beam
+		beam_dir = Vector2(0.0, sign(direction.y) if direction.y != 0 else -1.0)
+
+	var beam_start := hit_enemy.global_position
+	var beam_end := beam_start + beam_dir * beam_length
+
+	# Find enemies in the beam path
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
+	if not enemies_container:
+		return
+
+	for child in enemies_container.get_children():
+		if child is EnemyBase and child != hit_enemy:
+			# Check if enemy is within beam corridor
+			var enemy_pos: Vector2 = child.global_position
+			var to_enemy: Vector2 = enemy_pos - beam_start
+
+			# Project enemy position onto beam line
+			var beam_progress: float = to_enemy.dot(beam_dir)
+
+			# Check if enemy is ahead in beam direction and within length
+			if beam_progress > 0 and beam_progress < beam_length:
+				# Check perpendicular distance (within beam width)
+				var perp_dir: Vector2 = Vector2(-beam_dir.y, beam_dir.x)
+				var perp_dist: float = abs(to_enemy.dot(perp_dir))
+
+				if perp_dist < beam_width:
+					# Enemy is in beam path - deal damage
+					if child.has_method("take_damage"):
+						child.take_damage(beam_damage)
+					# Visual beam hit effect on enemy
+					child.modulate = Color(1.0, 0.5, 0.5)
+					var enemy_tween: Tween = child.create_tween()
+					enemy_tween.tween_property(child, "modulate", Color.WHITE, 0.15)
+
+	# Draw laser beam visual
+	_draw_laser_beam(beam_start, beam_end)
+
+
+func _draw_laser_beam(from: Vector2, to: Vector2) -> void:
+	"""Draw laser beam visual effect"""
+	# Main beam line
+	var beam := Line2D.new()
+	beam.width = 8.0
+	beam.default_color = Color(1.0, 0.2, 0.2, 0.9)
+	beam.add_point(from)
+	beam.add_point(to)
+
+	# Glow effect (wider, more transparent)
+	var glow := Line2D.new()
+	glow.width = 20.0
+	glow.default_color = Color(1.0, 0.4, 0.4, 0.4)
+	glow.add_point(from)
+	glow.add_point(to)
+
+	get_tree().current_scene.add_child(glow)
+	get_tree().current_scene.add_child(beam)
+
+	# Fade out both lines
+	var tween := beam.create_tween()
+	tween.tween_property(beam, "modulate:a", 0.0, 0.2)
+	tween.parallel().tween_property(glow, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(beam.queue_free)
+	tween.tween_callback(glow.queue_free)
 
 
 func _spawn_brood_baby(spawn_pos: Vector2) -> void:

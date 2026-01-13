@@ -30,7 +30,8 @@ enum BallType {
 	BROOD_MOTHER,
 	DARK,
 	CELL,
-	CHARM
+	CHARM,
+	LASER
 }
 
 const BALL_DATA := {
@@ -186,6 +187,15 @@ const BALL_DATA := {
 		"cooldown": 0.3,  # Light cooldown
 		"color": Color(1.0, 0.4, 0.8),  # Pink/magenta
 		"effect": "charm"
+	},
+	BallType.LASER: {
+		"name": "Laser",
+		"description": "Row/column AoE damage",
+		"base_damage": 7,
+		"speed_multiplier": 1.1,  # Slightly fast (880/800)
+		"cooldown": 0.5,  # Moderate cooldown since it's AoE
+		"color": Color(1.0, 0.1, 0.1),  # Bright red
+		"effect": "laser"
 	}
 }
 
