@@ -42,9 +42,13 @@ async def test_fire_button_cooldown(game, report):
     # Wait for cooldown to complete (0.5s default + buffer)
     await asyncio.sleep(0.6)
 
-    # Button should be ready again
+    # Button should be ready again (cooldown-wise)
     is_ready_after_cooldown = await game.get_property(PATHS["fire_button"], "is_ready")
     assert is_ready_after_cooldown, "Fire button should be ready after cooldown"
+
+    # Wait for balls to return (salvo mechanic: can't fire until balls return)
+    ready = await wait_for_fire_ready(game, PATHS["fire_button"])
+    assert ready, "Fire button should become fully ready (cooldown + balls returned)"
 
     # Verify firing still works after cooldown by checking state transitions again
     await game.click(PATHS["fire_button"])
