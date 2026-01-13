@@ -35,7 +35,7 @@ async def test_level_select_get_selected_stage(game):
 async def test_stage_manager_has_stages(game):
     """StageManager should have loaded stages."""
     total_stages = await game.call(STAGE_MANAGER, "get_total_stages")
-    assert total_stages == 4, f"Should have 4 stages, got {total_stages}"
+    assert total_stages == 8, f"Should have 8 stages, got {total_stages}"
 
 
 @pytest.mark.asyncio

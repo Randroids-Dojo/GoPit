@@ -26,9 +26,9 @@ async def test_initial_stage_is_zero(game):
 
 @pytest.mark.asyncio
 async def test_stage_count(game):
-    """Should have 4 stages total."""
+    """Should have 8 stages total."""
     total_stages = await game.call("/root/StageManager", "get_total_stages")
-    assert total_stages == 4
+    assert total_stages == 8
 
 
 @pytest.mark.asyncio
