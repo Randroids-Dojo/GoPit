@@ -123,7 +123,7 @@ var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
 # Passive ability flags (set based on selected character)
-enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL }
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER }
 var active_passive: Passive = Passive.NONE
 
 # High score persistence
@@ -260,7 +260,8 @@ const VALID_PASSIVES := {
 	"Jackpot": Passive.JACKPOT,
 	"Inferno": Passive.INFERNO,
 	"Squad Leader": Passive.SQUAD_LEADER,
-	"Lifesteal": Passive.LIFESTEAL
+	"Lifesteal": Passive.LIFESTEAL,
+	"Bounce Master": Passive.BOUNCE_MASTER
 }
 
 
@@ -498,6 +499,14 @@ func get_baby_ball_rate_bonus() -> float:
 	## Returns baby ball spawn rate bonus (Squad Leader: +30%)
 	if active_passive == Passive.SQUAD_LEADER:
 		return 0.3
+	return 0.0
+
+
+func get_bounce_damage_multiplier() -> float:
+	## Returns damage bonus per bounce (Bounce Master: +5% per bounce)
+	## Returns 0.0 if no bounce scaling passive, 0.05 = +5% damage per bounce
+	if active_passive == Passive.BOUNCE_MASTER:
+		return 0.05
 	return 0.0
 
 
