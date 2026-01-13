@@ -87,17 +87,19 @@ async def test_ball_returns_at_bottom_of_screen(game):
 
 @pytest.mark.asyncio
 async def test_can_fire_checks_ball_availability(game):
-    """BallSpawner.can_fire() should check ball availability."""
+    """BallSpawner.can_fire() should check ball availability (salvo mechanic)."""
+    # With salvo mechanic, can_fire returns True only when main_balls_in_flight == 0
+    # (all main balls must have returned before firing again)
+
     # Get can_fire state
     can_fire = await game.call(BALL_SPAWNER, "can_fire")
     assert can_fire is not None, "BallSpawner should have can_fire method"
 
-    # can_fire should return True when balls are available
-    max_balls = await game.get_property(BALL_SPAWNER, "max_balls")
-    in_flight = await game.call(BALL_SPAWNER, "get_balls_in_flight")
+    # can_fire should return True only when main_balls_in_flight == 0
+    main_in_flight = await game.call(BALL_SPAWNER, "get_main_balls_in_flight")
 
-    expected = in_flight < max_balls
-    assert can_fire == expected, f"can_fire should be {expected} when {in_flight}/{max_balls} balls in flight"
+    expected = main_in_flight == 0
+    assert can_fire == expected, f"can_fire should be {expected} when main_balls_in_flight={main_in_flight}"
 
 
 @pytest.mark.asyncio
