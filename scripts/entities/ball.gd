@@ -439,15 +439,8 @@ func _catch_on_collision() -> void:
 	caught.emit()
 	_show_catch_effect()
 
-	# Return to pool or free
-	if has_meta("pooled") and PoolManager:
-		reset()
-		# Hide AFTER reset (reset re-enables visibility for pool reuse)
-		set_physics_process(false)
-		hide()
-		PoolManager.release_ball(self)
-	else:
-		queue_free()
+	# Always queue_free when caught - simpler and more reliable
+	queue_free()
 
 
 func _show_catch_effect() -> void:
