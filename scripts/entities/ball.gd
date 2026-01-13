@@ -255,8 +255,8 @@ func _physics_process(delta: float) -> void:
 			if bounce_mult > 0 and _bounce_count > 0:
 				actual_damage = int(actual_damage * (1.0 + _bounce_count * bounce_mult))
 
-			# Check for critical hit (includes Jackpot bonus crit chance)
-			var total_crit_chance := crit_chance + GameManager.get_bonus_crit_chance()
+			# Check for critical hit (dexterity base + Jackpot bonus + upgrade crit chance)
+			var total_crit_chance := crit_chance + GameManager.get_total_crit_chance()
 			if total_crit_chance > 0 and randf() < total_crit_chance:
 				actual_damage = int(actual_damage * GameManager.get_crit_damage_multiplier())
 				is_crit = true

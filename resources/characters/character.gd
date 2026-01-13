@@ -27,7 +27,9 @@ const SCALING_MULTIPLIERS := {
 @export_range(0.5, 2.0, 0.1) var strength: float = 1.0   ## Damage multiplier (legacy, kept for UI)
 @export_range(0.5, 2.0, 0.1) var leadership: float = 1.0 ## Baby ball spawn rate
 @export_range(0.5, 2.0, 0.1) var speed: float = 1.0      ## Movement speed
-@export_range(0.5, 2.0, 0.1) var dexterity: float = 1.0  ## Crit chance multiplier
+@export_range(1, 15, 1) var base_dexterity: int = 5       ## Base dexterity value (absolute)
+@export var dexterity_scaling: StatScaling = StatScaling.C  ## Dexterity growth per level
+@export_range(0.5, 2.0, 0.1) var dexterity: float = 1.0  ## Dexterity multiplier (legacy, kept for UI)
 @export_range(0.5, 2.0, 0.1) var intelligence: float = 1.0  ## Effect duration multiplier
 @export_range(1.0, 4.0, 0.5) var base_fire_rate: float = 2.0  ## Base balls per second
 @export var fire_rate_scaling: StatScaling = StatScaling.C  ## Fire rate growth per level
@@ -146,3 +148,45 @@ func get_fire_rate_scaling_description() -> String:
 	var mult: float = SCALING_MULTIPLIERS.get(fire_rate_scaling, 0.08)
 	var percent := int(mult * 100)
 	return "%s (+%d%%/lvl)" % [grade, percent]
+
+
+## Calculate dexterity at a given level based on scaling grade
+func get_dexterity_at_level(level: int) -> int:
+	if level <= 1:
+		return base_dexterity
+	var scaling_mult: float = SCALING_MULTIPLIERS.get(dexterity_scaling, 0.08)
+	var level_bonus: float = base_dexterity * scaling_mult * (level - 1)
+	return base_dexterity + int(level_bonus)
+
+
+## Get the dexterity scaling grade as a display string (S/A/B/C/D/E)
+func get_dexterity_scaling_grade() -> String:
+	match dexterity_scaling:
+		StatScaling.S: return "S"
+		StatScaling.A: return "A"
+		StatScaling.B: return "B"
+		StatScaling.C: return "C"
+		StatScaling.D: return "D"
+		StatScaling.E: return "E"
+		_: return "?"
+
+
+## Get dexterity scaling description for UI
+func get_dexterity_scaling_description() -> String:
+	var grade := get_dexterity_scaling_grade()
+	var mult: float = SCALING_MULTIPLIERS.get(dexterity_scaling, 0.08)
+	var percent := int(mult * 100)
+	return "%s (+%d%%/lvl)" % [grade, percent]
+
+
+## Get crit chance from dexterity (2% per point)
+func get_crit_chance_from_dexterity(level: int) -> float:
+	var dex := get_dexterity_at_level(level)
+	return dex * 0.02  # 2% crit chance per dexterity point
+
+
+## Get fire rate multiplier from dexterity (5% per point above 5)
+func get_fire_rate_mult_from_dexterity(level: int) -> float:
+	var dex := get_dexterity_at_level(level)
+	# Base fire rate is at dexterity 5, each point above adds 5%
+	return 1.0 + (dex - 5) * 0.05
