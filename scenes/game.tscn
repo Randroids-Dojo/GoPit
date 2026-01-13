@@ -26,7 +26,6 @@
 [ext_resource type="Script" path="res://scripts/ui/stage_complete_overlay.gd" id="18_stagecomplete"]
 [ext_resource type="Script" path="res://scripts/entities/baby_ball_spawner.gd" id="19_baby_spawner"]
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
-[ext_resource type="Script" path="res://scripts/ui/ultimate_button.gd" id="22_ultimate"]
 [ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
 [ext_resource type="Script" path="res://scripts/ui/queue_display.gd" id="queue_display"]
 
@@ -304,15 +303,6 @@ theme_override_font_sizes/font_size = 12
 text = ""
 horizontal_alignment = 1
 script = ExtResource("queue_display")
-
-[node name="UltimateButtonContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 2
-
-[node name="UltimateButton" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-script = ExtResource("22_ultimate")
 
 [node name="AimJoystickContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
 layout_mode = 2

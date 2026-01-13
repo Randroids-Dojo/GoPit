@@ -27,7 +27,6 @@ extends Node2D
 @onready var stage_complete_overlay: CanvasLayer = $UI/StageCompleteOverlay
 @onready var fusion_overlay: Control = $UI/FusionOverlay
 @onready var boss_hp_bar: Control = $UI/BossHPBar
-@onready var ultimate_button: Control = $UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer/UltimateButton
 @onready var save_slot_select: CanvasLayer = $UI/SaveSlotSelect
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
@@ -83,10 +82,6 @@ func _ready() -> void:
 	if auto_toggle and fire_button:
 		auto_toggle.toggled.connect(_on_auto_toggle_pressed)
 		fire_button.autofire_toggled.connect(_on_autofire_state_changed)
-
-	# Wire up ultimate button
-	if ultimate_button:
-		ultimate_button.ultimate_activated.connect(_on_ultimate_activated)
 
 	# Set up ball spawner
 	if ball_spawner:
@@ -324,7 +319,6 @@ func _on_enemy_died(enemy: EnemyBase) -> void:
 	_maybe_spawn_fusion_reactor(enemy.global_position)
 	_check_wave_progress()
 	GameManager.record_enemy_kill()
-	GameManager.add_ultimate_charge(GameManager.CHARGE_PER_KILL)
 
 
 func _on_enemy_took_damage(_enemy: EnemyBase, _amount: int) -> void:
@@ -355,9 +349,7 @@ func _spawn_gem(pos: Vector2, xp_value: int) -> void:
 
 func _on_gem_collected(_gem: Node2D) -> void:
 	# Gems no longer give XP - XP is awarded on kill instead
-	# Gems still give ultimate charge and count toward stats
 	GameManager.record_gem_collected()
-	GameManager.add_ultimate_charge(GameManager.CHARGE_PER_GEM)
 
 
 func _check_wave_progress() -> void:
@@ -466,14 +458,6 @@ func _on_autofire_state_changed(enabled: bool) -> void:
 	# Keep toggle button in sync with fire button state
 	if auto_toggle:
 		auto_toggle.set_pressed_no_signal(enabled)
-
-
-func _on_ultimate_activated() -> void:
-	# Spawn the ultimate blast effect
-	var blast_scene: PackedScene = load("res://scenes/effects/ultimate_blast.tscn")
-	var blast: Node2D = blast_scene.instantiate()
-	add_child(blast)
-	blast.execute()
 
 
 func _process(_delta: float) -> void:
@@ -834,7 +818,7 @@ func _handle_keyboard_input() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	"""Handle discrete keyboard actions (fire, ultimate, toggle auto, mute)"""
+	"""Handle discrete keyboard actions (fire, toggle auto, mute)"""
 
 	# Fire with Space (when autofire is off)
 	if event.is_action_pressed("fire"):
@@ -844,12 +828,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				if ball_spawner and _last_keyboard_aim.length() > 0:
 					ball_spawner.set_aim_direction(_last_keyboard_aim)
 				fire_button._try_fire()
-
-	# Ultimate with E
-	if event.is_action_pressed("ultimate"):
-		if GameManager.current_state == GameManager.GameState.PLAYING:
-			if ultimate_button:
-				ultimate_button._try_activate()
 
 	# Toggle autofire with Tab
 	if event.is_action_pressed("toggle_auto"):

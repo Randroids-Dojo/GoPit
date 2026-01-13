@@ -21,9 +21,6 @@ signal wave_changed(new_wave: int)
 signal hp_changed(current_hp: int, max_hp: int)
 signal combo_changed(combo: int, multiplier: float)
 signal leadership_changed(new_value: float)
-signal ultimate_ready
-signal ultimate_used
-signal ultimate_charge_changed(current: float, max_val: float)
 signal invincibility_changed(is_invincible: bool)
 signal shooting_changed(is_shooting: bool)
 signal speed_tier_changed(tier: int, multiplier: float, loot_bonus: float)
@@ -106,12 +103,6 @@ var health_regen: float = 0.0  # HP per second
 var xp_multiplier: float = 1.0  # XP gain multiplier
 var dodge_chance: float = 0.0  # Chance to avoid damage
 var life_steal_percent: float = 0.0  # Heal from damage dealt
-
-# Ultimate ability system
-const ULTIMATE_CHARGE_MAX: float = 100.0
-const CHARGE_PER_KILL: float = 10.0
-const CHARGE_PER_GEM: float = 5.0
-var ultimate_charge: float = 0.0
 
 # Character system
 var selected_character: Resource = null
@@ -454,35 +445,6 @@ func add_leadership(amount: float) -> void:
 	leadership_changed.emit(leadership)
 
 
-# === Ultimate ability methods ===
-
-func add_ultimate_charge(amount: float) -> void:
-	## Add charge to the ultimate meter. Emits ultimate_ready when full.
-	if ultimate_charge >= ULTIMATE_CHARGE_MAX:
-		return  # Already full
-
-	var was_ready := ultimate_charge >= ULTIMATE_CHARGE_MAX
-	ultimate_charge = minf(ULTIMATE_CHARGE_MAX, ultimate_charge + amount)
-	ultimate_charge_changed.emit(ultimate_charge, ULTIMATE_CHARGE_MAX)
-
-	if not was_ready and ultimate_charge >= ULTIMATE_CHARGE_MAX:
-		ultimate_ready.emit()
-
-
-func use_ultimate() -> bool:
-	## Attempt to use the ultimate ability. Returns true if successful.
-	if ultimate_charge >= ULTIMATE_CHARGE_MAX:
-		ultimate_charge = 0.0
-		ultimate_used.emit()
-		ultimate_charge_changed.emit(0.0, ULTIMATE_CHARGE_MAX)
-		return true
-	return false
-
-
-func is_ultimate_ready() -> bool:
-	return ultimate_charge >= ULTIMATE_CHARGE_MAX
-
-
 # === Passive ability helpers ===
 
 func get_xp_multiplier() -> float:
@@ -772,7 +734,6 @@ func reset() -> void:
 	leadership = 0.0
 	is_boss_fight = false
 	is_endless_mode = false
-	ultimate_charge = 0.0
 	# Reset passive stats
 	armor_percent = 0.0
 	thorns_percent = 0.0
@@ -886,7 +847,6 @@ func get_session_state() -> Dictionary:
 		"leadership": leadership,
 		"is_boss_fight": is_boss_fight,
 		"is_endless_mode": is_endless_mode,
-		"ultimate_charge": ultimate_charge,
 
 		# Passive stats
 		"armor_percent": armor_percent,
@@ -921,7 +881,6 @@ func restore_session_state(data: Dictionary) -> void:
 	leadership = data.get("leadership", 0.0)
 	is_boss_fight = data.get("is_boss_fight", false)
 	is_endless_mode = data.get("is_endless_mode", false)
-	ultimate_charge = data.get("ultimate_charge", 0.0)
 
 	# Passive stats
 	armor_percent = data.get("armor_percent", 0.0)
@@ -956,5 +915,4 @@ func restore_session_state(data: Dictionary) -> void:
 	# Emit signals for UI updates
 	hp_changed.emit(player_hp, max_hp)
 	wave_changed.emit(current_wave)
-	ultimate_charge_changed.emit(ultimate_charge, ULTIMATE_CHARGE_MAX)
 	leadership_changed.emit(leadership)
