@@ -332,9 +332,57 @@ async def test_passive_enum_values(game):
         (4, "INFERNO", "get_fire_damage_multiplier", 1.2),
         (5, "SQUAD_LEADER", "get_extra_baby_balls", 2),
         (6, "LIFESTEAL", "get_lifesteal_percent", 0.05),
+        (7, "BOUNCE_MASTER", "get_bounce_damage_multiplier", 0.05),
     ]
 
     for enum_val, name, method, expected in test_cases:
         await game.set_property(GAME_MANAGER, "active_passive", enum_val)
         result = await game.call(GAME_MANAGER, method)
         assert abs(result - expected) < 0.01, f"Passive {name} ({enum_val}): {method} should return {expected}, got {result}"
+
+
+# ============================================================================
+# Bounce Master - +5% damage per bounce
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_bounce_master_multiplier_active(game):
+    """Bounce Master passive should give 0.05 bounce damage multiplier (+5%/bounce)."""
+    # Start game and set passive directly
+    await game.call(CHARACTER_SELECT, "show_select", [])
+    await asyncio.sleep(0.2)
+    await game.click(START_BUTTON)
+    await asyncio.sleep(0.3)
+
+    # Set Bounce Master passive (enum value 7)
+    await game.set_property(GAME_MANAGER, "active_passive", 7)
+
+    # Verify bounce damage multiplier is 0.05
+    bounce_mult = await game.call(GAME_MANAGER, "get_bounce_damage_multiplier")
+    assert abs(bounce_mult - 0.05) < 0.001, f"Bounce Master should give 0.05 multiplier, got {bounce_mult}"
+
+
+@pytest.mark.asyncio
+async def test_default_bounce_multiplier_is_zero(game):
+    """Without Bounce Master, bounce damage multiplier should be 0."""
+    # Select Rookie (has Quick Learner, not Bounce Master)
+    success = await select_and_start_with_character(game, "Rookie")
+    assert success, "Should be able to select Rookie"
+
+    # Verify bounce multiplier is 0
+    bounce_mult = await game.call(GAME_MANAGER, "get_bounce_damage_multiplier")
+    assert abs(bounce_mult) < 0.001, f"Non-Bounce Master should have 0 multiplier, got {bounce_mult}"
+
+
+@pytest.mark.asyncio
+async def test_bounce_master_in_valid_passives(game):
+    """Bounce Master should be in VALID_PASSIVES constant."""
+    # Start game
+    await game.call(CHARACTER_SELECT, "show_select", [])
+    await asyncio.sleep(0.2)
+    await game.click(START_BUTTON)
+    await asyncio.sleep(0.3)
+
+    # Check VALID_PASSIVES has Bounce Master
+    valid_passives = await game.get_property(GAME_MANAGER, "VALID_PASSIVES")
+    assert "Bounce Master" in valid_passives, "VALID_PASSIVES should include 'Bounce Master'"
