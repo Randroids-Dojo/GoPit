@@ -2,19 +2,20 @@ extends Node2D
 ## Spawns balls in the aimed direction when fire is triggered
 ## Now integrates with BallRegistry for ball types and levels
 ## Ball Return Mechanic: Balls return when reaching bottom of screen
-## Queue System: Balls queue up and fire in sequence at fire_rate
+## Salvo System: All balls fire at once, must return before firing again (BallxPit style)
 
 signal ball_spawned(ball: Node2D)
 signal ball_returned  # Emitted when a ball returns to player
 signal ball_caught  # Emitted when a ball is caught (active play bonus)
 signal balls_available_changed(available: bool)  # For fire button UI
-signal queue_changed(queue_size: int, max_size: int)  # For queue UI
+signal all_balls_returned  # Emitted when salvo is complete (all main balls back)
+signal queue_changed(queue_size: int, max_size: int)  # For baby ball queue UI
 signal cooldown_changed(ball_type: int, remaining: float)  # For cooldown UI
 
 @export var ball_scene: PackedScene
 @export var spawn_offset: float = 30.0
 @export var balls_container: Node2D
-@export var max_balls: int = 30  ## Maximum simultaneous balls (0 = unlimited)
+@export var max_balls: int = 50  ## Maximum total balls (main + baby) for performance
 
 var current_aim_direction: Vector2 = Vector2.UP
 var ball_damage: int = 10  # Base damage, can be modified by upgrades
@@ -30,15 +31,18 @@ var ball_type: int = 0  # Legacy: 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
 var _damage_bonus: int = 0
 var _speed_bonus: float = 0.0
 
-# Ball Return Mechanic - track balls in flight
-var balls_in_flight: int = 0
+# Salvo-based Ball Return Mechanic (BallxPit style)
+# Main balls: fired by player, must ALL return before firing again
+# Baby balls: auto-spawned, don't block main firing
+var main_balls_in_flight: int = 0  # Blocks firing until 0
+var baby_balls_in_flight: int = 0  # Doesn't block firing
+var balls_in_flight: int = 0  # Total (for compatibility)
 var _previous_available: bool = true
 
-# Queue-based firing system (like BallxPit)
-# Balls enter a queue and fire one at a time at fire_rate speed
+# Queue system for BABY BALLS ONLY (main balls fire immediately as salvo)
 # Each entry is {type: BallType, spread: float}
 var _fire_queue: Array[Dictionary] = []
-var fire_rate: float = 2.0  # Base balls per second (overridden by character stat)
+var fire_rate: float = 2.0  # Baby ball queue drain rate
 var max_queue_size: int = 20  # Prevent infinite stacking
 var _fire_timer: float = 0.0  # Timer for queue drain
 
@@ -86,19 +90,31 @@ func set_aim_direction_xy(x: float, y: float) -> void:
 
 
 func can_fire() -> bool:
-	"""Check if player has balls available to fire (return mechanic)"""
-	return balls_in_flight < max_balls
+	"""Check if player can fire (salvo mechanic: all main balls must have returned)"""
+	return main_balls_in_flight == 0
 
 
 func get_balls_in_flight() -> int:
+	"""Get total balls in flight (main + baby)"""
 	return balls_in_flight
 
 
+func get_main_balls_in_flight() -> int:
+	"""Get main salvo balls in flight (blocks firing)"""
+	return main_balls_in_flight
+
+
+func get_baby_balls_in_flight() -> int:
+	"""Get baby balls in flight (doesn't block firing)"""
+	return baby_balls_in_flight
+
+
 func fire() -> void:
+	"""Fire a salvo - all slot balls spawn immediately (BallxPit style)"""
 	if current_aim_direction == Vector2.ZERO:
 		return
 
-	# Check ball availability (return mechanic)
+	# Salvo mechanic: cannot fire until ALL main balls have returned
 	if not can_fire():
 		return
 
@@ -111,13 +127,15 @@ func fire() -> void:
 	if slot_balls.is_empty():
 		slot_balls = [BallRegistry.active_ball_type if BallRegistry else 0]
 
-	# Add all ball types to the queue (they'll fire in sequence)
-	# Skip balls that are on cooldown
-	var added_any: bool = false
+	# Fire ALL balls immediately as a salvo (not queued)
+	var fired_any: bool = false
 	for slot_ball_type in slot_balls:
 		# Skip this ball type if on cooldown
 		if is_on_cooldown(slot_ball_type):
 			continue
+
+		# Record fire time for cooldown tracking
+		_record_fire_time(slot_ball_type)
 
 		# Each slot fires ball_count balls (multi-shot)
 		for i in range(ball_count):
@@ -125,10 +143,15 @@ func fire() -> void:
 			var spread_offset: float = 0.0
 			if ball_count > 1:
 				spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
-			if _add_to_queue(slot_ball_type, spread_offset):
-				added_any = true
 
-	if added_any:
+			# Apply spread offset to current aim direction
+			var dir := current_aim_direction.rotated(spread_offset)
+
+			# Spawn ball immediately (salvo firing)
+			_spawn_ball_typed(dir, slot_ball_type)
+			fired_any = true
+
+	if fired_any:
 		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
@@ -329,10 +352,11 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	else:
 		get_parent().add_child(ball)
 
-	# Track ball return/catch (connect signals)
-	ball.returned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
-	ball.caught.connect(_on_ball_caught.bind(ball), CONNECT_ONE_SHOT)
-	ball.despawned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	# Track ball return/catch (connect signals) - main balls block firing
+	ball.returned.connect(_on_main_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.caught.connect(_on_main_ball_caught.bind(ball), CONNECT_ONE_SHOT)
+	ball.despawned.connect(_on_main_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	main_balls_in_flight += 1
 	balls_in_flight += 1
 	_check_availability_changed()
 
@@ -389,12 +413,13 @@ func _spawn_baby_ball_from_queue(direction: Vector2, registry_ball_type: int) ->
 	else:
 		get_parent().add_child(ball)
 
-	# Track ball return (baby balls count toward limit too)
-	ball.returned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
-	ball.caught.connect(_on_ball_caught.bind(ball), CONNECT_ONE_SHOT)
-	ball.despawned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	# Track ball return (baby balls DON'T block main firing)
+	ball.returned.connect(_on_baby_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.caught.connect(_on_baby_ball_caught.bind(ball), CONNECT_ONE_SHOT)
+	ball.despawned.connect(_on_baby_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	baby_balls_in_flight += 1
 	balls_in_flight += 1
-	_check_availability_changed()
+	# Don't call _check_availability_changed() - baby balls don't affect can_fire()
 
 	# Don't emit ball_spawned for baby balls to avoid triggering more baby spawns
 	# baby_ball_spawned signal could be added if needed
@@ -424,18 +449,42 @@ func _registry_to_ball_type(registry_type: int) -> int:
 	return 0
 
 
-func _on_ball_returned(_ball: Node) -> void:
-	"""Called when a ball returns to player (reaches bottom of screen)"""
+func _on_main_ball_returned(_ball: Node) -> void:
+	"""Called when a main salvo ball returns to player"""
+	main_balls_in_flight = maxi(0, main_balls_in_flight - 1)
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_returned.emit()
 	_check_availability_changed()
+	# Emit all_balls_returned when salvo is complete
+	if main_balls_in_flight == 0:
+		all_balls_returned.emit()
 
 
-func _on_ball_caught(_ball: Node) -> void:
-	"""Called when a ball is caught by the player (active play bonus)"""
+func _on_main_ball_caught(_ball: Node) -> void:
+	"""Called when a main salvo ball is caught by the player"""
+	main_balls_in_flight = maxi(0, main_balls_in_flight - 1)
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_caught.emit()
 	_check_availability_changed()
+	# Emit all_balls_returned when salvo is complete
+	if main_balls_in_flight == 0:
+		all_balls_returned.emit()
+
+
+func _on_baby_ball_returned(_ball: Node) -> void:
+	"""Called when a baby ball returns to player (doesn't affect can_fire)"""
+	baby_balls_in_flight = maxi(0, baby_balls_in_flight - 1)
+	balls_in_flight = maxi(0, balls_in_flight - 1)
+	ball_returned.emit()
+	# Don't call _check_availability_changed() - baby balls don't affect firing
+
+
+func _on_baby_ball_caught(_ball: Node) -> void:
+	"""Called when a baby ball is caught by the player"""
+	baby_balls_in_flight = maxi(0, baby_balls_in_flight - 1)
+	balls_in_flight = maxi(0, balls_in_flight - 1)
+	ball_caught.emit()
+	# Don't call _check_availability_changed() - baby balls don't affect firing
 
 
 func try_catch_ball() -> bool:

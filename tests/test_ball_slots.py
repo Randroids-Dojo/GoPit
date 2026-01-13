@@ -13,11 +13,16 @@ WAIT_TIMEOUT = 5.0
 
 
 async def wait_for_fire_ready(game, timeout=WAIT_TIMEOUT):
-    """Wait for fire button to be ready with timeout."""
+    """Wait for fire button to be ready with timeout.
+
+    With salvo firing, both cooldown (is_ready) and ball availability
+    (_balls_available) must be true before firing is possible.
+    """
     elapsed = 0
     while elapsed < timeout:
         is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        if is_ready:
+        balls_available = await game.get_property(FIRE_BUTTON, "_balls_available")
+        if is_ready and balls_available:
             return True
         await asyncio.sleep(0.1)
         elapsed += 0.1
@@ -91,11 +96,11 @@ async def test_multi_slot_fires_multiple_types(game):
     # Clear existing balls
     ball_count_before = await game.call(BALLS_CONTAINER, "get_child_count")
 
-    # Fire
+    # Fire - with salvo mechanic, all slots fire immediately
     await game.click(FIRE_BUTTON)
 
-    # Wait for queue to drain (fire_rate=2, 0.5s per ball, 2 slots = 1s+ to spawn all)
-    await asyncio.sleep(1.5)
+    # Wait briefly for balls to spawn (salvo fires all at once)
+    await asyncio.sleep(0.5)
 
     # Check that multiple balls spawned (one per slot)
     ball_count_after = await game.call(BALLS_CONTAINER, "get_child_count")
