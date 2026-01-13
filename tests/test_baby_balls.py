@@ -21,25 +21,28 @@ async def test_baby_ball_spawner_exists(game):
 
 @pytest.mark.asyncio
 async def test_baby_balls_spawn_on_fire(game):
-    """Baby balls should be added to queue when parent ball fires."""
+    """Baby balls should be added to queue when baby_ball_spawner queues them.
+
+    With salvo firing, main balls spawn immediately (not queued).
+    Baby balls are added to queue via baby_ball_spawner.queue_baby_balls().
+    """
     # Disable autofire to control firing
     await game.call(PATHS["fire_button"], "set_autofire", [False])
     await asyncio.sleep(0.3)
 
-    # Clear any existing balls
+    # Clear any existing balls from queue
     await game.call(PATHS["ball_spawner"], "clear_queue")
 
     # Get initial queue size
     initial_queue = await game.call(PATHS["ball_spawner"], "get_queue_size")
 
-    # Fire a ball
-    await game.call(PATHS["ball_spawner"], "fire")
+    # Queue baby balls directly (simulates what happens on fire button press)
+    await game.call(PATHS["baby_spawner"], "queue_baby_balls")
     await asyncio.sleep(0.1)
 
     # Check queue has baby balls added
     queue_size = await game.call(PATHS["ball_spawner"], "get_queue_size")
-    # Queue should have parent ball(s) + baby ball(s)
-    assert queue_size > initial_queue, "Baby balls should be added to queue on fire"
+    assert queue_size > initial_queue, "Baby balls should be added to queue"
 
     # Re-enable autofire
     await game.call(PATHS["fire_button"], "set_autofire", [True])
