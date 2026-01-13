@@ -115,6 +115,35 @@ func _on_parent_ball_fired(_ball: Node) -> void:
 		baby_balls_queued.emit(added)
 
 
+# Public method for testing and manual triggering
+
+func queue_baby_balls() -> void:
+	"""Manually queue baby balls (for testing or manual triggering)."""
+	if not _ball_spawner:
+		return
+
+	# Empty Nester passive disables baby ball spawning entirely
+	if GameManager.has_no_baby_balls():
+		return
+
+	# Calculate how many baby balls to add
+	var baby_count: int = get_max_baby_balls()
+	if baby_count <= 0:
+		return
+
+	# Get ball types from active slots (baby balls cycle through them)
+	var ball_types: Array[int] = []
+	if BallRegistry:
+		ball_types = BallRegistry.get_filled_slots()
+	if ball_types.is_empty():
+		ball_types = [0]  # Fallback to basic
+
+	# Add baby balls to the queue
+	var added: int = _ball_spawner.add_baby_balls_to_queue(baby_count, ball_types)
+	if added > 0:
+		baby_balls_queued.emit(added)
+
+
 # Legacy methods for compatibility with existing tests
 
 func get_baby_ball_damage_multiplier() -> float:
