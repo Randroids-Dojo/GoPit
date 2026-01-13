@@ -789,12 +789,33 @@ func reset() -> void:
 	stats["damage_dealt"] = 0
 	stats["gems_collected"] = 0
 	stats["time_survived"] = 0.0
+	# Apply MetaManager permanent bonuses (shop upgrades + passive evolutions)
+	_apply_meta_bonuses()
 
 
 func _calculate_xp_requirement(level: int) -> int:
 	# XP is now 1 per kill, so curve is in kills
 	# Level 1: 10 kills, Level 2: 15 kills, etc.
 	return 10 + (level - 1) * 5
+
+
+func _apply_meta_bonuses() -> void:
+	"""Apply permanent bonuses from MetaManager (shop upgrades + passive evolutions)."""
+	# HP bonus: adds to max_hp and heals that amount
+	var hp_bonus: int = MetaManager.get_starting_hp()
+	if hp_bonus > 0:
+		max_hp += hp_bonus
+		player_hp = max_hp
+
+	# Other evolution bonuses are applied through BallSpawner at fire time
+	# via the MetaManager getter functions:
+	# - get_damage_bonus() - applied to ball damage
+	# - get_fire_rate_bonus() - applied to fire cooldown
+	# - get_multi_shot_bonus() - extra balls per shot
+	# - get_ball_speed_bonus() - extra ball speed
+	# - get_piercing_bonus() - extra pierce
+	# - get_ricochet_bonus() - extra bounces
+	# - get_critical_bonus() - extra crit chance
 
 
 func _on_state_changed(old_state: GameState, new_state: GameState) -> void:

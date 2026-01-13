@@ -129,6 +129,10 @@ func fire() -> void:
 
 	# Fire ALL balls immediately as a salvo (not queued)
 	var fired_any: bool = false
+	# Include multi-shot bonus from passive evolutions
+	var meta_multi_shot_bonus: int = MetaManager.get_multi_shot_bonus() if MetaManager else 0
+	var effective_ball_count: int = ball_count + meta_multi_shot_bonus
+
 	for slot_ball_type in slot_balls:
 		# Skip this ball type if on cooldown
 		if is_on_cooldown(slot_ball_type):
@@ -137,12 +141,12 @@ func fire() -> void:
 		# Record fire time for cooldown tracking
 		_record_fire_time(slot_ball_type)
 
-		# Each slot fires ball_count balls (multi-shot)
-		for i in range(ball_count):
+		# Each slot fires effective_ball_count balls (multi-shot + evolution bonus)
+		for i in range(effective_ball_count):
 			# Calculate spread offset for multi-shot
 			var spread_offset: float = 0.0
-			if ball_count > 1:
-				spread_offset = (i - (ball_count - 1) / 2.0) * ball_spread
+			if effective_ball_count > 1:
+				spread_offset = (i - (effective_ball_count - 1) / 2.0) * ball_spread
 
 			# Apply spread offset to current aim direction
 			var dir := current_aim_direction.rotated(spread_offset)
@@ -321,6 +325,13 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	ball.position = global_position + direction * spawn_offset
 	ball.set_direction(direction)
 
+	# Get MetaManager permanent bonuses (shop upgrades + passive evolutions)
+	var meta_damage_bonus: float = MetaManager.get_damage_bonus() if MetaManager else 0.0
+	var meta_speed_bonus: float = MetaManager.get_ball_speed_bonus() if MetaManager else 0.0
+	var meta_pierce_bonus: int = MetaManager.get_piercing_bonus() if MetaManager else 0
+	var meta_ricochet_bonus: int = MetaManager.get_ricochet_bonus() if MetaManager else 0
+	var meta_crit_bonus: float = MetaManager.get_critical_bonus() if MetaManager else 0.0
+
 	# Get stats from BallRegistry for the specific ball type
 	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
 	var speed_mult: float = GameManager.character_speed_mult
@@ -329,8 +340,8 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 		var registry_speed: float = BallRegistry.get_speed(registry_ball_type)
 		var ball_level: int = BallRegistry.get_ball_level(registry_ball_type)
 
-		ball.damage = registry_damage + _damage_bonus
-		ball.speed = (registry_speed + _speed_bonus) * speed_mult
+		ball.damage = registry_damage + _damage_bonus + int(meta_damage_bonus)
+		ball.speed = (registry_speed + _speed_bonus + meta_speed_bonus) * speed_mult
 		ball.ball_level = ball_level
 		ball.registry_type = registry_ball_type
 
@@ -338,14 +349,14 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 		ball.set_ball_type(_registry_to_ball_type(registry_ball_type))
 	else:
 		# Fallback to legacy behavior
-		ball.damage = ball_damage + _damage_bonus
-		ball.speed = (ball_speed + _speed_bonus) * speed_mult
+		ball.damage = ball_damage + _damage_bonus + int(meta_damage_bonus)
+		ball.speed = (ball_speed + _speed_bonus + meta_speed_bonus) * speed_mult
 		if ball_type > 0 and ball.has_method("set_ball_type"):
 			ball.set_ball_type(ball_type)
 
-	ball.pierce_count = pierce_count
-	ball.max_bounces = max_bounces
-	ball.crit_chance = crit_chance
+	ball.pierce_count = pierce_count + meta_pierce_bonus
+	ball.max_bounces = max_bounces + meta_ricochet_bonus
+	ball.crit_chance = crit_chance + meta_crit_bonus
 
 	if balls_container:
 		balls_container.add_child(ball)

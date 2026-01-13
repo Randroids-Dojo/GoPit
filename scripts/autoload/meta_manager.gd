@@ -6,6 +6,7 @@ signal coins_changed(new_amount: int)
 signal upgrade_purchased(upgrade_id: String, new_level: int)
 signal character_unlocked(character_name: String)
 signal achievement_unlocked(achievement_id: String, reward: int)
+signal passive_evolution_unlocked(evolution_id: String)
 signal slot_changed(new_slot: int)
 signal slot_deleted(slot: int)
 signal session_saved
@@ -48,6 +49,7 @@ var best_wave: int = 0
 var highest_stage_cleared: int = 0  # 0 = none, 1 = The Pit, etc.
 var unlocked_upgrades: Dictionary = {}  # upgrade_id -> level
 var unlocked_characters: Array = []  # List of unlocked character names
+var unlocked_passive_evolutions: Array = []  # List of unlocked passive evolution IDs
 
 # Gear system - each stage×character completion = 1 gear
 # Format: {stage_index: [character_name, character_name, ...]}
@@ -102,6 +104,16 @@ var bonus_fire_rate: float = 0.0
 var bonus_xp_percent: float = 0.0  # +X% XP from Veteran's Hut
 var bonus_early_xp_percent: float = 0.0  # +X% XP for first N levels from Abbey
 const EARLY_XP_LEVEL_CAP: int = 5  # Abbey bonus applies to first 5 levels
+
+# Passive evolution bonuses (from unlocked passive evolutions)
+var evo_bonus_damage: float = 0.0  # +1 per Power Mastery
+var evo_bonus_fire_rate: float = 0.0  # -0.02s per Rapid Mastery
+var evo_bonus_max_hp: int = 0  # +5 per Vitality Mastery
+var evo_bonus_multi_shot: int = 0  # +1 per Multishot Mastery
+var evo_bonus_ball_speed: float = 0.0  # +20 per Velocity Mastery
+var evo_bonus_piercing: int = 0  # +1 per Pierce Mastery
+var evo_bonus_ricochet: int = 0  # +1 per Bounce Mastery
+var evo_bonus_critical: float = 0.0  # +0.02 per Critical Mastery
 
 
 func _ready() -> void:
@@ -319,18 +331,48 @@ func _calculate_bonuses() -> void:
 	# Early XP bonus: +10% per level for first 5 levels (max 30%)
 	bonus_early_xp_percent = get_upgrade_level("early_xp") * 0.10
 
+	# Calculate passive evolution bonuses
+	_calculate_evolution_bonuses()
+
 
 func get_starting_hp() -> int:
-	# Base HP from GameManager + bonus
-	return bonus_hp
+	# Bonus HP from shop upgrades + passive evolutions
+	return bonus_hp + evo_bonus_max_hp
 
 
 func get_damage_bonus() -> float:
-	return bonus_damage
+	# Bonus damage from shop upgrades + passive evolutions
+	return bonus_damage + evo_bonus_damage
 
 
 func get_fire_rate_bonus() -> float:
-	return bonus_fire_rate
+	# Bonus fire rate from shop upgrades + passive evolutions
+	return bonus_fire_rate + evo_bonus_fire_rate
+
+
+func get_multi_shot_bonus() -> int:
+	# Bonus balls per shot from passive evolutions
+	return evo_bonus_multi_shot
+
+
+func get_ball_speed_bonus() -> float:
+	# Bonus ball speed from passive evolutions
+	return evo_bonus_ball_speed
+
+
+func get_piercing_bonus() -> int:
+	# Bonus pierce from passive evolutions
+	return evo_bonus_piercing
+
+
+func get_ricochet_bonus() -> int:
+	# Bonus wall bounces from passive evolutions
+	return evo_bonus_ricochet
+
+
+func get_critical_bonus() -> float:
+	# Bonus crit chance from passive evolutions
+	return evo_bonus_critical
 
 
 func get_xp_gain_multiplier() -> float:
@@ -344,6 +386,110 @@ func get_early_xp_multiplier(current_level: int) -> float:
 	if current_level <= EARLY_XP_LEVEL_CAP:
 		return 1.0 + bonus_early_xp_percent
 	return 1.0
+
+
+# =============================================================================
+# PASSIVE EVOLUTION SYSTEM
+# =============================================================================
+
+func _calculate_evolution_bonuses() -> void:
+	"""Calculate bonuses from unlocked passive evolutions."""
+	# Reset all evolution bonuses
+	evo_bonus_damage = 0.0
+	evo_bonus_fire_rate = 0.0
+	evo_bonus_max_hp = 0
+	evo_bonus_multi_shot = 0
+	evo_bonus_ball_speed = 0.0
+	evo_bonus_piercing = 0
+	evo_bonus_ricochet = 0
+	evo_bonus_critical = 0.0
+
+	# Apply each unlocked evolution's bonus
+	for evolution_id in unlocked_passive_evolutions:
+		var evolution: PassiveEvolutions.EvolutionData = PassiveEvolutions.get_evolution(evolution_id)
+		if not evolution:
+			continue
+
+		match evolution.effect_type:
+			"damage":
+				evo_bonus_damage += evolution.effect_value
+			"fire_rate":
+				evo_bonus_fire_rate += evolution.effect_value
+			"max_hp":
+				evo_bonus_max_hp += int(evolution.effect_value)
+			"multi_shot":
+				evo_bonus_multi_shot += int(evolution.effect_value)
+			"ball_speed":
+				evo_bonus_ball_speed += evolution.effect_value
+			"piercing":
+				evo_bonus_piercing += int(evolution.effect_value)
+			"ricochet":
+				evo_bonus_ricochet += int(evolution.effect_value)
+			"critical":
+				evo_bonus_critical += evolution.effect_value
+
+
+func is_passive_evolution_unlocked(evolution_id: String) -> bool:
+	"""Check if a passive evolution is unlocked."""
+	return evolution_id in unlocked_passive_evolutions
+
+
+func unlock_passive_evolution(evolution_id: String) -> bool:
+	"""Unlock a passive evolution. Returns true if newly unlocked."""
+	if evolution_id in unlocked_passive_evolutions:
+		return false  # Already unlocked
+
+	if not PassiveEvolutions.get_evolution(evolution_id):
+		return false  # Invalid evolution
+
+	unlocked_passive_evolutions.append(evolution_id)
+	_calculate_evolution_bonuses()
+	passive_evolution_unlocked.emit(evolution_id)
+	save_data()
+	return true
+
+
+func try_unlock_evolution_for_passive(passive_type: int) -> String:
+	"""Try to unlock the evolution for a given passive type.
+	Called when a passive reaches L3. Returns evolution_id if newly unlocked, empty string otherwise."""
+	var evolution_id := PassiveEvolutions.get_evolution_id_for_passive(passive_type)
+	if evolution_id.is_empty():
+		return ""
+
+	if unlock_passive_evolution(evolution_id):
+		return evolution_id
+	return ""
+
+
+func get_passive_evolution_data(evolution_id: String) -> PassiveEvolutions.EvolutionData:
+	"""Get evolution data for display."""
+	return PassiveEvolutions.get_evolution(evolution_id)
+
+
+func get_all_passive_evolution_ids() -> Array[String]:
+	"""Get all possible passive evolution IDs."""
+	return PassiveEvolutions.get_evolution_ids()
+
+
+func get_unlocked_passive_evolutions() -> Array:
+	"""Get list of unlocked passive evolution IDs."""
+	return unlocked_passive_evolutions.duplicate()
+
+
+func get_evolution_unlock_progress() -> Dictionary:
+	"""Get progress toward all evolutions for UI display.
+	Returns: {evolution_id: {unlocked: bool, source_passive_name: String}}"""
+	var progress := {}
+	for evolution_id in PassiveEvolutions.get_evolution_ids():
+		var evolution: PassiveEvolutions.EvolutionData = PassiveEvolutions.get_evolution(evolution_id)
+		if evolution:
+			progress[evolution_id] = {
+				"unlocked": evolution_id in unlocked_passive_evolutions,
+				"name": evolution.name,
+				"description": evolution.description,
+				"icon": evolution.icon
+			}
+	return progress
 
 
 # =============================================================================
@@ -536,6 +682,7 @@ func save_data() -> void:
 		"highest_stage": highest_stage_cleared,
 		"upgrades": unlocked_upgrades,
 		"unlocked_characters": unlocked_characters,
+		"unlocked_passive_evolutions": unlocked_passive_evolutions,
 		"stage_completions": stage_completions,
 		"difficulty_completions": difficulty_completions,
 		"lifetime_kills": lifetime_kills,
@@ -575,6 +722,7 @@ func load_data() -> void:
 		highest_stage_cleared = data.get("highest_stage", 0)
 		unlocked_upgrades = data.get("upgrades", {})
 		unlocked_characters = data.get("unlocked_characters", [])
+		unlocked_passive_evolutions = data.get("unlocked_passive_evolutions", [])
 		stage_completions = data.get("stage_completions", {})
 		difficulty_completions = data.get("difficulty_completions", {})
 		lifetime_kills = data.get("lifetime_kills", 0)
@@ -595,6 +743,7 @@ func _reset_slot_data() -> void:
 	highest_stage_cleared = 0
 	unlocked_upgrades = {}
 	unlocked_characters = []
+	unlocked_passive_evolutions = []
 	stage_completions = {}
 	difficulty_completions = {}
 	lifetime_kills = 0
@@ -609,6 +758,15 @@ func _reset_slot_data() -> void:
 	bonus_fire_rate = 0.0
 	bonus_xp_percent = 0.0
 	bonus_early_xp_percent = 0.0
+	# Reset evolution bonuses
+	evo_bonus_damage = 0.0
+	evo_bonus_fire_rate = 0.0
+	evo_bonus_max_hp = 0
+	evo_bonus_multi_shot = 0
+	evo_bonus_ball_speed = 0.0
+	evo_bonus_piercing = 0
+	evo_bonus_ricochet = 0
+	evo_bonus_critical = 0.0
 	coins_changed.emit(pit_coins)
 
 
