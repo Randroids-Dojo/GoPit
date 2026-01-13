@@ -132,14 +132,30 @@ func fire() -> void:
 		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
-func _add_to_queue(ball_type: int, spread: float = 0.0) -> bool:
+func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false) -> bool:
 	"""Add a ball to the fire queue. Returns false if queue is full."""
 	if _fire_queue.size() >= max_queue_size:
 		return false
 
-	_fire_queue.append({"type": ball_type, "spread": spread})
+	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby})
 	queue_changed.emit(_fire_queue.size(), max_queue_size)
 	return true
+
+
+func add_baby_balls_to_queue(count: int, ball_types: Array[int]) -> int:
+	"""Add baby balls to the queue. Returns number actually added.
+	Baby balls cycle through the provided ball types (from slots)."""
+	var added: int = 0
+	for i in range(count):
+		if _fire_queue.size() >= max_queue_size:
+			break
+		var type_index: int = i % ball_types.size() if not ball_types.is_empty() else 0
+		var ball_type: int = ball_types[type_index] if not ball_types.is_empty() else 0
+		# Baby balls fire with slight random spread for variety
+		var spread: float = randf_range(-0.2, 0.2)
+		if _add_to_queue(ball_type, spread, true):
+			added += 1
+	return added
 
 
 func _fire_from_queue() -> void:
@@ -156,9 +172,11 @@ func _fire_from_queue() -> void:
 
 	var ball_type: int = entry.get("type", 0)
 	var spread: float = entry.get("spread", 0.0)
+	var is_baby: bool = entry.get("is_baby", false)
 
-	# Record fire time for cooldown tracking
-	_record_fire_time(ball_type)
+	# Record fire time for cooldown tracking (skip for baby balls)
+	if not is_baby:
+		_record_fire_time(ball_type)
 
 	# Apply spread offset to current aim direction
 	var dir := current_aim_direction.rotated(spread)
@@ -166,7 +184,10 @@ func _fire_from_queue() -> void:
 	# Enforce ball limit before spawning
 	_enforce_ball_limit(1)
 
-	_spawn_ball_typed(dir, ball_type)
+	if is_baby:
+		_spawn_baby_ball_from_queue(dir, ball_type)
+	else:
+		_spawn_ball_typed(dir, ball_type)
 
 
 func get_queue_size() -> int:
@@ -316,6 +337,67 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	_check_availability_changed()
 
 	ball_spawned.emit(ball)
+
+
+# Baby ball configuration (used when spawning from queue)
+const BABY_BALL_SCALE: float = 0.6
+const BABY_BALL_DAMAGE_MULT: float = 0.5
+
+
+func _spawn_baby_ball_from_queue(direction: Vector2, registry_ball_type: int) -> void:
+	"""Spawn a baby ball from the queue - scaled down with reduced damage"""
+	# Get ball from pool if available, otherwise instantiate
+	var ball: Node
+	if PoolManager:
+		ball = PoolManager.get_ball()
+	else:
+		ball = ball_scene.instantiate()
+	ball.position = global_position + direction * spawn_offset
+	ball.set_direction(direction)
+	ball.scale = Vector2(BABY_BALL_SCALE, BABY_BALL_SCALE)
+	ball.is_baby_ball = true
+
+	# Get baby ball spawner for Leadership damage bonus
+	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
+	var leadership_bonus: float = 1.0
+	if baby_spawner and baby_spawner.has_method("get_leadership_damage_bonus"):
+		leadership_bonus = baby_spawner.get_leadership_damage_bonus()
+
+	# Calculate damage: base damage * baby mult * leadership bonus
+	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
+	var speed_mult: float = GameManager.character_speed_mult
+	if use_registry:
+		var registry_damage: int = BallRegistry.get_damage(registry_ball_type)
+		var registry_speed: float = BallRegistry.get_speed(registry_ball_type)
+		var ball_level: int = BallRegistry.get_ball_level(registry_ball_type)
+
+		ball.damage = int(registry_damage * BABY_BALL_DAMAGE_MULT * leadership_bonus)
+		ball.speed = (registry_speed + _speed_bonus) * speed_mult
+		ball.ball_level = ball_level
+		ball.registry_type = registry_ball_type
+		ball.set_ball_type(_registry_to_ball_type(registry_ball_type))
+	else:
+		ball.damage = int(ball_damage * BABY_BALL_DAMAGE_MULT * leadership_bonus)
+		ball.speed = (ball_speed + _speed_bonus) * speed_mult
+
+	ball.pierce_count = 0  # Baby balls don't pierce
+	ball.max_bounces = max_bounces
+	ball.crit_chance = crit_chance * 0.5  # Reduced crit for babies
+
+	if balls_container:
+		balls_container.add_child(ball)
+	else:
+		get_parent().add_child(ball)
+
+	# Track ball return (baby balls count toward limit too)
+	ball.returned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.caught.connect(_on_ball_caught.bind(ball), CONNECT_ONE_SHOT)
+	ball.despawned.connect(_on_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	balls_in_flight += 1
+	_check_availability_changed()
+
+	# Don't emit ball_spawned for baby balls to avoid triggering more baby spawns
+	# baby_ball_spawned signal could be added if needed
 
 
 func _registry_to_ball_type(registry_type: int) -> int:

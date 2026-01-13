@@ -296,18 +296,18 @@ async def test_default_extra_baby_balls_is_zero(game):
 
 @pytest.mark.asyncio
 async def test_squad_leader_affects_baby_spawner(game):
-    """Squad Leader's +30% rate bonus should affect baby ball spawner timing."""
+    """Squad Leader's +2 extra baby balls should affect baby ball spawner (queue-based)."""
     success = await select_and_start_with_character(game, "Tactician")
     assert success, "Should be able to select Tactician"
 
-    # Get base spawn interval
-    base_interval = await game.get_property(BABY_SPAWNER, "base_spawn_interval")
-    assert base_interval == 2.0, f"Base interval should be 2.0s, got {base_interval}"
+    # Queue-based system: Squad Leader adds +2 extra baby balls
+    # Verify get_max_baby_balls method exists and returns expected value
+    has_method = await game.call(BABY_SPAWNER, "has_method", ["get_max_baby_balls"])
+    assert has_method, "BabyBallSpawner should have get_max_baby_balls method"
 
-    # The actual spawn timer should be reduced due to Squad Leader passive
-    # Formula: rate = base_interval / ((1.0 + total_bonus) * speed_mult)
-    # With Squad Leader (+30%) and default speed (1.0), timer should be ~1.54s
-    # We can't directly check the timer, but we can verify the passive is active
+    # With Tactician (Squad Leader passive), should have base (1) + extra (2) = 3 baby balls
+    max_babies = await game.call(BABY_SPAWNER, "get_max_baby_balls")
+    assert max_babies >= 3, f"Tactician should have at least 3 baby balls, got {max_babies}"
 
 
 # ============================================================================

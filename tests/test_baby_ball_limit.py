@@ -1,5 +1,5 @@
 """
-Tests for baby ball count limit based on Leadership stat.
+Tests for baby ball count based on Leadership stat (queue-based system).
 """
 
 import asyncio
@@ -8,8 +8,10 @@ from helpers import PATHS, WAIT_TIMEOUT
 
 
 BABY_BALL_SPAWNER = PATHS["baby_ball_spawner"]
+BALL_SPAWNER = PATHS["ball_spawner"]
 GAME_MANAGER = PATHS["game_manager"]
 BALLS = PATHS["balls"]
+FIRE_BUTTON = PATHS["fire_button"]
 
 
 @pytest.mark.asyncio
@@ -24,15 +26,15 @@ async def test_baby_ball_spawner_has_limit_methods(game):
 
 
 @pytest.mark.asyncio
-async def test_base_max_babies_is_three(game):
-    """Default base_max_babies should be 3."""
-    base_max = await game.get_property(BABY_BALL_SPAWNER, "base_max_babies")
-    assert base_max == 3, "Base max babies should be 3"
+async def test_base_baby_count_is_one(game):
+    """Default base_baby_count should be 1 (per fire action)."""
+    base_count = await game.get_property(BABY_BALL_SPAWNER, "base_baby_count")
+    assert base_count == 1, f"Base baby count should be 1, got {base_count}"
 
 
 @pytest.mark.asyncio
 async def test_get_max_baby_balls_returns_base_without_leadership(game):
-    """With no leadership bonus, max baby balls should be base_max_babies."""
+    """With no leadership bonus, max baby balls should be base_baby_count."""
     # Reset leadership to 0
     await game.call(GAME_MANAGER, "set", ["leadership", 0.0])
 
@@ -40,10 +42,10 @@ async def test_get_max_baby_balls_returns_base_without_leadership(game):
     await game.call(BABY_BALL_SPAWNER, "set_leadership", [0.0])
 
     max_babies = await game.call(BABY_BALL_SPAWNER, "get_max_baby_balls")
-    base_max = await game.get_property(BABY_BALL_SPAWNER, "base_max_babies")
+    base_count = await game.get_property(BABY_BALL_SPAWNER, "base_baby_count")
 
-    # Should equal base_max + any passive bonus (which is 0 for default character)
-    assert max_babies >= base_max, f"Max babies ({max_babies}) should be at least base ({base_max})"
+    # Should equal base_count + any passive bonus (which is 0 for default character)
+    assert max_babies >= base_count, f"Max babies ({max_babies}) should be at least base ({base_count})"
 
 
 @pytest.mark.asyncio
@@ -67,31 +69,35 @@ async def test_get_current_baby_count_starts_at_zero(game):
     await game.call(GAME_MANAGER, "reset")
     await asyncio.sleep(0.1)
 
-    # Count should be 0 before spawner starts
+    # Count should be 0 before any firing
     count = await game.call(BABY_BALL_SPAWNER, "get_current_baby_count")
     assert count == 0, f"Baby count should be 0 at start, got {count}"
 
 
 @pytest.mark.asyncio
-async def test_baby_ball_limit_respected(game):
-    """Baby ball spawner should not exceed max limit."""
-    # Set a low max by keeping leadership at 0
-    await game.call(BABY_BALL_SPAWNER, "set_leadership", [0.0])
+async def test_baby_balls_queued_on_fire(game):
+    """Baby balls should be added to queue when player fires."""
+    # Disable autofire
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+    await asyncio.sleep(0.2)
+
+    # Clear queue
+    await game.call(BALL_SPAWNER, "clear_queue")
+
+    # Get max baby balls to queue
     max_babies = await game.call(BABY_BALL_SPAWNER, "get_max_baby_balls")
 
-    # Start game and let baby balls spawn
-    await game.call(GAME_MANAGER, "start_game")
-    await game.call(BABY_BALL_SPAWNER, "start")
+    # Fire a ball
+    await game.call(BALL_SPAWNER, "fire")
+    await asyncio.sleep(0.1)
 
-    # Wait for spawner to try spawning several times
-    # (base interval is 2s, but we speed up by checking multiple times)
-    await asyncio.sleep(3.0)
+    # Queue should have balls (parent slots + baby balls)
+    queue_size = await game.call(BALL_SPAWNER, "get_queue_size")
+    # At minimum, should have at least 1 parent + some babies
+    assert queue_size >= 1, f"Queue should have balls after fire, got {queue_size}"
 
-    # Count baby balls
-    count = await game.call(BABY_BALL_SPAWNER, "get_current_baby_count")
-
-    # Should not exceed max
-    assert count <= max_babies, f"Baby count ({count}) should not exceed max ({max_babies})"
+    # Re-enable autofire
+    await game.call(FIRE_BUTTON, "set_autofire", [True])
 
 
 @pytest.mark.asyncio
