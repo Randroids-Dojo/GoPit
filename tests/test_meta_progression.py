@@ -1,7 +1,18 @@
 """Tests for the meta-progression system (Pit Coins and permanent upgrades)."""
 
 import asyncio
+import os
 import pytest
+
+
+def get_unique_slot() -> int:
+    """Get a unique save slot based on pytest-xdist worker ID to avoid conflicts."""
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id and worker_id != "master":
+        # Workers are gw0, gw1, etc. - use slot 1, 2, 3 based on worker
+        worker_num = int(worker_id.replace("gw", ""))
+        return (worker_num % 3) + 1  # Slots 1-3
+    return 3  # Default to slot 3 for non-parallel runs
 
 
 @pytest.mark.asyncio
@@ -138,8 +149,9 @@ async def test_meta_manager_persistence_functions(game):
     NOTE: This test may be skipped in headless/CI mode where user:// file I/O
     doesn't work reliably. The test verifies file operations work before proceeding.
     """
-    # Use slot 3 to avoid interference with other parallel tests
-    await game.call("/root/MetaManager", "set_active_slot", [3])
+    # Use worker-specific slot to avoid interference with other parallel tests
+    test_slot = get_unique_slot()
+    await game.call("/root/MetaManager", "set_active_slot", [test_slot])
     await asyncio.sleep(0.3)
 
     # Reset slot to ensure clean state
@@ -159,7 +171,7 @@ async def test_meta_manager_persistence_functions(game):
     await asyncio.sleep(0.5)  # More time for file write in CI
 
     # Verify the file was actually written (skip test if file I/O doesn't work)
-    slot_empty = await game.call("/root/MetaManager", "is_slot_empty", [3])
+    slot_empty = await game.call("/root/MetaManager", "is_slot_empty", [test_slot])
     if slot_empty:
         pytest.skip("File I/O not working in headless mode - skipping persistence test")
 
@@ -175,7 +187,7 @@ async def test_meta_manager_persistence_functions(game):
     coins = await game.get_property("/root/MetaManager", "pit_coins")
     assert coins == 1000, f"Coins should persist after save/load: got {coins}"
 
-    # Cleanup: delete slot 3 data
+    # Cleanup: delete slot data
     await game.call("/root/MetaManager", "reset_data", [])
 
 

@@ -133,7 +133,7 @@ func _update_sensitivity_slider() -> void:
 	if sensitivity_slider:
 		sensitivity_slider.value = SoundManager.get_aim_sensitivity()
 	if sensitivity_value:
-		sensitivity_value.text = "%.2gx" % SoundManager.get_aim_sensitivity()
+		sensitivity_value.text = str(snappedf(SoundManager.get_aim_sensitivity(), 0.1)) + "x"
 
 
 func _on_encyclopedia_pressed() -> void:
