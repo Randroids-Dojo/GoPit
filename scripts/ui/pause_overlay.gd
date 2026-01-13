@@ -8,8 +8,11 @@ signal quit_requested
 @onready var screen_shake_button: Button = $DimBackground/Panel/VBoxContainer/ScreenShakeButton
 @onready var sensitivity_slider: HSlider = $DimBackground/Panel/VBoxContainer/SensitivityContainer/SensitivitySlider
 @onready var sensitivity_value: Label = $DimBackground/Panel/VBoxContainer/SensitivityContainer/SensitivityValue
+@onready var encyclopedia_button: Button = $DimBackground/Panel/VBoxContainer/EncyclopediaButton
 @onready var resume_button: Button = $DimBackground/Panel/VBoxContainer/ResumeButton
 @onready var quit_button: Button = $DimBackground/Panel/VBoxContainer/QuitButton
+
+var _encyclopedia: Node  # Reference to EvolutionEncyclopedia
 
 
 func _ready() -> void:
@@ -30,6 +33,13 @@ func _ready() -> void:
 	if sensitivity_slider:
 		sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
 		_update_sensitivity_slider()
+	if encyclopedia_button:
+		encyclopedia_button.pressed.connect(_on_encyclopedia_pressed)
+
+	# Get reference to encyclopedia
+	_encyclopedia = get_node_or_null("../EvolutionEncyclopedia")
+	if _encyclopedia:
+		_encyclopedia.closed.connect(_on_encyclopedia_closed)
 
 	# Listen for state changes
 	SoundManager.mute_changed.connect(_on_mute_changed)
@@ -124,3 +134,13 @@ func _update_sensitivity_slider() -> void:
 		sensitivity_slider.value = SoundManager.get_aim_sensitivity()
 	if sensitivity_value:
 		sensitivity_value.text = "%.2gx" % SoundManager.get_aim_sensitivity()
+
+
+func _on_encyclopedia_pressed() -> void:
+	if _encyclopedia:
+		visible = false  # Hide pause menu while encyclopedia is open
+		_encyclopedia.show_encyclopedia()
+
+
+func _on_encyclopedia_closed() -> void:
+	visible = true  # Show pause menu again when encyclopedia closes
