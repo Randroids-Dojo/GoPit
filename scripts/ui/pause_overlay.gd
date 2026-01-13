@@ -6,6 +6,8 @@ signal quit_requested
 
 @onready var mute_button: Button = $DimBackground/Panel/VBoxContainer/MuteButton
 @onready var screen_shake_button: Button = $DimBackground/Panel/VBoxContainer/ScreenShakeButton
+@onready var sensitivity_slider: HSlider = $DimBackground/Panel/VBoxContainer/SensitivityContainer/SensitivitySlider
+@onready var sensitivity_value: Label = $DimBackground/Panel/VBoxContainer/SensitivityContainer/SensitivityValue
 @onready var resume_button: Button = $DimBackground/Panel/VBoxContainer/ResumeButton
 @onready var quit_button: Button = $DimBackground/Panel/VBoxContainer/QuitButton
 
@@ -25,10 +27,14 @@ func _ready() -> void:
 	if screen_shake_button:
 		screen_shake_button.pressed.connect(_on_screen_shake_pressed)
 		_update_screen_shake_button()
+	if sensitivity_slider:
+		sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
+		_update_sensitivity_slider()
 
 	# Listen for state changes
 	SoundManager.mute_changed.connect(_on_mute_changed)
 	CameraShake.screen_shake_changed.connect(_on_screen_shake_changed)
+	SoundManager.aim_sensitivity_changed.connect(_on_aim_sensitivity_changed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -53,6 +59,7 @@ func _pause() -> void:
 	GameManager.pause_game()
 	_update_mute_button()
 	_update_screen_shake_button()
+	_update_sensitivity_slider()
 
 
 func _resume() -> void:
@@ -102,3 +109,18 @@ func _update_screen_shake_button() -> void:
 			screen_shake_button.text = "Screen Shake: ON"
 		else:
 			screen_shake_button.text = "Screen Shake: OFF"
+
+
+func _on_sensitivity_changed(value: float) -> void:
+	SoundManager.set_aim_sensitivity(value)
+
+
+func _on_aim_sensitivity_changed(_value: float) -> void:
+	_update_sensitivity_slider()
+
+
+func _update_sensitivity_slider() -> void:
+	if sensitivity_slider:
+		sensitivity_slider.value = SoundManager.get_aim_sensitivity()
+	if sensitivity_value:
+		sensitivity_value.text = "%.2gx" % SoundManager.get_aim_sensitivity()
