@@ -224,14 +224,31 @@ func get_character_strength() -> int:
 func get_character_fire_rate() -> float:
 	"""Get the character's fire rate stat at current player level.
 	This determines how fast balls leave the queue (balls per second).
-	Uses the base_fire_rate + scaling system from Character resource."""
+	Uses base_fire_rate + scaling, then applies dexterity multiplier."""
 	if selected_character == null:
 		return 2.0  # Default fire rate when no character selected
-	# Use the get_fire_rate_at_level method from Character resource
+
+	# Get base fire rate from character's fire rate stat
+	var base_rate: float = 2.0
 	if selected_character.has_method("get_fire_rate_at_level"):
-		return selected_character.get_fire_rate_at_level(player_level)
-	# Fallback for old characters without the method
-	return 2.0
+		base_rate = selected_character.get_fire_rate_at_level(player_level)
+
+	# Apply dexterity multiplier (5% per point above 5)
+	var dex_mult: float = 1.0
+	if selected_character.has_method("get_fire_rate_mult_from_dexterity"):
+		dex_mult = selected_character.get_fire_rate_mult_from_dexterity(player_level)
+
+	return base_rate * dex_mult
+
+
+func get_character_dexterity() -> int:
+	"""Get the character's Dexterity stat at current player level."""
+	if selected_character == null:
+		return 5  # Default dexterity when no character selected
+	if selected_character.has_method("get_dexterity_at_level"):
+		return selected_character.get_dexterity_at_level(player_level)
+	# Fallback for old characters
+	return int(5 * character_crit_mult)
 
 
 func set_character(character: Resource) -> void:
@@ -435,10 +452,27 @@ func get_crit_damage_multiplier() -> float:
 
 
 func get_bonus_crit_chance() -> float:
-	## Returns bonus crit chance (Jackpot: +15%)
+	## Returns bonus crit chance from passives (Jackpot: +15%)
 	if active_passive == Passive.JACKPOT:
 		return 0.15
 	return 0.0
+
+
+func get_dexterity_crit_chance() -> float:
+	## Returns crit chance from character's Dexterity stat at current level.
+	## Formula: dexterity × 2% (e.g., 5 dex = 10% crit chance)
+	if selected_character == null:
+		return 0.1  # Default 10% when no character selected (equivalent to 5 dex)
+	if selected_character.has_method("get_crit_chance_from_dexterity"):
+		return selected_character.get_crit_chance_from_dexterity(player_level)
+	# Fallback for old characters without the method
+	return character_crit_mult * 0.1
+
+
+func get_total_crit_chance() -> float:
+	## Returns total crit chance (dexterity + passives + upgrades).
+	## This is the combined value to use when checking for crits.
+	return get_dexterity_crit_chance() + get_bonus_crit_chance()
 
 
 func get_fire_damage_multiplier() -> float:
