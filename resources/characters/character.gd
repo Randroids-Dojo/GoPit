@@ -30,7 +30,9 @@ const SCALING_MULTIPLIERS := {
 @export_range(1, 15, 1) var base_dexterity: int = 5       ## Base dexterity value (absolute)
 @export var dexterity_scaling: StatScaling = StatScaling.C  ## Dexterity growth per level
 @export_range(0.5, 2.0, 0.1) var dexterity: float = 1.0  ## Dexterity multiplier (legacy, kept for UI)
-@export_range(0.5, 2.0, 0.1) var intelligence: float = 1.0  ## Effect duration multiplier
+@export_range(1, 15, 1) var base_intelligence: int = 5       ## Base intelligence value (absolute)
+@export var intelligence_scaling: StatScaling = StatScaling.C  ## Intelligence growth per level
+@export_range(0.5, 2.0, 0.1) var intelligence: float = 1.0  ## Intelligence multiplier (legacy, kept for UI)
 @export_range(1.0, 4.0, 0.5) var base_fire_rate: float = 2.0  ## Base balls per second
 @export var fire_rate_scaling: StatScaling = StatScaling.C  ## Fire rate growth per level
 
@@ -190,3 +192,46 @@ func get_fire_rate_mult_from_dexterity(level: int) -> float:
 	var dex := get_dexterity_at_level(level)
 	# Base fire rate is at dexterity 5, each point above adds 5%
 	return 1.0 + (dex - 5) * 0.05
+
+
+## Calculate intelligence at a given level based on scaling grade
+func get_intelligence_at_level(level: int) -> int:
+	if level <= 1:
+		return base_intelligence
+	var scaling_mult: float = SCALING_MULTIPLIERS.get(intelligence_scaling, 0.08)
+	var level_bonus: float = base_intelligence * scaling_mult * (level - 1)
+	return base_intelligence + int(level_bonus)
+
+
+## Get the intelligence scaling grade as a display string (S/A/B/C/D/E)
+func get_intelligence_scaling_grade() -> String:
+	match intelligence_scaling:
+		StatScaling.S: return "S"
+		StatScaling.A: return "A"
+		StatScaling.B: return "B"
+		StatScaling.C: return "C"
+		StatScaling.D: return "D"
+		StatScaling.E: return "E"
+		_: return "?"
+
+
+## Get intelligence scaling description for UI
+func get_intelligence_scaling_description() -> String:
+	var grade := get_intelligence_scaling_grade()
+	var mult: float = SCALING_MULTIPLIERS.get(intelligence_scaling, 0.08)
+	var percent := int(mult * 100)
+	return "%s (+%d%%/lvl)" % [grade, percent]
+
+
+## Get status effect duration multiplier from intelligence (10% per point)
+func get_status_duration_mult_from_intelligence(level: int) -> float:
+	var intel := get_intelligence_at_level(level)
+	# Base duration at intelligence 5, each point adds 10%
+	return 1.0 + (intel - 5) * 0.10
+
+
+## Get status effect damage multiplier from intelligence (5% per point)
+func get_status_damage_mult_from_intelligence(level: int) -> float:
+	var intel := get_intelligence_at_level(level)
+	# Base damage at intelligence 5, each point adds 5%
+	return 1.0 + (intel - 5) * 0.05

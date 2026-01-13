@@ -26,56 +26,57 @@ func _init(effect_type: Type = Type.BURN) -> void:
 
 
 func _configure() -> void:
-	# Get intelligence multiplier for duration scaling
-	var int_mult: float = GameManager.character_intelligence_mult
+	# Get intelligence multipliers for duration and damage scaling
+	var duration_mult: float = GameManager.get_status_duration_mult() if GameManager else 1.0
+	var damage_mult: float = GameManager.get_status_damage_mult() if GameManager else 1.0
 
 	match type:
 		Type.BURN:
-			duration = 3.0 * int_mult
-			damage_per_tick = 2.5  # 5 DPS base (2.5 damage every 0.5s), scales with stacks
+			duration = 3.0 * duration_mult
+			damage_per_tick = 2.5 * damage_mult  # 5 DPS base (2.5 every 0.5s), scales with INT and stacks
 			tick_interval = 0.5
 			max_stacks = 5  # BallxPit cap: 5 stacks
 		Type.FREEZE:
 			# Shatter passive: +30% freeze duration
-			duration = 2.0 * int_mult * GameManager.get_freeze_duration_bonus()
+			duration = 2.0 * duration_mult * GameManager.get_freeze_duration_bonus()
 			damage_per_tick = 0.0
 			slow_multiplier = 0.5  # 50% slow
 			max_stacks = 1  # Freeze doesn't stack - refreshes duration
 			damage_amp_per_stack = 0.25  # Frozen enemies take +25% damage (BallxPit)
 		Type.POISON:
-			duration = 5.0 * int_mult
-			damage_per_tick = 1.5  # 3 DPS base, scales with stacks
+			duration = 5.0 * duration_mult
+			damage_per_tick = 1.5 * damage_mult  # 3 DPS base, scales with INT and stacks
 			tick_interval = 0.5
 			max_stacks = 8  # BallxPit cap: 8 stacks
 		Type.BLEED:
 			duration = INF  # Permanent until enemy dies (not affected by intelligence)
-			damage_per_tick = 1.0  # 2 DPS per stack (1.0 every 0.5s)
+			damage_per_tick = 1.0 * damage_mult  # 2 DPS per stack, scales with INT
 			tick_interval = 0.5
 			max_stacks = 24  # BallxPit cap: 24 stacks
-			on_hit_damage = 2.0  # Instant damage per application
+			on_hit_damage = 2.0 * damage_mult  # Instant damage scales with INT
 		Type.RADIATION:
 			# Radiation: Damage amplification (not DoT)
-			duration = 6.0 * int_mult
+			duration = 6.0 * duration_mult
 			damage_per_tick = 0.0  # No direct damage
 			max_stacks = 5  # BallxPit cap: 5 stacks
 			damage_amp_per_stack = 0.10  # +10% damage amplification per stack
 		Type.DISEASE:
 			# Disease: Strong DoT similar to poison but faster ticks
-			duration = 4.0 * int_mult
-			damage_per_tick = 2.0  # 4 DPS base, scales with stacks
+			duration = 4.0 * duration_mult
+			damage_per_tick = 2.0 * damage_mult  # 4 DPS base, scales with INT and stacks
 			tick_interval = 0.5
 			max_stacks = 8  # BallxPit cap: 8 stacks
 		Type.FROSTBURN:
 			# Frostburn: Combines slow with damage amplification
-			duration = 4.0 * int_mult
-			damage_per_tick = 1.5  # Light DoT
+			duration = 4.0 * duration_mult
+			damage_per_tick = 1.5 * damage_mult  # Light DoT, scales with INT
 			tick_interval = 0.5
 			max_stacks = 4  # BallxPit cap: 4 stacks
 			slow_multiplier = 0.7  # 30% slow
 			damage_amp_per_stack = 0.25  # +25% damage amplification per stack
 		Type.WIND:
 			# Wind: Light slow effect, refreshes on hit
-			duration = 2.0 * int_mult
+			duration = 2.0 * duration_mult
 			damage_per_tick = 0.0  # No damage
 			max_stacks = 1  # Doesn't stack - refreshes duration
 			slow_multiplier = 0.7  # 30% slow (lighter than freeze's 50%)
