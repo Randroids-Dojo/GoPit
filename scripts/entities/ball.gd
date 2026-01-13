@@ -350,24 +350,31 @@ func _physics_process(delta: float) -> void:
 		# Hit player - catch and return ball
 		# (spawn immunity handled by collision mask - won't reach here during immunity)
 		elif collider.collision_layer & 16:  # player layer
-			# Aggressively stop and remove ball
+			# IMMEDIATELY stop all movement
+			velocity = Vector2.ZERO
+			direction = Vector2.ZERO
+
+			# Save catch position BEFORE moving offscreen
+			var catch_pos := global_position
+
+			# Disable everything
 			set_physics_process(false)
 			set_process(false)
-			hide()
-			global_position = Vector2(-9999, -9999)  # Move off screen
-			collision_layer = 0  # Disable all collision
+			collision_layer = 0
 			collision_mask = 0
 
-			# Emit signals and show effect
-			caught.emit()
-			_show_catch_effect()
+			# Move offscreen and hide
+			global_position = Vector2(-9999, -9999)
+			hide()
 
-			# Delete after longer delay
-			var timer := get_tree().create_timer(0.5)
-			timer.timeout.connect(func():
-				if is_instance_valid(self):
-					queue_free()
-			)
+			# Emit caught signal (allows spawner to reload)
+			caught.emit()
+
+			# Show effect at original catch position
+			_show_catch_effect_at(catch_pos)
+
+			# Use call_deferred for cleanup to ensure it happens
+			call_deferred("queue_free")
 			return
 
 
@@ -453,10 +460,19 @@ func _catch_on_collision() -> void:
 
 
 func _show_catch_effect() -> void:
-	"""Visual effect when ball is caught"""
+	"""Visual effect when ball is caught (uses current position)"""
+	_show_catch_effect_at(global_position)
+
+
+func _show_catch_effect_at(pos: Vector2) -> void:
+	"""Visual effect when ball is caught at a specific position"""
+	# Don't show effect if position is offscreen
+	if pos.x < -1000 or pos.y < -1000:
+		return
+
 	# Spawn a brief burst effect at catch position
 	var burst := Control.new()
-	burst.global_position = global_position
+	burst.global_position = pos
 	burst.z_index = 10
 
 	var circle := ColorRect.new()
