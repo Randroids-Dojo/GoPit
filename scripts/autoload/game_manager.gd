@@ -114,7 +114,7 @@ var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
 # Passive ability flags (set based on selected character)
-enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER, COLLECTOR, EMPTY_NESTER }
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER, COLLECTOR, EMPTY_NESTER, BERSERKER, SWARM_LORD, GRAVITY, SHIELD_BOUNCE, PANDEMIC, BLOODLUST }
 var active_passive: Passive = Passive.NONE
 
 # High score persistence
@@ -304,7 +304,13 @@ const VALID_PASSIVES := {
 	"Bounce Master": Passive.BOUNCE_MASTER,
 	"Executioner": Passive.EXECUTIONER,
 	"Collector": Passive.COLLECTOR,
-	"Empty Nester": Passive.EMPTY_NESTER
+	"Empty Nester": Passive.EMPTY_NESTER,
+	"Berserker": Passive.BERSERKER,
+	"Swarm Lord": Passive.SWARM_LORD,
+	"Gravity": Passive.GRAVITY,
+	"Shield Bounce": Passive.SHIELD_BOUNCE,
+	"Pandemic": Passive.PANDEMIC,
+	"Bloodlust": Passive.BLOODLUST
 }
 
 
@@ -601,6 +607,69 @@ func get_special_fire_multiplier() -> int:
 	return 1
 
 
+func get_berserker_damage_mult() -> float:
+	## Returns damage multiplier when below 50% HP (Berserker: +30%)
+	## Returns 1.0 normally, 1.3 when HP < 50% with Berserker passive
+	if active_passive == Passive.BERSERKER and player_hp < max_hp * 0.5:
+		return 1.3
+	return 1.0
+
+
+func get_baby_ball_damage_mult() -> float:
+	## Returns damage multiplier for baby balls (Swarm Lord: +50%)
+	if active_passive == Passive.SWARM_LORD:
+		return 1.5
+	return 1.0
+
+
+func has_gravity_balls() -> bool:
+	## Returns true if balls are affected by gravity (Physicist passive)
+	return active_passive == Passive.GRAVITY
+
+
+func has_shield_bounce() -> bool:
+	## Returns true if balls bounce off enemies once (Shieldbearer passive)
+	return active_passive == Passive.SHIELD_BOUNCE
+
+
+func get_poison_damage_mult() -> float:
+	## Returns poison damage multiplier (Pandemic: +50%)
+	if active_passive == Passive.PANDEMIC:
+		return 1.5
+	return 1.0
+
+
+func get_poison_duration_mult() -> float:
+	## Returns poison duration multiplier (Pandemic: +50%)
+	if active_passive == Passive.PANDEMIC:
+		return 1.5
+	return 1.0
+
+
+# Bloodlust tracking - kill streaks increase attack speed
+var bloodlust_stacks: int = 0
+const BLOODLUST_MAX_STACKS: int = 17  # 17 stacks * 3% = 51% max
+const BLOODLUST_BONUS_PER_STACK: float = 0.03  # 3% per kill
+
+
+func add_bloodlust_stack() -> void:
+	## Add a bloodlust stack on kill (Bloodlust passive)
+	if active_passive == Passive.BLOODLUST:
+		bloodlust_stacks = mini(bloodlust_stacks + 1, BLOODLUST_MAX_STACKS)
+
+
+func get_bloodlust_fire_rate_mult() -> float:
+	## Returns fire rate multiplier from bloodlust stacks
+	if active_passive == Passive.BLOODLUST:
+		return 1.0 + bloodlust_stacks * BLOODLUST_BONUS_PER_STACK
+	return 1.0
+
+
+func reset_bloodlust() -> void:
+	## Reset bloodlust stacks (called on game start/end)
+	bloodlust_stacks = 0
+
+
 # === Shooting state and movement ===
 
 func set_shooting(shooting: bool) -> void:
@@ -750,6 +819,8 @@ func reset() -> void:
 	stats["damage_dealt"] = 0
 	stats["gems_collected"] = 0
 	stats["time_survived"] = 0.0
+	# Reset bloodlust stacks
+	bloodlust_stacks = 0
 	# Apply MetaManager permanent bonuses (shop upgrades + passive evolutions)
 	_apply_meta_bonuses()
 

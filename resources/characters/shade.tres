@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Shade"
+description = "A deadly assassin who finishes off wounded prey. Critical hits on low-health enemies are instant kills."
+endurance = 0.7
+base_strength = 6
+strength_scaling = 4
+strength = 0.9
+leadership = 0.7
+speed = 1.2
+base_dexterity = 12
+dexterity_scaling = 1
+dexterity = 1.5
+base_intelligence = 4
+intelligence_scaling = 4
+intelligence = 0.9
+base_fire_rate = 2.5
+fire_rate_scaling = 1
+starting_ball = 0
+passive_name = "Executioner"
+passive_description = "Critical hits on enemies below 20% HP are instant kills. Swift and deadly."
+is_unlocked = false
+unlock_requirement = "Get 50 critical hits in one run"

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Shieldbearer"
+description = "A defensive powerhouse. Balls bounce off their shield with doubled damage, rewarding precise positioning."
+endurance = 1.4
+base_strength = 8
+strength_scaling = 2
+strength = 1.1
+leadership = 0.7
+speed = 0.8
+base_dexterity = 4
+dexterity_scaling = 4
+dexterity = 0.8
+base_intelligence = 5
+intelligence_scaling = 3
+intelligence = 1.0
+base_fire_rate = 1.0
+fire_rate_scaling = 4
+starting_ball = 6
+passive_name = "Shield Bounce"
+passive_description = "Balls that return to player bounce off shield, gaining 2x damage."
+is_unlocked = false
+unlock_requirement = "Block 50 enemy projectiles"

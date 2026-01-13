@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Physicist"
+description = "A master of gravitational forces. Balls curve toward nearby enemies, making every shot count."
+endurance = 0.8
+base_strength = 6
+strength_scaling = 3
+strength = 1.0
+leadership = 0.8
+speed = 1.0
+base_dexterity = 7
+dexterity_scaling = 2
+dexterity = 1.1
+base_intelligence = 10
+intelligence_scaling = 1
+intelligence = 1.3
+base_fire_rate = 1.5
+fire_rate_scaling = 4
+starting_ball = 3
+passive_name = "Gravity"
+passive_description = "Balls curve toward nearby enemies. Never miss again."
+is_unlocked = false
+unlock_requirement = "Hit 100 enemies with a single ball"

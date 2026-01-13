@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Collector"
+description = "A treasure hunter with an innate magnetism. Gems are drawn to them from across the battlefield."
+endurance = 1.0
+base_strength = 6
+strength_scaling = 3
+strength = 1.0
+leadership = 1.0
+speed = 1.0
+base_dexterity = 5
+dexterity_scaling = 3
+dexterity = 1.0
+base_intelligence = 5
+intelligence_scaling = 3
+intelligence = 1.0
+base_fire_rate = 2.0
+fire_rate_scaling = 3
+starting_ball = 0
+passive_name = "Collector"
+passive_description = "Built-in maximum gem magnet range. Never miss a gem again."
+is_unlocked = false
+unlock_requirement = "Collect 500 gems in one run"

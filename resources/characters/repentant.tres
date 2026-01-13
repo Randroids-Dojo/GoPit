@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Repentant"
+description = "A patient warrior who gains power through persistence. Each wall bounce makes the ball hit harder."
+endurance = 1.0
+base_strength = 7
+strength_scaling = 3
+strength = 1.0
+leadership = 0.9
+speed = 0.9
+base_dexterity = 5
+dexterity_scaling = 3
+dexterity = 1.0
+base_intelligence = 4
+intelligence_scaling = 4
+intelligence = 0.9
+base_fire_rate = 1.5
+fire_rate_scaling = 4
+starting_ball = 6
+passive_name = "Bounce Master"
+passive_description = "+5% damage per wall bounce. Diagonal shots = maximum damage."
+is_unlocked = false
+unlock_requirement = "Achieve 20+ bounces on a single ball"

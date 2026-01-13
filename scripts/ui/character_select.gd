@@ -9,10 +9,20 @@ const CHARACTER_PATHS := [
 	"res://resources/characters/frost_mage.tres",
 	"res://resources/characters/tactician.tres",
 	"res://resources/characters/gambler.tres",
-	"res://resources/characters/vampire.tres"
+	"res://resources/characters/vampire.tres",
+	"res://resources/characters/warrior.tres",
+	"res://resources/characters/shade.tres",
+	"res://resources/characters/broodmother.tres",
+	"res://resources/characters/empty_nester.tres",
+	"res://resources/characters/collector.tres",
+	"res://resources/characters/repentant.tres",
+	"res://resources/characters/physicist.tres",
+	"res://resources/characters/shieldbearer.tres",
+	"res://resources/characters/plague_doctor.tres",
+	"res://resources/characters/berserker.tres"
 ]
 
-const BALL_TYPE_NAMES := ["Basic Ball", "Fire Ball", "Ice Ball", "Lightning Ball"]
+const BALL_TYPE_NAMES := ["Basic Ball", "Fire Ball", "Ice Ball", "Lightning Ball", "Poison Ball", "Bleed Ball", "Iron Ball"]
 const PORTRAIT_COLORS := [
 	Color(0.3, 0.5, 0.7),  # Rookie - blue
 	Color(0.8, 0.3, 0.1),  # Pyro - orange
@@ -20,8 +30,18 @@ const PORTRAIT_COLORS := [
 	Color(0.5, 0.5, 0.6),  # Tactician - gray
 	Color(0.7, 0.5, 0.8),  # Gambler - purple
 	Color(0.5, 0.2, 0.2),  # Vampire - dark red
+	Color(0.6, 0.3, 0.2),  # Warrior - brown-red
+	Color(0.2, 0.1, 0.3),  # Shade - dark purple
+	Color(0.3, 0.5, 0.2),  # Broodmother - green
+	Color(0.3, 0.3, 0.35), # Empty Nester - charcoal
+	Color(0.8, 0.7, 0.2),  # Collector - gold
+	Color(0.5, 0.4, 0.3),  # Repentant - brown
+	Color(0.2, 0.3, 0.6),  # Physicist - deep blue
+	Color(0.6, 0.6, 0.7),  # Shieldbearer - silver
+	Color(0.3, 0.5, 0.3),  # Plague Doctor - sickly green
+	Color(0.7, 0.2, 0.2),  # Berserker - blood red
 ]
-const PORTRAIT_EMOJIS := ["R", "P", "F", "T", "G", "V"]
+const PORTRAIT_EMOJIS := ["R", "P", "F", "T", "G", "V", "W", "S", "B", "E", "C", "Re", "Ph", "Sh", "PD", "Be"]
 
 var _characters: Array[Resource] = []
 var _current_index: int = 0

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Berserker"
+description = "An unstoppable force fueled by carnage. Each kill accelerates the onslaught."
+endurance = 1.1
+base_strength = 9
+strength_scaling = 2
+strength = 1.1
+leadership = 0.5
+speed = 1.2
+base_dexterity = 6
+dexterity_scaling = 3
+dexterity = 1.0
+base_intelligence = 3
+intelligence_scaling = 5
+intelligence = 0.7
+base_fire_rate = 1.0
+fire_rate_scaling = 2
+starting_ball = 5
+passive_name = "Bloodlust"
+passive_description = "+3% fire rate per kill (max 17 stacks). Resets on taking damage."
+is_unlocked = false
+unlock_requirement = "Kill 30 enemies in 10 seconds"
