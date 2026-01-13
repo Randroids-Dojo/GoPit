@@ -18,7 +18,7 @@ enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DI
 
 var direction: Vector2 = Vector2.UP
 var pierce_count: int = 0
-var max_bounces: int = 10
+var max_bounces: int = 30  # supports diagonal shot strategies (20-30 bounces)
 var crit_chance: float = 0.0
 var _bounce_count: int = 0
 
@@ -415,7 +415,7 @@ func reset() -> void:
 	speed = 800.0
 	damage = 10
 	pierce_count = 0
-	max_bounces = 10
+	max_bounces = 30
 	crit_chance = 0.0
 
 	# Reset type/level
