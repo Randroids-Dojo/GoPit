@@ -258,7 +258,15 @@ func _physics_process(delta: float) -> void:
 		global_position += velocity * delta
 		return  # Skip normal collision handling
 
+	# Temporarily disable player collision during spawn immunity
+	var original_mask := collision_mask
+	var current_time := Time.get_ticks_msec() / 1000.0
+	if current_time - _spawn_time < SPAWN_IMMUNITY_TIME:
+		collision_mask = collision_mask & ~16  # Remove player layer (16)
+
 	var collision := move_and_collide(velocity * delta)
+	collision_mask = original_mask  # Restore original mask
+
 	if collision:
 		var collider := collision.get_collider()
 
@@ -344,11 +352,11 @@ func _physics_process(delta: float) -> void:
 		elif collider.collision_layer & 8:  # gems layer
 			hit_gem.emit(collider)
 
-		# Hit player - catch and return ball (unless in spawn immunity)
+		# Hit player - catch and return ball
+		# (spawn immunity handled by collision mask - won't reach here during immunity)
 		elif collider.collision_layer & 16:  # player layer
-			if not _catch_on_collision():
-				# In spawn immunity - pass through player
-				position += direction * 20
+			_catch_on_collision()
+			return
 
 
 func _show_crit_effect() -> void:
@@ -424,22 +432,21 @@ func catch() -> bool:
 	return true
 
 
-func _catch_on_collision() -> bool:
-	"""Catch ball when it collides with player. Returns false if in spawn immunity."""
-	# Check spawn immunity - don't catch ball immediately after firing
-	var current_time := Time.get_ticks_msec() / 1000.0
-	if current_time - _spawn_time < SPAWN_IMMUNITY_TIME:
-		return false  # Still in spawn immunity, don't catch
-
+func _catch_on_collision() -> void:
+	"""Catch ball when it collides with player."""
 	caught.emit()
 	_show_catch_effect()
+
+	# Stop processing immediately to prevent visual glitches
+	set_physics_process(false)
+	hide()
+
 	# Return to pool
 	if has_meta("pooled") and PoolManager:
 		reset()
 		PoolManager.release_ball(self)
 	else:
 		queue_free()
-	return true
 
 
 func _show_catch_effect() -> void:
@@ -513,6 +520,8 @@ func reset() -> void:
 	modulate = Color.WHITE
 	scale = Vector2.ONE
 	ball_color = Color(0.3, 0.7, 1.0)
+	show()  # Re-enable visibility (may have been hidden on catch)
+	set_physics_process(true)  # Re-enable physics (may have been disabled on catch)
 
 	# Reset collision shape to default radius
 	var collision := get_node_or_null("CollisionShape2D")
