@@ -251,6 +251,38 @@ func get_character_dexterity() -> int:
 	return int(5 * character_crit_mult)
 
 
+func get_character_intelligence() -> int:
+	"""Get the character's Intelligence stat at current player level."""
+	if selected_character == null:
+		return 5  # Default intelligence when no character selected
+	if selected_character.has_method("get_intelligence_at_level"):
+		return selected_character.get_intelligence_at_level(player_level)
+	# Fallback for old characters
+	return int(5 * character_intelligence_mult)
+
+
+func get_status_duration_mult() -> float:
+	"""Get the status effect duration multiplier from Intelligence.
+	Formula: 1.0 + (intelligence - 5) × 10% (e.g., 10 INT = 1.5× duration)"""
+	if selected_character == null:
+		return 1.0  # Default when no character selected
+	if selected_character.has_method("get_status_duration_mult_from_intelligence"):
+		return selected_character.get_status_duration_mult_from_intelligence(player_level)
+	# Fallback for old characters using legacy multiplier
+	return character_intelligence_mult
+
+
+func get_status_damage_mult() -> float:
+	"""Get the status effect damage multiplier from Intelligence.
+	Formula: 1.0 + (intelligence - 5) × 5% (e.g., 10 INT = 1.25× damage)"""
+	if selected_character == null:
+		return 1.0  # Default when no character selected
+	if selected_character.has_method("get_status_damage_mult_from_intelligence"):
+		return selected_character.get_status_damage_mult_from_intelligence(player_level)
+	# Fallback for old characters
+	return 1.0
+
+
 func set_character(character: Resource) -> void:
 	if character == null:
 		_reset_character_stats()
