@@ -1,12 +1,35 @@
 extends Node
 ## Meta-progression manager - handles Pit Coins, permanent upgrades, and cross-run persistence
+## Supports multiple save slots with both meta progression and mid-run session saves
 
 signal coins_changed(new_amount: int)
 signal upgrade_purchased(upgrade_id: String, new_level: int)
 signal character_unlocked(character_name: String)
 signal achievement_unlocked(achievement_id: String, reward: int)
+signal slot_changed(new_slot: int)
+signal slot_deleted(slot: int)
+signal session_saved
+signal session_loaded
+signal session_cleared
 
-const SAVE_PATH := "user://meta.save"
+# Save slot system
+const SLOT_COUNT := 3
+const LEGACY_SAVE_PATH := "user://meta.save"
+const ACTIVE_SLOT_PATH := "user://active_slot.save"
+
+var current_slot: int = 1
+
+
+func _get_meta_path(slot: int = -1) -> String:
+	if slot == -1:
+		slot = current_slot
+	return "user://slot_%d_meta.save" % slot
+
+
+func _get_session_path(slot: int = -1) -> String:
+	if slot == -1:
+		slot = current_slot
+	return "user://slot_%d_session.save" % slot
 
 # Characters that start unlocked by default (no requirement)
 const DEFAULT_UNLOCKED_CHARACTERS := [
@@ -41,6 +64,12 @@ var lifetime_kills: int = 0
 var lifetime_gems: int = 0
 var lifetime_damage: int = 0
 
+# Slot metadata
+var created_at: String = ""  # ISO 8601 timestamp
+var last_played: String = ""  # ISO 8601 timestamp
+var total_playtime: float = 0.0  # seconds
+var _session_start_time: float = 0.0  # for tracking current session playtime
+
 # Achievement system
 var unlocked_achievements: Array = []  # List of achievement IDs
 
@@ -73,8 +102,11 @@ var bonus_fire_rate: float = 0.0
 
 
 func _ready() -> void:
+	_migrate_legacy_save()
+	_load_active_slot()
 	load_data()
 	_calculate_bonuses()
+	_session_start_time = Time.get_unix_time_from_system()
 
 
 func earn_coins(wave: int, level: int) -> int:
@@ -465,6 +497,16 @@ func get_achievement_progress(achievement_id: String) -> Dictionary:
 
 
 func save_data() -> void:
+	# Update playtime before saving
+	_update_playtime()
+
+	# Update last_played timestamp
+	last_played = Time.get_datetime_string_from_system(true)
+
+	# Set created_at if this is a new slot
+	if created_at.is_empty():
+		created_at = last_played
+
 	var data := {
 		"coins": pit_coins,
 		"runs": total_runs,
@@ -477,20 +519,26 @@ func save_data() -> void:
 		"lifetime_kills": lifetime_kills,
 		"lifetime_gems": lifetime_gems,
 		"lifetime_damage": lifetime_damage,
-		"unlocked_achievements": unlocked_achievements
+		"unlocked_achievements": unlocked_achievements,
+		"created_at": created_at,
+		"last_played": last_played,
+		"total_playtime": total_playtime
 	}
 
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(_get_meta_path(), FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
 		file.close()
 
 
 func load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	var path := _get_meta_path()
+	if not FileAccess.file_exists(path):
+		# Reset to defaults for empty slot
+		_reset_slot_data()
 		return
 
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
 		return
 
@@ -511,10 +559,14 @@ func load_data() -> void:
 		lifetime_gems = data.get("lifetime_gems", 0)
 		lifetime_damage = data.get("lifetime_damage", 0)
 		unlocked_achievements = data.get("unlocked_achievements", [])
+		created_at = data.get("created_at", "")
+		last_played = data.get("last_played", "")
+		total_playtime = data.get("total_playtime", 0.0)
 		coins_changed.emit(pit_coins)
 
 
-func reset_data() -> void:
+func _reset_slot_data() -> void:
+	"""Reset all slot data to defaults (for empty/new slots)."""
 	pit_coins = 0
 	total_runs = 0
 	best_wave = 0
@@ -527,11 +579,290 @@ func reset_data() -> void:
 	lifetime_gems = 0
 	lifetime_damage = 0
 	unlocked_achievements = []
+	created_at = ""
+	last_played = ""
+	total_playtime = 0.0
 	bonus_hp = 0
 	bonus_damage = 0.0
 	bonus_fire_rate = 0.0
-
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
-
 	coins_changed.emit(pit_coins)
+
+
+func reset_data() -> void:
+	"""Reset current slot data and delete save files."""
+	_reset_slot_data()
+
+	var meta_path := _get_meta_path()
+	var session_path := _get_session_path()
+
+	if FileAccess.file_exists(meta_path):
+		DirAccess.remove_absolute(meta_path)
+	if FileAccess.file_exists(session_path):
+		DirAccess.remove_absolute(session_path)
+
+
+# =============================================================================
+# SAVE SLOT MANAGEMENT
+# =============================================================================
+
+func set_active_slot(slot: int) -> void:
+	"""Switch to a different save slot."""
+	if slot < 1 or slot > SLOT_COUNT:
+		push_error("Invalid slot number: %d" % slot)
+		return
+
+	# Save current playtime before switching
+	_update_playtime()
+	save_data()
+
+	current_slot = slot
+	_save_active_slot()
+	load_data()
+	_calculate_bonuses()
+	_session_start_time = Time.get_unix_time_from_system()
+	slot_changed.emit(slot)
+
+
+func get_slot_preview(slot: int) -> Dictionary:
+	"""Get preview info for a slot without fully loading it.
+	Returns empty dict if slot is empty."""
+	var path := _get_meta_path(slot)
+	if not FileAccess.file_exists(path):
+		return {}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return {}
+
+	var json_string := file.get_as_text()
+	file.close()
+
+	var data = JSON.parse_string(json_string)
+	if not data is Dictionary:
+		return {}
+
+	# Check if there's an active session
+	var has_session := has_active_session(slot)
+	var session_preview := {}
+	if has_session:
+		session_preview = _get_session_preview(slot)
+
+	return {
+		"slot": slot,
+		"coins": data.get("coins", 0),
+		"runs": data.get("runs", 0),
+		"best_wave": data.get("best_wave", 0),
+		"highest_stage": data.get("highest_stage", 0),
+		"total_playtime": data.get("total_playtime", 0.0),
+		"last_played": data.get("last_played", ""),
+		"created_at": data.get("created_at", ""),
+		"has_active_session": has_session,
+		"session": session_preview
+	}
+
+
+func _get_session_preview(slot: int) -> Dictionary:
+	"""Get preview info from a session save file."""
+	var path := _get_session_path(slot)
+	if not FileAccess.file_exists(path):
+		return {}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return {}
+
+	var json_string := file.get_as_text()
+	file.close()
+
+	var data = JSON.parse_string(json_string)
+	if not data is Dictionary:
+		return {}
+
+	return {
+		"character_path": data.get("character_path", ""),
+		"current_wave": data.get("current_wave", 1),
+		"player_level": data.get("player_level", 1),
+		"player_hp": data.get("player_hp", 100),
+		"max_hp": data.get("max_hp", 100),
+		"current_stage": data.get("current_stage", 0)
+	}
+
+
+func is_slot_empty(slot: int) -> bool:
+	"""Check if a slot has no save data."""
+	return not FileAccess.file_exists(_get_meta_path(slot))
+
+
+func has_active_session(slot: int = -1) -> bool:
+	"""Check if a slot has a mid-run session save."""
+	return FileAccess.file_exists(_get_session_path(slot))
+
+
+func delete_slot(slot: int) -> void:
+	"""Delete all data for a slot."""
+	if slot < 1 or slot > SLOT_COUNT:
+		push_error("Invalid slot number: %d" % slot)
+		return
+
+	var meta_path := _get_meta_path(slot)
+	var session_path := _get_session_path(slot)
+
+	if FileAccess.file_exists(meta_path):
+		DirAccess.remove_absolute(meta_path)
+	if FileAccess.file_exists(session_path):
+		DirAccess.remove_absolute(session_path)
+
+	# If deleting current slot, reset in-memory data
+	if slot == current_slot:
+		_reset_slot_data()
+
+	slot_deleted.emit(slot)
+
+
+func _update_playtime() -> void:
+	"""Update total playtime with time since session started."""
+	var now := Time.get_unix_time_from_system()
+	var session_time := now - _session_start_time
+	total_playtime += session_time
+	_session_start_time = now
+
+
+func _save_active_slot() -> void:
+	"""Save the currently active slot number."""
+	var file := FileAccess.open(ACTIVE_SLOT_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(str(current_slot))
+		file.close()
+
+
+func _load_active_slot() -> void:
+	"""Load the last used slot number."""
+	if not FileAccess.file_exists(ACTIVE_SLOT_PATH):
+		current_slot = 1
+		return
+
+	var file := FileAccess.open(ACTIVE_SLOT_PATH, FileAccess.READ)
+	if file:
+		var content := file.get_as_text().strip_edges()
+		file.close()
+		current_slot = clampi(content.to_int(), 1, SLOT_COUNT)
+		if current_slot == 0:
+			current_slot = 1
+
+
+func _migrate_legacy_save() -> void:
+	"""Migrate old single-file save to slot 1."""
+	if not FileAccess.file_exists(LEGACY_SAVE_PATH):
+		return
+
+	# Only migrate if slot 1 is empty
+	if FileAccess.file_exists(_get_meta_path(1)):
+		# Slot 1 already has data, delete legacy file
+		DirAccess.remove_absolute(LEGACY_SAVE_PATH)
+		return
+
+	# Copy legacy save to slot 1
+	var file := FileAccess.open(LEGACY_SAVE_PATH, FileAccess.READ)
+	if file:
+		var content := file.get_as_text()
+		file.close()
+
+		var new_file := FileAccess.open(_get_meta_path(1), FileAccess.WRITE)
+		if new_file:
+			new_file.store_string(content)
+			new_file.close()
+
+		# Delete legacy file after successful migration
+		DirAccess.remove_absolute(LEGACY_SAVE_PATH)
+		print("Migrated legacy save to slot 1")
+
+
+# =============================================================================
+# SESSION SAVE/LOAD (Mid-run persistence)
+# =============================================================================
+
+func save_session(session_data: Dictionary) -> void:
+	"""Save mid-run session state."""
+	session_data["saved_at"] = Time.get_datetime_string_from_system(true)
+
+	var file := FileAccess.open(_get_session_path(), FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(session_data))
+		file.close()
+		session_saved.emit()
+
+
+func load_session() -> Dictionary:
+	"""Load mid-run session state. Returns empty dict if none exists."""
+	var path := _get_session_path()
+	if not FileAccess.file_exists(path):
+		return {}
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return {}
+
+	var json_string := file.get_as_text()
+	file.close()
+
+	var data = JSON.parse_string(json_string)
+	if data is Dictionary:
+		session_loaded.emit()
+		return data
+	return {}
+
+
+func clear_session() -> void:
+	"""Delete the mid-run session save (called on run end)."""
+	var path := _get_session_path()
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+		session_cleared.emit()
+
+
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
+func format_playtime(seconds: float) -> String:
+	"""Format playtime as human-readable string (e.g., '2h 15m')."""
+	var total_minutes := int(seconds / 60.0)
+	var hours := total_minutes / 60
+	var minutes := total_minutes % 60
+
+	if hours > 0:
+		return "%dh %dm" % [hours, minutes]
+	elif minutes > 0:
+		return "%dm" % minutes
+	else:
+		return "< 1m"
+
+
+func format_relative_time(iso_timestamp: String) -> String:
+	"""Format timestamp as relative time (e.g., '2 days ago')."""
+	if iso_timestamp.is_empty():
+		return "Never"
+
+	# Parse ISO timestamp
+	var datetime := Time.get_datetime_dict_from_datetime_string(iso_timestamp, true)
+	if datetime.is_empty():
+		return "Unknown"
+
+	var then := Time.get_unix_time_from_datetime_dict(datetime)
+	var now := Time.get_unix_time_from_system()
+	var diff := now - then
+
+	if diff < 60:
+		return "Just now"
+	elif diff < 3600:
+		var mins := int(diff / 60)
+		return "%d min ago" % mins
+	elif diff < 86400:
+		var hours := int(diff / 3600)
+		return "%d hour%s ago" % [hours, "s" if hours > 1 else ""]
+	elif diff < 604800:
+		var days := int(diff / 86400)
+		return "%d day%s ago" % [days, "s" if days > 1 else ""]
+	else:
+		var weeks := int(diff / 604800)
+		return "%d week%s ago" % [weeks, "s" if weeks > 1 else ""]

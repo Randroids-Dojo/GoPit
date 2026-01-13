@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=3 uid="uid://save_slot_select"]
+
+[ext_resource type="Script" path="res://scripts/ui/save_slot_select.gd" id="1_select"]
+[ext_resource type="PackedScene" uid="uid://save_slot_panel" path="res://scenes/ui/save_slot_panel.tscn" id="2_panel"]
+[ext_resource type="PackedScene" uid="uid://delete_confirm_dlg" path="res://scenes/ui/delete_confirm_dialog.tscn" id="3_delete"]
+[ext_resource type="PackedScene" uid="uid://resume_run_dialog" path="res://scenes/ui/resume_run_dialog.tscn" id="4_resume"]
+
+[node name="SaveSlotSelect" type="CanvasLayer"]
+process_mode = 3
+layer = 14
+script = ExtResource("1_select")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.1, 0.95)
+
+[node name="Panel" type="Panel" parent="DimBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -250.0
+offset_right = 340.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DimBackground/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 36
+text = "SELECT SAVE SLOT"
+horizontal_alignment = 1
+
+[node name="SlotsContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 15
+
+[node name="Slot1Panel" parent="DimBackground/Panel/VBoxContainer/SlotsContainer" instance=ExtResource("2_panel")]
+layout_mode = 2
+
+[node name="Slot2Panel" parent="DimBackground/Panel/VBoxContainer/SlotsContainer" instance=ExtResource("2_panel")]
+layout_mode = 2
+slot_number = 2
+
+[node name="Slot3Panel" parent="DimBackground/Panel/VBoxContainer/SlotsContainer" instance=ExtResource("2_panel")]
+layout_mode = 2
+slot_number = 3
+
+[node name="DeleteConfirmDialog" parent="." instance=ExtResource("3_delete")]
+visible = false
+
+[node name="ResumeRunDialog" parent="." instance=ExtResource("4_resume")]
+visible = false

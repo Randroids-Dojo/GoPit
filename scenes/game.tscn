@@ -1,6 +1,7 @@
-[gd_scene load_steps=24 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=25 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" uid="uid://save_slot_select" path="res://scenes/ui/save_slot_select.tscn" id="25_slotselect"]
 [ext_resource type="Script" path="res://scripts/ui/passive_slots_display.gd" id="24_passive_slots"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
 [ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
@@ -785,6 +786,8 @@ grow_vertical = 2
 color = Color(1, 0, 0, 0)
 
 [node name="MetaShop" parent="UI" instance=ExtResource("16_meta_shop")]
+
+[node name="SaveSlotSelect" parent="UI" instance=ExtResource("25_slotselect")]
 
 [node name="CharacterSelect" parent="UI" instance=ExtResource("17_charselect")]
 

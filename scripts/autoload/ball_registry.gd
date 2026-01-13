@@ -448,3 +448,43 @@ func get_empty_slot_count() -> int:
 		if slot == -1:
 			count += 1
 	return count
+
+
+# =============================================================================
+# SESSION STATE CAPTURE/RESTORE (for mid-run saves)
+# =============================================================================
+
+func get_session_state() -> Dictionary:
+	"""Capture current ball registry state for session save."""
+	# Convert owned_balls keys to strings for JSON compatibility
+	var owned_balls_json := {}
+	for ball_type in owned_balls:
+		owned_balls_json[str(ball_type)] = owned_balls[ball_type]
+
+	return {
+		"owned_balls": owned_balls_json,
+		"active_ball_type": active_ball_type,
+		"active_ball_slots": active_ball_slots.duplicate()
+	}
+
+
+func restore_session_state(data: Dictionary) -> void:
+	"""Restore ball registry state from session save."""
+	# Clear current state
+	owned_balls.clear()
+
+	# Restore owned balls (convert string keys back to int)
+	var saved_balls: Dictionary = data.get("owned_balls", {})
+	for ball_type_str in saved_balls:
+		var ball_type: int = int(ball_type_str)
+		owned_balls[ball_type] = saved_balls[ball_type_str]
+
+	# Restore active ball type
+	active_ball_type = data.get("active_ball_type", BallType.BASIC) as BallType
+
+	# Restore slots
+	var saved_slots: Array = data.get("active_ball_slots", [-1, -1, -1, -1, -1])
+	for i in range(mini(saved_slots.size(), MAX_SLOTS)):
+		active_ball_slots[i] = saved_slots[i]
+
+	slots_changed.emit()

@@ -1,0 +1,103 @@
+[gd_scene load_steps=2 format=3 uid="uid://save_slot_panel"]
+
+[ext_resource type="Script" path="res://scripts/ui/save_slot_panel.gd" id="1_panel"]
+
+[node name="SaveSlotPanel" type="Panel"]
+custom_minimum_size = Vector2(200, 320)
+script = ExtResource("1_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="SlotLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+text = "SLOT 1"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="EmptyLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "Empty Slot"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PreviewContainer" type="VBoxContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="CoinsLabel" type="Label" parent="VBoxContainer/PreviewContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "Coins: 0"
+
+[node name="PlaytimeLabel" type="Label" parent="VBoxContainer/PreviewContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "Playtime: < 1m"
+
+[node name="BestWaveLabel" type="Label" parent="VBoxContainer/PreviewContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "Best Wave: 0"
+
+[node name="LastPlayedLabel" type="Label" parent="VBoxContainer/PreviewContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "Last: Never"
+
+[node name="ActiveRunIndicator" type="ColorRect" parent="VBoxContainer/PreviewContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+color = Color(0.2, 0.4, 0.2, 1)
+
+[node name="ActiveRunLabel" type="Label" parent="VBoxContainer/PreviewContainer/ActiveRunIndicator"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Run in Progress!
+Wave 18 - HP 75/150"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "DELETE"
+
+[node name="SelectButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "SELECT"

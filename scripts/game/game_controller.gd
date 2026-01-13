@@ -27,6 +27,7 @@ extends Node2D
 @onready var fusion_overlay: Control = $UI/FusionOverlay
 @onready var boss_hp_bar: Control = $UI/BossHPBar
 @onready var ultimate_button: Control = $UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer/UltimateButton
+@onready var save_slot_select: CanvasLayer = $UI/SaveSlotSelect
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 # NOTE: Boss scenes use load() not preload() to avoid class resolution issues during import
@@ -126,12 +127,22 @@ func _ready() -> void:
 	if level_select:
 		level_select.stage_selected.connect(_on_stage_selected)
 
+	# Connect save slot select
+	if save_slot_select:
+		save_slot_select.slot_selected.connect(_on_slot_selected)
+
+	# Connect wave changes for auto-save
+	GameManager.wave_changed.connect(_on_wave_changed_for_autosave)
+
 	# Start game flow
-	# Skip character/level select in headless mode (for testing)
+	# Skip save slot/character/level select in headless mode (for testing)
 	if DisplayServer.get_name() == "headless":
 		GameManager.start_game()
+	elif save_slot_select:
+		# Show save slot select first for normal gameplay
+		save_slot_select.show_select()
 	elif character_select:
-		# Show character select for normal gameplay
+		# Fallback: show character select if no save slot select
 		character_select.show_select()
 	else:
 		# Fallback: auto-start if no character select
@@ -168,6 +179,83 @@ func _on_stage_selected(stage_index: int) -> void:
 	GameManager.start_game()
 
 
+func _on_slot_selected(slot: int) -> void:
+	"""Handle save slot selection. Negative slot means restore session."""
+	if slot < 0:
+		# Restore session from saved data
+		_restore_session()
+	else:
+		# Normal flow - show character select
+		if character_select:
+			character_select.show_select()
+		else:
+			GameManager.start_game()
+
+
+func _restore_session() -> void:
+	"""Restore a saved mid-run session."""
+	var session_data := MetaManager.load_session()
+	if session_data.is_empty():
+		# No session to restore - fall back to normal flow
+		if character_select:
+			character_select.show_select()
+		return
+
+	# Restore GameManager state
+	GameManager.restore_session_state(session_data)
+
+	# Restore BallRegistry state
+	var ball_state: Dictionary = session_data.get("ball_registry", {})
+	if not ball_state.is_empty():
+		BallRegistry.restore_session_state(ball_state)
+
+	# Restore FusionRegistry state
+	var fusion_state: Dictionary = session_data.get("fusion_registry", {})
+	if not fusion_state.is_empty():
+		FusionRegistry.restore_session_state(fusion_state)
+
+	# Restore StageManager state
+	var stage: int = session_data.get("current_stage", 0)
+	if StageManager:
+		StageManager.current_stage = stage
+		StageManager._apply_biome()
+
+	# Apply character stats to ball spawner
+	if ball_spawner and GameManager.selected_character:
+		ball_spawner.ball_damage = GameManager.get_character_strength()
+		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
+		ball_spawner.set_ball_type(GameManager.character_starting_ball)
+
+	# Set state to playing and start
+	GameManager.current_state = GameManager.GameState.PLAYING
+	GameManager.game_started.emit()
+
+
+func _save_session() -> void:
+	"""Save the current game session for mid-run persistence."""
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
+	var session_data := GameManager.get_session_state()
+
+	# Add BallRegistry state
+	session_data["ball_registry"] = BallRegistry.get_session_state()
+
+	# Add FusionRegistry state
+	session_data["fusion_registry"] = FusionRegistry.get_session_state()
+
+	# Add StageManager state
+	if StageManager:
+		session_data["current_stage"] = StageManager.current_stage
+
+	MetaManager.save_session(session_data)
+
+
+func _on_wave_changed_for_autosave(_new_wave: int) -> void:
+	"""Auto-save session when wave changes."""
+	_save_session()
+
+
 func _on_game_started() -> void:
 	if enemy_spawner:
 		enemy_spawner.start_spawning()
@@ -187,6 +275,8 @@ func _on_game_over() -> void:
 		for enemy in enemies_container.get_children():
 			if enemy is EnemyBase:
 				enemy.queue_free()
+	# Clear the mid-run session save (run ended)
+	MetaManager.clear_session()
 
 
 func _on_player_damaged(_amount: int) -> void:
@@ -389,9 +479,11 @@ func _process(_delta: float) -> void:
 
 
 func _notification(what: int) -> void:
-	# Auto-pause when app loses focus (mobile)
+	# Auto-pause and save when app loses focus (mobile)
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		if GameManager.current_state == GameManager.GameState.PLAYING:
+			# Auto-save session before pausing
+			_save_session()
 			if pause_overlay:
 				pause_overlay.show_pause()
 
@@ -458,6 +550,8 @@ func _on_stage_completed(_stage: int) -> void:
 func _on_game_won() -> void:
 	# Trigger victory state in GameManager
 	GameManager.trigger_victory()
+	# Clear mid-run session save (run complete)
+	MetaManager.clear_session()
 	# Show victory screen
 	if stage_complete_overlay:
 		stage_complete_overlay.show_victory()

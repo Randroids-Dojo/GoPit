@@ -746,3 +746,99 @@ func _save_high_scores() -> void:
 	var file := FileAccess.open(HIGH_SCORE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(data))
+
+
+# =============================================================================
+# SESSION STATE CAPTURE/RESTORE (for mid-run saves)
+# =============================================================================
+
+func get_session_state() -> Dictionary:
+	"""Capture current game state for session save."""
+	var character_path := ""
+	if selected_character:
+		character_path = selected_character.resource_path
+
+	return {
+		# Core game state
+		"player_hp": player_hp,
+		"max_hp": max_hp,
+		"current_wave": current_wave,
+		"current_xp": current_xp,
+		"xp_to_next_level": xp_to_next_level,
+		"player_level": player_level,
+		"gem_magnetism_range": gem_magnetism_range,
+		"leadership": leadership,
+		"is_boss_fight": is_boss_fight,
+		"is_endless_mode": is_endless_mode,
+		"ultimate_charge": ultimate_charge,
+
+		# Passive stats
+		"armor_percent": armor_percent,
+		"thorns_percent": thorns_percent,
+		"health_regen": health_regen,
+		"xp_multiplier": xp_multiplier,
+		"dodge_chance": dodge_chance,
+		"life_steal_percent": life_steal_percent,
+
+		# Difficulty and speed
+		"current_speed_tier": current_speed_tier,
+		"selected_difficulty_level": selected_difficulty_level,
+
+		# Character
+		"character_path": character_path,
+
+		# Session stats (for display/continuity)
+		"stats": stats.duplicate()
+	}
+
+
+func restore_session_state(data: Dictionary) -> void:
+	"""Restore game state from session save."""
+	# Core game state
+	player_hp = data.get("player_hp", 100)
+	max_hp = data.get("max_hp", 100)
+	current_wave = data.get("current_wave", 1)
+	current_xp = data.get("current_xp", 0)
+	xp_to_next_level = data.get("xp_to_next_level", 100)
+	player_level = data.get("player_level", 1)
+	gem_magnetism_range = data.get("gem_magnetism_range", 0.0)
+	leadership = data.get("leadership", 0.0)
+	is_boss_fight = data.get("is_boss_fight", false)
+	is_endless_mode = data.get("is_endless_mode", false)
+	ultimate_charge = data.get("ultimate_charge", 0.0)
+
+	# Passive stats
+	armor_percent = data.get("armor_percent", 0.0)
+	thorns_percent = data.get("thorns_percent", 0.0)
+	health_regen = data.get("health_regen", 0.0)
+	xp_multiplier = data.get("xp_multiplier", 1.0)
+	dodge_chance = data.get("dodge_chance", 0.0)
+	life_steal_percent = data.get("life_steal_percent", 0.0)
+
+	# Difficulty and speed
+	selected_difficulty_level = data.get("selected_difficulty_level", 1)
+	var speed_tier: int = data.get("current_speed_tier", 0)
+	set_speed_tier(speed_tier)
+
+	# Character - load and apply
+	var character_path: String = data.get("character_path", "")
+	if not character_path.is_empty():
+		var character := load(character_path) as Resource
+		if character:
+			set_character(character)
+			# Override max_hp with saved value (includes upgrades)
+			max_hp = data.get("max_hp", max_hp)
+
+	# Session stats
+	var saved_stats: Dictionary = data.get("stats", {})
+	stats["enemies_killed"] = saved_stats.get("enemies_killed", 0)
+	stats["balls_fired"] = saved_stats.get("balls_fired", 0)
+	stats["damage_dealt"] = saved_stats.get("damage_dealt", 0)
+	stats["gems_collected"] = saved_stats.get("gems_collected", 0)
+	stats["time_survived"] = saved_stats.get("time_survived", 0.0)
+
+	# Emit signals for UI updates
+	hp_changed.emit(player_hp, max_hp)
+	wave_changed.emit(current_wave)
+	ultimate_charge_changed.emit(ultimate_charge, ULTIMATE_CHARGE_MAX)
+	leadership_changed.emit(leadership)

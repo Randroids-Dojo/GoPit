@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3 uid="uid://resume_run_dialog"]
+
+[ext_resource type="Script" path="res://scripts/ui/resume_run_dialog.gd" id="1_dialog"]
+
+[node name="ResumeRunDialog" type="CanvasLayer"]
+process_mode = 3
+layer = 20
+script = ExtResource("1_dialog")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="Panel" type="Panel" parent="DimBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -130.0
+offset_right = 220.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DimBackground/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 24
+text = "Run in Progress"
+horizontal_alignment = 1
+
+[node name="PreviewContainer" type="VBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="CharacterLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/PreviewContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "Pyro - Wave 18"
+horizontal_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/PreviewContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "HP: 75/150 | Level 8 | Stage 1"
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="NewGameButton" type="Button" parent="DimBackground/Panel/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(140, 55)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Start Fresh"
+
+[node name="ContinueButton" type="Button" parent="DimBackground/Panel/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(140, 55)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "Continue Run"

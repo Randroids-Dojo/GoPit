@@ -774,3 +774,63 @@ func _get_fire_button() -> Node:
 	if tree is SceneTree:
 		return tree.get_first_node_in_group("fire_button")
 	return null
+
+
+# =============================================================================
+# SESSION STATE CAPTURE/RESTORE (for mid-run saves)
+# =============================================================================
+
+func get_session_state() -> Dictionary:
+	"""Capture current fusion registry state for session save."""
+	# Convert evolved balls keys to strings for JSON compatibility
+	var evolved_balls_json := {}
+	for evolved_type in owned_evolved_balls:
+		evolved_balls_json[str(evolved_type)] = owned_evolved_balls[evolved_type]
+
+	# Passive slots need to convert enum to int for JSON
+	var passive_slots_json: Array[Dictionary] = []
+	for slot in passive_slots:
+		passive_slots_json.append({
+			"type": slot["type"],
+			"level": slot["level"]
+		})
+
+	return {
+		"owned_evolved_balls": evolved_balls_json,
+		"owned_fused_balls": owned_fused_balls.duplicate(true),
+		"active_evolved_type": active_evolved_type,
+		"active_fused_id": active_fused_id,
+		"passive_slots": passive_slots_json
+	}
+
+
+func restore_session_state(data: Dictionary) -> void:
+	"""Restore fusion registry state from session save."""
+	# Clear current state
+	owned_evolved_balls.clear()
+	owned_fused_balls.clear()
+	_init_passive_slots()
+
+	# Restore evolved balls (convert string keys back to int)
+	var saved_evolved: Dictionary = data.get("owned_evolved_balls", {})
+	for evolved_type_str in saved_evolved:
+		var evolved_type: int = int(evolved_type_str)
+		owned_evolved_balls[evolved_type] = saved_evolved[evolved_type_str]
+
+	# Restore fused balls
+	owned_fused_balls = data.get("owned_fused_balls", {}).duplicate(true)
+
+	# Restore active selections
+	active_evolved_type = data.get("active_evolved_type", EvolvedBallType.NONE) as EvolvedBallType
+	active_fused_id = data.get("active_fused_id", "")
+
+	# Restore passive slots
+	var saved_slots: Array = data.get("passive_slots", [])
+	for i in range(mini(saved_slots.size(), MAX_PASSIVE_SLOTS)):
+		var slot_data: Dictionary = saved_slots[i]
+		passive_slots[i] = {
+			"type": slot_data.get("type", -1),
+			"level": slot_data.get("level", 0)
+		}
+
+	passive_slots_changed.emit()
