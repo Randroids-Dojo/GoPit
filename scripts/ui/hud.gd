@@ -9,6 +9,7 @@ extends Control
 @onready var xp_bar: ProgressBar = $XPBarContainer/XPBar
 @onready var level_label: Label = $XPBarContainer/LevelLabel
 @onready var combo_label: Label = $ComboLabel
+@onready var fission_counter: Label = $FissionCounter
 
 var pause_overlay: CanvasLayer
 var _combo_tween: Tween
@@ -26,6 +27,10 @@ func _ready() -> void:
 	# Hide combo label initially
 	if combo_label:
 		combo_label.visible = false
+
+	# Hide fission counter initially (shows when first fission used)
+	if fission_counter:
+		fission_counter.visible = false
 
 	# Get reference to pause overlay
 	pause_overlay = get_node_or_null("../PauseOverlay")
@@ -45,6 +50,10 @@ func _ready() -> void:
 	# Connect to GameManager signals
 	GameManager.state_changed.connect(_on_state_changed)
 	GameManager.combo_changed.connect(_on_combo_changed)
+
+	# Connect to FusionRegistry for fission counter
+	if FusionRegistry:
+		FusionRegistry.fission_upgrades_changed.connect(_on_fission_upgrades_changed)
 
 
 func _on_mute_pressed() -> void:
@@ -126,3 +135,16 @@ func _on_combo_changed(combo: int, multiplier: float) -> void:
 		_combo_tween.tween_property(combo_label, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_OUT)
 	else:
 		combo_label.visible = false
+
+
+func _on_fission_upgrades_changed(total: int) -> void:
+	if not fission_counter:
+		return
+
+	fission_counter.visible = true
+	fission_counter.text = "FISSION: %d" % total
+
+	# Pop animation on update
+	var tween := create_tween()
+	fission_counter.scale = Vector2(1.2, 1.2)
+	tween.tween_property(fission_counter, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_OUT)
