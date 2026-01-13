@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="Biome" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="Biome" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
 [ext_resource type="PackedScene" path="res://scenes/entities/enemies/slime.tscn" id="2_slime"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/entities/enemies/swarm.tscn" id="6_swarm"]
 [ext_resource type="PackedScene" path="res://scenes/entities/enemies/archer.tscn" id="7_archer"]
 [ext_resource type="PackedScene" path="res://scenes/entities/enemies/bomber.tscn" id="8_bomber"]
+[ext_resource type="PackedScene" uid="uid://void_zone_scene" path="res://scenes/entities/hazards/void_zone.tscn" id="9_hazard"]
 
 [resource]
 script = ExtResource("1_biome")
@@ -16,3 +17,5 @@ background_color = Color(0.12, 0.02, 0.08, 1)
 wall_color = Color(0.4, 0.1, 0.15, 1)
 waves_before_boss = 10
 enemy_scenes = [ExtResource("2_slime"), ExtResource("3_bat"), ExtResource("4_crab"), ExtResource("5_golem"), ExtResource("6_swarm"), ExtResource("7_archer"), ExtResource("8_bomber")]
+hazard_scene = ExtResource("9_hazard")
+hazard_count = 4

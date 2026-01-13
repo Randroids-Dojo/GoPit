@@ -13,6 +13,9 @@ signal moved(position: Vector2)
 var movement_input: Vector2 = Vector2.ZERO
 var last_aim_direction: Vector2 = Vector2.UP  # Default aim upward
 
+# Speed modifiers from environmental hazards
+var _speed_modifier: float = 1.0
+
 # Game bounds (set by game_controller)
 var bounds_min: Vector2 = Vector2(30, 280)  # Left wall + some padding, top area (below enlarged TopBar)
 var bounds_max: Vector2 = Vector2(690, 1150)  # Right wall - padding, above input area
@@ -31,8 +34,8 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	# Apply movement speed (includes character multiplier and shooting penalty)
-	var effective_speed := move_speed * GameManager.get_movement_speed_mult()
+	# Apply movement speed (includes character multiplier, shooting penalty, and hazard modifiers)
+	var effective_speed := move_speed * GameManager.get_movement_speed_mult() * _speed_modifier
 	velocity = movement_input * effective_speed
 	move_and_slide()
 
@@ -100,3 +103,17 @@ func _on_invincibility_changed(is_invincible: bool) -> void:
 	else:
 		# Restore full opacity when invincibility ends
 		modulate.a = 1.0
+
+
+func apply_slow(amount: float) -> void:
+	"""Apply a slow effect (0.0-1.0 where 0.5 = 50% speed)."""
+	_speed_modifier = clampf(amount, 0.1, 1.0)
+	# Visual feedback for being slowed
+	modulate = Color(0.7, 0.9, 1.0, 1.0)
+
+
+func remove_slow() -> void:
+	"""Remove any active slow effect."""
+	_speed_modifier = 1.0
+	# Restore normal color
+	modulate = Color.WHITE

@@ -13,6 +13,11 @@ extends Resource
 ## If empty, spawner uses default all-enemy logic
 @export var enemy_scenes: Array[PackedScene] = []
 
-## Future: hazards, music
-# @export var hazard_scenes: Array[PackedScene]
+## Environmental hazard scene for this biome (optional)
+@export var hazard_scene: PackedScene
+
+## How many hazards to spawn in this biome
+@export var hazard_count: int = 0
+
+## Future: music
 # @export var music_track: AudioStream
