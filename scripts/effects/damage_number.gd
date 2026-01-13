@@ -67,3 +67,25 @@ static func spawn(parent: Node, pos: Vector2, value: int, text_color: Color = Co
 	# Start animation (pooled or not)
 	if label.has_method("animate"):
 		label.animate()
+
+
+static func spawn_text(parent: Node, pos: Vector2, text: String, text_color: Color = Color.WHITE) -> void:
+	"""Spawn floating text (like 'EXECUTE') instead of a number"""
+	var label: Label
+
+	# Get from pool if available
+	if PoolManager:
+		label = PoolManager.get_damage_number()
+	else:
+		var scene := preload("res://scenes/effects/damage_number.tscn")
+		label = scene.instantiate()
+
+	label.text = text
+	label.position = pos + Vector2(randf_range(-10, 10), randf_range(-10, 10))
+	label.modulate = text_color
+	label.z_index = 100
+	parent.add_child(label)
+
+	# Start animation (pooled or not)
+	if label.has_method("animate"):
+		label.animate()

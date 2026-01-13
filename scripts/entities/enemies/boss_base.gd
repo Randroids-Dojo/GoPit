@@ -119,21 +119,21 @@ func _on_phase_enter(_phase: BossPhase) -> void:
 
 # === DAMAGE & PHASE TRANSITIONS ===
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, is_crit: bool = false) -> void:
 	if is_invulnerable:
 		# Visual feedback for invulnerable hit
 		_flash_invulnerable()
 		return
 
-	super.take_damage(amount)
+	super.take_damage(amount, is_crit)
 	_check_phase_transition()
 
 
-func take_damage_at_position(amount: int, hit_position: Vector2) -> void:
+func take_damage_at_position(amount: int, hit_position: Vector2, is_crit: bool = false) -> void:
 	## Called when damage is dealt at a specific position (e.g., from a ball hit).
 	## Override in subclasses to implement weak point systems.
 	## Default behavior: ignore position and call regular take_damage.
-	take_damage(amount)
+	take_damage(amount, is_crit)
 
 
 func _flash_invulnerable() -> void:
