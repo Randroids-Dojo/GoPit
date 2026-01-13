@@ -22,7 +22,7 @@ var ball_speed: float = 800.0  # Base speed, can be modified by upgrades
 var ball_count: int = 1
 var ball_spread: float = 0.15  # radians between balls
 var pierce_count: int = 0
-var max_bounces: int = 10  # default wall bounces
+var max_bounces: int = 30  # default wall bounces (supports diagonal shot strategies)
 var crit_chance: float = 0.0
 var ball_type: int = 0  # Legacy: 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
 
