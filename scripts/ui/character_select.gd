@@ -36,6 +36,7 @@ var _dots: Array[ColorRect] = []
 @onready var str_grade_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/DMGStat/GradeLabel
 @onready var spd_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/SPDStat/Bar
 @onready var crit_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/CRITStat/Bar
+@onready var team_bar: ProgressBar = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/StatsContainer/TEAMStat/Bar
 @onready var passive_name_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer/PassiveName
 @onready var passive_desc_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer/PassiveDesc
 @onready var ball_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/AbilityPanel/VBoxContainer/BallLabel
@@ -132,6 +133,7 @@ func _update_display() -> void:
 	str_grade_label.text = character.get_strength_scaling_grade()  # Show scaling grade (S/A/B/C/D/E)
 	spd_bar.value = character.speed
 	crit_bar.value = character.dexterity
+	team_bar.value = character.leadership
 
 	# Update ability info
 	passive_name_label.text = "Passive: " + character.passive_name

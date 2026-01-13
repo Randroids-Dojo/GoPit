@@ -207,5 +207,3 @@ func _on_card_pressed(index: int) -> void:
 	get_tree().paused = false
 	visible = false
 	GameManager.complete_level_up()
-
-
