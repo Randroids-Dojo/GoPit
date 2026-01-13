@@ -3,6 +3,7 @@ extends Node
 ## Manages audio settings (volume, mute) with persistence
 
 signal mute_changed(is_muted: bool)
+signal aim_sensitivity_changed(value: float)
 
 var _players: Array[AudioStreamPlayer] = []
 const MAX_PLAYERS := 8
@@ -37,6 +38,13 @@ var is_muted: bool = false:
 		is_muted = value
 		AudioServer.set_bus_mute(0, is_muted)
 		mute_changed.emit(is_muted)
+		_save_settings()
+
+# Aim sensitivity (0.25 = very slow, 1.0 = normal, 2.0 = very fast)
+var aim_sensitivity: float = 1.0:
+	set(value):
+		aim_sensitivity = clampf(value, 0.25, 2.0)
+		aim_sensitivity_changed.emit(aim_sensitivity)
 		_save_settings()
 
 enum SoundType {
@@ -140,6 +148,14 @@ func toggle_mute() -> void:
 	is_muted = !is_muted
 
 
+func set_aim_sensitivity(value: float) -> void:
+	aim_sensitivity = value
+
+
+func get_aim_sensitivity() -> float:
+	return aim_sensitivity
+
+
 ## Play sound for a specific ball type (when spawning/firing)
 func play_ball_type_sound(ball_type: int) -> void:
 	# Ball types: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6
@@ -168,7 +184,8 @@ func _save_settings() -> void:
 		"muted": is_muted,
 		"master": master_volume,
 		"sfx": sfx_volume,
-		"music": music_volume
+		"music": music_volume,
+		"aim_sensitivity": aim_sensitivity
 	}
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file:
@@ -196,6 +213,8 @@ func _load_settings() -> void:
 		sfx_volume = data["sfx"]
 	if data.has("music"):
 		music_volume = data["music"]
+	if data.has("aim_sensitivity"):
+		aim_sensitivity = data["aim_sensitivity"]
 
 	# Apply loaded settings to audio buses
 	AudioServer.set_bus_mute(0, is_muted)

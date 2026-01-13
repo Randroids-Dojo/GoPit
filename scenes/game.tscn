@@ -662,9 +662,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -150.0
+offset_top = -175.0
 offset_right = 150.0
-offset_bottom = 150.0
+offset_bottom = 175.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -697,6 +697,27 @@ text = "Sound: ON"
 [node name="ScreenShakeButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Screen Shake: ON"
+
+[node name="SensitivityContainer" type="HBoxContainer" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="SensitivityLabel" type="Label" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer/SensitivityContainer"]
+layout_mode = 2
+text = "Aim:"
+
+[node name="SensitivitySlider" type="HSlider" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer/SensitivityContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.25
+max_value = 2.0
+step = 0.25
+value = 1.0
+
+[node name="SensitivityValue" type="Label" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer/SensitivityContainer"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "1.0x"
+horizontal_alignment = 2
 
 [node name="QuitButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
 layout_mode = 2

@@ -67,14 +67,18 @@ func _update_drag(pos: Vector2) -> void:
 	var offset := pos - center
 	var distance := offset.length()
 
+	# Apply aim sensitivity - higher sensitivity = smaller movements reach full direction
+	var sensitivity := SoundManager.get_aim_sensitivity()
+	var effective_distance := distance * sensitivity
+
 	# Clamp to base radius
 	if distance > base_radius:
 		offset = offset.normalized() * base_radius
 
 	knob_position = offset
 
-	# Calculate direction with dead zone
-	var normalized_distance := distance / base_radius
+	# Calculate direction with dead zone (using effective distance for sensitivity)
+	var normalized_distance := effective_distance / base_radius
 	if normalized_distance > dead_zone:
 		current_direction = offset.normalized()
 	else:
