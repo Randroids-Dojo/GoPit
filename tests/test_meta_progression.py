@@ -134,6 +134,14 @@ async def test_coin_balance_display(game):
 @pytest.mark.asyncio
 async def test_meta_manager_persistence_functions(game):
     """Test MetaManager save/load functionality."""
+    # Use slot 3 to avoid interference with other parallel tests
+    await game.call("/root/MetaManager", "set_active_slot", [3])
+    await asyncio.sleep(0.1)
+
+    # Reset slot to ensure clean state
+    await game.call("/root/MetaManager", "reset_data", [])
+    await asyncio.sleep(0.1)
+
     # Set some values
     await game.call("/root/MetaManager", "set", ["pit_coins", 1000])
 
@@ -151,6 +159,9 @@ async def test_meta_manager_persistence_functions(game):
     # Check value restored
     coins = await game.get_property("/root/MetaManager", "pit_coins")
     assert coins == 1000, f"Coins should persist after save/load: got {coins}"
+
+    # Cleanup: delete slot 3 data
+    await game.call("/root/MetaManager", "reset_data", [])
 
 
 @pytest.mark.asyncio
