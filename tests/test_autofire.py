@@ -54,15 +54,27 @@ async def test_autofire_fires_automatically(game):
     """Test that balls are fired automatically when autofire is enabled."""
     fire_btn = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
     balls_container = "/root/Game/GameArea/Balls"
+    ball_spawner = "/root/Game/GameArea/BallSpawner"
 
-    # Get initial ball count
+    # Disable autofire first to get a clean state
+    await game.call(fire_btn, "set_autofire", [False])
+    await asyncio.sleep(0.1)
+
+    # Wait for any in-flight balls to return (salvo mechanic blocks firing)
+    for _ in range(30):  # Wait up to 3 seconds
+        main_in_flight = await game.call(ball_spawner, "get_main_balls_in_flight")
+        if main_in_flight == 0:
+            break
+        await asyncio.sleep(0.1)
+
+    # Get initial ball count (should be 0 or stable)
     initial_count = await game.call(balls_container, "get_child_count")
 
     # Enable autofire
     await game.call(fire_btn, "set_autofire", [True])
 
-    # Wait for autofire to fire some balls (cooldown is 0.5s)
-    await asyncio.sleep(1.2)
+    # Wait for autofire to fire some balls (cooldown is 0.5s, wait for at least 2 fires)
+    await asyncio.sleep(1.5)
 
     # Check ball count increased
     final_count = await game.call(balls_container, "get_child_count")
