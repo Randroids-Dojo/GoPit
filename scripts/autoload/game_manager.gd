@@ -402,7 +402,20 @@ func return_to_menu() -> void:
 
 
 func add_xp(amount: int) -> void:
-	var final_xp: int = int(amount * get_combo_multiplier() * get_xp_multiplier() * get_loot_multiplier() * get_difficulty_xp_multiplier())
+	# Calculate all XP multipliers:
+	# - Combo multiplier (kill streak)
+	# - XP multiplier (Quick Learner passive + Veteran's Hut meta)
+	# - Loot multiplier (game speed tier)
+	# - Difficulty multiplier (+15% per level)
+	# - Early XP multiplier (Abbey meta - first 5 levels)
+	var final_xp: int = int(
+		amount *
+		get_combo_multiplier() *
+		get_xp_multiplier() *
+		get_loot_multiplier() *
+		get_difficulty_xp_multiplier() *
+		MetaManager.get_early_xp_multiplier(player_level)
+	)
 	current_xp += final_xp
 	if current_xp >= xp_to_next_level:
 		trigger_level_up()
@@ -473,10 +486,14 @@ func is_ultimate_ready() -> bool:
 # === Passive ability helpers ===
 
 func get_xp_multiplier() -> float:
-	## Returns XP multiplier (Quick Learner: +10%)
+	## Returns XP multiplier from passives and meta-progression
+	## - Quick Learner: +10%
+	## - Veteran's Hut (meta): +5% per level (max +25%)
+	var base := 1.0
 	if active_passive == Passive.QUICK_LEARNER:
-		return 1.1
-	return 1.0
+		base = 1.1
+	# Apply Veteran's Hut meta-progression bonus
+	return base * MetaManager.get_xp_gain_multiplier()
 
 
 func get_crit_damage_multiplier() -> float:
