@@ -9,7 +9,7 @@ signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 signal caught  # Emitted when ball is caught by player (active play bonus)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK, CELL }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK, CELL, CHARM }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -106,6 +106,8 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.15, 0.05, 0.2)  # Very dark purple
 		BallType.CELL:
 			ball_color = Color(0.2, 0.8, 0.7)  # Teal/aqua
+		BallType.CHARM:
+			ball_color = Color(1.0, 0.4, 0.8)  # Pink/magenta
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -612,6 +614,16 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 			enemy.modulate = Color(0.3, 0.9, 0.8)
 			var tween := enemy.create_tween()
 			tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
+
+		BallType.CHARM:
+			# Charm: Apply charm status effect (mind control)
+			if enemy.has_method("apply_status_effect"):
+				var charm = StatusEffect.new(StatusEffect.Type.CHARM)
+				enemy.apply_status_effect(charm)
+			# Visual charm effect
+			enemy.modulate = Color(1.0, 0.4, 0.8)
+			var charm_tween := enemy.create_tween()
+			charm_tween.tween_property(enemy, "modulate", Color(1.0, 0.5, 0.85), 0.3)
 
 
 func _chain_lightning(hit_enemy: Node2D) -> void:

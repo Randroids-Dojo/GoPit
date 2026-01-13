@@ -83,6 +83,11 @@ func _physics_process(delta: float) -> void:
 	# Process status effects first
 	_process_status_effects(delta)
 
+	# Charmed enemies attack other enemies instead of the player
+	if is_charmed():
+		_do_charmed_behavior(delta)
+		return
+
 	match current_state:
 		State.DESCENDING:
 			_move(delta)
@@ -424,6 +429,82 @@ func _get_player_node() -> Node2D:
 	return null
 
 
+# === CHARM BEHAVIOR (Mind Control) ===
+
+const CHARM_ATTACK_RANGE: float = 50.0  # Distance at which charmed enemy attacks
+const CHARM_DAMAGE_MULT: float = 1.5  # Charmed enemies deal 1.5x their base damage to enemies
+
+func _do_charmed_behavior(delta: float) -> void:
+	"""Charmed enemy moves toward and attacks other non-charmed enemies"""
+	# Find nearest non-charmed enemy
+	var target := _find_nearest_enemy_target()
+
+	if target == null:
+		# No target found - just wander randomly
+		velocity = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized() * speed * 0.5
+		move_and_slide()
+		return
+
+	# Move toward target enemy
+	var to_target := target.global_position - global_position
+	var dist_to_target := to_target.length()
+
+	if dist_to_target < CHARM_ATTACK_RANGE:
+		# Attack the enemy
+		_attack_enemy_target(target)
+	else:
+		# Move toward target
+		var direction := to_target.normalized()
+		velocity = direction * speed
+		move_and_slide()
+
+
+func _find_nearest_enemy_target() -> EnemyBase:
+	"""Find the nearest non-charmed, alive enemy to attack"""
+	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
+	if not enemies_container:
+		return null
+
+	var nearest: EnemyBase = null
+	var nearest_dist: float = INF
+
+	for child in enemies_container.get_children():
+		if child is EnemyBase and child != self:
+			# Skip charmed enemies (allies don't attack each other)
+			if child.is_charmed():
+				continue
+			# Skip dead enemies
+			if child.current_state == State.DEAD:
+				continue
+
+			var dist: float = global_position.distance_to(child.global_position)
+			if dist < nearest_dist:
+				nearest_dist = dist
+				nearest = child
+
+	return nearest
+
+
+func _attack_enemy_target(target: EnemyBase) -> void:
+	"""Deal damage to an enemy target while charmed"""
+	var charm_damage := int(damage_to_player * CHARM_DAMAGE_MULT)
+	target.take_damage(charm_damage)
+
+	# Visual feedback - flash both attacker and target
+	modulate = Color(1.5, 0.5, 1.0)  # Pink flash
+	var tween := create_tween()
+	tween.tween_property(self, "modulate", _get_charm_tint(), 0.2)
+
+	# Knockback/separation to prevent continuous attacking
+	var knockback_dir := (global_position - target.global_position).normalized()
+	global_position += knockback_dir * 30
+
+
+func _get_charm_tint() -> Color:
+	"""Get the visual tint for charmed state"""
+	return Color(1.0, 0.4, 0.8)  # Pink/magenta
+
+
 func _deal_damage_to_player() -> void:
 	var player := _get_player_node()
 	if player and player.has_method("take_damage"):
@@ -727,6 +808,11 @@ func _spread_poison() -> void:
 func has_status_effect(effect_type: StatusEffect.Type) -> bool:
 	"""Check if enemy has a specific status effect"""
 	return _active_effects.has(effect_type)
+
+
+func is_charmed() -> bool:
+	"""Check if enemy is under charm effect (mind controlled)"""
+	return _active_effects.has(StatusEffect.Type.CHARM)
 
 
 func get_status_effect(effect_type: StatusEffect.Type) -> StatusEffect:
