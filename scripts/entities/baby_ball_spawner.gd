@@ -1,84 +1,68 @@
 class_name BabyBallSpawner
 extends Node2D
-## Spawns baby balls automatically toward enemies - provides passive DPS
+## Queue-based baby ball spawner - adds baby balls to the firing queue
+## Baby balls are added when parent balls are fired, based on Leadership stat
 
-signal baby_ball_spawned(ball: Node2D)
+signal baby_balls_queued(count: int)
 
-@export var ball_scene: PackedScene
-@export var base_spawn_interval: float = 2.0
-@export var baby_ball_damage_multiplier: float = 0.5
-@export var baby_ball_scale: float = 0.6
-
-## Maximum baby balls on screen (Leadership increases this limit)
-@export var base_max_babies: int = 3
+## Base number of baby balls to queue per fire action
+@export var base_baby_count: int = 1
 ## Extra baby balls per point of Leadership bonus
 @export var leadership_baby_multiplier: float = 2.0
+## Damage multiplier for baby balls (applied by ball_spawner)
+@export var baby_ball_damage_multiplier: float = 0.5
 ## Damage bonus per point of Leadership (0.15 = +15% per point)
 @export var leadership_damage_per_point: float = 0.15
 
-var balls_container: Node2D
-var _spawn_timer: Timer
+var _ball_spawner: Node2D
 var _player: Node2D
 
-# Leadership stat affects spawn rate (from GameManager)
+# Leadership stat affects baby ball count and damage
 var _leadership_bonus: float = 0.0
-
-# Slot cycling - baby balls rotate through active ball slots
-var _slot_cycle_index: int = 0
 
 
 func _ready() -> void:
 	add_to_group("baby_ball_spawner")
-	if ball_scene == null:
-		ball_scene = preload("res://scenes/entities/ball.tscn")
-	_setup_timer()
+	# Defer connection to ensure ball_spawner is ready
+	call_deferred("_connect_to_ball_spawner")
 
 
-func _setup_timer() -> void:
-	_spawn_timer = Timer.new()
-	_spawn_timer.one_shot = false
-	_spawn_timer.timeout.connect(_spawn_baby_ball)
-	add_child(_spawn_timer)
+func _connect_to_ball_spawner() -> void:
+	_ball_spawner = get_tree().get_first_node_in_group("ball_spawner")
+	if _ball_spawner and _ball_spawner.has_signal("ball_spawned"):
+		# Connect to ball_spawned to add baby balls after each parent fires
+		_ball_spawner.ball_spawned.connect(_on_parent_ball_fired)
 
 
 func start() -> void:
 	_player = get_tree().get_first_node_in_group("player")
-	_update_spawn_rate()
-	_spawn_timer.start()
+	# Queue-based: no timer to start
 
 
 func stop() -> void:
-	_spawn_timer.stop()
+	# Queue-based: nothing to stop
+	pass
 
 
 func set_leadership(value: float) -> void:
 	_leadership_bonus = value
-	_update_spawn_rate()
-
-
-func _update_spawn_rate() -> void:
-	# Higher leadership = faster spawns
-	# leadership_bonus of 1.0 = 2x spawn rate
-	# Also apply character's leadership multiplier, Squad Leader passive, and speed
-	var char_mult: float = GameManager.character_leadership_mult
-	var speed_mult: float = GameManager.character_speed_mult
-	var passive_bonus: float = GameManager.get_baby_ball_rate_bonus()  # Squad Leader: +30%
-	var total_bonus: float = (_leadership_bonus * char_mult) + passive_bonus
-	var rate: float = base_spawn_interval / ((1.0 + total_bonus) * speed_mult)
-	_spawn_timer.wait_time = maxf(0.3, rate)
 
 
 func get_max_baby_balls() -> int:
-	"""Returns max baby balls based on Leadership stat"""
+	"""Returns max baby balls that can be queued per fire action"""
 	var char_mult: float = GameManager.character_leadership_mult
 	var extra_from_passive: int = GameManager.get_extra_baby_balls()  # Squad Leader: +2
 	var leadership_extra: int = int(_leadership_bonus * char_mult * leadership_baby_multiplier)
-	return base_max_babies + leadership_extra + extra_from_passive
+	return base_baby_count + leadership_extra + extra_from_passive
 
 
 func get_current_baby_count() -> int:
 	"""Returns count of active baby balls on screen"""
-	var container: Node = balls_container if balls_container else get_parent()
+	if not _ball_spawner or not "balls_container" in _ball_spawner:
+		return 0
+	var container: Node = _ball_spawner.balls_container
+	if not container:
+		return 0
 	var count: int = 0
 	for child in container.get_children():
 		if child.get("is_baby_ball") == true:
@@ -92,157 +76,43 @@ func get_leadership_damage_bonus() -> float:
 	return 1.0 + (_leadership_bonus * char_mult * leadership_damage_per_point)
 
 
-func _spawn_baby_ball() -> void:
-	if not _player:
+func _on_parent_ball_fired(_ball: Node) -> void:
+	"""Called when a parent ball is fired - add baby balls to queue"""
+	if not _ball_spawner:
 		return
 
 	if GameManager.current_state != GameManager.GameState.PLAYING:
 		return
 
-	# Check baby ball limit based on Leadership
-	var current_count: int = get_current_baby_count()
-	var max_count: int = get_max_baby_balls()
-	if current_count >= max_count:
-		return  # At capacity, wait for some babies to despawn
-
-	# Get ball from pool if available, otherwise instantiate
-	var ball: Node
-	if PoolManager:
-		ball = PoolManager.get_ball()
-	else:
-		ball = ball_scene.instantiate()
-	ball.position = _player.global_position
-	ball.scale = Vector2(baby_ball_scale, baby_ball_scale)
-	ball.is_baby_ball = true
-
-	# Inherit ball type from active slots (cycles through slots)
-	_apply_slot_inheritance(ball)
-
-	# Baby balls deal reduced damage based on inherited type
-	# Leadership bonus adds +15% damage per point (char_mult scales this)
-	var base_damage: int = 10
-	if BallRegistry and ball.registry_type >= 0:
-		base_damage = BallRegistry.get_damage(ball.registry_type)
-	else:
-		var ball_spawner := get_tree().get_first_node_in_group("ball_spawner")
-		if ball_spawner and "ball_damage" in ball_spawner:
-			base_damage = ball_spawner.ball_damage
-	var char_mult: float = GameManager.character_leadership_mult
-	var leadership_damage_bonus: float = 1.0 + (_leadership_bonus * char_mult * leadership_damage_per_point)
-	ball.damage = int(base_damage * baby_ball_damage_multiplier * leadership_damage_bonus)
-
-	# Set direction toward nearest enemy
-	var direction := _get_target_direction()
-	ball.set_direction(direction)
-
-	if balls_container:
-		balls_container.add_child(ball)
-	else:
-		get_parent().add_child(ball)
-
-	# Baby balls fire silently to avoid audio spam
-	# (main ball fire sound is loud enough)
-
-	baby_ball_spawned.emit(ball)
-
-
-func _apply_slot_inheritance(ball: Node) -> void:
-	"""Apply ball type inheritance from active slots (cycles through slots)"""
-	if not BallRegistry:
+	# Skip if the fired ball is already a baby ball (avoid recursion)
+	if _ball and _ball.get("is_baby_ball") == true:
 		return
 
-	var active_slots := BallRegistry.get_filled_slots()
-	if active_slots.is_empty():
+	# Calculate how many baby balls to add
+	var baby_count: int = get_max_baby_balls()
+	if baby_count <= 0:
 		return
 
-	# Cycle through active slots
-	var slot_type: int = active_slots[_slot_cycle_index % active_slots.size()]
-	_slot_cycle_index += 1
+	# Get ball types from active slots (baby balls cycle through them)
+	var ball_types: Array[int] = []
+	if BallRegistry:
+		ball_types = BallRegistry.get_filled_slots()
+	if ball_types.is_empty():
+		ball_types = [0]  # Fallback to basic
 
-	# Set registry type and ball level
-	ball.registry_type = slot_type
-	ball.ball_level = BallRegistry.get_ball_level(slot_type)
-
-	# Map registry type to ball.gd BallType enum
-	var ball_type: int = _registry_to_ball_type(slot_type)
-	ball.set_ball_type(ball_type)
-
-	# Inherit evolved/fused properties from FusionRegistry (global state)
-	_apply_evolved_fused_inheritance(ball)
+	# Add baby balls to the queue
+	var added: int = _ball_spawner.add_baby_balls_to_queue(baby_count, ball_types)
+	if added > 0:
+		baby_balls_queued.emit(added)
 
 
-func _apply_evolved_fused_inheritance(ball: Node) -> void:
-	"""Apply evolved/fused ball properties from FusionRegistry global state"""
-	if not FusionRegistry:
-		return
+# Legacy methods for compatibility with existing tests
 
-	# Check for active evolved ball
-	if FusionRegistry.active_evolved_type != FusionRegistry.EvolvedBallType.NONE:
-		ball.is_evolved = true
-		ball.evolved_type = FusionRegistry.active_evolved_type
-		# Get evolved ball color
-		var evolved_data := FusionRegistry.get_evolved_ball_data(FusionRegistry.active_evolved_type)
-		if evolved_data.has("color"):
-			ball.ball_color = evolved_data["color"]
-		return  # Evolved takes priority over fused
-
-	# Check for active fused ball
-	if FusionRegistry.active_fused_id != "":
-		ball.is_fused = true
-		ball.fused_id = FusionRegistry.active_fused_id
-		var fused_data := FusionRegistry.get_fused_ball_data(FusionRegistry.active_fused_id)
-		if fused_data.has("effects"):
-			ball.fused_effects = fused_data["effects"]
-		if fused_data.has("color"):
-			ball.ball_color = fused_data["color"]
+func get_baby_ball_damage_multiplier() -> float:
+	"""Returns the base damage multiplier for baby balls"""
+	return baby_ball_damage_multiplier
 
 
-func _registry_to_ball_type(registry_type: int) -> int:
-	"""Map BallRegistry.BallType to ball.gd BallType enum"""
-	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6,
-	#               RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13, DARK=14
-	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6,
-	#          RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12, BROOD_MOTHER=13, DARK=14
-	match registry_type:
-		0: return 0  # BASIC -> NORMAL
-		1: return 1  # BURN -> FIRE
-		2: return 2  # FREEZE -> ICE
-		3: return 4  # POISON -> POISON
-		4: return 5  # BLEED -> BLEED
-		5: return 3  # LIGHTNING -> LIGHTNING
-		6: return 6  # IRON -> IRON
-		7: return 7  # RADIATION -> RADIATION
-		8: return 8  # DISEASE -> DISEASE
-		9: return 9  # FROSTBURN -> FROSTBURN
-		10: return 10  # WIND -> WIND
-		11: return 11  # GHOST -> GHOST
-		12: return 12  # VAMPIRE -> VAMPIRE
-		13: return 13  # BROOD_MOTHER -> BROOD_MOTHER
-		14: return 14  # DARK -> DARK
-	return 0
-
-
-func _get_target_direction() -> Vector2:
-	var nearest := _find_nearest_enemy()
-	if nearest:
-		return _player.global_position.direction_to(nearest.global_position)
-	# Fallback: random upward direction
-	return Vector2(randf_range(-0.3, 0.3), -1.0).normalized()
-
-
-func _find_nearest_enemy() -> Node2D:
-	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
-	if not enemies_container:
-		return null
-
-	var nearest: Node2D = null
-	var nearest_dist: float = INF
-
-	for enemy in enemies_container.get_children():
-		if enemy is EnemyBase:
-			var dist: float = _player.global_position.distance_to(enemy.global_position)
-			if dist < nearest_dist:
-				nearest_dist = dist
-				nearest = enemy
-
-	return nearest
+func get_leadership_baby_multiplier() -> float:
+	"""Returns how many extra babies per Leadership point"""
+	return leadership_baby_multiplier

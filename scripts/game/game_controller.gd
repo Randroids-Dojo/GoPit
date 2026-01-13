@@ -172,7 +172,6 @@ func _on_game_started() -> void:
 	if enemy_spawner:
 		enemy_spawner.start_spawning()
 	if baby_ball_spawner:
-		baby_ball_spawner.balls_container = balls_container
 		baby_ball_spawner.start()
 	MusicManager.start_music()
 
