@@ -1,6 +1,7 @@
-[gd_scene load_steps=25 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=26 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+[ext_resource type="Script" path="res://scripts/ui/evolution_encyclopedia.gd" id="encyclopedia"]
 [ext_resource type="PackedScene" uid="uid://save_slot_select" path="res://scenes/ui/save_slot_select.tscn" id="25_slotselect"]
 [ext_resource type="Script" path="res://scripts/ui/passive_slots_display.gd" id="24_passive_slots"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
@@ -662,9 +663,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -175.0
+offset_top = -200.0
 offset_right = 150.0
-offset_bottom = 175.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -719,9 +720,73 @@ layout_mode = 2
 text = "1.0x"
 horizontal_alignment = 2
 
+[node name="EncyclopediaButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Evolutions"
+
 [node name="QuitButton" type="Button" parent="UI/PauseOverlay/DimBackground/Panel/VBoxContainer"]
 layout_mode = 2
 text = "Quit"
+
+[node name="EvolutionEncyclopedia" type="CanvasLayer" parent="UI"]
+layer = 20
+process_mode = 3
+script = ExtResource("encyclopedia")
+
+[node name="DimBackground" type="ColorRect" parent="UI/EvolutionEncyclopedia"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0, 0, 0, 0.8)
+
+[node name="Panel" type="Panel" parent="UI/EvolutionEncyclopedia/DimBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -250.0
+offset_right = 180.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/EvolutionEncyclopedia/DimBackground/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="UI/EvolutionEncyclopedia/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "EVOLUTION RECIPES"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/EvolutionEncyclopedia/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="EvolutionList" type="VBoxContainer" parent="UI/EvolutionEncyclopedia/DimBackground/Panel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="CloseButton" type="Button" parent="UI/EvolutionEncyclopedia/DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Close"
 
 [node name="DamageVignette" type="ColorRect" parent="UI"]
 anchors_preset = 15
