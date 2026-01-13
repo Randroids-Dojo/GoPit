@@ -123,7 +123,7 @@ var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
 # Passive ability flags (set based on selected character)
-enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER, COLLECTOR }
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER, COLLECTOR, EMPTY_NESTER }
 var active_passive: Passive = Passive.NONE
 
 # High score persistence
@@ -312,7 +312,8 @@ const VALID_PASSIVES := {
 	"Lifesteal": Passive.LIFESTEAL,
 	"Bounce Master": Passive.BOUNCE_MASTER,
 	"Executioner": Passive.EXECUTIONER,
-	"Collector": Passive.COLLECTOR
+	"Collector": Passive.COLLECTOR,
+	"Empty Nester": Passive.EMPTY_NESTER
 }
 
 
@@ -606,6 +607,19 @@ func get_effective_magnetism_range() -> float:
 func has_built_in_magnet() -> bool:
 	## Returns true if current character has built-in magnet (Collector passive)
 	return active_passive == Passive.COLLECTOR
+
+
+func has_no_baby_balls() -> bool:
+	## Returns true if current character disables baby balls (Empty Nester passive)
+	return active_passive == Passive.EMPTY_NESTER
+
+
+func get_special_fire_multiplier() -> int:
+	## Returns multiplier for special ball fires (Empty Nester: 2x, otherwise 1x)
+	## Empty Nester trades baby balls for double special fires
+	if active_passive == Passive.EMPTY_NESTER:
+		return 2
+	return 1
 
 
 # === Shooting state and movement ===

@@ -89,6 +89,10 @@ func _on_parent_ball_fired(_ball: Node) -> void:
 	if GameManager.current_state != GameManager.GameState.PLAYING:
 		return
 
+	# Empty Nester passive disables baby ball spawning entirely
+	if GameManager.has_no_baby_balls():
+		return
+
 	# Skip if the fired ball is already a baby ball (avoid recursion)
 	if _ball and _ball.get("is_baby_ball") == true:
 		return
