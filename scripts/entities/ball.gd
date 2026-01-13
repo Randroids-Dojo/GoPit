@@ -38,6 +38,10 @@ const RETURN_SPEED_MULT: float = 1.5  # Return speed is faster than normal
 var is_returning: bool = false  # True when ball is flying back to player
 var is_catchable: bool = false  # True when ball can be caught (returning and in catch zone)
 
+# Spawn immunity - prevents immediate catch when ball spawns overlapping player
+const SPAWN_IMMUNITY_TIME: float = 0.3  # Seconds before ball can be caught
+var _spawn_time: float = 0.0  # Time.get_ticks_msec() when spawned
+
 # Trail particle scenes per ball type (preloaded for performance)
 const TRAIL_SCENE_FIRE: PackedScene = preload("res://scenes/effects/fire_trail.tscn")
 const TRAIL_SCENE_ICE: PackedScene = preload("res://scenes/effects/ice_trail.tscn")
@@ -63,6 +67,7 @@ var fused_effects: Array = []  # Array of effect strings for fused balls
 
 
 func _ready() -> void:
+	_spawn_time = Time.get_ticks_msec() / 1000.0
 	_apply_ball_type_visuals()
 	queue_redraw()
 
@@ -339,6 +344,12 @@ func _physics_process(delta: float) -> void:
 		elif collider.collision_layer & 8:  # gems layer
 			hit_gem.emit(collider)
 
+		# Hit player - catch and return ball (unless in spawn immunity)
+		elif collider.collision_layer & 16:  # player layer
+			if not _catch_on_collision():
+				# In spawn immunity - pass through player
+				position += direction * 20
+
 
 func _show_crit_effect() -> void:
 	# Brief flash to indicate crit
@@ -403,6 +414,24 @@ func catch() -> bool:
 
 	caught.emit()
 	# Visual catch effect
+	_show_catch_effect()
+	# Return to pool
+	if has_meta("pooled") and PoolManager:
+		reset()
+		PoolManager.release_ball(self)
+	else:
+		queue_free()
+	return true
+
+
+func _catch_on_collision() -> bool:
+	"""Catch ball when it collides with player. Returns false if in spawn immunity."""
+	# Check spawn immunity - don't catch ball immediately after firing
+	var current_time := Time.get_ticks_msec() / 1000.0
+	if current_time - _spawn_time < SPAWN_IMMUNITY_TIME:
+		return false  # Still in spawn immunity, don't catch
+
+	caught.emit()
 	_show_catch_effect()
 	# Return to pool
 	if has_meta("pooled") and PoolManager:
@@ -478,6 +507,7 @@ func reset() -> void:
 	fused_effects.clear()
 	is_returning = false
 	is_catchable = false
+	_spawn_time = Time.get_ticks_msec() / 1000.0  # Reset spawn immunity
 
 	# Reset visual state
 	modulate = Color.WHITE
