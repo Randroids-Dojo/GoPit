@@ -6,6 +6,7 @@ extends Node
 signal evolution_completed(evolved_type: EvolvedBallType)
 signal evolution_upgraded(evolved_type: EvolvedBallType, new_tier: int)
 signal fusion_completed(fused_ball_id: String)
+signal fission_upgrades_changed(total: int)
 
 # Evolution tier levels (damage multipliers)
 enum EvolutionTier {
@@ -171,6 +172,9 @@ var owned_evolved_balls: Dictionary = {}  # EvolvedBallType -> EvolutionTier
 # Key: "TYPE1_TYPE2" (sorted), Value: { "name": "...", "effects": [...], ... }
 var owned_fused_balls: Dictionary = {}
 
+# Fission upgrades tracking for current run
+var fission_upgrades: int = 0
+
 # Currently active evolved/fused ball (if any)
 var active_evolved_type: EvolvedBallType = EvolvedBallType.NONE
 var active_evolved_tier: EvolutionTier = EvolutionTier.TIER_1
@@ -193,6 +197,7 @@ func reset() -> void:
 	active_evolved_type = EvolvedBallType.NONE
 	active_evolved_tier = EvolutionTier.TIER_1
 	active_fused_id = ""
+	fission_upgrades = 0
 	_init_passive_slots()
 
 
@@ -566,7 +571,19 @@ func apply_fission() -> Dictionary:
 		# Update ball upgrade availability
 		has_ball_upgrades = upgradeable.size() > 0 or unowned.size() > 0
 
+	# Track total fission upgrades this run
+	var upgrades_array: Array = result["upgrades"]
+	var upgrade_count: int = upgrades_array.size()
+	if upgrade_count > 0:
+		fission_upgrades += upgrade_count
+		fission_upgrades_changed.emit(fission_upgrades)
+
 	return result
+
+
+func get_fission_upgrades() -> int:
+	"""Get total fission upgrades this run"""
+	return fission_upgrades
 
 
 # ===== PASSIVE UPGRADES (for Fission) =====
