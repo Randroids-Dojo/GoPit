@@ -347,10 +347,20 @@ func _physics_process(delta: float) -> void:
 		elif collider.collision_layer & 8:  # gems layer
 			hit_gem.emit(collider)
 
-		# Hit player - catch and return ball
-		# (spawn immunity handled by collision mask - won't reach here during immunity)
+		# Hit player - catch ball if moving toward player, otherwise ignore
+		# NEVER bounce off player - either catch or pass through
 		elif collider.collision_layer & 16:  # player layer
-			# IMMEDIATELY stop all movement
+			var player_center: Vector2 = collider.global_position
+			var to_player: Vector2 = (player_center - global_position).normalized()
+			var moving_toward_player: bool = direction.dot(to_player) > 0
+
+			if not moving_toward_player:
+				# Ball is moving away from player - ignore collision, let it pass
+				# Move ball slightly to avoid re-collision
+				global_position += direction * 5
+				return
+
+			# Ball is moving toward player - CATCH IT
 			velocity = Vector2.ZERO
 			direction = Vector2.ZERO
 
