@@ -99,6 +99,9 @@ const ACHIEVEMENTS := {
 var bonus_hp: int = 0
 var bonus_damage: float = 0.0
 var bonus_fire_rate: float = 0.0
+var bonus_xp_percent: float = 0.0  # +X% XP from Veteran's Hut
+var bonus_early_xp_percent: float = 0.0  # +X% XP for first N levels from Abbey
+const EARLY_XP_LEVEL_CAP: int = 5  # Abbey bonus applies to first 5 levels
 
 
 func _ready() -> void:
@@ -310,6 +313,12 @@ func _calculate_bonuses() -> void:
 	# Fire rate bonus: -0.05s per level (faster firing)
 	bonus_fire_rate = get_upgrade_level("fire_rate") * 0.05
 
+	# XP gain bonus: +5% per level (max 25%)
+	bonus_xp_percent = get_upgrade_level("xp_gain") * 0.05
+
+	# Early XP bonus: +10% per level for first 5 levels (max 30%)
+	bonus_early_xp_percent = get_upgrade_level("early_xp") * 0.10
+
 
 func get_starting_hp() -> int:
 	# Base HP from GameManager + bonus
@@ -322,6 +331,19 @@ func get_damage_bonus() -> float:
 
 func get_fire_rate_bonus() -> float:
 	return bonus_fire_rate
+
+
+func get_xp_gain_multiplier() -> float:
+	## Returns XP gain multiplier from Veteran's Hut upgrade (1.0 to 1.25)
+	return 1.0 + bonus_xp_percent
+
+
+func get_early_xp_multiplier(current_level: int) -> float:
+	## Returns early-level XP multiplier from Abbey upgrade
+	## Only applies to levels 1 through EARLY_XP_LEVEL_CAP (5)
+	if current_level <= EARLY_XP_LEVEL_CAP:
+		return 1.0 + bonus_early_xp_percent
+	return 1.0
 
 
 # =============================================================================
@@ -585,6 +607,8 @@ func _reset_slot_data() -> void:
 	bonus_hp = 0
 	bonus_damage = 0.0
 	bonus_fire_rate = 0.0
+	bonus_xp_percent = 0.0
+	bonus_early_xp_percent = 0.0
 	coins_changed.emit(pit_coins)
 
 

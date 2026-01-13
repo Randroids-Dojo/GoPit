@@ -91,6 +91,26 @@ static var UPGRADES: Dictionary = {
 		3.0,  # 500, 1500, 4500
 		3,
 		"Start at level %d"
+	),
+	"xp_gain": UpgradeData.new(
+		"xp_gain",
+		"Veteran's Hut",
+		"Increase XP from all sources",
+		"📚",
+		200,
+		2.0,  # 200, 400, 800, 1600, 3200
+		5,
+		"+5%% XP per level"
+	),
+	"early_xp": UpgradeData.new(
+		"early_xp",
+		"Abbey",
+		"Bonus XP for early levels",
+		"⛪",
+		300,
+		2.5,  # 300, 750, 1875
+		3,
+		"+10%% XP (lvl 1-5)"
 	)
 }
 
