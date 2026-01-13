@@ -28,7 +28,8 @@ enum BallType {
 	GHOST,
 	VAMPIRE,
 	BROOD_MOTHER,
-	DARK
+	DARK,
+	CELL
 }
 
 const BALL_DATA := {
@@ -166,6 +167,15 @@ const BALL_DATA := {
 		"cooldown": 0.5,  # Cooldown since it's high risk/reward
 		"color": Color(0.15, 0.05, 0.2),  # Very dark purple
 		"effect": "dark"
+	},
+	BallType.CELL: {
+		"name": "Cell",
+		"description": "Clones on bounce",
+		"base_damage": 6,
+		"speed_multiplier": 0.9,  # Slightly slow (720/800)
+		"cooldown": 0.4,  # Moderate cooldown since it multiplies
+		"color": Color(0.2, 0.8, 0.7),  # Teal/aqua
+		"effect": "cell"
 	}
 }
 

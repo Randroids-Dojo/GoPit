@@ -9,7 +9,7 @@ signal despawned
 signal returned  # Emitted when ball returns to player (bottom of screen)
 signal caught  # Emitted when ball is caught by player (active play bonus)
 
-enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK }
+enum BallType { NORMAL, FIRE, ICE, LIGHTNING, POISON, BLEED, IRON, RADIATION, DISEASE, FROSTBURN, WIND, GHOST, VAMPIRE, BROOD_MOTHER, DARK, CELL }
 
 @export var speed: float = 800.0
 @export var ball_color: Color = Color(0.3, 0.7, 1.0)
@@ -48,6 +48,10 @@ const TRAIL_SCENE_VAMPIRE: PackedScene = preload("res://scenes/effects/vampire_t
 
 # Baby ball properties (auto-spawned, smaller, less damage)
 var is_baby_ball: bool = false
+
+# Cell ball clone tracking (prevents infinite cloning)
+var is_cell_clone: bool = false
+const MAX_CELL_CLONES_PER_BOUNCE: int = 1
 
 # Evolved/Fused ball properties
 var is_evolved: bool = false
@@ -100,6 +104,8 @@ func _apply_ball_type_visuals() -> void:
 			ball_color = Color(0.8, 0.5, 0.9)  # Lavender/pink
 		BallType.DARK:
 			ball_color = Color(0.15, 0.05, 0.2)  # Very dark purple
+		BallType.CELL:
+			ball_color = Color(0.2, 0.8, 0.7)  # Teal/aqua
 
 	# Spawn particle trail for special ball types
 	_spawn_particle_trail()
@@ -244,6 +250,10 @@ func _physics_process(delta: float) -> void:
 			# Removed despawn on max_bounces - balls now return at bottom of screen
 			direction = direction.bounce(collision.get_normal())
 			SoundManager.play(SoundManager.SoundType.HIT_WALL)
+
+			# Cell ball clones on bounce (only original cells clone, not clones)
+			if ball_type == BallType.CELL and not is_cell_clone and not is_baby_ball:
+				_spawn_cell_clone(collision.get_normal())
 
 		# Hit enemy
 		elif collider.collision_layer & 4:  # enemies layer
@@ -432,6 +442,7 @@ func reset() -> void:
 
 	# Reset flags
 	is_baby_ball = false
+	is_cell_clone = false
 	is_evolved = false
 	evolved_type = 0
 	is_fused = false
@@ -596,6 +607,12 @@ func _apply_ball_type_effect(enemy: Node2D, _base_damage: int) -> void:
 			# Self-destruct after hit
 			call_deferred("despawn")
 
+		BallType.CELL:
+			# Cell: Main effect is clone-on-bounce, hitting enemies just shows visual
+			enemy.modulate = Color(0.3, 0.9, 0.8)
+			var tween := enemy.create_tween()
+			tween.tween_property(enemy, "modulate", Color.WHITE, 0.2)
+
 
 func _chain_lightning(hit_enemy: Node2D) -> void:
 	var chain_range: float = 150.0
@@ -674,6 +691,53 @@ func _spawn_brood_baby(spawn_pos: Vector2) -> void:
 		balls_container.add_child(baby)
 	else:
 		get_parent().add_child(baby)
+
+
+func _spawn_cell_clone(bounce_normal: Vector2) -> void:
+	"""Spawn a cell clone on bounce - clone goes in mirrored direction"""
+	var ball_scene := preload("res://scenes/entities/ball.tscn")
+	var clone: Node2D
+
+	# Get from pool if available
+	if PoolManager:
+		clone = PoolManager.get_ball()
+	else:
+		clone = ball_scene.instantiate()
+
+	clone.position = global_position
+	clone.scale = Vector2(0.8, 0.8)  # Slightly smaller than parent
+	clone.is_cell_clone = true  # Mark as clone to prevent further cloning
+	clone.damage = int(damage * 0.7)  # 70% of parent damage
+	clone.speed = speed * 0.9  # Slightly slower
+
+	# Set cell ball type
+	if clone.has_method("set_ball_type"):
+		clone.set_ball_type(BallType.CELL)
+
+	# Clone goes in alternate bounce direction (reflect original direction)
+	# This creates a splitting effect
+	var original_dir := -direction.bounce(bounce_normal)  # Pre-bounce direction
+	clone.direction = original_dir.bounce(bounce_normal)  # Same as parent post-bounce
+	# Add slight spread to make it visually distinct
+	clone.direction = clone.direction.rotated(randf_range(-0.3, 0.3))
+
+	# Add to game
+	var balls_container := get_tree().get_first_node_in_group("balls_container")
+	if balls_container:
+		balls_container.add_child(clone)
+	else:
+		get_parent().add_child(clone)
+
+	# Visual clone effect
+	_show_cell_split_effect()
+
+
+func _show_cell_split_effect() -> void:
+	"""Visual effect when cell ball splits"""
+	# Brief flash and pulse
+	modulate = Color(0.5, 1.5, 1.3)
+	var tween := create_tween()
+	tween.tween_property(self, "modulate", Color.WHITE, 0.15)
 
 
 func _apply_evolved_effect(enemy: Node2D, base_damage: int) -> void:
