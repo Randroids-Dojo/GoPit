@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Broodmother"
+description = "A swarm commander whose children overwhelm the enemy. Weak alone, unstoppable with the horde."
+endurance = 1.1
+base_strength = 4
+strength_scaling = 5
+strength = 0.7
+leadership = 1.8
+speed = 0.8
+base_dexterity = 3
+dexterity_scaling = 5
+dexterity = 0.8
+base_intelligence = 5
+intelligence_scaling = 3
+intelligence = 1.0
+base_fire_rate = 1.5
+fire_rate_scaling = 4
+starting_ball = 0
+passive_name = "Swarm Lord"
+passive_description = "+50% baby ball damage. Your army of smaller balls hits much harder."
+is_unlocked = false
+unlock_requirement = "Spawn 100 baby balls in one run"

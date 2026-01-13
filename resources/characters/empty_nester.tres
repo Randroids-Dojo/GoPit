@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Empty Nester"
+description = "A lone wolf who traded support for raw power. No baby balls, but special fires happen twice as often."
+endurance = 0.9
+base_strength = 10
+strength_scaling = 2
+strength = 1.2
+leadership = 0.0
+speed = 1.1
+base_dexterity = 8
+dexterity_scaling = 2
+dexterity = 1.2
+base_intelligence = 6
+intelligence_scaling = 3
+intelligence = 1.0
+base_fire_rate = 3.0
+fire_rate_scaling = 1
+starting_ball = 0
+passive_name = "Empty Nester"
+passive_description = "No baby balls spawn. Instead, evolved/special balls fire 2x per shot."
+is_unlocked = false
+unlock_requirement = "Complete a run without any baby ball kills"

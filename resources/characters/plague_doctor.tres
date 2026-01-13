@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Character" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+character_name = "Plague Doctor"
+description = "A master of afflictions. Poison spreads further and lasts longer, turning the battlefield toxic."
+endurance = 0.9
+base_strength = 5
+strength_scaling = 4
+strength = 0.9
+leadership = 0.6
+speed = 0.9
+base_dexterity = 6
+dexterity_scaling = 3
+dexterity = 1.0
+base_intelligence = 12
+intelligence_scaling = 1
+intelligence = 1.4
+base_fire_rate = 1.5
+fire_rate_scaling = 3
+starting_ball = 4
+passive_name = "Pandemic"
+passive_description = "+50% poison damage and duration. Toxins spread like wildfire."
+is_unlocked = false
+unlock_requirement = "Kill 200 enemies with poison damage"
