@@ -350,18 +350,24 @@ func _physics_process(delta: float) -> void:
 		# Hit player - catch and return ball
 		# (spawn immunity handled by collision mask - won't reach here during immunity)
 		elif collider.collision_layer & 16:  # player layer
-			# Emit caught signal, show effect, then delete
+			# Aggressively stop and remove ball
+			set_physics_process(false)
+			set_process(false)
+			hide()
+			global_position = Vector2(-9999, -9999)  # Move off screen
+			collision_layer = 0  # Disable all collision
+			collision_mask = 0
+
+			# Emit signals and show effect
 			caught.emit()
 			_show_catch_effect()
-			# Use a timer to delete after brief delay, ensuring clean removal
-			var timer := get_tree().create_timer(0.1)
+
+			# Delete after longer delay
+			var timer := get_tree().create_timer(0.5)
 			timer.timeout.connect(func():
 				if is_instance_valid(self):
 					queue_free()
 			)
-			# Stop processing immediately
-			set_physics_process(false)
-			hide()
 			return
 
 
