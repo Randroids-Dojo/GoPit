@@ -6,11 +6,12 @@ signal upgrade_selected(upgrade_type: String)
 
 # Upgrade categories for card generation
 enum CardType {
-	PASSIVE,      # Traditional stat upgrades (uses FusionRegistry.PassiveType)
-	NEW_BALL,     # Acquire a new ball type
+	PASSIVE,       # Traditional stat upgrades (uses FusionRegistry.PassiveType)
+	NEW_BALL,      # Acquire a new ball type
 	LEVEL_UP_BALL, # Level up an owned ball (L1->L2 or L2->L3)
-	FISSION,      # Random upgrades (1-3 ball level-ups or new balls)
-	HEAL          # One-time heal (not tracked in stacks)
+	FISSION,       # Random upgrades (1-3 ball level-ups or new balls)
+	HEAL,          # One-time heal (not tracked in stacks)
+	TIER_UPGRADE   # Upgrade an evolved ball to next tier (Advanced/Ultimate)
 }
 
 # Heal is special - not tracked in FusionRegistry as it's not a stackable passive
@@ -84,7 +85,15 @@ func _randomize_cards() -> void:
 				"passive_type": passive_type
 			})
 
-	# 5. Always add heal option (not a stackable passive)
+		# 5. Add tier upgrades for evolved balls (Advanced/Ultimate)
+		var tier_upgrades := FusionRegistry.get_available_upgrades()
+		for upgrade_data in tier_upgrades:
+			pool.append({
+				"card_type": CardType.TIER_UPGRADE,
+				"upgrade_data": upgrade_data
+			})
+
+	# 6. Always add heal option (not a stackable passive)
 	pool.append({
 		"card_type": CardType.HEAL
 	})
@@ -149,6 +158,18 @@ func _update_cards() -> void:
 					if desc_label:
 						desc_label.text = "Random 1-5 upgrades!"
 
+				CardType.TIER_UPGRADE:
+					var upgrade_data: Dictionary = card_data["upgrade_data"]
+					var tier_name: String = upgrade_data.get("name", "Unknown")
+					var new_tier: int = upgrade_data.get("new_tier", 2)
+					var tier_label: String = FusionRegistry.get_tier_name(new_tier) if FusionRegistry else "Advanced"
+					var mult: float = FusionRegistry.get_tier_damage_multiplier(new_tier) if FusionRegistry else 2.5
+
+					if name_label:
+						name_label.text = tier_name
+					if desc_label:
+						desc_label.text = "%s tier: %.1fx damage" % [tier_label, mult]
+
 				CardType.HEAL:
 					if name_label:
 						name_label.text = HEAL_DATA["name"]
@@ -196,6 +217,18 @@ func _on_card_pressed(index: int) -> void:
 				else:
 					selected_name = "FISSION"
 				SoundManager.play(SoundManager.SoundType.FISSION)
+
+		CardType.TIER_UPGRADE:
+			if FusionRegistry:
+				var upgrade_data: Dictionary = card_data["upgrade_data"]
+				var evolved_type: FusionRegistry.EvolvedBallType = upgrade_data["evolved_type"]
+				var sacrifice_options: Array = upgrade_data.get("sacrifice_options", [])
+				if not sacrifice_options.is_empty():
+					# Use first available L3 ball as sacrifice
+					var sacrifice_ball: int = sacrifice_options[0]
+					if FusionRegistry.upgrade_evolution(evolved_type, sacrifice_ball):
+						selected_name = upgrade_data.get("name", "Upgraded")
+						SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 
 		CardType.HEAL:
 			GameManager.heal(30)

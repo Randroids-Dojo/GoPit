@@ -4,7 +4,29 @@ extends Node
 ## Fusion: Any two L3 balls -> combined ball (cannot further evolve)
 
 signal evolution_completed(evolved_type: EvolvedBallType)
+signal evolution_upgraded(evolved_type: EvolvedBallType, new_tier: int)
 signal fusion_completed(fused_ball_id: String)
+
+# Evolution tier levels (damage multipliers)
+enum EvolutionTier {
+	TIER_1 = 1,  # Base evolution: 1.5x damage (from L3 + L3)
+	TIER_2 = 2,  # Advanced: 2.5x damage (evolved + L3)
+	TIER_3 = 3   # Ultimate: 4x damage (advanced + L3)
+}
+
+# Tier damage multipliers
+const TIER_DAMAGE_MULTIPLIERS := {
+	EvolutionTier.TIER_1: 1.5,
+	EvolutionTier.TIER_2: 2.5,
+	EvolutionTier.TIER_3: 4.0
+}
+
+# Tier name prefixes for display
+const TIER_PREFIXES := {
+	EvolutionTier.TIER_1: "",          # No prefix for base
+	EvolutionTier.TIER_2: "Advanced ",
+	EvolutionTier.TIER_3: "Ultimate "
+}
 
 # Evolved ball types from specific recipes
 enum EvolvedBallType {
@@ -143,7 +165,7 @@ const EVOLVED_BALL_DATA := {
 }
 
 # Owned evolved balls for current run
-var owned_evolved_balls: Dictionary = {}  # EvolvedBallType -> true
+var owned_evolved_balls: Dictionary = {}  # EvolvedBallType -> EvolutionTier
 
 # Owned fused balls for current run (generic fusions)
 # Key: "TYPE1_TYPE2" (sorted), Value: { "name": "...", "effects": [...], ... }
@@ -151,6 +173,7 @@ var owned_fused_balls: Dictionary = {}
 
 # Currently active evolved/fused ball (if any)
 var active_evolved_type: EvolvedBallType = EvolvedBallType.NONE
+var active_evolved_tier: EvolutionTier = EvolutionTier.TIER_1
 var active_fused_id: String = ""
 
 
@@ -168,6 +191,7 @@ func reset() -> void:
 	owned_evolved_balls.clear()
 	owned_fused_balls.clear()
 	active_evolved_type = EvolvedBallType.NONE
+	active_evolved_tier = EvolutionTier.TIER_1
 	active_fused_id = ""
 	_init_passive_slots()
 
@@ -240,7 +264,7 @@ func get_available_evolutions() -> Array[Dictionary]:
 
 
 func evolve_balls(ball_a: BallRegistry.BallType, ball_b: BallRegistry.BallType) -> EvolvedBallType:
-	"""Evolve two L3 balls into an evolved ball. Returns NONE if invalid."""
+	"""Evolve two L3 balls into a Tier 1 evolved ball. Returns NONE if invalid."""
 	var result := get_evolution_result(ball_a, ball_b)
 	if result == EvolvedBallType.NONE:
 		return EvolvedBallType.NONE
@@ -253,12 +277,99 @@ func evolve_balls(ball_a: BallRegistry.BallType, ball_b: BallRegistry.BallType) 
 	BallRegistry.owned_balls.erase(ball_a)
 	BallRegistry.owned_balls.erase(ball_b)
 
-	# Add evolved ball
-	owned_evolved_balls[result] = true
+	# Add evolved ball at Tier 1
+	owned_evolved_balls[result] = EvolutionTier.TIER_1
 	active_evolved_type = result
+	active_evolved_tier = EvolutionTier.TIER_1
 
 	evolution_completed.emit(result)
 	return result
+
+
+func can_upgrade_evolution(evolved_type: EvolvedBallType) -> bool:
+	"""Check if an evolved ball can be upgraded to the next tier."""
+	if not owned_evolved_balls.has(evolved_type):
+		return false
+
+	var current_tier: int = owned_evolved_balls[evolved_type]
+	if current_tier >= EvolutionTier.TIER_3:
+		return false  # Already at max tier
+
+	# Need at least one L3 ball to upgrade
+	return BallRegistry.get_fusion_ready_balls().size() > 0
+
+
+func get_evolution_tier(evolved_type: EvolvedBallType) -> int:
+	"""Get the current tier of an evolved ball (0 if not owned)."""
+	return owned_evolved_balls.get(evolved_type, 0)
+
+
+func get_tier_name(tier: int) -> String:
+	"""Get display name for a tier."""
+	match tier:
+		EvolutionTier.TIER_1: return "Evolved"
+		EvolutionTier.TIER_2: return "Advanced"
+		EvolutionTier.TIER_3: return "Ultimate"
+		_: return "Unknown"
+
+
+func get_tier_damage_multiplier(tier: int) -> float:
+	"""Get the damage multiplier for a tier."""
+	return TIER_DAMAGE_MULTIPLIERS.get(tier, 1.0)
+
+
+func upgrade_evolution(evolved_type: EvolvedBallType, sacrifice_ball: BallRegistry.BallType) -> bool:
+	"""Upgrade an evolved ball to the next tier using an L3 ball. Returns true if successful."""
+	if not can_upgrade_evolution(evolved_type):
+		return false
+
+	# Check sacrifice ball is L3
+	if not BallRegistry.is_fusion_ready(sacrifice_ball):
+		return false
+
+	var current_tier: int = owned_evolved_balls[evolved_type]
+	var new_tier: int = current_tier + 1
+
+	# Consume the sacrifice ball
+	BallRegistry.owned_balls.erase(sacrifice_ball)
+
+	# Upgrade tier
+	owned_evolved_balls[evolved_type] = new_tier
+
+	# Update active if this is the active evolved ball
+	if active_evolved_type == evolved_type:
+		active_evolved_tier = new_tier
+
+	evolution_upgraded.emit(evolved_type, new_tier)
+	return true
+
+
+func get_available_upgrades() -> Array[Dictionary]:
+	"""Get all evolution upgrades that can be done with current L3 balls."""
+	var available: Array[Dictionary] = []
+	var fusion_ready := BallRegistry.get_fusion_ready_balls()
+
+	if fusion_ready.is_empty():
+		return available
+
+	for evolved_type in owned_evolved_balls:
+		var current_tier: int = owned_evolved_balls[evolved_type]
+		if current_tier >= EvolutionTier.TIER_3:
+			continue  # Already maxed
+
+		var data := get_evolved_ball_data(evolved_type)
+		var base_name: String = data.get("name", "Unknown")
+		var new_tier: int = current_tier + 1
+
+		available.append({
+			"evolved_type": evolved_type,
+			"current_tier": current_tier,
+			"new_tier": new_tier,
+			"name": TIER_PREFIXES[new_tier] + base_name,
+			"sacrifice_options": fusion_ready.duplicate()
+		})
+
+	return available
 
 
 # ===== GENERIC FUSION (Any Two L3 Balls) =====
@@ -331,10 +442,35 @@ func get_evolved_ball_data(evolved_type: EvolvedBallType) -> Dictionary:
 	return EVOLVED_BALL_DATA.get(evolved_type, {})
 
 
-func get_evolved_ball_name(evolved_type: EvolvedBallType) -> String:
-	"""Get display name for an evolved ball"""
+func get_evolved_ball_name(evolved_type: EvolvedBallType, include_tier: bool = true) -> String:
+	"""Get display name for an evolved ball (with tier prefix if owned and include_tier is true)"""
 	var data := get_evolved_ball_data(evolved_type)
-	return data.get("name", "Unknown")
+	var base_name: String = data.get("name", "Unknown")
+
+	if include_tier and owned_evolved_balls.has(evolved_type):
+		var tier: int = owned_evolved_balls[evolved_type]
+		return TIER_PREFIXES.get(tier, "") + base_name
+
+	return base_name
+
+
+func get_evolved_ball_damage(evolved_type: EvolvedBallType) -> int:
+	"""Get damage for an evolved ball (scaled by tier if owned)"""
+	var data := get_evolved_ball_data(evolved_type)
+	var base_damage: int = data.get("base_damage", 10)
+
+	if owned_evolved_balls.has(evolved_type):
+		var tier: int = owned_evolved_balls[evolved_type]
+		var mult: float = get_tier_damage_multiplier(tier)
+		return int(base_damage * mult)
+
+	return base_damage
+
+
+func get_evolved_ball_speed(evolved_type: EvolvedBallType) -> float:
+	"""Get speed for an evolved ball"""
+	var data := get_evolved_ball_data(evolved_type)
+	return data.get("base_speed", 800.0)
 
 
 func get_evolved_ball_color(evolved_type: EvolvedBallType) -> Color:
