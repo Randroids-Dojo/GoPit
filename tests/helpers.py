@@ -43,14 +43,19 @@ PATHS = {
 # WAIT HELPERS
 # =============================================================================
 async def wait_for_fire_ready(game, fire_button_path=None, timeout=WAIT_TIMEOUT):
-    """Wait for fire button to be ready with timeout."""
+    """Wait for fire button to be ready with timeout.
+
+    With salvo firing, both cooldown (is_ready) and ball availability
+    (_balls_available) must be true before firing is possible.
+    """
     if fire_button_path is None:
         fire_button_path = PATHS["fire_button"]
 
     elapsed = 0
     while elapsed < timeout:
         is_ready = await game.get_property(fire_button_path, "is_ready")
-        if is_ready:
+        balls_available = await game.get_property(fire_button_path, "_balls_available")
+        if is_ready and balls_available:
             return True
         await asyncio.sleep(0.1)
         elapsed += 0.1
