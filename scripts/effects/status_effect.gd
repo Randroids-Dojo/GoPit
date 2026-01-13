@@ -2,7 +2,7 @@ class_name StatusEffect
 extends RefCounted
 ## Base class for status effects that can be applied to enemies
 
-enum Type { BURN, FREEZE, POISON, BLEED, RADIATION, DISEASE, FROSTBURN, WIND }
+enum Type { BURN, FREEZE, POISON, BLEED, RADIATION, DISEASE, FROSTBURN, WIND, CHARM }
 
 # Effect configuration
 var type: Type
@@ -80,6 +80,12 @@ func _configure() -> void:
 			damage_per_tick = 0.0  # No damage
 			max_stacks = 1  # Doesn't stack - refreshes duration
 			slow_multiplier = 0.7  # 30% slow (lighter than freeze's 50%)
+		Type.CHARM:
+			# Charm: Mind control - enemy attacks other enemies
+			duration = 5.0 * duration_mult
+			damage_per_tick = 0.0  # No direct damage
+			max_stacks = 1  # Doesn't stack - refreshes duration
+			slow_multiplier = 1.0  # No slow
 
 	time_remaining = duration
 
@@ -147,6 +153,8 @@ func get_color() -> Color:
 			return Color(0.3, 0.6, 1.2)  # Pale frost blue
 		Type.WIND:
 			return Color(0.8, 1.0, 0.8)  # Light green-white (airy)
+		Type.CHARM:
+			return Color(1.0, 0.4, 0.8)  # Pink/magenta for mind control
 	return Color.WHITE
 
 
@@ -169,6 +177,8 @@ func get_type_name() -> String:
 			return "Frostburn"
 		Type.WIND:
 			return "Wind"
+		Type.CHARM:
+			return "Charm"
 	return "Unknown"
 
 

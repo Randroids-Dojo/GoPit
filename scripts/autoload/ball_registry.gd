@@ -29,7 +29,8 @@ enum BallType {
 	VAMPIRE,
 	BROOD_MOTHER,
 	DARK,
-	CELL
+	CELL,
+	CHARM
 }
 
 const BALL_DATA := {
@@ -176,6 +177,15 @@ const BALL_DATA := {
 		"cooldown": 0.4,  # Moderate cooldown since it multiplies
 		"color": Color(0.2, 0.8, 0.7),  # Teal/aqua
 		"effect": "cell"
+	},
+	BallType.CHARM: {
+		"name": "Charm",
+		"description": "Mind controls enemies",
+		"base_damage": 5,
+		"speed_multiplier": 1.0,  # Standard speed
+		"cooldown": 0.3,  # Light cooldown
+		"color": Color(1.0, 0.4, 0.8),  # Pink/magenta
+		"effect": "charm"
 	}
 }
 
