@@ -34,6 +34,7 @@ var _particle_trail: GPUParticles2D = null
 const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position - start return
 const RETURN_COMPLETE_Y: float = 350.0  # Near player position - complete return
 const CATCH_ZONE_Y: float = 600.0  # Ball is catchable when y < this (in catch zone)
+const RETURN_SPEED_MULT: float = 1.5  # Return speed is faster than normal
 var is_returning: bool = false  # True when ball is flying back to player
 var is_catchable: bool = false  # True when ball can be caught (returning and in catch zone)
 
@@ -222,7 +223,9 @@ func _draw() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	velocity = direction * speed
+	# Returning balls move faster and home toward player
+	var current_speed := speed * RETURN_SPEED_MULT if is_returning else speed
+	velocity = direction * current_speed
 
 	# Update trail
 	if ball_type != BallType.NORMAL:
@@ -237,12 +240,18 @@ func _physics_process(delta: float) -> void:
 		if global_position.y > RETURN_Y_THRESHOLD:
 			_start_return()
 	else:
+		# Continuously update direction to home toward player (BallxPit-style)
+		_update_return_direction()
 		# Check if ball is in catch zone (can be caught by player)
 		is_catchable = global_position.y < CATCH_ZONE_Y
-		# Check if ball has returned to player area
-		if global_position.y < RETURN_COMPLETE_Y:
+		# Check if ball has returned to player area (close to player position)
+		var player_pos := _get_player_position()
+		if global_position.distance_to(player_pos) < 50.0:
 			return_to_player()
 			return
+		# When returning, move directly to player (skip wall collision)
+		global_position += velocity * delta
+		return  # Skip normal collision handling
 
 	var collision := move_and_collide(velocity * delta)
 	if collision:
@@ -353,12 +362,27 @@ func despawn() -> void:
 
 
 func _start_return() -> void:
-	"""Start returning to player - ball reverses direction and flies back"""
+	"""Start returning to player - ball homes toward player position"""
 	is_returning = true
-	# Reverse direction to fly back toward player (mostly upward)
-	direction = Vector2.UP
+	# Set direction toward player (will be updated each frame)
+	_update_return_direction()
 	# Visual feedback - slight tint to show returning state
 	modulate = Color(0.8, 0.8, 1.0, 0.9)
+
+
+func _update_return_direction() -> void:
+	"""Update direction to home toward player's current position"""
+	var player_pos := _get_player_position()
+	direction = (player_pos - global_position).normalized()
+
+
+func _get_player_position() -> Vector2:
+	"""Get the current player position for homing"""
+	var players := get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		return players[0].global_position
+	# Fallback: aim at center-top of screen if no player found
+	return Vector2(360, 300)
 
 
 func return_to_player() -> void:
