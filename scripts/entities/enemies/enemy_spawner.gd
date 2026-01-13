@@ -1,9 +1,19 @@
 class_name EnemySpawner
 extends Node2D
 ## Spawns enemies at random X positions at the top of the screen
+## Supports various spawn formations for visual variety
 
 signal enemy_spawned(enemy: EnemyBase)
 signal enemy_died(enemy: EnemyBase)
+
+## Spawn formation types
+enum Formation {
+	SINGLE,      # Single enemy (default)
+	LINE,        # Horizontal line
+	V_SHAPE,     # V-shaped arrow pattern
+	CLUSTER,     # Tight cluster group
+	DIAGONAL,    # Diagonal line
+}
 
 @export var slime_scene: PackedScene
 @export var spawn_interval: float = 2.0
@@ -13,6 +23,7 @@ signal enemy_died(enemy: EnemyBase)
 @export var burst_chance: float = 0.1  # 10% chance for burst spawn
 @export var burst_count_min: int = 2
 @export var burst_count_max: int = 3
+@export var formation_chance: float = 0.15  # 15% chance for formation spawn
 
 # Enemy variety
 var bat_scene: PackedScene = preload("res://scenes/entities/enemies/bat.tscn")
@@ -163,8 +174,11 @@ func _fallback_enemy_choice() -> PackedScene:
 
 
 func _on_spawn_timer_timeout() -> void:
+	# Check for formation spawn (higher priority than burst)
+	if randf() < formation_chance:
+		_formation_spawn()
 	# Check for burst spawn
-	if randf() < burst_chance:
+	elif randf() < burst_chance:
 		_burst_spawn()
 	else:
 		spawn_enemy()
@@ -177,6 +191,158 @@ func _burst_spawn() -> void:
 	var count := randi_range(burst_count_min, burst_count_max)
 	for i in range(count):
 		spawn_enemy()
+
+
+func _formation_spawn() -> void:
+	"""Spawn enemies in a formation pattern."""
+	# Choose random formation (excluding SINGLE and CLUSTER which are handled separately)
+	var formations: Array[Formation] = [Formation.LINE, Formation.V_SHAPE, Formation.DIAGONAL]
+	var formation: Formation = formations[randi() % formations.size()]
+	spawn_formation(formation)
+
+
+func spawn_formation(formation: Formation, count: int = 0) -> Array[EnemyBase]:
+	"""Spawn enemies in the specified formation. Returns array of spawned enemies."""
+	match formation:
+		Formation.SINGLE:
+			var enemy := spawn_enemy()
+			return [enemy] if enemy else []
+		Formation.LINE:
+			return _spawn_line_formation(count if count > 0 else randi_range(3, 5))
+		Formation.V_SHAPE:
+			return _spawn_v_formation(count if count > 0 else randi_range(5, 7))
+		Formation.CLUSTER:
+			return _spawn_cluster_formation(count if count > 0 else randi_range(3, 5))
+		Formation.DIAGONAL:
+			return _spawn_diagonal_formation(count if count > 0 else randi_range(3, 5))
+	return []
+
+
+func _spawn_line_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in a horizontal line formation."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene  # Don't use swarms for formations
+
+	# Calculate spacing
+	var total_width: float = _screen_width - (spawn_margin * 2)
+	var spacing: float = total_width / (count + 1)
+	var start_x: float = spawn_margin + spacing
+
+	for i in range(count):
+		var enemy: EnemyBase = scene.instantiate()
+		var x_pos: float = start_x + (spacing * i)
+		enemy.global_position = Vector2(x_pos, spawn_y_offset)
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+		enemies.append(enemy)
+
+	return enemies
+
+
+func _spawn_v_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in a V-shape (arrow) formation."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene
+
+	# V-formation parameters
+	var center_x: float = _screen_width / 2.0
+	var spacing_x: float = 50.0
+	var spacing_y: float = 30.0
+
+	# Calculate positions - leader at front, wings behind
+	var positions: Array[Vector2] = []
+	var half: int = count / 2
+
+	# Leader position (front of V)
+	positions.append(Vector2(center_x, spawn_y_offset))
+
+	# Left and right wings
+	for i in range(1, half + 1):
+		# Left wing
+		positions.append(Vector2(center_x - spacing_x * i, spawn_y_offset - spacing_y * i))
+		# Right wing
+		if positions.size() < count:
+			positions.append(Vector2(center_x + spacing_x * i, spawn_y_offset - spacing_y * i))
+
+	# Spawn enemies at positions
+	for i in range(mini(count, positions.size())):
+		var enemy: EnemyBase = scene.instantiate()
+		enemy.global_position = positions[i]
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+		enemies.append(enemy)
+
+	return enemies
+
+
+func _spawn_cluster_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in a tight cluster formation."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene
+
+	var center_x: float = randf_range(spawn_margin + 60, _screen_width - spawn_margin - 60)
+	var cluster_radius: float = 40.0
+
+	for i in range(count):
+		var enemy: EnemyBase = scene.instantiate()
+		# Random position within cluster radius
+		var offset_x: float = randf_range(-cluster_radius, cluster_radius)
+		var offset_y: float = randf_range(-cluster_radius, cluster_radius)
+		enemy.global_position = Vector2(center_x + offset_x, spawn_y_offset + offset_y)
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+		enemies.append(enemy)
+
+	return enemies
+
+
+func _spawn_diagonal_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in a diagonal line formation."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene
+
+	# Diagonal direction: left-to-right or right-to-left
+	var left_to_right: bool = randf() < 0.5
+	var spacing_x: float = 45.0
+	var spacing_y: float = 25.0
+
+	var start_x: float
+	if left_to_right:
+		start_x = spawn_margin + 50
+	else:
+		start_x = _screen_width - spawn_margin - 50
+
+	for i in range(count):
+		var enemy: EnemyBase = scene.instantiate()
+		var x_offset: float = spacing_x * i * (1 if left_to_right else -1)
+		var y_offset: float = spacing_y * i
+		enemy.global_position = Vector2(start_x + x_offset, spawn_y_offset - y_offset)
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+		enemies.append(enemy)
+
+	return enemies
+
+
+func get_available_formations() -> Array[Formation]:
+	"""Get list of all available spawn formations."""
+	return [Formation.SINGLE, Formation.LINE, Formation.V_SHAPE, Formation.CLUSTER, Formation.DIAGONAL]
 
 
 func _on_enemy_died(enemy: EnemyBase) -> void:
