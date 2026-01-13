@@ -36,12 +36,17 @@ func _connect_to_ball_spawner() -> void:
 
 func start() -> void:
 	_player = get_tree().get_first_node_in_group("player")
-	# Queue-based: no timer to start
+	# Reconnect to ball_spawner signal if not connected
+	if _ball_spawner and _ball_spawner.has_signal("ball_spawned"):
+		if not _ball_spawner.ball_spawned.is_connected(_on_parent_ball_fired):
+			_ball_spawner.ball_spawned.connect(_on_parent_ball_fired)
 
 
 func stop() -> void:
-	# Queue-based: nothing to stop
-	pass
+	# Disconnect from ball_spawner signal to stop queueing baby balls
+	if _ball_spawner and _ball_spawner.has_signal("ball_spawned"):
+		if _ball_spawner.ball_spawned.is_connected(_on_parent_ball_fired):
+			_ball_spawner.ball_spawned.disconnect(_on_parent_ball_fired)
 
 
 func set_leadership(value: float) -> void:
