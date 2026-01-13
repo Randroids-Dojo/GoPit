@@ -123,7 +123,7 @@ var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
 
 # Passive ability flags (set based on selected character)
-enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER }
+enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER, COLLECTOR }
 var active_passive: Passive = Passive.NONE
 
 # High score persistence
@@ -311,7 +311,8 @@ const VALID_PASSIVES := {
 	"Squad Leader": Passive.SQUAD_LEADER,
 	"Lifesteal": Passive.LIFESTEAL,
 	"Bounce Master": Passive.BOUNCE_MASTER,
-	"Executioner": Passive.EXECUTIONER
+	"Executioner": Passive.EXECUTIONER,
+	"Collector": Passive.COLLECTOR
 }
 
 
@@ -584,6 +585,27 @@ func get_execute_threshold() -> float:
 	if active_passive == Passive.EXECUTIONER:
 		return 0.20
 	return 0.0
+
+
+# Built-in magnet range for Collector passive
+const COLLECTOR_MAGNET_RANGE: float = 1000.0
+
+
+func get_effective_magnetism_range() -> float:
+	## Returns the effective gem magnetism range, accounting for passives
+	## Collector passive: Always max range (1000px)
+	## Boss fight: Uses BOSS_MAGNET_RANGE (2000px)
+	## Otherwise: Uses gem_magnetism_range from upgrades
+	if active_passive == Passive.COLLECTOR:
+		return COLLECTOR_MAGNET_RANGE
+	if is_boss_fight:
+		return BOSS_MAGNET_RANGE
+	return gem_magnetism_range
+
+
+func has_built_in_magnet() -> bool:
+	## Returns true if current character has built-in magnet (Collector passive)
+	return active_passive == Passive.COLLECTOR
 
 
 # === Shooting state and movement ===

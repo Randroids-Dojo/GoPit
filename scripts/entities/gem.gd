@@ -44,11 +44,9 @@ func _process(delta: float) -> void:
 		_collect()
 		return
 
-	# Check for magnetism toward player (auto-magnet during boss fights)
+	# Check for magnetism toward player (auto-magnet during boss fights or with Collector passive)
 	_being_attracted = false
-	var magnetism_range := GameManager.gem_magnetism_range
-	if GameManager.is_boss_fight:
-		magnetism_range = GameManager.BOSS_MAGNET_RANGE
+	var magnetism_range := GameManager.get_effective_magnetism_range()
 	if magnetism_range > 0 and _player:
 		var distance_to_player := global_position.distance_to(_player.global_position)
 		if distance_to_player < magnetism_range:
