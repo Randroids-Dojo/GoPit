@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Biome" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/golem.tscn" id="2_golem"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/crab.tscn" id="3_crab"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/slime.tscn" id="4_slime"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/swarm.tscn" id="5_swarm"]
+[ext_resource type="PackedScene" uid="uid://ice_patch_scene" path="res://scenes/entities/hazards/ice_patch.tscn" id="6_hazard"]
+
+[resource]
+script = ExtResource("1_biome")
+biome_name = "Crystal Caverns"
+background_color = Color(0.1, 0.08, 0.15, 1)
+wall_color = Color(0.4, 0.3, 0.5, 1)
+waves_before_boss = 10
+enemy_scenes = [ExtResource("2_golem"), ExtResource("3_crab"), ExtResource("4_slime"), ExtResource("5_swarm")]
+hazard_scene = ExtResource("6_hazard")
+hazard_count = 5

@@ -7,10 +7,14 @@ const STAGE_COLORS := [
 	Color(0.102, 0.102, 0.18),  # The Pit - dark blue
 	Color(0.15, 0.25, 0.35),    # Frozen Depths - icy blue
 	Color(0.35, 0.2, 0.1),      # Burning Sands - orange
-	Color(0.15, 0.1, 0.2),      # Final Descent - dark purple
+	Color(0.15, 0.1, 0.2),      # Void Chasm - dark purple
+	Color(0.1, 0.2, 0.08),      # Toxic Marsh - sickly green
+	Color(0.08, 0.12, 0.25),    # Storm Spire - electric blue
+	Color(0.15, 0.12, 0.22),    # Crystal Caverns - purple crystal
+	Color(0.03, 0.03, 0.08),    # The Abyss - deepest black
 ]
 
-const STAGE_ICONS := ["1", "2", "3", "4"]
+const STAGE_ICONS := ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 var _stages: Array[Resource] = []
 var _current_index: int = 0
@@ -46,6 +50,10 @@ func _load_stages() -> void:
 		preload("res://resources/biomes/frozen_depths.tres"),
 		preload("res://resources/biomes/burning_sands.tres"),
 		preload("res://resources/biomes/final_descent.tres"),
+		preload("res://resources/biomes/toxic_marsh.tres"),
+		preload("res://resources/biomes/storm_spire.tres"),
+		preload("res://resources/biomes/crystal_caverns.tres"),
+		preload("res://resources/biomes/the_abyss.tres"),
 	]
 
 
@@ -158,7 +166,11 @@ func _get_stage_description(index: int) -> String:
 		0: return "Where it all begins. Basic enemies and learning the ropes."
 		1: return "Chilling depths with frozen foes. Ice hazards await."
 		2: return "Scorching desert with fire enemies. Stay cool."
-		3: return "The final challenge. Everything comes together."
+		3: return "Darkness consumes all. Void zones drain your will."
+		4: return "Poisonous swamps breed deadly swarms. Watch your step."
+		5: return "Lightning strikes from above. Speed is survival."
+		6: return "Ancient crystals hide stone guardians. Shatter or be shattered."
+		7: return "The deepest abyss. Only the strongest survive."
 		_: return "Unknown territory."
 
 

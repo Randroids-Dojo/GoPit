@@ -12,10 +12,10 @@
 
 [resource]
 script = ExtResource("1_biome")
-biome_name = "Void Chasm"
-background_color = Color(0.12, 0.02, 0.08, 1)
-wall_color = Color(0.4, 0.1, 0.15, 1)
-waves_before_boss = 10
+biome_name = "The Abyss"
+background_color = Color(0.02, 0.02, 0.05, 1)
+wall_color = Color(0.1, 0.1, 0.15, 1)
+waves_before_boss = 12
 enemy_scenes = [ExtResource("2_slime"), ExtResource("3_bat"), ExtResource("4_crab"), ExtResource("5_golem"), ExtResource("6_swarm"), ExtResource("7_archer"), ExtResource("8_bomber")]
 hazard_scene = ExtResource("9_hazard")
-hazard_count = 4
+hazard_count = 6

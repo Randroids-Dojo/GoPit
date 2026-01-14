@@ -62,11 +62,11 @@ async def test_game_controller_has_spawn_biome_hazards(game):
 
 
 @pytest.mark.asyncio
-async def test_stage_count_is_four(game):
-    """Should have 4 stages (biomes)."""
-    # StageManager should have 4 stages
-    # We check indirectly by verifying stage can be set to 0-3
-    for stage in range(4):
+async def test_stage_count_is_eight(game):
+    """Should have 8 stages (biomes)."""
+    # StageManager should have 8 stages
+    # We check indirectly by verifying stage can be set to 0-7
+    for stage in range(8):
         await game.call(STAGE_MANAGER, "set", ["current_stage", stage])
         current = await game.get_property(STAGE_MANAGER, "current_stage")
         assert current == stage, f"Should be able to set stage to {stage}"

@@ -29,6 +29,10 @@ func _load_stages() -> void:
 		preload("res://resources/biomes/frozen_depths.tres"),
 		preload("res://resources/biomes/burning_sands.tres"),
 		preload("res://resources/biomes/final_descent.tres"),
+		preload("res://resources/biomes/toxic_marsh.tres"),
+		preload("res://resources/biomes/storm_spire.tres"),
+		preload("res://resources/biomes/crystal_caverns.tres"),
+		preload("res://resources/biomes/the_abyss.tres"),
 	]
 
 

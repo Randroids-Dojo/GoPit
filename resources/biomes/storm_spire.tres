@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Biome" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://resources/biomes/biome.gd" id="1_biome"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/bat.tscn" id="2_bat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/archer.tscn" id="3_archer"]
+[ext_resource type="PackedScene" path="res://scenes/entities/enemies/bomber.tscn" id="4_bomber"]
+[ext_resource type="PackedScene" uid="uid://fire_vent_scene" path="res://scenes/entities/hazards/fire_vent.tscn" id="5_hazard"]
+
+[resource]
+script = ExtResource("1_biome")
+biome_name = "Storm Spire"
+background_color = Color(0.05, 0.08, 0.18, 1)
+wall_color = Color(0.15, 0.2, 0.5, 1)
+waves_before_boss = 10
+enemy_scenes = [ExtResource("2_bat"), ExtResource("3_archer"), ExtResource("4_bomber")]
+hazard_scene = ExtResource("5_hazard")
+hazard_count = 4
