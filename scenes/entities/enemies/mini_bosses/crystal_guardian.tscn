@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://k3v0y5cgt4a0t"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/mini_bosses/crystal_guardian.gd" id="1_script"]
+
+[node name="CrystalGuardian" type="Area2D"]
+collision_layer = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
