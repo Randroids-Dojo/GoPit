@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://d2k9n4rvj3pys"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/mini_bosses/giant_bat.gd" id="1_script"]
+
+[node name="GiantBat" type="Area2D"]
+collision_layer = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]

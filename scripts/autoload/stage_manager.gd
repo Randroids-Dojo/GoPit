@@ -3,8 +3,12 @@ extends Node
 
 signal biome_changed(biome: Biome)
 signal boss_wave_reached(stage: int)
+signal mini_boss_wave_reached(stage: int, mini_boss_index: int)
 signal stage_completed(stage: int)
 signal game_won
+
+# Mini-boss waves within each stage (waves 4 and 7 of 10)
+const MINI_BOSS_WAVES: Array[int] = [4, 7]
 
 var stages: Array[Biome] = []
 var current_stage: int = 0
@@ -46,6 +50,11 @@ func _on_wave_changed(global_wave: int) -> void:
 	# Calculate wave within current stage
 	var waves_per_stage: int = current_biome.waves_before_boss if current_biome else 10
 	wave_in_stage = ((global_wave - 1) % waves_per_stage) + 1
+
+	# Check if mini-boss wave reached (waves 4 and 7)
+	var mini_boss_idx := MINI_BOSS_WAVES.find(wave_in_stage)
+	if mini_boss_idx != -1:
+		mini_boss_wave_reached.emit(current_stage, mini_boss_idx)
 
 	# Check if boss wave reached
 	if wave_in_stage >= waves_per_stage:

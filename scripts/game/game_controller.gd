@@ -36,9 +36,25 @@ var slime_king_scene: PackedScene
 var frost_wyrm_scene: PackedScene
 var sand_golem_scene: PackedScene
 var void_lord_scene: PackedScene
+var plague_beast_scene: PackedScene
+var storm_titan_scene: PackedScene
+var crystal_golem_scene: PackedScene
+var abyssal_horror_scene: PackedScene
 
 # Boss tracking
 var _current_boss: Node = null
+var _current_mini_boss: Node = null
+
+# Mini-boss scenes (lazy loaded)
+# Stage 0: Elite Slime, Giant Bat
+# Stage 1: Frost Golem, Ice Wraith
+# Stage 2: Fire Crab, Sand Archer
+# Stage 3: Void Spawn, Shadow Knight
+# Stage 4: Toxic Lurker, Swamp Horror
+# Stage 5: Lightning Elemental, Storm Harpy
+# Stage 6: Crystal Guardian, Gem Spider
+# Stage 7: Abyss Watcher, Nightmare
+var mini_boss_scenes: Array[Array] = []
 var player_scene: PackedScene = preload("res://scenes/entities/player.tscn")
 var fusion_reactor_scene: PackedScene = preload("res://scenes/entities/fusion_reactor.tscn")
 
@@ -108,6 +124,7 @@ func _ready() -> void:
 	# Connect to stage manager for biome changes
 	StageManager.biome_changed.connect(_on_biome_changed)
 	StageManager.boss_wave_reached.connect(_on_boss_wave_reached)
+	StageManager.mini_boss_wave_reached.connect(_on_mini_boss_wave_reached)
 	StageManager.stage_completed.connect(_on_stage_completed)
 	StageManager.game_won.connect(_on_game_won)
 
@@ -702,6 +719,14 @@ func _spawn_boss(stage: int) -> void:
 		sand_golem_scene = load("res://scenes/entities/enemies/bosses/sand_golem.tscn")
 	if not void_lord_scene:
 		void_lord_scene = load("res://scenes/entities/enemies/bosses/void_lord.tscn")
+	if not plague_beast_scene:
+		plague_beast_scene = load("res://scenes/entities/enemies/bosses/plague_beast.tscn")
+	if not storm_titan_scene:
+		storm_titan_scene = load("res://scenes/entities/enemies/bosses/storm_titan.tscn")
+	if not crystal_golem_scene:
+		crystal_golem_scene = load("res://scenes/entities/enemies/bosses/crystal_golem.tscn")
+	if not abyssal_horror_scene:
+		abyssal_horror_scene = load("res://scenes/entities/enemies/bosses/abyssal_horror.tscn")
 
 	var boss_scene: PackedScene = null
 
@@ -713,8 +738,16 @@ func _spawn_boss(stage: int) -> void:
 			boss_scene = frost_wyrm_scene
 		2:  # Burning Sands - Sand Golem
 			boss_scene = sand_golem_scene
-		3:  # Final Descent - Void Lord
+		3:  # Void Chasm - Void Lord
 			boss_scene = void_lord_scene
+		4:  # Toxic Marsh - Plague Beast
+			boss_scene = plague_beast_scene
+		5:  # Storm Spire - Storm Titan
+			boss_scene = storm_titan_scene
+		6:  # Crystal Caverns - Crystal Golem
+			boss_scene = crystal_golem_scene
+		7:  # The Abyss - Abyssal Horror
+			boss_scene = abyssal_horror_scene
 		_:
 			# Fallback to Slime King
 			boss_scene = slime_king_scene
@@ -772,6 +805,108 @@ func _on_boss_defeated() -> void:
 func _on_boss_enemy_died(_enemy: Node) -> void:
 	"""Boss died signal handler - record kill"""
 	GameManager.record_enemy_kill()
+
+
+# ============================================================================
+# MINI-BOSS SPAWNING
+# ============================================================================
+
+func _on_mini_boss_wave_reached(stage: int, mini_boss_idx: int) -> void:
+	"""Spawn mini-boss at waves 4 and 7 of each stage"""
+	# Don't spawn if already fighting a boss or mini-boss
+	if _current_boss or _current_mini_boss:
+		return
+
+	_spawn_mini_boss(stage, mini_boss_idx)
+
+
+func _load_mini_boss_scenes() -> void:
+	"""Lazy load all mini-boss scenes"""
+	if mini_boss_scenes.size() > 0:
+		return  # Already loaded
+
+	mini_boss_scenes = [
+		# Stage 0: The Pit
+		[
+			load("res://scenes/entities/enemies/mini_bosses/elite_slime.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/giant_bat.tscn"),
+		],
+		# Stage 1: Frozen Depths
+		[
+			load("res://scenes/entities/enemies/mini_bosses/frost_golem.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/ice_wraith.tscn"),
+		],
+		# Stage 2: Burning Sands
+		[
+			load("res://scenes/entities/enemies/mini_bosses/fire_crab.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/sand_archer.tscn"),
+		],
+		# Stage 3: Void Chasm
+		[
+			load("res://scenes/entities/enemies/mini_bosses/void_spawn.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/shadow_knight.tscn"),
+		],
+		# Stage 4: Toxic Marsh
+		[
+			load("res://scenes/entities/enemies/mini_bosses/toxic_lurker.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/swamp_horror.tscn"),
+		],
+		# Stage 5: Storm Spire
+		[
+			load("res://scenes/entities/enemies/mini_bosses/lightning_elemental.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/storm_harpy.tscn"),
+		],
+		# Stage 6: Crystal Caverns
+		[
+			load("res://scenes/entities/enemies/mini_bosses/crystal_guardian.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/gem_spider.tscn"),
+		],
+		# Stage 7: The Abyss
+		[
+			load("res://scenes/entities/enemies/mini_bosses/abyss_watcher.tscn"),
+			load("res://scenes/entities/enemies/mini_bosses/nightmare.tscn"),
+		],
+	]
+
+
+func _spawn_mini_boss(stage: int, mini_boss_idx: int) -> void:
+	"""Spawn the appropriate mini-boss for the stage and index"""
+	_load_mini_boss_scenes()
+
+	if stage < 0 or stage >= mini_boss_scenes.size():
+		return
+	if mini_boss_idx < 0 or mini_boss_idx >= mini_boss_scenes[stage].size():
+		return
+
+	var scene: PackedScene = mini_boss_scenes[stage][mini_boss_idx]
+	if not scene:
+		return
+
+	_current_mini_boss = scene.instantiate()
+	enemies_container.add_child(_current_mini_boss)
+
+	# Connect mini-boss signals
+	if _current_mini_boss.has_signal("mini_boss_defeated"):
+		_current_mini_boss.mini_boss_defeated.connect(_on_mini_boss_defeated)
+	if _current_mini_boss.has_signal("died"):
+		_current_mini_boss.died.connect(_on_mini_boss_enemy_died)
+
+	# Announce mini-boss
+	SoundManager.play(SoundManager.SoundType.ENEMY_DEATH)
+	CameraShake.shake(6.0, 3.0)
+
+
+func _on_mini_boss_defeated() -> void:
+	"""Handle mini-boss defeat - resume normal spawning"""
+	_current_mini_boss = null
+
+
+func _on_mini_boss_enemy_died(enemy: Node) -> void:
+	"""Mini-boss died signal handler - spawn gem and record kill"""
+	if enemy:
+		_spawn_gem(enemy.global_position, enemy.xp_value)
+	GameManager.record_enemy_kill()
+	_current_mini_boss = null
 
 
 # ============================================================================
