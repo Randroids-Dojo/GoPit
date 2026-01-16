@@ -18,7 +18,7 @@ var _speed_modifier: float = 1.0
 
 # Game bounds (set by game_controller)
 var bounds_min: Vector2 = Vector2(30, 280)  # Left wall + some padding, top area (below enlarged TopBar)
-var bounds_max: Vector2 = Vector2(690, 1115)  # Right wall - padding, player feet at Y=1150
+var bounds_max: Vector2 = Vector2(690, 1150)  # Right wall - padding, above input area
 
 # Invincibility blinking
 var _blink_tween: Tween = null

@@ -89,8 +89,8 @@ func _ready() -> void:
 
 	# Set up player
 	if player:
-		# Player starts at bottom center with feet touching ground (Y=1150)
-		player.position = Vector2(360, 1115)
+		# Player starts at bottom center
+		player.position = Vector2(360, 1000)
 		# Connect player to ball spawner so balls spawn from player position
 		player.moved.connect(_on_player_moved)
 
