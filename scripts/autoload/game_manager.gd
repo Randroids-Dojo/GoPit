@@ -106,16 +106,19 @@ var life_steal_percent: float = 0.0  # Heal from damage dealt
 
 # Character system
 var selected_character: Resource = null
+var secondary_character: Resource = null  # For dual character mode (Matchmaker)
 var character_damage_mult: float = 1.0
 var character_speed_mult: float = 1.0
 var character_crit_mult: float = 1.0
 var character_leadership_mult: float = 1.0
 var character_intelligence_mult: float = 1.0
 var character_starting_ball: int = 0  # BallType enum
+var secondary_starting_ball: int = -1  # Second ball for dual character mode (-1 = none)
 
 # Passive ability flags (set based on selected character)
 enum Passive { NONE, QUICK_LEARNER, SHATTER, JACKPOT, INFERNO, SQUAD_LEADER, LIFESTEAL, BOUNCE_MASTER, EXECUTIONER, COLLECTOR, EMPTY_NESTER, BERSERKER, SWARM_LORD, GRAVITY, SHIELD_BOUNCE, PANDEMIC, BLOODLUST }
 var active_passive: Passive = Passive.NONE
+var secondary_passive: Passive = Passive.NONE  # Second passive for dual character mode
 
 # High score persistence
 var high_score_wave: int = 0
@@ -280,6 +283,7 @@ func set_character(character: Resource) -> void:
 		return
 
 	selected_character = character
+	secondary_character = null
 	# Apply character stat multipliers
 	max_hp = int(100 * character.endurance)
 	character_damage_mult = character.strength
@@ -288,9 +292,56 @@ func set_character(character: Resource) -> void:
 	character_leadership_mult = character.leadership
 	character_intelligence_mult = character.intelligence
 	character_starting_ball = character.starting_ball
+	secondary_starting_ball = -1
 
 	# Set active passive based on character
 	_set_passive_from_name(character.passive_name)
+	secondary_passive = Passive.NONE
+
+
+func set_dual_characters(primary: Resource, secondary: Resource) -> void:
+	"""Set two characters for dual character mode (Matchmaker building).
+	Both passives are active, stats are combined, both starting balls available.
+	Trade-off: Player hitbox is doubled."""
+	if primary == null:
+		_reset_character_stats()
+		return
+
+	selected_character = primary
+	secondary_character = secondary
+
+	# Combine stats - use higher of the two for each stat (best of both)
+	# HP uses average (since hitbox is bigger)
+	var avg_endurance: float = (primary.endurance + secondary.endurance) / 2.0
+	max_hp = int(100 * avg_endurance)
+
+	# Use higher multipliers (benefit of dual mode)
+	character_damage_mult = maxf(primary.strength, secondary.strength)
+	character_speed_mult = maxf(primary.speed, secondary.speed)
+	character_crit_mult = maxf(primary.dexterity, secondary.dexterity)
+	character_leadership_mult = maxf(primary.leadership, secondary.leadership)
+	character_intelligence_mult = maxf(primary.intelligence, secondary.intelligence)
+
+	# Both starting balls
+	character_starting_ball = primary.starting_ball
+	secondary_starting_ball = secondary.starting_ball
+
+	# Both passives active
+	_set_passive_from_name(primary.passive_name)
+	if secondary:
+		secondary_passive = VALID_PASSIVES.get(secondary.passive_name, Passive.NONE)
+	else:
+		secondary_passive = Passive.NONE
+
+
+func is_dual_character_mode() -> bool:
+	"""Check if currently in dual character mode."""
+	return secondary_character != null
+
+
+func has_passive(passive: Passive) -> bool:
+	"""Check if a passive is active (either primary or secondary in dual mode)."""
+	return active_passive == passive or secondary_passive == passive
 
 
 ## Valid passive names mapped to enum values
@@ -329,6 +380,7 @@ func _set_passive_from_name(passive_name: String) -> void:
 
 func _reset_character_stats() -> void:
 	selected_character = null
+	secondary_character = null
 	max_hp = 100
 	character_damage_mult = 1.0
 	character_speed_mult = 1.0
@@ -336,7 +388,9 @@ func _reset_character_stats() -> void:
 	character_leadership_mult = 1.0
 	character_intelligence_mult = 1.0
 	character_starting_ball = 0
+	secondary_starting_ball = -1
 	active_passive = Passive.NONE
+	secondary_passive = Passive.NONE
 
 
 func start_game() -> void:
@@ -458,7 +512,7 @@ func get_xp_multiplier() -> float:
 	## - Quick Learner: +10%
 	## - Veteran's Hut (meta): +5% per level (max +25%)
 	var base := 1.0
-	if active_passive == Passive.QUICK_LEARNER:
+	if has_passive(Passive.QUICK_LEARNER):
 		base = 1.1
 	# Apply Veteran's Hut meta-progression bonus
 	return base * MetaManager.get_xp_gain_multiplier()
@@ -466,14 +520,14 @@ func get_xp_multiplier() -> float:
 
 func get_crit_damage_multiplier() -> float:
 	## Returns crit damage multiplier (Jackpot: 3x instead of 2x)
-	if active_passive == Passive.JACKPOT:
+	if has_passive(Passive.JACKPOT):
 		return 3.0
 	return 2.0
 
 
 func get_bonus_crit_chance() -> float:
 	## Returns bonus crit chance from passives (Jackpot: +15%)
-	if active_passive == Passive.JACKPOT:
+	if has_passive(Passive.JACKPOT):
 		return 0.15
 	return 0.0
 
@@ -497,14 +551,14 @@ func get_total_crit_chance() -> float:
 
 func get_fire_damage_multiplier() -> float:
 	## Returns fire damage multiplier (Inferno: +20%)
-	if active_passive == Passive.INFERNO:
+	if has_passive(Passive.INFERNO):
 		return 1.2
 	return 1.0
 
 
 func get_damage_vs_burning() -> float:
 	## Returns damage multiplier vs burning enemies (Inferno: +25%)
-	if active_passive == Passive.INFERNO:
+	if has_passive(Passive.INFERNO):
 		return 1.25
 	return 1.0
 
@@ -516,42 +570,42 @@ func get_damage_vs_bleeding() -> float:
 
 func get_damage_vs_frozen() -> float:
 	## Returns damage multiplier vs frozen enemies (base +25%, Shatter: +50%)
-	if active_passive == Passive.SHATTER:
+	if has_passive(Passive.SHATTER):
 		return 1.5
 	return 1.25  # Frozen enemies always take +25% more damage
 
 
 func get_freeze_duration_bonus() -> float:
 	## Returns freeze duration bonus multiplier (Shatter: +30%)
-	if active_passive == Passive.SHATTER:
+	if has_passive(Passive.SHATTER):
 		return 1.3
 	return 1.0
 
 
 func get_lifesteal_percent() -> float:
 	## Returns lifesteal percentage (Lifesteal: 5%)
-	if active_passive == Passive.LIFESTEAL:
+	if has_passive(Passive.LIFESTEAL):
 		return 0.05
 	return 0.0
 
 
 func get_health_gem_chance() -> float:
 	## Returns chance for health gem on kill (Lifesteal: 20%)
-	if active_passive == Passive.LIFESTEAL:
+	if has_passive(Passive.LIFESTEAL):
 		return 0.2
 	return 0.0
 
 
 func get_extra_baby_balls() -> int:
 	## Returns starting baby ball count bonus (Squad Leader: +2)
-	if active_passive == Passive.SQUAD_LEADER:
+	if has_passive(Passive.SQUAD_LEADER):
 		return 2
 	return 0
 
 
 func get_baby_ball_rate_bonus() -> float:
 	## Returns baby ball spawn rate bonus (Squad Leader: +30%)
-	if active_passive == Passive.SQUAD_LEADER:
+	if has_passive(Passive.SQUAD_LEADER):
 		return 0.3
 	return 0.0
 
@@ -559,7 +613,7 @@ func get_baby_ball_rate_bonus() -> float:
 func get_bounce_damage_multiplier() -> float:
 	## Returns damage bonus per bounce (Bounce Master: +5% per bounce)
 	## Returns 0.0 if no bounce scaling passive, 0.05 = +5% damage per bounce
-	if active_passive == Passive.BOUNCE_MASTER:
+	if has_passive(Passive.BOUNCE_MASTER):
 		return 0.05
 	return 0.0
 
@@ -568,7 +622,7 @@ func get_execute_threshold() -> float:
 	## Returns the HP threshold for execute mechanic (Executioner: 20%)
 	## Execute: Critical hits on enemies below this HP% = instant kill
 	## Returns 0.0 if no execute passive, 0.20 = 20% HP threshold
-	if active_passive == Passive.EXECUTIONER:
+	if has_passive(Passive.EXECUTIONER):
 		return 0.20
 	return 0.0
 
@@ -582,7 +636,7 @@ func get_effective_magnetism_range() -> float:
 	## Collector passive: Always max range (1000px)
 	## Boss fight: Uses BOSS_MAGNET_RANGE (2000px)
 	## Otherwise: Uses gem_magnetism_range from upgrades
-	if active_passive == Passive.COLLECTOR:
+	if has_passive(Passive.COLLECTOR):
 		return COLLECTOR_MAGNET_RANGE
 	if is_boss_fight:
 		return BOSS_MAGNET_RANGE
@@ -591,18 +645,18 @@ func get_effective_magnetism_range() -> float:
 
 func has_built_in_magnet() -> bool:
 	## Returns true if current character has built-in magnet (Collector passive)
-	return active_passive == Passive.COLLECTOR
+	return has_passive(Passive.COLLECTOR)
 
 
 func has_no_baby_balls() -> bool:
 	## Returns true if current character disables baby balls (Empty Nester passive)
-	return active_passive == Passive.EMPTY_NESTER
+	return has_passive(Passive.EMPTY_NESTER)
 
 
 func get_special_fire_multiplier() -> int:
 	## Returns multiplier for special ball fires (Empty Nester: 2x, otherwise 1x)
 	## Empty Nester trades baby balls for double special fires
-	if active_passive == Passive.EMPTY_NESTER:
+	if has_passive(Passive.EMPTY_NESTER):
 		return 2
 	return 1
 
@@ -610,38 +664,38 @@ func get_special_fire_multiplier() -> int:
 func get_berserker_damage_mult() -> float:
 	## Returns damage multiplier when below 50% HP (Berserker: +30%)
 	## Returns 1.0 normally, 1.3 when HP < 50% with Berserker passive
-	if active_passive == Passive.BERSERKER and player_hp < max_hp * 0.5:
+	if has_passive(Passive.BERSERKER) and player_hp < max_hp * 0.5:
 		return 1.3
 	return 1.0
 
 
 func get_baby_ball_damage_mult() -> float:
 	## Returns damage multiplier for baby balls (Swarm Lord: +50%)
-	if active_passive == Passive.SWARM_LORD:
+	if has_passive(Passive.SWARM_LORD):
 		return 1.5
 	return 1.0
 
 
 func has_gravity_balls() -> bool:
 	## Returns true if balls are affected by gravity (Physicist passive)
-	return active_passive == Passive.GRAVITY
+	return has_passive(Passive.GRAVITY)
 
 
 func has_shield_bounce() -> bool:
 	## Returns true if balls bounce off enemies once (Shieldbearer passive)
-	return active_passive == Passive.SHIELD_BOUNCE
+	return has_passive(Passive.SHIELD_BOUNCE)
 
 
 func get_poison_damage_mult() -> float:
 	## Returns poison damage multiplier (Pandemic: +50%)
-	if active_passive == Passive.PANDEMIC:
+	if has_passive(Passive.PANDEMIC):
 		return 1.5
 	return 1.0
 
 
 func get_poison_duration_mult() -> float:
 	## Returns poison duration multiplier (Pandemic: +50%)
-	if active_passive == Passive.PANDEMIC:
+	if has_passive(Passive.PANDEMIC):
 		return 1.5
 	return 1.0
 
@@ -654,13 +708,13 @@ const BLOODLUST_BONUS_PER_STACK: float = 0.03  # 3% per kill
 
 func add_bloodlust_stack() -> void:
 	## Add a bloodlust stack on kill (Bloodlust passive)
-	if active_passive == Passive.BLOODLUST:
+	if has_passive(Passive.BLOODLUST):
 		bloodlust_stacks = mini(bloodlust_stacks + 1, BLOODLUST_MAX_STACKS)
 
 
 func get_bloodlust_fire_rate_mult() -> float:
 	## Returns fire rate multiplier from bloodlust stacks
-	if active_passive == Passive.BLOODLUST:
+	if has_passive(Passive.BLOODLUST):
 		return 1.0 + bloodlust_stacks * BLOODLUST_BONUS_PER_STACK
 	return 1.0
 

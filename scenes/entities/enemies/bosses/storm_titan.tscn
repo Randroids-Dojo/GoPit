@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://storm_titan_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/enemies/bosses/storm_titan.gd" id="1_storm"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_storm"]
+radius = 50.0
+
+[node name="StormTitan" type="CharacterBody2D" groups=["boss", "enemies"]]
+collision_layer = 4
+collision_mask = 18
+script = ExtResource("1_storm")
+max_hp = 1000
+speed = 50.0
+damage_to_player = 30
+xp_value = 280
+boss_name = "Storm Titan"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_storm")

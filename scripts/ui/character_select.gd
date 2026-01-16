@@ -1,7 +1,9 @@
 extends CanvasLayer
 ## Character selection screen - shown before game starts
+## Supports 2-character mode when Matchmaker building is unlocked
 
 signal character_selected(character: Resource)
+signal dual_character_selected(primary: Resource, secondary: Resource)
 
 const CHARACTER_PATHS := [
 	"res://resources/characters/rookie.tres",
@@ -47,6 +49,11 @@ var _characters: Array[Resource] = []
 var _current_index: int = 0
 var _dots: Array[ColorRect] = []
 
+# Dual character mode (Matchmaker building)
+var _selecting_secondary: bool = false
+var _primary_character: Resource = null
+var _primary_index: int = -1
+
 @onready var name_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/NameLabel
 @onready var desc_label: Label = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/InfoContainer/DescLabel
 @onready var portrait: ColorRect = $DimBackground/Panel/VBoxContainer/CharacterPanel/HBoxContainer/PortraitContainer/Portrait
@@ -67,11 +74,17 @@ var _dots: Array[ColorRect] = []
 @onready var locked_overlay: ColorRect = $DimBackground/Panel/LockedOverlay
 @onready var lock_label: Label = $DimBackground/Panel/LockedOverlay/LockLabel
 
+# Dual character UI (created dynamically)
+var _partner_button: Button = null
+var _solo_button: Button = null
+var _partner_label: Label = null
+
 
 func _ready() -> void:
 	add_to_group("character_select")
 	_load_characters()
 	_create_dots()
+	_create_dual_character_ui()
 	_connect_signals()
 	_update_display()
 	visible = false
@@ -93,6 +106,38 @@ func _create_dots() -> void:
 		_dots.append(dot)
 
 
+func _create_dual_character_ui() -> void:
+	# Create partner selection label (shows selected primary character)
+	_partner_label = Label.new()
+	_partner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_partner_label.add_theme_font_size_override("font_size", 16)
+	_partner_label.visible = false
+
+	# Create "Add Partner" button
+	_partner_button = Button.new()
+	_partner_button.text = "+ ADD PARTNER"
+	_partner_button.custom_minimum_size = Vector2(200, 50)
+	_partner_button.visible = false
+	_partner_button.pressed.connect(_on_partner_button_pressed)
+
+	# Create "Play Solo" button (for when selecting secondary)
+	_solo_button = Button.new()
+	_solo_button.text = "PLAY SOLO"
+	_solo_button.custom_minimum_size = Vector2(200, 50)
+	_solo_button.visible = false
+	_solo_button.pressed.connect(_on_solo_button_pressed)
+
+	# Add to container (above start button)
+	var vbox := start_button.get_parent()
+	var start_idx := start_button.get_index()
+	vbox.add_child(_partner_label)
+	vbox.move_child(_partner_label, start_idx)
+	vbox.add_child(_partner_button)
+	vbox.move_child(_partner_button, start_idx + 1)
+	vbox.add_child(_solo_button)
+	vbox.move_child(_solo_button, start_idx + 2)
+
+
 func _connect_signals() -> void:
 	prev_button.pressed.connect(_on_prev_pressed)
 	next_button.pressed.connect(_on_next_pressed)
@@ -102,6 +147,10 @@ func _connect_signals() -> void:
 func show_select() -> void:
 	visible = true
 	get_tree().paused = true
+	# Reset dual character state
+	_selecting_secondary = false
+	_primary_character = null
+	_primary_index = -1
 	_update_display()
 
 
@@ -129,8 +178,40 @@ func _on_start_pressed() -> void:
 		return
 
 	SoundManager.play(SoundManager.SoundType.LEVEL_UP)  # Start game sound
-	character_selected.emit(character)
+
+	if _selecting_secondary:
+		# Selected second character - start dual character run
+		dual_character_selected.emit(_primary_character, character)
+	else:
+		# Single character run
+		character_selected.emit(character)
 	hide_select()
+
+
+func _on_partner_button_pressed() -> void:
+	"""Switch to secondary character selection mode."""
+	var character := _characters[_current_index]
+	if not MetaManager.is_character_unlocked(character.character_name):
+		SoundManager.play(SoundManager.SoundType.BLOCKED)
+		return
+
+	SoundManager.play(SoundManager.SoundType.HIT_WALL)
+	_primary_character = character
+	_primary_index = _current_index
+	_selecting_secondary = true
+	# Move to a different character by default
+	_current_index = (_current_index + 1) % _characters.size()
+	_update_display()
+
+
+func _on_solo_button_pressed() -> void:
+	"""Cancel partner selection and go back to primary selection."""
+	SoundManager.play(SoundManager.SoundType.HIT_WALL)
+	_selecting_secondary = false
+	_current_index = _primary_index if _primary_index >= 0 else 0
+	_primary_character = null
+	_primary_index = -1
+	_update_display()
 
 
 func _update_display() -> void:
@@ -187,6 +268,35 @@ func _update_display() -> void:
 
 	# Update start button
 	start_button.disabled = not is_unlocked
+
+	# Update dual character UI
+	_update_dual_character_ui(character, is_unlocked)
+
+
+func _update_dual_character_ui(character: Resource, is_unlocked: bool) -> void:
+	"""Update visibility and state of dual character UI elements."""
+	var matchmaker_available := MetaManager.is_matchmaker_unlocked()
+
+	if _selecting_secondary:
+		# Selecting partner - show partner info and different buttons
+		_partner_label.visible = true
+		_partner_label.text = "Primary: %s" % _primary_character.character_name
+		_partner_button.visible = false
+		_solo_button.visible = true
+
+		# Can't select same character as partner
+		var is_same := _current_index == _primary_index
+		start_button.text = "START DUO"
+		start_button.disabled = not is_unlocked or is_same
+		if is_same:
+			lock_label.text = "Cannot select same character"
+			locked_overlay.visible = true
+	else:
+		# Normal selection - show partner button if matchmaker unlocked
+		_partner_label.visible = false
+		_partner_button.visible = matchmaker_available and is_unlocked
+		_solo_button.visible = false
+		start_button.text = "START"
 
 
 func get_selected_character() -> Resource:
