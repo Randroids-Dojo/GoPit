@@ -135,6 +135,7 @@ func _ready() -> void:
 	# Connect character select
 	if character_select:
 		character_select.character_selected.connect(_on_character_selected)
+		character_select.dual_character_selected.connect(_on_dual_character_selected)
 
 	# Connect level select
 	if level_select:
@@ -174,6 +175,43 @@ func _on_character_selected(character: Resource) -> void:
 		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
 		# Set starting ball type
 		ball_spawner.set_ball_type(GameManager.character_starting_ball)
+
+	# Show level select (or start game if no level select)
+	if level_select:
+		level_select.show_select()
+	else:
+		GameManager.start_game()
+
+
+func _on_dual_character_selected(primary: Resource, secondary: Resource) -> void:
+	"""Handle dual character selection (Matchmaker building).
+	Both characters' passives are active, both starting balls available."""
+	# Apply dual characters to GameManager
+	GameManager.set_dual_characters(primary, secondary)
+
+	# Apply character stats to ball spawner
+	if ball_spawner:
+		# Apply Strength-based damage (all balls use character Strength)
+		ball_spawner.ball_damage = GameManager.get_character_strength()
+		# Apply crit multiplier
+		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
+		# Set primary starting ball type
+		ball_spawner.set_ball_type(GameManager.character_starting_ball)
+
+	# Add both starting balls to registry for dual mode
+	if BallRegistry:
+		# Add primary starting ball (if not basic)
+		if GameManager.character_starting_ball != 0:
+			BallRegistry.add_ball(GameManager.character_starting_ball)
+			BallRegistry.set_slot(0, GameManager.character_starting_ball)
+		# Add secondary starting ball (if different and not -1)
+		if GameManager.secondary_starting_ball >= 0 and GameManager.secondary_starting_ball != GameManager.character_starting_ball:
+			BallRegistry.add_ball(GameManager.secondary_starting_ball)
+			BallRegistry.set_slot(1, GameManager.secondary_starting_ball)
+
+	# Increase player hitbox for dual character mode (trade-off)
+	if player:
+		_apply_dual_character_hitbox(true)
 
 	# Show level select (or start game if no level select)
 	if level_select:
@@ -490,6 +528,12 @@ func _notification(what: int) -> void:
 			_save_session()
 			if pause_overlay:
 				pause_overlay.show_pause()
+
+
+func _apply_dual_character_hitbox(enabled: bool) -> void:
+	"""Apply dual character mode hitbox to player (trade-off for 2 characters)."""
+	if player and player.has_method("set_dual_character_mode"):
+		player.set_dual_character_mode(enabled)
 
 
 func _cleanup_offscreen_balls() -> void:

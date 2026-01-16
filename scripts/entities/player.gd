@@ -10,6 +10,10 @@ signal moved(position: Vector2)
 @export var body_color: Color = Color(0.3, 0.7, 1.0, 0.9)
 @export var outline_color: Color = Color(0.5, 0.9, 1.0, 1.0)
 
+# Base radius for scaling (set on ready)
+var _base_radius: float = 35.0
+var _is_dual_mode: bool = false
+
 var movement_input: Vector2 = Vector2.ZERO
 var last_aim_direction: Vector2 = Vector2.UP  # Default aim upward
 
@@ -26,6 +30,8 @@ var _blink_tween: Tween = null
 
 func _ready() -> void:
 	add_to_group("player")
+	# Store base radius for scaling
+	_base_radius = player_radius
 	# Set up collision - layer 16 (player), mask 4+8 (enemies + gems)
 	collision_layer = 16
 	collision_mask = 12  # 4 (enemies) + 8 (gems)
@@ -117,3 +123,26 @@ func remove_slow() -> void:
 	_speed_modifier = 1.0
 	# Restore normal color
 	modulate = Color.WHITE
+
+
+func set_dual_character_mode(enabled: bool) -> void:
+	"""Set dual character mode - doubles hitbox size as trade-off.
+	Like BallxPit's Matchmaker building."""
+	_is_dual_mode = enabled
+	if enabled:
+		# Double the hitbox radius (trade-off for having 2 characters)
+		player_radius = _base_radius * 1.5  # 1.5x is more balanced than 2x
+		body_color = Color(0.4, 0.6, 1.0, 0.85)  # Slightly different color to indicate duo
+	else:
+		player_radius = _base_radius
+		body_color = Color(0.3, 0.7, 1.0, 0.9)
+	# Update collision shape if it exists
+	var collision := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision and collision.shape is CircleShape2D:
+		(collision.shape as CircleShape2D).radius = player_radius
+	queue_redraw()
+
+
+func is_dual_character_mode() -> bool:
+	"""Check if in dual character mode."""
+	return _is_dual_mode

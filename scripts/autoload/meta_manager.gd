@@ -12,6 +12,7 @@ signal slot_deleted(slot: int)
 signal session_saved
 signal session_loaded
 signal session_cleared
+signal matchmaker_unlocked
 
 # Save slot system
 const SLOT_COUNT := 3
@@ -55,6 +56,11 @@ var unlocked_passive_evolutions: Array = []  # List of unlocked passive evolutio
 # Format: {stage_index: [character_name, character_name, ...]}
 var stage_completions: Dictionary = {}
 const GEARS_PER_STAGE: int = 2  # Need 2 unique character completions to unlock next
+
+# Matchmaker building - enables 2-character runs (like BallxPit)
+const MATCHMAKER_COST: int = 1000  # Pit coins to unlock
+const MATCHMAKER_REQUIRED_CHARACTERS: int = 6  # Must unlock 6 characters first
+var matchmaker_purchased: bool = false
 
 # Difficulty completion tracking (like BallxPit's Fast+N system)
 # Format: {character_name: {stage_index: highest_difficulty_beaten}}
@@ -389,6 +395,56 @@ func get_early_xp_multiplier(current_level: int) -> float:
 
 
 # =============================================================================
+# MATCHMAKER BUILDING (2-CHARACTER MODE)
+# =============================================================================
+
+func is_matchmaker_unlocked() -> bool:
+	"""Check if the Matchmaker building is unlocked (enables 2-character runs)."""
+	return matchmaker_purchased
+
+
+func can_purchase_matchmaker() -> bool:
+	"""Check if player meets requirements to purchase Matchmaker."""
+	if matchmaker_purchased:
+		return false  # Already purchased
+	if pit_coins < MATCHMAKER_COST:
+		return false  # Not enough coins
+	# Check if enough characters are unlocked
+	var total_unlocked := DEFAULT_UNLOCKED_CHARACTERS.size() + unlocked_characters.size()
+	if total_unlocked < MATCHMAKER_REQUIRED_CHARACTERS:
+		return false
+	return true
+
+
+func get_matchmaker_unlock_progress() -> Dictionary:
+	"""Get progress toward unlocking Matchmaker.
+	Returns {characters_unlocked, characters_required, coins, cost, can_purchase, is_purchased}."""
+	var total_unlocked := DEFAULT_UNLOCKED_CHARACTERS.size() + unlocked_characters.size()
+	return {
+		"characters_unlocked": total_unlocked,
+		"characters_required": MATCHMAKER_REQUIRED_CHARACTERS,
+		"coins": pit_coins,
+		"cost": MATCHMAKER_COST,
+		"can_purchase": can_purchase_matchmaker(),
+		"is_purchased": matchmaker_purchased
+	}
+
+
+func purchase_matchmaker() -> bool:
+	"""Purchase the Matchmaker building. Returns true if successful."""
+	if not can_purchase_matchmaker():
+		return false
+
+	if not spend_coins(MATCHMAKER_COST):
+		return false
+
+	matchmaker_purchased = true
+	matchmaker_unlocked.emit()
+	save_data()
+	return true
+
+
+# =============================================================================
 # PASSIVE EVOLUTION SYSTEM
 # =============================================================================
 
@@ -689,6 +745,7 @@ func save_data() -> void:
 		"lifetime_gems": lifetime_gems,
 		"lifetime_damage": lifetime_damage,
 		"unlocked_achievements": unlocked_achievements,
+		"matchmaker_purchased": matchmaker_purchased,
 		"created_at": created_at,
 		"last_played": last_played,
 		"total_playtime": total_playtime
@@ -729,6 +786,7 @@ func load_data() -> void:
 		lifetime_gems = data.get("lifetime_gems", 0)
 		lifetime_damage = data.get("lifetime_damage", 0)
 		unlocked_achievements = data.get("unlocked_achievements", [])
+		matchmaker_purchased = data.get("matchmaker_purchased", false)
 		created_at = data.get("created_at", "")
 		last_played = data.get("last_played", "")
 		total_playtime = data.get("total_playtime", 0.0)
@@ -750,6 +808,7 @@ func _reset_slot_data() -> void:
 	lifetime_gems = 0
 	lifetime_damage = 0
 	unlocked_achievements = []
+	matchmaker_purchased = false
 	created_at = ""
 	last_played = ""
 	total_playtime = 0.0
