@@ -19,6 +19,8 @@ const ATTACK_RANGE_Y: float = 950.0  # When to start warning (before danger zone
 const WARNING_DURATION: float = 1.0  # Seconds to show warning
 const ATTACK_SPEED: float = 600.0  # Speed when lunging at player
 const ATTACK_SELF_DAMAGE: int = 3  # HP lost per attack attempt
+const ATTACK_COOLDOWN: float = 0.5  # Seconds before enemy can attack again after completing an attack
+const POST_ATTACK_SNAP_OFFSET: float = 100.0  # How far above player to snap after attack
 
 # Hemorrhage: Triggers at 12+ bleed stacks, deals 20% of current HP
 const HEMORRHAGE_THRESHOLD: int = 12  # Bleed stacks required to trigger
@@ -27,6 +29,7 @@ const HEMORRHAGE_DAMAGE_PERCENT: float = 0.20  # Damage as percent of current HP
 var in_danger_zone: bool = false
 var current_state: State = State.DESCENDING
 var _warning_timer: float = 0.0
+var _attack_cooldown_timer: float = 0.0  # Cooldown after attack to prevent immediate re-attack
 var _attack_target: Vector2 = Vector2.ZERO
 var _pre_attack_position: Vector2 = Vector2.ZERO  # Position before attack, to snap back to
 var _shake_offset: Vector2 = Vector2.ZERO
@@ -83,6 +86,10 @@ func _physics_process(delta: float) -> void:
 	# Process status effects first
 	_process_status_effects(delta)
 
+	# Process attack cooldown
+	if _attack_cooldown_timer > 0:
+		_attack_cooldown_timer -= delta
+
 	# Charmed enemies attack other enemies instead of the player
 	if is_charmed():
 		_do_charmed_behavior(delta)
@@ -108,6 +115,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _should_attack() -> bool:
+	# Don't attack if still on cooldown from previous attack
+	if _attack_cooldown_timer > 0:
+		return false
 	# Attack when enemy is at or below player's Y position
 	var player := _get_player_node()
 	if player:
@@ -407,8 +417,19 @@ func _complete_attack_attempt(hit_player: bool) -> void:
 
 	# If still alive, snap back and continue descending
 	if hp > 0:
-		# Snap back to pre-attack position
-		global_position = _pre_attack_position
+		# Set cooldown to prevent immediate re-attack
+		_attack_cooldown_timer = ATTACK_COOLDOWN
+
+		# Snap to a position above the player (not the pre-attack position)
+		# This prevents getting stuck on the player after hitting them
+		var player := _get_player_node()
+		if player:
+			# Snap above the player, maintaining our X position
+			global_position.y = player.global_position.y - POST_ATTACK_SNAP_OFFSET
+		else:
+			# Fallback: snap back to pre-attack position
+			global_position = _pre_attack_position
+
 		# Return to descending state - will re-trigger attack when reaching player level again
 		current_state = State.DESCENDING
 	# If dead, _die() is called automatically via hp setter
