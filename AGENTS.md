@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
+This project uses **dot** (dots) for issue tracking. Run `dot list` to see all tasks.
 
 ---
 
@@ -54,11 +54,12 @@ This ensures:
 ## Quick Reference
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
+dot list              # List all tasks
+dot list --status open  # Find available work
+dot show <id>         # View task details
+dot edit <id>         # Edit task (opens in $EDITOR)
+dot close <id>        # Complete task
+git add .dots && git commit -m "Update tasks" && git push  # Sync with git
 ```
 
 ## Testing Requirements
@@ -494,7 +495,8 @@ Step 2 happens before step 4, so `boss_base.gd` (alphabetically first) tries to 
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
+   git add .dots
+   git commit -m "Update task status"
    git push
    git status  # MUST show "up to date with origin"
    ```
