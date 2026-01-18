@@ -152,6 +152,9 @@ func _ready() -> void:
 	# Skip save slot/character/level select in headless mode (for testing)
 	if DisplayServer.get_name() == "headless":
 		GameManager.start_game()
+	elif MetaManager.are_all_slots_empty():
+		# New player onboarding - skip menus and start tutorial
+		_start_new_player_experience()
 	elif save_slot_select:
 		# Show save slot select first for normal gameplay
 		save_slot_select.show_select()
@@ -161,6 +164,38 @@ func _ready() -> void:
 	else:
 		# Fallback: auto-start if no character select
 		GameManager.start_game()
+
+
+func _start_new_player_experience() -> void:
+	"""Streamlined onboarding for new players - skip all menus."""
+	# Default to slot 1
+	MetaManager.set_active_slot(1)
+
+	# Load first character (Rookie)
+	var first_character := load("res://resources/characters/rookie.tres") as Resource
+	if not first_character:
+		push_error("Failed to load Rookie character for new player onboarding")
+		# Fallback to normal flow
+		if save_slot_select:
+			save_slot_select.show_select()
+		return
+
+	# Apply character to GameManager
+	GameManager.set_character(first_character)
+
+	# Apply character stats to ball spawner
+	if ball_spawner:
+		ball_spawner.ball_damage = GameManager.get_character_strength()
+		ball_spawner.crit_chance = 0.0 + (GameManager.character_crit_mult - 1.0) * 0.15
+		ball_spawner.set_ball_type(GameManager.character_starting_ball)
+
+	# Set first stage (The Pit, stage 0)
+	if StageManager:
+		StageManager.current_stage = 0
+		StageManager._apply_biome()
+
+	# Start game with tutorial
+	GameManager.start_game()
 
 
 func _on_character_selected(character: Resource) -> void:

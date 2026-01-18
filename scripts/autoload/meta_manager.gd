@@ -934,6 +934,14 @@ func is_slot_empty(slot: int) -> bool:
 	return not FileAccess.file_exists(_get_meta_path(slot))
 
 
+func are_all_slots_empty() -> bool:
+	"""Check if all save slots are empty (new player)."""
+	for slot in range(1, SLOT_COUNT + 1):
+		if not is_slot_empty(slot):
+			return false
+	return true
+
+
 func has_active_session(slot: int = -1) -> bool:
 	"""Check if a slot has a mid-run session save."""
 	return FileAccess.file_exists(_get_session_path(slot))
