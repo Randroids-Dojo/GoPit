@@ -66,6 +66,10 @@ var _pre_boss_tempo: float = 120.0
 var _pre_boss_drum_volume: float = -6.0
 var _pre_boss_melody_volume: float = -10.0
 
+# Crossfade state
+var _crossfading: bool = false
+var _crossfade_tween: Tween
+
 
 func _ready() -> void:
 	_setup_players()
@@ -121,24 +125,51 @@ func set_intensity(intensity: float) -> void:
 	_drum_player.volume_db = lerpf(-10.0, -2.0, (intensity - 1.0) / 4.0)
 
 
-## Set music parameters for a specific biome
+## Set music parameters for a specific biome (with crossfade)
 func set_biome(biome_name: String) -> void:
 	if biome_name not in BIOME_MUSIC:
 		return
 	if _current_biome == biome_name:
 		return
 
-	_current_biome = biome_name
+	_crossfade_to_biome(biome_name)
+
+
+## Smoothly crossfade from current biome to new biome
+func _crossfade_to_biome(biome_name: String) -> void:
+	# Kill any existing crossfade
+	if _crossfade_tween:
+		_crossfade_tween.kill()
+
+	_crossfading = true
+	_crossfade_tween = create_tween()
+
+	# Store target parameters
 	var params: Dictionary = BIOME_MUSIC[biome_name]
+	var target_root: float = params["root"]
+	var target_tempo: float = params["tempo"]
+	var target_scale: Array = SCALES[params["scale"]]
+	var target_intensity: float = params["intensity_base"]
 
-	# Update music parameters
-	_root_note = params["root"]
-	_current_scale = SCALES[params["scale"]]
-	_current_tempo = params["tempo"]
-	current_intensity = params["intensity_base"]
+	# Fade out current (0.5s) - bass and melody go quiet, drums stay
+	_crossfade_tween.tween_property(_bass_player, "volume_db", -24.0, 0.5)
+	_crossfade_tween.parallel().tween_property(_melody_player, "volume_db", -24.0, 0.5)
 
-	# Update timer for new tempo
-	_beat_timer.wait_time = 60.0 / _current_tempo / 2.0  # Eighth notes
+	# Switch parameters at midpoint
+	_crossfade_tween.tween_callback(func():
+		_current_biome = biome_name
+		_root_note = target_root
+		_current_scale = target_scale
+		_current_tempo = target_tempo
+		current_intensity = target_intensity
+		_beat_timer.wait_time = 60.0 / _current_tempo / 2.0
+	)
+
+	# Fade in new (0.5s)
+	_crossfade_tween.tween_property(_bass_player, "volume_db", -8.0, 0.5)
+	_crossfade_tween.parallel().tween_property(_melody_player, "volume_db", -10.0, 0.5)
+
+	_crossfade_tween.tween_callback(func(): _crossfading = false)
 
 
 func _on_biome_changed(biome: Biome) -> void:

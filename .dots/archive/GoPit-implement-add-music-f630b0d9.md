@@ -1,9 +1,11 @@
 ---
 title: "implement: Add music crossfade between biomes"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:06:04.488591-06:00"
+created-at: "\"\\\"\\\\\\\"2026-01-19T11:06:04.488591-06:00\\\\\\\"\\\"\""
+closed-at: "2026-01-19T11:17:20.958469-06:00"
+close-reason: Added crossfade between biomes - 0.5s fade out, parameter switch, 0.5s fade in. Tests pass.
 blocks:
   - GoPit-implement-add-per-2623a39b
 ---
