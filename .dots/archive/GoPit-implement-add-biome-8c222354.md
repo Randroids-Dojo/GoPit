@@ -1,10 +1,11 @@
 ---
 title: "implement: Add biome transition effect"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T09:57:35.934733-06:00"
-parent: GoPit-5tv
+created-at: "\"2026-01-19T09:57:35.934733-06:00\""
+closed-at: "2026-01-19T10:08:26.138739-06:00"
+close-reason: Added biome transition effect with fade-to-black and stage name display
 ---
 
 # Add Biome Transition Effect

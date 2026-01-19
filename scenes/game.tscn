@@ -1,6 +1,7 @@
-[gd_scene load_steps=26 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=27 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" uid="uid://biome_transition_scene" path="res://scenes/ui/biome_transition.tscn" id="biome_transition"]
 [ext_resource type="Script" path="res://scripts/ui/evolution_encyclopedia.gd" id="encyclopedia"]
 [ext_resource type="PackedScene" uid="uid://save_slot_select" path="res://scenes/ui/save_slot_select.tscn" id="25_slotselect"]
 [ext_resource type="Script" path="res://scripts/ui/passive_slots_display.gd" id="24_passive_slots"]
@@ -981,3 +982,5 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Endless Mode"
+
+[node name="BiomeTransition" parent="UI" instance=ExtResource("biome_transition")]
