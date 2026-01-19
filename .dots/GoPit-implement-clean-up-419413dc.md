@@ -67,7 +67,7 @@ git push origin --delete feature/aim-sensitivity research/stage-speed-progressio
 
 ## Verify
 
-- [ ] Run `git branch -r | wc -l` before and after - should drop from 75 to ~12
-- [ ] All ball types still work (test `./test.sh tests/test_status_effects.py`)
-- [ ] All bosses still work (boss system should be unaffected)
-- [ ] `git fetch --prune` shows deleted branches
+- [ ] Capture `git branch -r | sort` before deletion for reference
+- [ ] Delete branches in batches; re-run `git branch -r | wc -l` to confirm count drops as expected
+- [ ] Run `git fetch --prune` and confirm deleted branches are gone
+- [ ] Spot-check that the "KEEP" branch list is still present
