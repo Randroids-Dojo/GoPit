@@ -83,7 +83,37 @@ func _update_stats() -> void:
 
 func _show() -> void:
 	visible = true
-	get_tree().paused = true
+	_animate_show()
+
+
+func _animate_show() -> void:
+	"""Animate the overlay in with bounce effect."""
+	if not dim_background or not panel:
+		get_tree().paused = true
+		return
+
+	# Start state
+	dim_background.modulate.a = 0
+	panel.modulate.a = 0
+	panel.scale = Vector2(0.5, 0.5)
+	panel.pivot_offset = panel.size / 2
+
+	var tween := create_tween()
+
+	# Fade in dim background
+	tween.tween_property(dim_background, "modulate:a", 1.0, 0.3)
+
+	# Pop in panel with bounce
+	tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.3)
+	tween.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.5)
+
+	# Screen shake for victory emphasis
+	if _is_victory:
+		tween.tween_callback(func(): CameraShake.shake(10.0, 5.0))
+
+	# Pause after animation completes
+	tween.tween_callback(func(): get_tree().paused = true)
 
 
 func _on_continue_pressed() -> void:

@@ -1,10 +1,11 @@
 ---
 title: "implement: Add victory and defeat animations"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T09:58:05.432613-06:00"
-parent: GoPit-5tv
+created-at: "\"2026-01-19T09:58:05.432613-06:00\""
+closed-at: "2026-01-19T10:14:03.938371-06:00"
+close-reason: Added bounce animations to game over and stage complete overlays
 ---
 
 # Add Victory and Defeat Animations

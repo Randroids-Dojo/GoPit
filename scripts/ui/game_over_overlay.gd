@@ -6,6 +6,7 @@ signal restart_pressed
 const SETTINGS_PATH := "user://settings.save"
 const SHOP_HINT_TEXT := "Spend Pit Coins on permanent upgrades!"
 
+@onready var panel: Panel = $Panel
 @onready var score_label: Label = $Panel/VBoxContainer/ScoreLabel
 @onready var wave_label: Label = $Panel/VBoxContainer/WaveLabel
 @onready var stats_label: Label = $Panel/VBoxContainer/StatsLabel
@@ -47,7 +48,30 @@ func _on_game_over() -> void:
 
 	_update_stats()
 	visible = true
+	_animate_show()
 	_show_shop_hint()
+
+
+func _animate_show() -> void:
+	"""Animate the panel in with a scale bounce effect."""
+	if not panel:
+		return
+
+	# Start state: scaled small, transparent
+	panel.modulate.a = 0
+	panel.scale = Vector2(0.8, 0.8)
+	panel.pivot_offset = panel.size / 2
+
+	# Brief delay for dramatic effect after player death
+	var delay_tween := create_tween()
+	delay_tween.tween_interval(0.3)
+	await delay_tween.finished
+
+	# Animate in with bounce
+	var tween := create_tween()
+	tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.3)
+	tween.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.4)
 
 
 func _update_stats() -> void:
