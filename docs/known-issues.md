@@ -142,11 +142,11 @@ CI workflow uses Godot 4.4.1 but project requires 4.5+.
 - name: Setup Godot Engine
   uses: chickensoft-games/setup-godot@v2
   with:
-    version: 4.4.1
+    version: 4.5.1
 ```
 
 ### Impact
 Scene file changes may not export correctly due to format differences between versions.
 
-### TODO
-Update CI to use Godot 4.5+ when stable release is available.
+### Status
+- **Fixed** (2026-01-19) - Updated CI to use Godot 4.5.1 matching project requirements.

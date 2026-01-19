@@ -19,9 +19,9 @@ Optimize for mobile performance, profile on devices, and prepare iOS/Android exp
 
 This task naturally breaks into phases that can be done incrementally:
 
-**Phase A: Export Presets (can do without devices)**
-- Add iOS and Android export presets to `export_presets.cfg`
-- Verify exports build without errors (CI can validate)
+**Phase A: Export Presets (can do without devices)** ✅ COMPLETE
+- [x] Add iOS and Android export presets to `export_presets.cfg`
+- [x] Verify exports build without errors (CI can validate)
 - Note: Cannot test on real devices until provisioning profiles are set up
 
 **Phase B: Desktop/Web Profiling (can do without devices)**
@@ -34,7 +34,7 @@ This task naturally breaks into phases that can be done incrementally:
 - Profile with platform-specific tools
 - Iterate on optimizations based on real data
 
-**Recommendation:** Complete Phases A and B first, then Phase C when devices are available.
+**Recommendation:** Phase A complete. Continue with Phase B (profiling), then Phase C when devices are available.
 
 ## Current State
 
@@ -45,11 +45,11 @@ This task naturally breaks into phases that can be done incrementally:
 - Web export preset configured with custom shell
 
 **Gaps:**
-- No iOS export preset
-- No Android export preset
-- No profiling data on actual devices
-- No particle system limits
-- Enemies not pooled (could be added)
+- ~~No iOS export preset~~ **DONE** (preset.1 in export_presets.cfg)
+- ~~No Android export preset~~ **DONE** (preset.2 in export_presets.cfg)
+- No profiling data on actual devices (Phase C)
+- No particle system limits (evaluate during profiling)
+- Enemies not pooled (could be added if profiling shows need)
 
 ## Requirements
 

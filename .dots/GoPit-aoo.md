@@ -13,7 +13,7 @@ created-at: 2026-01-05T23:19:25.78436-06:00
 Final polish pass including audio, visual effects, mobile optimization, and release preparation.
 
 ## Success Criteria
-- [ ] Unique music per biome
+- [x] Unique music per biome **DONE** (8 biomes with distinct params in music_manager.gd)
 - [x] Complete SFX coverage **DONE** (procedural audio for all ball types, status effects, fusion, UI)
 - [x] Particle effects for all actions **DONE** (ball trails + status effect particles)
 - [x] Tutorial for new players **DONE** (first-time hints for level-up and shop)
@@ -43,12 +43,12 @@ Final polish pass including audio, visual effects, mobile optimization, and rele
 
 **Exports:**
 - Web export configured with custom shell
-- iOS/Android export presets NOT yet configured
+- iOS/Android export presets DONE (added 2026-01-19)
 
 ## Remaining Audio Work
-- [ ] Per-biome music variation (8 biomes need distinct musical feel)
-- [ ] Boss fight music trigger
-- [ ] Music crossfades between biomes
+- [x] Per-biome music variation **DONE** (BIOME_MUSIC const, SCALES const, `_crossfade_to_biome()`)
+- [x] Boss fight music trigger **DONE** (`set_boss_mode()`, signal connections)
+- [x] Music crossfades between biomes **DONE** (`_crossfade_to_biome()` with tween)
 
 ## Visual Polish
 - ~~Ball trails per type~~ **DONE**
@@ -61,15 +61,16 @@ Final polish pass including audio, visual effects, mobile optimization, and rele
 **All visual polish complete (GoPit-5tv closed)**
 
 ## Remaining Performance Work
-- [ ] Add iOS/Android export presets
-- [ ] Profile on real mobile devices
+- [x] Add iOS/Android export presets **DONE** (preset.1, preset.2 in export_presets.cfg)
+- [x] Update CI Godot version **DONE** - spec at GoPit-implement-update-ci-0cb84250
+- [ ] Profile on real mobile devices (Phase C - requires physical devices)
 - [ ] Enemy pooling (optional - assess if needed based on profiling)
 
 ## Child Tasks
 1. ~~GoPit-64u - Add audio settings with volume controls~~ **CLOSED**
-2. GoPit-0it - Complete Audio Pass (includes biome music & SFX)
+2. ~~GoPit-0it - Complete Audio Pass~~ **CLOSED** (biome music, boss music, crossfades all implemented)
 3. ~~GoPit-5tv - Visual Effects Polish~~ **CLOSED** (6/6 items done)
-4. GoPit-29a - Mobile Optimization & Testing
+4. GoPit-29a - Mobile Optimization & Testing (Phase A/B done, Phase C needs devices)
 
 **Created from research (COMPLETED):**
 - ~~GoPit-implement-add-first-bd018b35 - Tutorial hints for level-up and shop~~ **CLOSED**

@@ -1,9 +1,11 @@
 ---
 title: "implement: Update CI Godot version to 4.5.1"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:16:12.022246-06:00"
+created-at: "\"\\\"2026-01-19T11:16:12.022246-06:00\\\"\""
+closed-at: "2026-01-19T11:23:33.221364-06:00"
+close-reason: Updated CI Godot version from 4.4.1 to 4.5.1. Updated known-issues.md.
 ---
 
 ## Description
