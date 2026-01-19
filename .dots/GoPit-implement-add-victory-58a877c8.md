@@ -13,13 +13,21 @@ parent: GoPit-5tv
 
 Add satisfying entry animations to the game over overlay (defeat) and stage complete/victory overlay. Currently both overlays appear instantly without any visual feedback.
 
+## Implementation Status (2026-01-19)
+
+**IMPLEMENTED:** Both overlay animations are now in the codebase (uncommitted):
+- `game_over_overlay.gd` - Has `_animate_show()` with scale bounce (0.3s delay)
+- `stage_complete_overlay.gd` - Has `_animate_show()` with dim fade + panel bounce + victory screen shake
+
+**Minor issue:** `game_over_overlay.gd` calls `_show_shop_hint()` immediately after `_animate_show()` rather than waiting for the animation to complete. This is a minor timing issue - the shop hint will appear before the panel finishes animating.
+
+**Remaining:** Test the implementation, commit the changes, and optionally add confetti for victory.
+
 ## Context
 
 The game has two overlays that show end-game screens:
 - `game_over_overlay.gd` - Shown when player dies
 - `stage_complete_overlay.gd` - Shown when defeating a boss (stage complete) or winning the game (victory)
-
-Both overlays currently set `visible = true` and pause the game without any animations. Wave announcements already have nice fade/scale animations we can reference.
 
 ## Affected Files
 
@@ -38,6 +46,8 @@ This affects how animations are applied (CanvasLayer children animate differentl
 
 ### Existing Behavior to Preserve
 
+**IMPORTANT:** `game_over_overlay.gd` does NOT pause the game itself - it only sets `visible = true`. The game is presumably already paused by the death sequence or handled elsewhere. The entry animation must NOT add `get_tree().paused = true` to avoid double-pausing issues.
+
 `game_over_overlay.gd` already has a shop hint pulsing animation (`_pulse_tween`). The entry animation must not interfere with this. The shop hint should start pulsing AFTER the entry animation completes.
 
 ### Game Over (Defeat) Animation
@@ -48,8 +58,7 @@ Add to `game_over_overlay.gd`:
 func _on_game_over() -> void:
     # Existing stat recording code...
     _update_stats()
-    _animate_show()  # NEW: Replace direct visible = true
-    _show_shop_hint()
+    _animate_show()  # NEW: Replace direct visible = true, calls _show_shop_hint() after animation
 
 
 func _animate_show() -> void:
@@ -72,8 +81,8 @@ func _animate_show() -> void:
     tween.tween_property(panel, "modulate:a", 1.0, 0.3)
     tween.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.4)
 
-    # Pause game after animation starts (allow death effects to play)
-    tween.tween_callback(func(): get_tree().paused = true)
+    # After animation completes, show shop hint
+    tween.tween_callback(_show_shop_hint)
 ```
 
 ### Stage Complete / Victory Animation

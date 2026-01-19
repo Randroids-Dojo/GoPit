@@ -4,6 +4,7 @@ status: open
 priority: 2
 issue-type: task
 created-at: "2026-01-19T10:04:48.763044-06:00"
+parent: GoPit-a0p
 ---
 
 ## Description
@@ -20,7 +21,7 @@ The Empty Nester passive should double the ultimate ability effect, but it's not
 
 ## Implementation
 
-Option A - Fire blast twice:
+**Recommended: Option A** - Fire blast twice (more visually satisfying):
 ```gdscript
 func _on_ultimate_activated() -> void:
     var blast_scene: PackedScene = load("res://scenes/effects/ultimate_blast.tscn")
@@ -35,6 +36,13 @@ func _on_ultimate_activated() -> void:
 
 Option B - Pass damage multiplier to blast:
 Modify `ultimate_blast.gd` to accept a damage multiplier parameter and deal 9999 * multiplier damage.
+This is simpler but less visually impactful.
+
+## Implementation Notes
+
+- The function `_on_ultimate_activated()` is at line 468 in the salvo-firing branch
+- `get_special_fire_multiplier()` already has tests in `tests/test_empty_nester_passive.py`
+- No test exists for the actual double-blast behavior - add one if possible
 
 ## Verify
 

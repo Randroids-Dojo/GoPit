@@ -30,9 +30,9 @@ created-at: 2026-01-05T02:15:33.520331-06:00
 - [x] Charge resets on use and game reset
 
 ### Remaining Work
-- [ ] Empty Nester 2x specials passive for ultimate - `get_special_fire_multiplier()` exists but is NOT wired to `_on_ultimate_activated()`
+- [ ] Empty Nester 2x specials passive for ultimate (see child task GoPit-implement-wire-empty-cbe1c611)
 
-The function `GameManager.get_special_fire_multiplier()` (line 617) returns 2 for Empty Nester but is never called. The implementation needs to fire the ultimate blast twice (or deal 2x damage) when Empty Nester is the active character.
+The function `GameManager.get_special_fire_multiplier()` (line 617) returns 2 for Empty Nester but is never called in `_on_ultimate_activated()`. The child implementation task specifies the fix.
 
 ---
 

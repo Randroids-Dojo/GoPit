@@ -17,7 +17,7 @@ Add visual polish including particle effects, screen transitions, and juice.
 
 ## Child Tasks
 - GoPit-lbw - Add visual effect particles for status effects **DONE**
-- GoPit-implement-add-biome-8c222354 - Add biome transition effect
+- GoPit-implement-add-biome-8c222354 - Add biome transition effect **DONE**
 - GoPit-implement-add-victory-58a877c8 - Add victory and defeat animations
 - GoPit-implement-add-ui-8d3db9b7 - Add UI animations for level-up and cards
 
@@ -29,7 +29,7 @@ Add visual polish including particle effects, screen transitions, and juice.
 - [x] Boss attack telegraphs - All 8 bosses have telegraphs via `_show_attack_telegraph()` (e.g., SlimeKing has slam shadow, color flashes)
 
 **REMAINING:**
-- [ ] Screen transitions between biomes (GoPit-implement-add-biome-8c222354)
+- [x] Screen transitions between biomes (GoPit-implement-add-biome-8c222354) **DONE**
 - [ ] Victory/defeat animations (GoPit-implement-add-victory-58a877c8)
 - [ ] UI animations (GoPit-implement-add-ui-8d3db9b7)
 
@@ -37,7 +37,7 @@ Add visual polish including particle effects, screen transitions, and juice.
 1. ~~Ball trails per type (fire trail, ice sparkle, etc)~~ **DONE**
 2. ~~Status effect particles on enemies~~ **DONE**
 3. ~~Boss attack telegraphs (ground markers, warnings)~~ **DONE** - via `_show_attack_telegraph()` in boss_base.gd + subclasses
-4. Screen transitions between biomes
+4. ~~Screen transitions between biomes~~ **DONE** - fade-to-black with stage name
 5. Victory/defeat animations
 6. UI animations (level up flourish, etc)
 
@@ -77,7 +77,7 @@ Add visual polish including particle effects, screen transitions, and juice.
 - [x] All ball types have distinct trails **DONE**
 - [x] Status effects visible on enemies **DONE**
 - [x] Boss attacks clearly telegraphed **DONE** - all 8 bosses have `_show_attack_telegraph()` implementations
-- [ ] Smooth biome transitions
+- [x] Smooth biome transitions **DONE** - fade-to-black with stage name display
 - [ ] Satisfying victory animation
 - [ ] UI feels responsive and juicy
 

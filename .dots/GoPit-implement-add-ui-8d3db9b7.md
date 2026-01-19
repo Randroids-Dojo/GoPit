@@ -72,9 +72,8 @@ func _animate_show() -> void:
     # Pause after cards are shown
     tween.tween_callback(func(): get_tree().paused = true)
 
-
-# Play sound for "LEVEL UP!" announcement
-SoundManager.play(SoundManager.SoundType.LEVEL_UP)
+    # Play sound for "LEVEL UP!" announcement
+    SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 ```
 
 ### Card Hover Effect

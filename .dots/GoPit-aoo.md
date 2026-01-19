@@ -45,11 +45,12 @@ SFX gaps to fill:
 - UI feedback sounds
 
 ## Visual Polish
-- Ball trails per type
-- Status effect particles
-- Boss attack telegraphs
-- Screen transitions between biomes
+- ~~Ball trails per type~~ **DONE**
+- ~~Status effect particles~~ **DONE**
+- ~~Boss attack telegraphs~~ **DONE**
+- ~~Screen transitions between biomes~~ **DONE**
 - Victory/defeat animations
+- UI animations (level-up flourish)
 
 ## Performance
 - Profile on mobile devices
@@ -60,8 +61,11 @@ SFX gaps to fill:
 ## Child Tasks
 1. GoPit-64u - Add audio settings with volume controls
 2. GoPit-0it - Complete Audio Pass (includes biome music & SFX)
-3. GoPit-5tv - Visual Effects Polish (2/6 items done: ball trails, status particles)
+3. GoPit-5tv - Visual Effects Polish (4/6 items done)
    - ~~GoPit-lbw - Add visual effect particles for status effects~~ **CLOSED**
+   - ~~GoPit-implement-add-biome-8c222354 - Add biome transition effect~~ **CLOSED**
+   - GoPit-implement-add-victory-58a877c8 - Add victory and defeat animations
+   - GoPit-implement-add-ui-8d3db9b7 - Add UI animations for level-up and cards
 4. GoPit-29a - Mobile Optimization & Testing
 
 **Created from research (COMPLETED):**
