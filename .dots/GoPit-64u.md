@@ -8,81 +8,55 @@ created-at: 2026-01-05T02:02:57.527844-06:00
 ---
 
 ## Problem
-Players cannot mute or adjust volume. Critical for mobile (public places, night time).
+Players cannot access a full settings UI to adjust volume sliders. The quick mute button is available but fine-grained control is missing.
 
-## Implementation Plan
+## Current State (already implemented)
 
-### Phase 1: Settings Data
-**Modify: `scripts/autoload/sound_manager.gd`**
+- **Phase 1: Settings Data** - DONE in `scripts/autoload/sound_manager.gd`
+  - `master_volume`, `sfx_volume`, `music_volume` properties
+  - `is_muted` property with toggle
+  - Persistence via `user://audio_settings.save`
+  - Audio bus integration (Master, SFX, Music buses)
 
-```gdscript
-var master_volume: float = 1.0
-var sfx_volume: float = 1.0
-var music_volume: float = 1.0
-var is_muted: bool = false
+- **Phase 3: Quick Mute Button** - DONE in `scenes/game.tscn`
+  - Mute button exists at `/root/Game/UI/HUD/TopBar/MuteButton`
+  - Toggles mute state on click
+  - Tests pass in `tests/test_audio_settings.py`
 
-func set_master_volume(value: float):
-    master_volume = clamp(value, 0.0, 1.0)
-    AudioServer.set_bus_volume_db(0, linear_to_db(master_volume))
-    _save_settings()
+## Remaining Work: Settings UI (Phase 2)
 
-func set_sfx_volume(value: float):
-    sfx_volume = clamp(value, 0.0, 1.0)
-    var bus_idx = AudioServer.get_bus_index("SFX")
-    AudioServer.set_bus_volume_db(bus_idx, linear_to_db(sfx_volume))
-    _save_settings()
+Create a settings overlay accessible from pause menu that exposes volume sliders.
 
-func toggle_mute():
-    is_muted = !is_muted
-    AudioServer.set_bus_mute(0, is_muted)
-    _save_settings()
+### Files to Create
+1. **NEW: `scenes/ui/settings_overlay.tscn`**
+   ```
+   SettingsOverlay (CanvasLayer)
+   └── Panel (centered, ~400x500)
+       └── VBoxContainer
+           ├── TitleLabel ("Settings")
+           ├── HBoxContainer (Master: Label + HSlider)
+           ├── HBoxContainer (SFX: Label + HSlider)
+           ├── HBoxContainer (Music: Label + HSlider)
+           ├── HBoxContainer (Aim Sensitivity: Label + HSlider)
+           ├── CheckButton (Mute toggle)
+           └── CloseButton
+   ```
 
-func _save_settings():
-    var data = {
-        "master": master_volume,
-        "sfx": sfx_volume,
-        "music": music_volume,
-        "muted": is_muted
-    }
-    var file = FileAccess.open("user://audio_settings.save", FileAccess.WRITE)
-    file.store_string(JSON.stringify(data))
+2. **NEW: `scripts/ui/settings_overlay.gd`**
+   - Connect sliders to SoundManager.set_master_volume(), set_sfx_volume(), set_music_volume()
+   - Connect mute checkbox to SoundManager.toggle_mute()
+   - Connect aim sensitivity slider to SoundManager.set_aim_sensitivity()
+   - Initialize slider values from SoundManager on open
 
-func _load_settings():
-    if FileAccess.file_exists("user://audio_settings.save"):
-        # Load and apply settings
-        pass
-```
+### Files to Modify
+1. **MODIFY: `scenes/ui/pause_overlay.tscn`** - Add "Settings" button
+2. **MODIFY: `scripts/ui/pause_overlay.gd`** - Handle settings button press, show overlay
 
-### Phase 2: Settings UI
-**File: `scenes/ui/settings_overlay.tscn`** (new)
-
-```
-SettingsOverlay (CanvasLayer)
-└── Panel
-    └── VBoxContainer
-        ├── TitleLabel ("Settings")
-        ├── MasterVolumeSlider + Label
-        ├── SFXVolumeSlider + Label
-        ├── MusicVolumeSlider + Label
-        ├── MuteToggle (CheckButton)
-        └── CloseButton
-```
-
-### Phase 3: Quick Mute Button on HUD
-**Modify: `scenes/game.tscn`**
-
-Add small speaker icon in top-right corner that toggles mute on tap.
-
-### Files to Create/Modify
-1. MODIFY: `scripts/autoload/sound_manager.gd` - volume controls
-2. NEW: `scenes/ui/settings_overlay.tscn`
-3. NEW: `scripts/ui/settings_overlay.gd`
-4. MODIFY: `scenes/game.tscn` - add mute button to HUD
-5. MODIFY: `scripts/ui/hud.gd` - handle mute button
-
-### Audio Bus Setup (prerequisite)
-Requires audio buses: Master, SFX, Music
-**NOTE**: Already configured in `default_bus_layout.tres` - no action needed.
+### Integration Notes
+- Settings overlay should appear above pause overlay (higher z_index or CanvasLayer)
+- Pause menu needs "Settings" button between Resume and Quit
+- Close button returns to pause menu
+- Consider: should settings also be accessible from main menu?
 
 ## Verify
 
