@@ -854,10 +854,8 @@ func _try_unlock_passive_evolution(passive_type: PassiveType) -> void:
 	"""Try to unlock a passive evolution when a passive reaches L3."""
 	var evolution_id := MetaManager.try_unlock_evolution_for_passive(passive_type)
 	if not evolution_id.is_empty():
-		# Emit signal for UI notification
-		var evolution_data: PassiveEvolutions.EvolutionData = PassiveEvolutions.get_evolution(evolution_id)
-		if evolution_data:
-			print("Passive Evolution Unlocked: %s!" % evolution_data.name)
+		# Evolution unlocked - UI notification handled via MetaManager signal
+		var _evolution_data: PassiveEvolutions.EvolutionData = PassiveEvolutions.get_evolution(evolution_id)
 
 
 func _apply_passive_effect(passive_type: PassiveType) -> void:

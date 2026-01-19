@@ -1023,7 +1023,7 @@ func _migrate_legacy_save() -> void:
 
 		# Delete legacy file after successful migration
 		DirAccess.remove_absolute(LEGACY_SAVE_PATH)
-		print("Migrated legacy save to slot 1")
+		# Migration complete - legacy save data is now in slot 1
 
 
 # =============================================================================
