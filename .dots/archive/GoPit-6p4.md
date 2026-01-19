@@ -1,10 +1,11 @@
 ---
-title: EPIC: Phase 3 - Boss & Stages
-status: open
+title: "EPIC: Phase 3 - Boss & Stages"
+status: closed
 priority: 2
 issue-type: feature
 assignee: randroid
-created-at: 2026-01-05T23:19:25.263102-06:00
+created-at: "2026-01-05T23:19:25.263102-06:00"
+closed-at: "2026-01-19T01:36:20.014744-06:00"
 ---
 
 # Phase 3: Boss Fights & Biome System
