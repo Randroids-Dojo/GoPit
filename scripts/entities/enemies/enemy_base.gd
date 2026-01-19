@@ -47,6 +47,11 @@ const BURN_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/burn_par
 const FREEZE_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/freeze_particles.tscn")
 const POISON_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/poison_particles.tscn")
 const BLEED_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/bleed_particles.tscn")
+const RADIATION_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/radiation_particles.tscn")
+const DISEASE_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/disease_particles.tscn")
+const FROSTBURN_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/frostburn_particles.tscn")
+const WIND_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/wind_particles.tscn")
+const CHARM_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/charm_particles.tscn")
 
 @export var max_hp: int = 10
 @export var speed: float = 100.0
@@ -778,6 +783,16 @@ func _ensure_effect_particles(effect_type: int) -> void:
 			particle_scene = POISON_PARTICLES_SCENE
 		StatusEffect.Type.BLEED:
 			particle_scene = BLEED_PARTICLES_SCENE
+		StatusEffect.Type.RADIATION:
+			particle_scene = RADIATION_PARTICLES_SCENE
+		StatusEffect.Type.DISEASE:
+			particle_scene = DISEASE_PARTICLES_SCENE
+		StatusEffect.Type.FROSTBURN:
+			particle_scene = FROSTBURN_PARTICLES_SCENE
+		StatusEffect.Type.WIND:
+			particle_scene = WIND_PARTICLES_SCENE
+		StatusEffect.Type.CHARM:
+			particle_scene = CHARM_PARTICLES_SCENE
 
 	if particle_scene:
 		var particles: GPUParticles2D = particle_scene.instantiate()

@@ -1,10 +1,12 @@
 ---
 title: Add visual effect particles for status effects
-status: open
+status: closed
 priority: 3
 issue-type: task
 assignee: randroid
-created-at: 2026-01-07T00:18:33.988475-06:00
+created-at: "2026-01-07T00:18:33.988475-06:00"
+closed-at: "2026-01-19T09:43:35.199197-06:00"
+close-reason: Added 5 new particle scenes (radiation, disease, frostburn, wind, charm) and integrated them into enemy_base.gd
 ---
 
 ## Parent Task
