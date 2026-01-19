@@ -35,6 +35,7 @@ PATHS = {
     "game_over_overlay": "/root/Game/UI/GameOverOverlay",
     "level_up_overlay": "/root/Game/UI/LevelUpOverlay",
     "level_up_cards": "/root/Game/UI/LevelUpOverlay/Panel/VBoxContainer/CardsContainer",
+    "tutorial_overlay": "/root/Game/UI/TutorialOverlay",
     "game_manager": "/root/GameManager",
 }
 
