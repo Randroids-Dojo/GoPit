@@ -1,0 +1,131 @@
+[gd_scene load_steps=2 format=3 uid="uid://settings_overlay"]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_overlay.gd" id="1_settings"]
+
+[node name="SettingsOverlay" type="CanvasLayer"]
+layer = 101
+process_mode = 3
+script = ExtResource("1_settings")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="Panel" parent="DimBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -220.0
+offset_right = 180.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DimBackground/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "AUDIO SETTINGS"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="DimBackground/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="MasterLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Master Volume"
+
+[node name="MasterContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="MasterSlider" type="HSlider" parent="DimBackground/Panel/VBoxContainer/MasterContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MasterValue" type="Label" parent="DimBackground/Panel/VBoxContainer/MasterContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="SFXLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Sound Effects"
+
+[node name="SFXContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="SFXSlider" type="HSlider" parent="DimBackground/Panel/VBoxContainer/SFXContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="SFXValue" type="Label" parent="DimBackground/Panel/VBoxContainer/SFXContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="MusicLabel" type="Label" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Music"
+
+[node name="MusicContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="MusicSlider" type="HSlider" parent="DimBackground/Panel/VBoxContainer/MusicContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MusicValue" type="Label" parent="DimBackground/Panel/VBoxContainer/MusicContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="Spacer2" type="Control" parent="DimBackground/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="MuteButton" type="CheckButton" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Mute All Audio"
+
+[node name="Spacer3" type="Control" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Close"
