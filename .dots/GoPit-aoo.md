@@ -14,7 +14,7 @@ Final polish pass including audio, visual effects, mobile optimization, and rele
 
 ## Success Criteria
 - [ ] Unique music per biome
-- [ ] Complete SFX coverage
+- [x] Complete SFX coverage **DONE** (procedural audio for all ball types, status effects, fusion, UI)
 - [x] Particle effects for all actions **DONE** (ball trails + status effect particles)
 - [x] Tutorial for new players **DONE** (first-time hints for level-up and shop)
 - [ ] Mobile performance optimized (60fps)
@@ -24,25 +24,31 @@ Final polish pass including audio, visual effects, mobile optimization, and rele
 ## Reference
 - [GDD.md Section 7](./GDD.md#7-development-roadmap)
 
-## Technical Context
-Current state:
-- sound_manager.gd has basic SFX
-- music_manager.gd plays single track
-- camera_shake.gd, hit_particles.gd exist
-- tutorial_overlay.gd has basic tutorial
-- PlayGodot tests exist in tests/
+## Technical Context (Updated 2026-01-19)
 
-## Audio Needs
-Per biome:
-- Background music track
-- Ambient sounds
-- Boss fight music
+**Audio System:**
+- `sound_manager.gd` - Comprehensive procedural SFX with 25+ sound types:
+  - Ball types: FIRE_BALL, ICE_BALL, LIGHTNING_BALL, POISON_BALL, BLEED_BALL, IRON_BALL
+  - Status effects: BURN_APPLY, FREEZE_APPLY, POISON_APPLY, BLEED_APPLY
+  - Fusion: FUSION_REACTOR, EVOLUTION, FISSION
+  - Combat: FIRE, HIT_WALL, HIT_ENEMY, ENEMY_DEATH, WEAK_POINT_HIT
+  - UI/progression: GEM_COLLECT, PLAYER_DAMAGE, LEVEL_UP, GAME_OVER, WAVE_COMPLETE, BLOCKED
+- `music_manager.gd` - Procedural music with bass/drums/melody, intensity scaling
+- Audio buses: Master, SFX, Music with volume controls
 
-SFX gaps to fill:
-- Ball type-specific sounds
-- Status effect sounds
-- Boss attack sounds
-- UI feedback sounds
+**Rendering/Performance:**
+- Object pooling: balls (20-50), gems (30-100), damage numbers (30-100)
+- Renderer: gl_compatibility mode (mobile-optimized)
+- Pool manager in `scripts/autoload/pool_manager.gd`
+
+**Exports:**
+- Web export configured with custom shell
+- iOS/Android export presets NOT yet configured
+
+## Remaining Audio Work
+- [ ] Per-biome music variation (8 biomes need distinct musical feel)
+- [ ] Boss fight music trigger
+- [ ] Music crossfades between biomes
 
 ## Visual Polish
 - ~~Ball trails per type~~ **DONE**
@@ -54,11 +60,10 @@ SFX gaps to fill:
 
 **All visual polish complete (GoPit-5tv closed)**
 
-## Performance
-- Profile on mobile devices
-- Optimize particle systems
-- Batch draw calls
-- Memory management for long sessions
+## Remaining Performance Work
+- [ ] Add iOS/Android export presets
+- [ ] Profile on real mobile devices
+- [ ] Enemy pooling (optional - assess if needed based on profiling)
 
 ## Child Tasks
 1. ~~GoPit-64u - Add audio settings with volume controls~~ **CLOSED**
