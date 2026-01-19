@@ -1,9 +1,11 @@
 ---
 title: "implement: Close Phase 5 EPIC and Mobile Optimization task"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:30:04.477963-06:00"
+created-at: "\"\\\"2026-01-19T11:30:04.477963-06:00\\\"\""
+closed-at: "2026-01-19T11:34:01.171826-06:00"
+close-reason: Closed GoPit-aoo (Phase 5) and GoPit-29a (Mobile Optimization)
 ---
 
 ## Description

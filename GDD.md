@@ -46,16 +46,16 @@ Fire Balls → Defeat Enemies → Collect Gems → Level Up → Fuse/Evolve Ball
 
 | Feature | Current GoPit | Target (BallxPit-aligned) | Status |
 |---------|---------------|---------------------------|--------|
-| **Player Movement** | Fixed at bottom | Free movement in play area | Gap |
-| **Ball Firing** | Manual tap only | Toggle autofire + manual | Gap |
-| **Baby Balls** | Not implemented | Auto-generated small balls | Gap |
-| **Ball Types** | Fire/Ice/Lightning | Status effects + Fusion system | Partial |
-| **Enemy Warning** | Instant damage at wall | Exclamation → Shake → Attack | Gap |
-| **Gem Collection** | Player zone area pickup | Walk over / magnetism | Gap |
-| **Bosses** | Not implemented | 2 stage + 1 final per level | Gap |
-| **Biomes** | Single environment | Multiple themed stages | Gap |
-| **Characters** | Single character | Multiple with unique abilities | Gap |
-| **Win Condition** | Endless survival | Level-based (beat final boss) | Gap |
+| **Player Movement** | Virtual joystick | Free movement in play area | ✅ Done |
+| **Ball Firing** | Autofire toggle + manual | Toggle autofire + manual | ✅ Done |
+| **Baby Balls** | BabyBallSpawner + Leadership | Auto-generated small balls | ✅ Done |
+| **Ball Types** | 6 types + 15+ fusions | Status effects + Fusion system | ✅ Done |
+| **Enemy Warning** | Exclamation → Shake → Attack | Exclamation → Shake → Attack | ✅ Done |
+| **Gem Collection** | Walk over + magnetism | Walk over / magnetism | ✅ Done |
+| **Bosses** | 8 bosses + 16 mini-bosses | 2 stage + 1 final per level | ✅ Done |
+| **Biomes** | 8 themed stages | Multiple themed stages | ✅ Done |
+| **Characters** | 6 unique characters | Multiple with unique abilities | ✅ Done |
+| **Win Condition** | Beat final boss | Level-based (beat final boss) | ✅ Done |
 
 ---
 
@@ -357,38 +357,38 @@ Each biome has unique visual theme, hazards, and enemy variants.
 
 ## 7. Development Roadmap
 
-### Phase 1: Core Alignment (Current)
-- [ ] Player free movement (replace fixed position)
-- [ ] Autofire toggle
-- [ ] Enemy warning system (exclamation → shake → attack)
-- [ ] Gem collection via player movement
-- [ ] Baby ball system
+### Phase 1: Core Alignment ✅ COMPLETE
+- [x] Player free movement (virtual joystick controls)
+- [x] Autofire toggle (toggle button in HUD)
+- [x] Enemy warning system (exclamation → shake → attack animation)
+- [x] Gem collection via player movement (magnetism upgrade available)
+- [x] Baby ball system (BabyBallSpawner, Leadership stat)
 
-### Phase 2: Ball Evolution
-- [ ] Status effect system (Burn, Freeze, Poison, Bleed)
-- [ ] Ball leveling (L1 → L2 → L3)
-- [ ] Fusion Reactor drops
-- [ ] Ball fusion combinations
-- [ ] Evolution stones
+### Phase 2: Ball Evolution ✅ COMPLETE
+- [x] Status effect system (Burn, Freeze, Poison, Bleed, Lightning, Iron)
+- [x] Ball leveling (L1 → L2 → L3 with stat scaling)
+- [x] Fusion Reactor drops (random spawn, combine L3 balls)
+- [x] Ball fusion combinations (15+ fusion recipes)
+- [x] Evolution stones (passive evolution system)
 
-### Phase 3: Boss & Stages
-- [ ] Boss base class with phases
-- [ ] Stage 1 bosses (Slime King, etc.)
-- [ ] Biome system (visual themes + hazards)
-- [ ] Stage progression (Pit → Ice → Desert → Swamp → Final)
-- [ ] Win condition (beat Final Descent)
+### Phase 3: Boss & Stages ✅ COMPLETE
+- [x] Boss base class with phases (BossBase with attack patterns)
+- [x] 8 stage bosses (Slime King, Frost Wyrm, Sand Golem, etc.)
+- [x] Biome system (8 biomes with unique hazards)
+- [x] Stage progression (The Pit → Frozen Depths → Burning Sands → etc.)
+- [x] Win condition (defeat final boss)
 
-### Phase 4: Characters
-- [ ] Character selection screen
-- [ ] 6 unique characters with abilities
-- [ ] Character-specific starting balls
-- [ ] Stat system (Endurance, Strength, etc.)
+### Phase 4: Characters ✅ COMPLETE
+- [x] Character selection screen (CharacterSelect overlay)
+- [x] 6 unique characters with abilities (Rookie, Pyro, Frost Mage, etc.)
+- [x] Character-specific starting balls (fire, ice, bleed, etc.)
+- [x] Stat system (Endurance, Strength, Leadership, Speed, Dexterity, Intelligence)
 
-### Phase 5: Polish
-- [ ] Sound effects + music per biome
-- [ ] Visual juice (particles, screen shake)
-- [ ] Mobile optimization
-- [ ] Tutorial for new players
+### Phase 5: Polish ✅ COMPLETE
+- [x] Sound effects + music per biome (procedural audio, 8 biome music modes)
+- [x] Visual juice (17 particle effects, screen shake, damage vignette)
+- [x] Mobile optimization (export presets, gl_compatibility renderer)
+- [x] Tutorial for new players (first-time hints system)
 
 ---
 
@@ -402,29 +402,42 @@ Each biome has unique visual theme, hazards, and enemy variants.
 
 ---
 
-## Appendix A: Gap Analysis Summary
+## Appendix A: Implementation Summary
 
-**Critical Gaps** (fundamental mechanics different from BallxPit):
-1. Player cannot move (fixed position vs free movement)
-2. No baby ball generation
-3. Enemies deal instant damage (no warning/attack animation)
-4. Gems collected at wall (should require player to walk over)
-5. No boss fights
-6. Single character (no variety)
-7. Endless mode only (no level-based progression)
+**All Core Features Complete** (aligned with BallxPit):
 
-**Partial Implementations** (started but incomplete):
-1. Ball types exist but limited (Fire/Ice/Lightning vs full status system)
-2. Level-up system works but needs ball fusion
-3. Wave scaling exists but no biome transitions
+*Movement & Controls:*
+1. Player free movement via virtual joystick
+2. Autofire toggle + manual firing
+3. Aim line trajectory preview
 
-**Working Features** (aligned with BallxPit):
-1. Ball physics (bounce, wall collision)
-2. Enemy spawning and descent
-3. XP/gem/level-up core loop
-4. Visual feedback (damage numbers, screen shake)
-5. Upgrade variety (10+ upgrade types)
+*Ball System:*
+1. 6 ball types with status effects (Burn, Freeze, Poison, Bleed, Lightning, Iron)
+2. Ball leveling (L1 → L2 → L3)
+3. 15+ fusion combinations via Fusion Reactor
+4. Baby ball generation (BabyBallSpawner, Leadership stat)
+5. Passive evolution system
+
+*Combat:*
+1. Enemy warning system (exclamation → shake → attack)
+2. 7 enemy types (Slime, Bat, Crab, Golem, Swarm, Archer, Bomber)
+3. 8 stage bosses with phases (Slime King, Frost Wyrm, Sand Golem, etc.)
+4. 16 mini-bosses across biomes
+
+*Progression:*
+1. Gem collection via player movement + magnetism
+2. XP/level-up system with upgrade choices
+3. 8 biomes with unique themes and hazards
+4. Level-based win condition (beat final boss)
+5. 6 playable characters with unique stats and abilities
+
+*Polish:*
+1. Procedural audio (25+ sound types)
+2. Per-biome music with crossfades
+3. 17 particle effects
+4. Screen shake, damage vignette
+5. Tutorial hints for new players
 
 ---
 
-*This document reflects alignment with Ball x Pit mechanics as of January 2026.*
+*This document reflects completed Ball x Pit alignment as of January 2026.*
