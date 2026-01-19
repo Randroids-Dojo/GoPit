@@ -16,11 +16,23 @@ GoPit-aoo (Phase 5 - Polish & Release)
 Add visual polish including particle effects, screen transitions, and juice.
 
 ## Child Tasks
-- GoPit-lbw - Add visual effect particles for status effects
+- GoPit-lbw - Add visual effect particles for status effects **DONE**
+
+## Progress (2026-01-19)
+
+**COMPLETED:**
+- [x] Ball trails per type - fire, ice, lightning, poison, bleed, iron, vampire trails exist in `scenes/effects/*_trail.tscn`
+- [x] Status effect particles on enemies - All 9 status effects have particles (GoPit-lbw)
+
+**REMAINING:**
+- [ ] Boss attack telegraphs (ground markers, warnings)
+- [ ] Screen transitions between biomes
+- [ ] Victory/defeat animations
+- [ ] UI animations (level up flourish, etc)
 
 ## Requirements
-1. Ball trails per type (fire trail, ice sparkle, etc)
-2. Status effect particles on enemies
+1. ~~Ball trails per type (fire trail, ice sparkle, etc)~~ **DONE**
+2. ~~Status effect particles on enemies~~ **DONE**
 3. Boss attack telegraphs (ground markers, warnings)
 4. Screen transitions between biomes
 5. Victory/defeat animations
@@ -59,8 +71,8 @@ Add visual polish including particle effects, screen transitions, and juice.
 - MODIFY: UI scripts for animations
 
 ## Acceptance Criteria
-- [ ] All ball types have distinct trails
-- [ ] Status effects visible on enemies
+- [x] All ball types have distinct trails **DONE**
+- [x] Status effects visible on enemies **DONE**
 - [ ] Boss attacks clearly telegraphed
 - [ ] Smooth biome transitions
 - [ ] Satisfying victory animation

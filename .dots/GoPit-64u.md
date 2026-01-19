@@ -1,10 +1,10 @@
 ---
 title: Add audio settings with volume controls
-status: open
+status: active
 priority: 2
 issue-type: feature
 assignee: randroid
-created-at: 2026-01-05T02:02:57.527844-06:00
+created-at: "2026-01-05T02:02:57.527844-06:00"
 ---
 
 ## Problem
@@ -23,12 +23,24 @@ Players cannot access a full settings UI to adjust volume sliders. The quick mut
   - Toggles mute state on click
   - Tests pass in `tests/test_audio_settings.py`
 
+## Implementation Progress (2026-01-19)
+
+**COMPLETE - UNCOMMITTED FILES:**
+- `scripts/ui/settings_overlay.gd` - Created (untracked)
+- `scenes/ui/settings_overlay.tscn` - Created (untracked)
+- `scenes/game.tscn` - Modified (added SettingsOverlay instance + button)
+- `scripts/ui/pause_overlay.gd` - Already has settings integration (committed)
+
+**READY TO COMMIT** - Just needs to add and commit the untracked files + game.tscn changes
+
+---
+
 ## Remaining Work: Settings UI (Phase 2)
 
 Create a settings overlay accessible from pause menu that exposes volume sliders.
 
 ### Files to Create
-1. **NEW: `scenes/ui/settings_overlay.tscn`**
+1. **CREATED: `scenes/ui/settings_overlay.tscn`** (uncommitted)
    ```
    SettingsOverlay (CanvasLayer)
    └── Panel (centered, ~400x500)
