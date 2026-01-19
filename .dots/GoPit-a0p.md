@@ -146,3 +146,18 @@ func _on_gem_collected(gem):
 6. MODIFY: `scenes/game.tscn` - add ultimate button
 7. MODIFY: `scripts/game/game_controller.gd` - wire charge gain
 8. MODIFY: `scripts/autoload/sound_manager.gd` - add ULTIMATE sound
+
+## Verify
+
+- [ ] `./test.sh` passes
+- [ ] Ultimate charge increases when killing enemies
+- [ ] Ultimate charge increases when collecting gems
+- [ ] UI shows charge progress (0-100%)
+- [ ] UI pulses/glows when ultimate is ready
+- [ ] Tapping ultimate button activates the effect
+- [ ] All enemies on screen are damaged/killed
+- [ ] Visual blast effect plays with screen flash
+- [ ] Screen shake occurs on activation
+- [ ] Sound effect plays
+- [ ] Ultimate charge resets to 0 after use
+- [ ] Cannot activate ultimate when charge < 100%

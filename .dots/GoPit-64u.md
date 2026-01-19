@@ -82,3 +82,14 @@ Add small speaker icon in top-right corner that toggles mute on tap.
 
 ### Audio Bus Setup (prerequisite)
 Requires audio buses: Master, SFX, Music
+
+## Verify
+
+- [ ] `./test.sh` passes
+- [ ] Master volume slider adjusts overall game volume
+- [ ] SFX volume slider adjusts sound effects independently
+- [ ] Music volume slider adjusts background music independently
+- [ ] Mute toggle silences all audio
+- [ ] Settings persist after app restart (test via: change volume, close game, reopen)
+- [ ] Quick mute button on HUD toggles mute state
+- [ ] Mute icon shows current state (muted vs unmuted)
