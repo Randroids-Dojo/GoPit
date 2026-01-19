@@ -1,10 +1,11 @@
 ---
 title: "implement: Clean up obsolete feature branches"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T12:09:37.615910-06:00"
-after: GoPit-research-audit-feature-706ba0eb
+created-at: "\"\\\"2026-01-19T12:09:37.615910-06:00\\\"\""
+closed-at: "2026-01-19T12:59:47.126444-06:00"
+close-reason: Deleted listed remote branches, pruned remotes, keep branches intact
 ---
 
 ## Description
