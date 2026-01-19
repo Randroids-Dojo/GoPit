@@ -31,22 +31,31 @@ async def test_ball_spawner_tracks_balls_in_flight(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
     await asyncio.sleep(0.2)
 
-    # Check balls in flight starts at 0 or returns to 0
-    # Wait for any existing balls to return
-    await asyncio.sleep(2.0)
+    # Wait for salvo to return (main_balls_in_flight == 0)
+    # This is more reliable than waiting for total balls
+    elapsed = 0
+    timeout = 5.0
+    while elapsed < timeout:
+        main_in_flight = await game.call(BALL_SPAWNER, "get_main_balls_in_flight")
+        if main_in_flight == 0:
+            break
+        await asyncio.sleep(0.1)
+        elapsed += 0.1
 
-    initial_in_flight = await game.call(BALL_SPAWNER, "get_balls_in_flight")
+    # Verify we can fire (main_balls_in_flight is 0)
+    can_fire_before = await game.call(BALL_SPAWNER, "can_fire")
+    assert can_fire_before, "Should be able to fire when main_balls_in_flight is 0"
 
-    # Fire once
+    # Fire salvo
     await wait_for_fire_ready(game)
     await game.click(FIRE_BUTTON)
 
-    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
-    await asyncio.sleep(0.5)
+    # Wait briefly for salvo to register
+    await asyncio.sleep(0.1)
 
-    # Balls in flight should increase
-    after_fire = await game.call(BALL_SPAWNER, "get_balls_in_flight")
-    assert after_fire > initial_in_flight, f"Balls in flight should increase after firing, got {after_fire}"
+    # Main balls in flight should now be > 0 (salvo just fired)
+    main_after = await game.call(BALL_SPAWNER, "get_main_balls_in_flight")
+    assert main_after > 0, f"Main balls in flight should increase after firing salvo, got {main_after}"
 
     # Re-enable autofire
     await game.call(FIRE_BUTTON, "set_autofire", [True])
