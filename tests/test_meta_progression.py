@@ -95,6 +95,9 @@ async def test_shop_opens_from_game_over(game):
     # Trigger game over
     await trigger_game_over(game)
 
+    # Wait for panel animation to complete (bounce effect)
+    await asyncio.sleep(0.8)
+
     # Click shop button
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
 
@@ -111,6 +114,10 @@ async def test_shop_displays_upgrades(game):
 
     # Trigger game over and open shop
     await trigger_game_over(game)
+
+    # Wait for panel animation to complete (bounce effect)
+    await asyncio.sleep(0.8)
+
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
 
     # Wait for shop to become visible instead of fixed sleep
@@ -130,6 +137,10 @@ async def test_shop_close_button(game):
     """Test that the shop can be closed."""
     # Trigger game over and open shop
     await trigger_game_over(game)
+
+    # Wait for panel animation to complete (bounce effect)
+    await asyncio.sleep(0.8)
+
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
 
     # Wait for shop to become visible instead of fixed sleep
@@ -152,6 +163,10 @@ async def test_coin_balance_display(game):
 
     # Trigger game over and open shop
     await trigger_game_over(game)
+
+    # Wait for panel animation to complete (bounce effect)
+    await asyncio.sleep(0.8)
+
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
 
     # Wait for shop to become visible instead of fixed sleep

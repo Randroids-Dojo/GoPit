@@ -24,6 +24,7 @@ const SETTINGS_PATH := "user://settings.save"
 const HINT_TEXT := "Choose an upgrade! Tap a card to power up."
 const HINT_DURATION := 3.0  # Seconds before auto-dismiss
 
+@onready var panel: Panel = $Panel
 @onready var cards_container: HBoxContainer = $Panel/VBoxContainer/CardsContainer
 @onready var title_label: Label = $Panel/VBoxContainer/TitleLabel
 @onready var hint_label: Label = $Panel/VBoxContainer/HintLabel
@@ -32,6 +33,7 @@ const HINT_DURATION := 3.0  # Seconds before auto-dismiss
 var _available_cards: Array[Dictionary] = []
 var _first_levelup_seen: bool = false
 var _hint_tween: Tween = null
+var _animation_complete: bool = false
 
 
 func _ready() -> void:
@@ -46,6 +48,8 @@ func _setup_cards() -> void:
 	for i in range(cards_container.get_child_count()):
 		var card: Button = cards_container.get_child(i)
 		card.pressed.connect(_on_card_pressed.bind(i))
+		card.mouse_entered.connect(_on_card_hover.bind(card, true))
+		card.mouse_exited.connect(_on_card_hover.bind(card, false))
 
 
 func _setup_hint_label() -> void:
@@ -70,8 +74,64 @@ func _on_level_up() -> void:
 	_randomize_cards()
 	_update_cards()
 	visible = true
-	get_tree().paused = true
+	_animation_complete = false
+	_animate_show()
 	_show_first_time_hint()
+
+
+func _animate_show() -> void:
+	"""Animate the panel and cards in with staggered entrance."""
+	if not panel:
+		get_tree().paused = true
+		_animation_complete = true
+		return
+
+	# Initial state for panel
+	panel.modulate.a = 0
+	panel.scale = Vector2(0.9, 0.9)
+	panel.pivot_offset = panel.size / 2
+
+	# Hide all cards initially
+	for i in range(cards_container.get_child_count()):
+		var card: Button = cards_container.get_child(i)
+		if card.visible:
+			card.modulate.a = 0
+			card.scale = Vector2(0.8, 0.8)
+			card.pivot_offset = card.size / 2
+
+	var tween := create_tween()
+
+	# Fade in panel with slight bounce
+	tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.2)
+	tween.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.3)
+
+	# Staggered card entrance
+	for i in range(cards_container.get_child_count()):
+		var card: Button = cards_container.get_child(i)
+		if card.visible:
+			tween.tween_property(card, "modulate:a", 1.0, 0.15)
+			tween.parallel().tween_property(card, "scale", Vector2(1.0, 1.0), 0.2)
+
+	# Play level up sound
+	if SoundManager:
+		tween.tween_callback(func(): SoundManager.play(SoundManager.SoundType.LEVEL_UP))
+
+	# Pause after cards are shown
+	tween.tween_callback(func():
+		get_tree().paused = true
+		_animation_complete = true
+	)
+
+
+func _on_card_hover(card: Button, is_hovered: bool) -> void:
+	"""Scale card slightly on hover for feedback."""
+	if not _animation_complete:
+		return
+
+	var target_scale := Vector2(1.05, 1.05) if is_hovered else Vector2(1.0, 1.0)
+	var tween := create_tween()
+	tween.tween_property(card, "scale", target_scale, 0.1)
 
 
 func _randomize_cards() -> void:
@@ -210,7 +270,38 @@ func _update_cards() -> void:
 func _on_card_pressed(index: int) -> void:
 	if index >= _available_cards.size():
 		return
+	if not _animation_complete:
+		return
 
+	# Prevent double-clicks during animation
+	_animation_complete = false
+
+	var card: Button = cards_container.get_child(index)
+	_animate_selection(card, index)
+
+
+func _animate_selection(card: Button, index: int) -> void:
+	"""Animate the selected card with highlight, fade others, then apply selection."""
+	var tween := create_tween()
+
+	# Scale up and highlight selected card
+	tween.tween_property(card, "scale", Vector2(1.15, 1.15), 0.1)
+	tween.parallel().tween_property(card, "modulate", Color(1.3, 1.3, 1.0, 1.0), 0.1)
+
+	# Fade out other cards
+	for i in range(cards_container.get_child_count()):
+		if i != index:
+			var other_card: Button = cards_container.get_child(i)
+			if other_card.visible:
+				tween.parallel().tween_property(other_card, "modulate:a", 0.3, 0.2)
+
+	# Brief pause then apply selection
+	tween.tween_interval(0.2)
+	tween.tween_callback(func(): _apply_selection(index))
+
+
+func _apply_selection(index: int) -> void:
+	"""Apply the card selection and close the overlay."""
 	var card_data: Dictionary = _available_cards[index]
 	var selected_name: String = ""
 

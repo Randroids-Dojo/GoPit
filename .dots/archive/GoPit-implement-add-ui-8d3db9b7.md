@@ -1,13 +1,29 @@
 ---
 title: "implement: Add UI animations for level-up and cards"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T09:58:48.660669-06:00"
-parent: GoPit-5tv
+created-at: "\"\\\"2026-01-19T09:58:48.660669-06:00\\\"\""
+closed-at: "2026-01-19T10:25:38.960400-06:00"
+close-reason: "Added level-up animations: panel bounce, staggered cards, hover effects, selection highlight"
 ---
 
 # Add UI Animations for Level-up and Cards
+
+## Implementation Status (2026-01-19)
+
+**FULLY IMPLEMENTED** but uncommitted. Changes in working tree:
+- `scripts/ui/level_up_overlay.gd` has all animations added
+
+**What's implemented:**
+- [x] Entry animation (`_animate_show()`) - panel fade/scale with bounce
+- [x] Staggered card entrance - cards animate in one by one
+- [x] Card hover effect (`_on_card_hover()`) - scale to 1.05x on hover
+- [x] Card selection animation (`_animate_selection()`) - highlights selected, fades others
+
+**Remaining:**
+- [ ] Run tests and commit changes
+- [ ] Close this task
 
 ## Description
 
