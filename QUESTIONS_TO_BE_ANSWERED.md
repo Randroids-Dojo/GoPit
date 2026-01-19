@@ -1,74 +1,55 @@
 # Questions to Be Answered
 
-## Ball Slot System (GoPit-6zk)
+## Ball Slot System (GoPit-6zk) - RESOLVED (2026-01-19)
 
-### Key Questions
+**STATUS: IMPLEMENTED** - See `scripts/autoload/ball_registry.gd`
 
-1. **How many slots exactly?** The task says "4-5 ball types". Is it 4 or 5? BallxPit might have a specific number.
+### Implementation Summary
 
-2. **Multi-shot interaction**: When there are 4 slots and multi-shot is 3:
-   - Does each slot fire 3 balls (total 12)?
-   - Or do all 4 slots share the 3-ball spread?
+1. **How many slots exactly?** → **5 slots** (`MAX_SLOTS: int = 5` at line 211)
 
-3. **Empty slots**: What happens if player only has 2 ball types but 4 slots?
-   - Fire nothing from empty slots?
-   - Fill remaining slots with Basic ball?
+2. **Multi-shot interaction**: Each equipped slot fires independently. Multi-shot would multiply per slot.
+
+3. **Empty slots**: Empty slots (`-1`) are skipped. Only filled slots fire. (`get_filled_slots()` at line 422)
 
 4. **Slot assignment**: When acquiring a new ball type:
-   - Automatically fills next empty slot?
-   - Player can rearrange slots?
+   - Automatically fills next empty slot via `_assign_to_empty_slot()` (line 407)
+   - Player can rearrange slots via `swap_slots()` (line 459) and `set_slot()` (line 440)
 
-5. **Duplicate balls in slots**: Can the same ball type be in multiple slots for more of that type?
+5. **Duplicate balls in slots**: Implementation allows same ball type in multiple slots (no uniqueness check in `set_slot()`)
 
-6. **Baby balls**: How do baby balls interact with slots? Do they inherit from parent slot's ball type?
+6. **Baby balls**: Baby balls inherit ball type from their spawner configuration
 
-### Need to Verify in BallxPit
-
-- [ ] Count exact number of ball slots
-- [ ] Test multi-shot with multiple ball types
-- [ ] Observe what happens when acquiring new balls
-- [ ] Check if slots can be rearranged
+### Resolved
 
 ---
 
-## Ball Return Mechanic (GoPit-ay9)
+## Ball Return Mechanic (GoPit-ay9) - RESOLVED (2026-01-19)
 
-### Key Questions
+**STATUS: IMPLEMENTED** - See `scripts/entities/ball.gd`
+
+### Implementation Summary
 
 1. **When does a ball "return"?**
-   - When hitting bottom of screen only?
-   - When player "catches" it manually?
-   - Both? (bottom = auto-return, catch = bonus DPS)
+   - Y-position check at `RETURN_Y_THRESHOLD = 1150.0` (line 34)
+   - Ball crosses bottom threshold → starts returning
+   - Return completes at `RETURN_COMPLETE_Y = 350.0` (line 35)
+   - Catch zone: ball is catchable when `y < CATCH_ZONE_Y (600.0)` (line 36)
 
-2. **Fire restriction**: With multi-slot system, how does "cannot fire until balls return" work?
-   - All balls must return before ANY can fire?
-   - Each slot tracks its own balls independently?
-   - Pool of available balls across all slots?
+2. **Fire restriction**: Global ball availability tracking
+   - `_balls_available` flag on fire button (checked in `wait_for_fire_ready()`)
+   - Fire button waits for balls to be available
 
-3. **Bottom boundary**: Is there a physical bottom wall, or Y-position check?
-   - Current GoPit has no bottom wall (balls just bounce off sides)
-   - Should add a bottom collision or check Y > threshold?
+3. **Bottom boundary**: Y-position check, not physics wall
+   - `is_returning` flag triggers at `y > RETURN_Y_THRESHOLD`
+   - Return speed is faster: `RETURN_SPEED_MULT = 1.5` (line 37)
 
-4. **Ball persistence**: With return mechanic, what replaces max_bounces?
-   - Remove max_bounces entirely?
-   - Keep as fallback safety?
-   - Different mechanic (time-based despawn)?
+4. **Ball persistence**: `max_bounces` kept as fallback
+   - Line 271: "Removed despawn on max_bounces - balls now return at bottom of screen"
+   - `max_bounces = 30` still exists as safety limit
 
-5. **Multi-shot + return**: If multi-shot=3 and 4 slots = 12 balls per fire:
-   - Must ALL 12 return before firing again?
-   - Does this make the game feel slow?
+5. **Multi-shot + return**: All balls share global availability pool
 
-6. **Baby balls**: Do baby balls count in the "balls out" system?
-   - They auto-spawn, would they block player firing?
+6. **Baby balls**: Separate tracking via `is_baby_ball` flag (line 52)
 
-### Design Decision Needed
-
-The ball return mechanic fundamentally changes gameplay from:
-- **Current**: Cooldown-based firing, balls despawn after bounces
-- **BallxPit**: Balls persist, must return before firing again
-
-This is a MAJOR change. Proceeding with implementation:
-- Add bottom-screen detection for ball return
-- Track "balls in flight" per slot
-- Fire button only active when balls are available
-- Consider keeping autofire but adjusting for return timing
+### Resolved

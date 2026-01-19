@@ -19,8 +19,10 @@ Address code quality issues, bugs, and refactoring opportunities identified duri
 - [ ] All tests passing
 
 ## Child Tasks
-1. GoPit-iqz - Fix void ball alternation state bug (high priority)
-2. GoPit-fmp - Consolidate hardcoded scene paths to use groups (low priority)
+1. ~~GoPit-iqz - Fix void ball alternation state bug (high priority)~~ **CLOSED**
+2. GoPit-fmp - Consolidate hardcoded scene paths to use groups (low priority) - **OPEN**
+
+**NOTE (2026-01-19)**: Only GoPit-fmp remains. When that is closed, this EPIC can be closed.
 
 ## Notes
 This epic tracks technical debt and code quality improvements that don't add new features but improve maintainability and correctness.
