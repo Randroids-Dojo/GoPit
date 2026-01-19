@@ -80,20 +80,88 @@ Enhance audio system with per-biome music variation and ensure complete SFX cove
 
 **Biome Music Parameters (Option A):**
 ```gdscript
-# Example biome music parameters
+# Complete biome music parameters - each biome gets distinct musical character
 const BIOME_MUSIC = {
-    "The Pit": {"root": 110.0, "scale": "minor", "tempo": 120, "intensity_base": 1.0},
-    "Frozen Depths": {"root": 82.4, "scale": "lydian", "tempo": 90, "intensity_base": 0.8},
-    "Burning Sands": {"root": 146.8, "scale": "phrygian", "tempo": 140, "intensity_base": 1.2},
-    # etc.
+    # Stage 1 - Tutorial zone, accessible feel
+    "The Pit": {"root": 110.0, "scale": "minor", "tempo": 120, "intensity_base": 1.0, "melody_octave": 2},
+
+    # Stage 2 - Cold, ethereal, slower pace
+    "Frozen Depths": {"root": 82.4, "scale": "lydian", "tempo": 90, "intensity_base": 0.8, "melody_octave": 3},
+
+    # Stage 3 - Hot, aggressive, phrygian for tension
+    "Burning Sands": {"root": 146.8, "scale": "phrygian", "tempo": 140, "intensity_base": 1.2, "melody_octave": 2},
+
+    # Stage 4 - Ominous descent, locrian for dissonance
+    "Final Descent": {"root": 73.4, "scale": "locrian", "tempo": 100, "intensity_base": 1.0, "melody_octave": 2},
+
+    # Stage 5 - Swampy, unsettling, chromatic feel
+    "Toxic Marsh": {"root": 98.0, "scale": "dorian", "tempo": 105, "intensity_base": 0.9, "melody_octave": 2},
+
+    # Stage 6 - Electric, chaotic energy
+    "Storm Spire": {"root": 130.8, "scale": "mixolydian", "tempo": 135, "intensity_base": 1.3, "melody_octave": 3},
+
+    # Stage 7 - Mystical, crystalline
+    "Crystal Caverns": {"root": 123.5, "scale": "major", "tempo": 110, "intensity_base": 1.0, "melody_octave": 3},
+
+    # Stage 8 - Final stage, epic, heavy
+    "The Abyss": {"root": 65.4, "scale": "minor", "tempo": 130, "intensity_base": 1.5, "melody_octave": 1},
+}
+
+# Scale definitions (intervals from root in semitones)
+const SCALES = {
+    "minor": [0, 2, 3, 5, 7, 8, 10],        # Natural minor
+    "lydian": [0, 2, 4, 6, 7, 9, 11],       # Bright, dreamy
+    "phrygian": [0, 1, 3, 5, 7, 8, 10],     # Spanish/tense
+    "locrian": [0, 1, 3, 5, 6, 8, 10],      # Very dissonant
+    "dorian": [0, 2, 3, 5, 7, 9, 10],       # Minor with raised 6th
+    "mixolydian": [0, 2, 4, 5, 7, 9, 10],   # Major with flat 7th
+    "major": [0, 2, 4, 5, 7, 9, 11],        # Standard major
 }
 ```
 
 **Boss Music Trigger:**
-- Connect to `StageManager.boss_wave_reached`
+- Connect to `StageManager.boss_wave_reached` in MusicManager._ready()
 - Set `is_boss_fight = true` in MusicManager
-- Increase tempo, add heavier kick pattern
-- On boss defeat, transition back
+- Boss music modifications:
+  - Tempo increase: +20% from biome tempo
+  - Heavier kick pattern: Double kick on beats 1 and 3
+  - Remove melody (drums + bass only for intensity)
+  - Volume boost: +3dB on drums
+- On `StageManager.stage_completed`, transition back to next biome music
+
+**Signal Wiring:**
+```gdscript
+func _ready() -> void:
+    # Existing setup...
+    StageManager.biome_changed.connect(_on_biome_changed)
+    StageManager.boss_wave_reached.connect(_on_boss_wave_reached)
+    StageManager.stage_completed.connect(_on_stage_completed)
+
+func _on_biome_changed(biome: Biome) -> void:
+    _crossfade_to_biome(biome.biome_name)
+
+func _on_boss_wave_reached(_stage: int) -> void:
+    is_boss_fight = true
+    _apply_boss_mode()
+
+func _on_stage_completed(_stage: int) -> void:
+    is_boss_fight = false
+    # Next biome change will trigger _on_biome_changed
+```
+
+**Crossfade Implementation:**
+```gdscript
+var _crossfade_timer: Timer
+var _crossfade_duration: float = 1.0
+var _target_biome: String = ""
+
+func _crossfade_to_biome(biome_name: String) -> void:
+    # Store target and start fade-out
+    _target_biome = biome_name
+    # Tween current volume down over 0.5s
+    # Change parameters
+    # Tween volume back up over 0.5s
+```
 
 ## Acceptance Criteria
 - [ ] Each of the 8 biomes has distinct musical feel

@@ -15,6 +15,27 @@ GoPit-aoo (Phase 5 - Polish & Release)
 ## Overview
 Optimize for mobile performance, profile on devices, and prepare iOS/Android exports.
 
+## Implementation Phases
+
+This task naturally breaks into phases that can be done incrementally:
+
+**Phase A: Export Presets (can do without devices)**
+- Add iOS and Android export presets to `export_presets.cfg`
+- Verify exports build without errors (CI can validate)
+- Note: Cannot test on real devices until provisioning profiles are set up
+
+**Phase B: Desktop/Web Profiling (can do without devices)**
+- Profile on desktop as performance baseline
+- Profile web export in Chrome DevTools
+- Identify any obvious bottlenecks before device testing
+
+**Phase C: Device Testing (requires physical devices)**
+- Install on iOS/Android devices
+- Profile with platform-specific tools
+- Iterate on optimizations based on real data
+
+**Recommendation:** Complete Phases A and B first, then Phase C when devices are available.
+
 ## Current State
 
 **Already Implemented:**
