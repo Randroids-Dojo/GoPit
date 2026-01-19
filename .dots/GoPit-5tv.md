@@ -17,23 +17,26 @@ Add visual polish including particle effects, screen transitions, and juice.
 
 ## Child Tasks
 - GoPit-lbw - Add visual effect particles for status effects **DONE**
+- GoPit-implement-add-biome-8c222354 - Add biome transition effect
+- GoPit-implement-add-victory-58a877c8 - Add victory and defeat animations
+- GoPit-implement-add-ui-8d3db9b7 - Add UI animations for level-up and cards
 
 ## Progress (2026-01-19)
 
 **COMPLETED:**
 - [x] Ball trails per type - fire, ice, lightning, poison, bleed, iron, vampire trails exist in `scenes/effects/*_trail.tscn`
 - [x] Status effect particles on enemies - All 9 status effects have particles (GoPit-lbw)
+- [x] Boss attack telegraphs - All 8 bosses have telegraphs via `_show_attack_telegraph()` (e.g., SlimeKing has slam shadow, color flashes)
 
 **REMAINING:**
-- [ ] Boss attack telegraphs (ground markers, warnings)
-- [ ] Screen transitions between biomes
-- [ ] Victory/defeat animations
-- [ ] UI animations (level up flourish, etc)
+- [ ] Screen transitions between biomes (GoPit-implement-add-biome-8c222354)
+- [ ] Victory/defeat animations (GoPit-implement-add-victory-58a877c8)
+- [ ] UI animations (GoPit-implement-add-ui-8d3db9b7)
 
 ## Requirements
 1. ~~Ball trails per type (fire trail, ice sparkle, etc)~~ **DONE**
 2. ~~Status effect particles on enemies~~ **DONE**
-3. Boss attack telegraphs (ground markers, warnings)
+3. ~~Boss attack telegraphs (ground markers, warnings)~~ **DONE** - via `_show_attack_telegraph()` in boss_base.gd + subclasses
 4. Screen transitions between biomes
 5. Victory/defeat animations
 6. UI animations (level up flourish, etc)
@@ -73,7 +76,7 @@ Add visual polish including particle effects, screen transitions, and juice.
 ## Acceptance Criteria
 - [x] All ball types have distinct trails **DONE**
 - [x] Status effects visible on enemies **DONE**
-- [ ] Boss attacks clearly telegraphed
+- [x] Boss attacks clearly telegraphed **DONE** - all 8 bosses have `_show_attack_telegraph()` implementations
 - [ ] Smooth biome transitions
 - [ ] Satisfying victory animation
 - [ ] UI feels responsive and juicy
