@@ -875,6 +875,9 @@ func reset() -> void:
 	stats["time_survived"] = 0.0
 	# Reset bloodlust stacks
 	bloodlust_stacks = 0
+	# Reset invincibility state
+	is_invincible = false
+	invincibility_timer = 0.0
 	# Apply MetaManager permanent bonuses (shop upgrades + passive evolutions)
 	_apply_meta_bonuses()
 

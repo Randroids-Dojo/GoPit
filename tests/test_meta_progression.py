@@ -5,15 +5,21 @@ import os
 import pytest
 
 
+async def trigger_game_over(game):
+    """Helper to trigger game over by dealing exactly max HP damage."""
+    max_hp = await game.get_property("/root/GameManager", "max_hp")
+    await game.call("/root/GameManager", "take_damage", [max_hp])
+    await asyncio.sleep(1.0)
+
+
 @pytest.mark.asyncio
 async def test_coins_earned_on_game_over(game):
     """Test that Pit Coins are earned when the game ends."""
     # Get initial coin balance
     initial_coins = await game.get_property("/root/MetaManager", "pit_coins")
 
-    # Kill player in one hit to avoid i-frame issues (player has 100 HP)
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    # Trigger game over (uses actual max HP to ensure player dies)
+    await trigger_game_over(game)
 
     # Check game over overlay is visible
     game_over_visible = await game.get_property(
@@ -30,8 +36,7 @@ async def test_coins_earned_on_game_over(game):
 async def test_coins_label_shows_earned(game):
     """Test that the game over screen shows coins earned."""
     # Trigger game over
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    await trigger_game_over(game)
 
     # Check coins label exists and has content
     coins_text = await game.get_property(
@@ -45,8 +50,7 @@ async def test_coins_label_shows_earned(game):
 async def test_shop_button_exists(game):
     """Test that the shop button exists on game over screen."""
     # Trigger game over
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    await trigger_game_over(game)
 
     # Check shop button exists
     shop_btn = await game.get_node(
@@ -59,8 +63,7 @@ async def test_shop_button_exists(game):
 async def test_shop_opens_from_game_over(game):
     """Test that clicking shop button opens the meta shop."""
     # Trigger game over
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    await trigger_game_over(game)
 
     # Click shop button
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
@@ -78,8 +81,7 @@ async def test_shop_displays_upgrades(game):
     await game.call("/root/MetaManager", "earn_coins", [5, 5])  # 5*10 + 5*25 = 175 coins
 
     # Trigger game over and open shop
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    await trigger_game_over(game)
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
     await asyncio.sleep(0.5)
 
@@ -95,8 +97,7 @@ async def test_shop_displays_upgrades(game):
 async def test_shop_close_button(game):
     """Test that the shop can be closed."""
     # Trigger game over and open shop
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    await trigger_game_over(game)
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
     await asyncio.sleep(0.5)
 
@@ -120,8 +121,7 @@ async def test_coin_balance_display(game):
     await game.call("/root/MetaManager", "set", ["pit_coins", 500])
 
     # Trigger game over and open shop
-    await game.call("/root/GameManager", "take_damage", [100])
-    await asyncio.sleep(1.0)
+    await trigger_game_over(game)
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
     await asyncio.sleep(0.5)
 

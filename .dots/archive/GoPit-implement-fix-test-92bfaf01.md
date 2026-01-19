@@ -3,9 +3,9 @@ title: "research: Investigate flaky meta_progression tests"
 status: closed
 priority: 3
 issue-type: research
-created-at: "\"\\\"2026-01-19T00:31:07.044196-06:00\\\"\""
-closed-at: "2026-01-19T00:51:00.964120-06:00"
-close-reason: "Research completed: Original analysis was incorrect - invincibility IS reset. Tests are flaky due to timing. Converted to research task with detailed findings."
+created-at: "\"\\\"\\\\\\\"2026-01-19T00:31:07.044196-06:00\\\\\\\"\\\"\""
+closed-at: "2026-01-19T01:15:26.776780-06:00"
+close-reason: "Fixed test by using actual max_hp instead of hardcoded 100. Also added invincibility reset to game_manager.reset(). Full suite: 542 passed."
 ---
 
 ## Research Findings (2026-01-19)
