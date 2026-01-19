@@ -79,7 +79,9 @@ SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 
 ### Card Hover Effect
 
-Add hover feedback to cards in `_setup_cards()`:
+Add hover feedback to cards in `_setup_cards()`.
+
+**IMPORTANT:** On mobile/touch devices, `mouse_entered`/`mouse_exited` fire only on touch-down/up, not on hover. The hover effect is primarily for desktop play but should degrade gracefully on mobile (touch-down briefly scales card before selection animation plays).
 
 ```gdscript
 func _setup_cards() -> void:
@@ -98,7 +100,9 @@ func _on_card_hover(card: Button, is_hovered: bool) -> void:
 
 ### Card Selection Animation
 
-Add selection feedback before dismissing:
+Add selection feedback before dismissing.
+
+**IMPORTANT:** The current `_on_card_pressed()` immediately applies the upgrade, hides overlay, and resumes game (lines 210-273). The animation must be inserted BEFORE `visible = false` and `get_tree().paused = false`. Move existing logic to `_apply_selection()` as shown below.
 
 ```gdscript
 func _on_card_pressed(index: int) -> void:

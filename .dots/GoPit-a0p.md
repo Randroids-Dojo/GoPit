@@ -11,14 +11,28 @@ created-at: 2026-01-05T02:15:33.520331-06:00
 
 **IMPORTANT:** This feature is already implemented in the `feature/salvo-firing` branch (worktree: `GoPit-salvo-firing/`).
 
-Files implemented:
-- `scripts/autoload/game_manager.gd` - Ultimate charge system
-- `scripts/ui/ultimate_button.gd` - UI with charge ring visualization
+### Files Implemented
+- `scripts/autoload/game_manager.gd` - Ultimate charge system (signals, add/use/reset)
+- `scripts/ui/ultimate_button.gd` - UI with charge ring visualization, pulse animation
 - `scripts/effects/ultimate_blast.gd` - Screen-clearing blast effect
 - `scenes/effects/ultimate_blast.tscn`
 - `scenes/ui/ultimate_button.tscn`
+- `scripts/game/game_controller.gd` - Wired charge gain on enemy kill and gem collection
 
-**Remaining work**: Wire charge gain to enemy kills/gem collection, Empty Nester 2x specials passive.
+### What's Complete
+- [x] Ultimate charge accumulates via `add_ultimate_charge()` (line 446 in game_manager.gd)
+- [x] Charge increases on enemy kill (`CHARGE_PER_KILL = 10.0`) at game_controller.gd:324
+- [x] Charge increases on gem collection (`CHARGE_PER_GEM = 5.0`) at game_controller.gd:357
+- [x] UI shows charge progress with ring visualization
+- [x] Button pulses when ultimate is ready
+- [x] Activation deals 9999 damage to all enemies
+- [x] Screen flash, camera shake, sound effect
+- [x] Charge resets on use and game reset
+
+### Remaining Work
+- [ ] Empty Nester 2x specials passive for ultimate - `get_special_fire_multiplier()` exists but is NOT wired to `_on_ultimate_activated()`
+
+The function `GameManager.get_special_fire_multiplier()` (line 617) returns 2 for Empty Nester but is never called. The implementation needs to fire the ultimate blast twice (or deal 2x damage) when Empty Nester is the active character.
 
 ---
 

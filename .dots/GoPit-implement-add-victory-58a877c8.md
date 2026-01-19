@@ -28,6 +28,18 @@ Both overlays currently set `visible = true` and pause the game without any anim
 
 ## Implementation Notes
 
+### Architecture Note
+
+**IMPORTANT:** The two overlays have different base types:
+- `game_over_overlay.gd` extends `Control`
+- `stage_complete_overlay.gd` extends `CanvasLayer`
+
+This affects how animations are applied (CanvasLayer children animate differently).
+
+### Existing Behavior to Preserve
+
+`game_over_overlay.gd` already has a shop hint pulsing animation (`_pulse_tween`). The entry animation must not interfere with this. The shop hint should start pulsing AFTER the entry animation completes.
+
 ### Game Over (Defeat) Animation
 
 Add to `game_over_overlay.gd`:

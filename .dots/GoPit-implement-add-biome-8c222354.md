@@ -76,7 +76,15 @@ BiomeTransition (CanvasLayer, layer=100)
 
 ### Timing Consideration
 
-The transition should play AFTER the stage_complete_overlay is dismissed but BEFORE enemies start spawning in the new biome. StageManager.complete_stage() should be called by stage_complete_overlay when player clicks Continue.
+The `biome_changed` signal flow is:
+1. Player defeats boss -> `stage_complete_overlay` shows
+2. Player clicks "Continue Playing" -> calls `StageManager.complete_stage()`
+3. `complete_stage()` increments stage and calls `_apply_biome()` (line 73)
+4. `_apply_biome()` emits `biome_changed(new_biome)` (line 78)
+
+The transition overlay should connect to `biome_changed` and display the NEW biome's name.
+
+**Note:** Since the overlay dismisses BEFORE `complete_stage()` runs (see stage_complete_overlay.gd line 104), the transition will play immediately after the overlay closes, which is the desired timing.
 
 ## Verify
 
