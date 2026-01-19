@@ -82,6 +82,7 @@ Add small speaker icon in top-right corner that toggles mute on tap.
 
 ### Audio Bus Setup (prerequisite)
 Requires audio buses: Master, SFX, Music
+**NOTE**: Already configured in `default_bus_layout.tres` - no action needed.
 
 ## Verify
 

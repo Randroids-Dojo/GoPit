@@ -137,6 +137,30 @@ func _on_gem_collected(gem):
     # existing code...
 ```
 
+### Character Interactions
+
+**Empty Nester Passive: "2x specials"**
+Per the GDD (Section 2.3), Empty Nester has "No babies, 2x specials". This means:
+- When Empty Nester uses ultimate, execute it TWICE (or deal 2x damage)
+- Implementation: Check character passive in `use_ultimate()` and modify effect
+
+```gdscript
+func use_ultimate() -> bool:
+    if ultimate_charge >= ULTIMATE_CHARGE_MAX:
+        ultimate_charge = 0
+        ultimate_used.emit()
+        ultimate_charge_changed.emit(0, ULTIMATE_CHARGE_MAX)
+
+        # Empty Nester fires ultimate twice
+        var multiplier = 1
+        var character = GameManager.selected_character
+        if character and character.passive == "NO_BABIES_2X_SPECIALS":
+            multiplier = 2
+
+        return true, multiplier  # Caller handles multiplier
+    return false, 0
+```
+
 ### Files to Create/Modify
 1. MODIFY: `scripts/autoload/game_manager.gd` - ultimate charge system
 2. NEW: `scenes/effects/ultimate_blast.tscn`
@@ -146,6 +170,7 @@ func _on_gem_collected(gem):
 6. MODIFY: `scenes/game.tscn` - add ultimate button
 7. MODIFY: `scripts/game/game_controller.gd` - wire charge gain
 8. MODIFY: `scripts/autoload/sound_manager.gd` - add ULTIMATE sound
+9. MODIFY: Character handling to support Empty Nester's 2x special multiplier
 
 ## Verify
 
@@ -161,3 +186,4 @@ func _on_gem_collected(gem):
 - [ ] Sound effect plays
 - [ ] Ultimate charge resets to 0 after use
 - [ ] Cannot activate ultimate when charge < 100%
+- [ ] Empty Nester's 2x specials passive triggers double ultimate effect

@@ -64,9 +64,9 @@ SFX gaps to fill:
    - GoPit-lbw - Add visual effect particles for status effects
 4. GoPit-29a - Mobile Optimization & Testing
 
-**Not yet created:**
-- Tutorial Expansion (enhance existing tutorial_overlay.gd)
-- Web Export & Testing (verify web builds work)
+**Created from research:**
+- GoPit-implement-add-first-bd018b35 - Tutorial hints for level-up and shop
+- GoPit-implement-add-web-162122e6 - Web export CI verification
 
 ## Dependencies
 Depends on all prior phases being feature-complete
