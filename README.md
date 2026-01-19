@@ -134,9 +134,37 @@ Invoke with `/godot` or let Claude auto-use it for Godot projects.
 
 See [docs/testing.md](docs/testing.md) for detailed API documentation.
 
+## Web Build
+
+GoPit can be exported for web browsers and is deployed to [go-pit.vercel.app](https://go-pit.vercel.app).
+
+### Local Web Export
+
+```bash
+# Build and serve locally for testing
+./verify_web_export.sh --serve
+
+# Build only (no server)
+./verify_web_export.sh
+
+# Clean build
+./verify_web_export.sh --clean
+```
+
+Then open http://localhost:8000 in your browser.
+
+### CI/CD
+
+Web builds are automatically:
+- Built and tested on every PR (preview deployment)
+- Deployed to production on merge to main
+
+See [docs/web-testing-checklist.md](docs/web-testing-checklist.md) for manual testing guide.
+
 ## Documentation
 
 - [Testing Setup](docs/testing.md) - PlayGodot automated testing
+- [Web Testing Checklist](docs/web-testing-checklist.md) - Browser testing guide
 - [UI Best Practices](docs/godot-ui-best-practices.md) - Godot UI/UX guidelines
 - [Input Best Practices](docs/godot-input-best-practices.md) - Keyboard and touch input guidelines
 - [Known Issues](docs/known-issues.md) - Current limitations and workarounds

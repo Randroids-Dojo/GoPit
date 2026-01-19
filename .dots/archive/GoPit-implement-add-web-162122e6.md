@@ -1,9 +1,11 @@
 ---
 title: "implement: Add web export verification"
-status: open
+status: closed
 priority: 3
 issue-type: task
-created-at: "2026-01-19T03:18:28.021657-06:00"
+created-at: "\"2026-01-19T03:18:28.021657-06:00\""
+closed-at: "2026-01-19T03:41:18.479964-06:00"
+close-reason: Added verify_web_export.sh script and docs/web-testing-checklist.md. CI already has web export configured.
 ---
 
 ## Description
