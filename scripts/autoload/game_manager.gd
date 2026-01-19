@@ -24,6 +24,9 @@ signal leadership_changed(new_value: float)
 signal invincibility_changed(is_invincible: bool)
 signal shooting_changed(is_shooting: bool)
 signal speed_tier_changed(tier: int, multiplier: float, loot_bonus: float)
+signal ultimate_ready
+signal ultimate_used
+signal ultimate_charge_changed(current: float, max_val: float)
 
 # Combo system
 var combo_count: int = 0
@@ -103,6 +106,12 @@ var health_regen: float = 0.0  # HP per second
 var xp_multiplier: float = 1.0  # XP gain multiplier
 var dodge_chance: float = 0.0  # Chance to avoid damage
 var life_steal_percent: float = 0.0  # Heal from damage dealt
+
+# Ultimate ability system
+const ULTIMATE_CHARGE_MAX: float = 100.0
+const CHARGE_PER_KILL: float = 10.0
+const CHARGE_PER_GEM: float = 5.0
+var ultimate_charge: float = 0.0
 
 # Character system
 var selected_character: Resource = null
@@ -661,6 +670,32 @@ func get_special_fire_multiplier() -> int:
 	return 1
 
 
+# === Ultimate Ability System ===
+
+func add_ultimate_charge(amount: float) -> void:
+	## Add charge to ultimate ability (from kills, gems, etc.)
+	var was_ready := is_ultimate_ready()
+	ultimate_charge = minf(ULTIMATE_CHARGE_MAX, ultimate_charge + amount)
+	ultimate_charge_changed.emit(ultimate_charge, ULTIMATE_CHARGE_MAX)
+	if not was_ready and is_ultimate_ready():
+		ultimate_ready.emit()
+
+
+func use_ultimate() -> bool:
+	## Attempt to use ultimate ability. Returns true if successful.
+	if is_ultimate_ready():
+		ultimate_charge = 0.0
+		ultimate_used.emit()
+		ultimate_charge_changed.emit(0.0, ULTIMATE_CHARGE_MAX)
+		return true
+	return false
+
+
+func is_ultimate_ready() -> bool:
+	## Check if ultimate ability is fully charged and ready to use.
+	return ultimate_charge >= ULTIMATE_CHARGE_MAX
+
+
 func get_berserker_damage_mult() -> float:
 	## Returns damage multiplier when below 50% HP (Berserker: +30%)
 	## Returns 1.0 normally, 1.3 when HP < 50% with Berserker passive
@@ -878,6 +913,8 @@ func reset() -> void:
 	# Reset invincibility state
 	is_invincible = false
 	invincibility_timer = 0.0
+	# Reset ultimate charge
+	ultimate_charge = 0.0
 	# Apply MetaManager permanent bonuses (shop upgrades + passive evolutions)
 	_apply_meta_bonuses()
 

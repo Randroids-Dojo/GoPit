@@ -1,9 +1,11 @@
 ---
 title: "implement: Add Ultimate Ability (extracted from stale salvo-firing branch)"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:39:02.789967-06:00"
+created-at: "\"\\\"\\\\\\\"2026-01-19T11:39:02.789967-06:00\\\\\\\"\\\"\""
+closed-at: "2026-01-19T12:00:18.256851-06:00"
+close-reason: "Ultimate ability implemented: copied 4 files from salvo-firing branch (ultimate_blast.gd, ultimate_button.gd, scenes). Modified game_manager.gd (signals, charge system, reset), sound_manager.gd (ULTIMATE sound type), game_controller.gd (wiring, charge on kills/gems), game.tscn (UI node). All 567 tests pass."
 ---
 
 ## Description
