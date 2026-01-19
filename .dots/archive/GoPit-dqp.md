@@ -1,10 +1,11 @@
 ---
 title: Add passive abilities integration tests
-status: open
+status: closed
 priority: 2
 issue-type: task
 assignee: randroid
-created-at: 2026-01-08T19:57:16.274692-06:00
+created-at: "2026-01-08T19:57:16.274692-06:00"
+closed-at: "2026-01-18T23:37:58.490241-06:00"
 ---
 
 ## Description

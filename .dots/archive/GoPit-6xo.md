@@ -1,10 +1,11 @@
 ---
 title: Add character stats integration tests
-status: open
+status: closed
 priority: 2
 issue-type: task
 assignee: randroid
-created-at: 2026-01-08T19:57:16.049635-06:00
+created-at: "2026-01-08T19:57:16.049635-06:00"
+closed-at: "2026-01-18T23:37:56.292924-06:00"
 ---
 
 ## Description

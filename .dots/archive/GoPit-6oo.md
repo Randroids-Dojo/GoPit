@@ -1,10 +1,11 @@
 ---
 title: Add fusion system dedicated tests
-status: open
+status: closed
 priority: 3
 issue-type: task
 assignee: randroid
-created-at: 2026-01-08T19:57:16.51316-06:00
+created-at: "2026-01-08T19:57:16.51316-06:00"
+closed-at: "2026-01-18T23:37:57.476757-06:00"
 ---
 
 ## Description
