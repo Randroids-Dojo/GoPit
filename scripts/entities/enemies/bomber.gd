@@ -1,5 +1,5 @@
 class_name Bomber
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Bomber enemy - explodes on death, dealing AoE damage to nearby enemies and player
 
 @export var body_color: Color = Color(0.8, 0.3, 0.1)

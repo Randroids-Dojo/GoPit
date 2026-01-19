@@ -1,5 +1,5 @@
 class_name Swarm
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Swarm enemy - small, fast, fragile. Spawns in groups.
 
 @export var body_color: Color = Color(0.3, 0.3, 0.4)

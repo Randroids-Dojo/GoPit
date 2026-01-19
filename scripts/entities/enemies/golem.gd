@@ -1,5 +1,5 @@
 class_name Golem
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Golem enemy - slow, tanky, deals AoE slam damage on attack
 
 @export var body_color: Color = Color(0.5, 0.4, 0.35)

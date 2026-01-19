@@ -1,5 +1,5 @@
 class_name Archer
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Archer enemy - ranged attacker that shoots projectiles at the player
 
 const EnemyProjectileScene: PackedScene = preload("res://scenes/entities/enemies/enemy_projectile.tscn")

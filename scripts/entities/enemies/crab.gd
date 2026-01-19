@@ -1,5 +1,5 @@
 class_name Crab
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Crab enemy - sideways movement with more HP
 
 @export var crab_color: Color = Color(0.9, 0.3, 0.2)

@@ -1,5 +1,5 @@
 class_name Slime
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Slime enemy - simple blob that moves straight down
 
 @export var slime_color: Color = Color(0.2, 0.8, 0.3)

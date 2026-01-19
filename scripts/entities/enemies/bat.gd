@@ -1,5 +1,5 @@
 class_name Bat
-extends EnemyBase
+extends "res://scripts/entities/enemies/enemy_base.gd"
 ## Bat enemy - flies in zigzag pattern and is faster
 
 @export var bat_color: Color = Color(0.3, 0.2, 0.4)
