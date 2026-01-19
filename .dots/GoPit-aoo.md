@@ -58,12 +58,15 @@ SFX gaps to fill:
 - Memory management for long sessions
 
 ## Child Tasks
-1. Biome Music & Ambience
-2. Complete SFX Pass
-3. Visual Effects Polish
-4. Tutorial Expansion
-5. Mobile Optimization
-6. Web Export & Testing
+1. GoPit-64u - Add audio settings with volume controls
+2. GoPit-0it - Complete Audio Pass (includes biome music & SFX)
+3. GoPit-5tv - Visual Effects Polish
+   - GoPit-lbw - Add visual effect particles for status effects
+4. GoPit-29a - Mobile Optimization & Testing
+
+**Not yet created:**
+- Tutorial Expansion (enhance existing tutorial_overlay.gd)
+- Web Export & Testing (verify web builds work)
 
 ## Dependencies
 Depends on all prior phases being feature-complete
