@@ -2,8 +2,38 @@ extends Node
 ## MusicManager - Procedural background music that intensifies with gameplay
 
 const SAMPLE_RATE := 44100.0
-const BPM := 120.0
-const BEAT_DURATION := 60.0 / BPM
+const DEFAULT_BPM := 120.0
+
+# Biome-specific music parameters for distinct musical character per stage
+const BIOME_MUSIC := {
+	# Stage 1 - Tutorial zone, accessible feel
+	"The Pit": {"root": 110.0, "scale": "minor", "tempo": 120, "intensity_base": 1.0},
+	# Stage 2 - Cold, ethereal, slower pace
+	"Frozen Depths": {"root": 82.4, "scale": "lydian", "tempo": 90, "intensity_base": 0.8},
+	# Stage 3 - Hot, aggressive, phrygian for tension
+	"Burning Sands": {"root": 146.8, "scale": "phrygian", "tempo": 140, "intensity_base": 1.2},
+	# Stage 4 - Ominous descent, locrian for dissonance
+	"Final Descent": {"root": 73.4, "scale": "locrian", "tempo": 100, "intensity_base": 1.0},
+	# Stage 5 - Swampy, unsettling, dorian feel
+	"Toxic Marsh": {"root": 98.0, "scale": "dorian", "tempo": 105, "intensity_base": 0.9},
+	# Stage 6 - Electric, chaotic energy
+	"Storm Spire": {"root": 130.8, "scale": "mixolydian", "tempo": 135, "intensity_base": 1.3},
+	# Stage 7 - Mystical, crystalline
+	"Crystal Caverns": {"root": 123.5, "scale": "major", "tempo": 110, "intensity_base": 1.0},
+	# Stage 8 - Final stage, epic, heavy
+	"The Abyss": {"root": 65.4, "scale": "minor", "tempo": 130, "intensity_base": 1.5},
+}
+
+# Scale definitions (intervals from root in semitones)
+const SCALES := {
+	"minor": [0, 2, 3, 5, 7, 8, 10],        # Natural minor
+	"lydian": [0, 2, 4, 6, 7, 9, 11],       # Bright, dreamy
+	"phrygian": [0, 1, 3, 5, 7, 8, 10],     # Spanish/tense
+	"locrian": [0, 1, 3, 5, 6, 8, 10],      # Very dissonant
+	"dorian": [0, 2, 3, 5, 7, 9, 10],       # Minor with raised 6th
+	"mixolydian": [0, 2, 4, 5, 7, 9, 10],   # Major with flat 7th
+	"major": [0, 2, 4, 5, 7, 9, 11],        # Standard major
+}
 
 var _bass_player: AudioStreamPlayer
 var _drum_player: AudioStreamPlayer
@@ -17,6 +47,11 @@ var _beat_timer: Timer
 var _current_beat: int = 0
 var _bar_length: int = 4
 
+# Biome state
+var _current_biome: String = "The Pit"
+var _current_scale: Array = [0, 2, 3, 5, 7, 8, 10]  # Default minor (untyped for dict compatibility)
+var _current_tempo: float = DEFAULT_BPM
+
 # Bass pattern (notes relative to root)
 var _bass_pattern: Array[int] = [0, 0, 7, 5, 0, 0, 3, 5]
 var _root_note: float = 110.0  # A2
@@ -28,6 +63,8 @@ var _drum_pattern: Array[int] = [1, 3, 2, 3, 1, 3, 2, 3]
 func _ready() -> void:
 	_setup_players()
 	_setup_timer()
+	# Connect to biome changes for per-biome music
+	StageManager.biome_changed.connect(_on_biome_changed)
 
 
 func _setup_players() -> void:
@@ -49,7 +86,7 @@ func _setup_players() -> void:
 
 func _setup_timer() -> void:
 	_beat_timer = Timer.new()
-	_beat_timer.wait_time = BEAT_DURATION / 2.0  # Eighth notes
+	_beat_timer.wait_time = 60.0 / _current_tempo / 2.0  # Eighth notes
 	_beat_timer.timeout.connect(_on_beat)
 	add_child(_beat_timer)
 
@@ -74,6 +111,30 @@ func set_intensity(intensity: float) -> void:
 	_drum_player.volume_db = lerpf(-10.0, -2.0, (intensity - 1.0) / 4.0)
 
 
+## Set music parameters for a specific biome
+func set_biome(biome_name: String) -> void:
+	if biome_name not in BIOME_MUSIC:
+		return
+	if _current_biome == biome_name:
+		return
+
+	_current_biome = biome_name
+	var params: Dictionary = BIOME_MUSIC[biome_name]
+
+	# Update music parameters
+	_root_note = params["root"]
+	_current_scale = SCALES[params["scale"]]
+	_current_tempo = params["tempo"]
+	current_intensity = params["intensity_base"]
+
+	# Update timer for new tempo
+	_beat_timer.wait_time = 60.0 / _current_tempo / 2.0  # Eighth notes
+
+
+func _on_biome_changed(biome: Biome) -> void:
+	set_biome(biome.biome_name)
+
+
 func _on_beat() -> void:
 	if not is_playing:
 		return
@@ -96,7 +157,8 @@ func _on_beat() -> void:
 
 func _play_bass(semitone: int) -> void:
 	var freq: float = _root_note * pow(2.0, semitone / 12.0)
-	_bass_player.stream = _generate_bass_note(freq, BEAT_DURATION * 0.45)
+	var beat_duration: float = 60.0 / _current_tempo
+	_bass_player.stream = _generate_bass_note(freq, beat_duration * 0.45)
 	_bass_player.play()
 
 
@@ -112,10 +174,11 @@ func _play_drum(drum_type: int) -> void:
 
 
 func _play_melody_note() -> void:
-	var scale: Array[int] = [0, 2, 3, 5, 7, 10, 12]  # Minor pentatonic
-	var note: int = scale[randi() % scale.size()]
+	# Use current biome's scale for melody notes
+	var note: int = _current_scale[randi() % _current_scale.size()]
 	var freq: float = _root_note * 4.0 * pow(2.0, note / 12.0)  # Two octaves up
-	_melody_player.stream = _generate_melody_note(freq, BEAT_DURATION * 0.3)
+	var beat_duration: float = 60.0 / _current_tempo
+	_melody_player.stream = _generate_melody_note(freq, beat_duration * 0.3)
 	_melody_player.play()
 
 
