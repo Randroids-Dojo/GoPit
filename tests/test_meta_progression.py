@@ -4,12 +4,42 @@ import asyncio
 import os
 import pytest
 
+from helpers import wait_for_game_over, wait_for_visible, wait_for_not_visible
 
-async def trigger_game_over(game):
-    """Helper to trigger game over by dealing exactly max HP damage."""
-    max_hp = await game.get_property("/root/GameManager", "max_hp")
-    await game.call("/root/GameManager", "take_damage", [max_hp])
-    await asyncio.sleep(1.0)
+
+# Meta shop path constant
+META_SHOP_PATH = "/root/Game/UI/MetaShop"
+
+
+async def trigger_game_over(game, timeout=5.0):
+    """Helper to trigger game over by dealing enough damage to kill the player.
+
+    Waits for the game over overlay to become visible instead of using
+    a fixed sleep, making tests more reliable in CI/headless environments.
+
+    Uses current player HP (not max_hp) to handle cases where HP may have
+    changed during the test or between tests.
+    """
+    # Check if already in game over state
+    already_game_over = await game.get_property("/root/Game/UI/GameOverOverlay", "visible")
+    if already_game_over:
+        return  # Already at game over, nothing to do
+
+    # Get current HP and deal enough damage to kill
+    current_hp = await game.get_property("/root/GameManager", "player_hp")
+
+    # If player is already dead (HP <= 0), game over should trigger soon
+    if current_hp <= 0:
+        success = await wait_for_game_over(game, timeout)
+        assert success, "Game over should trigger when player HP is 0"
+        return
+
+    # Deal damage equal to current HP (ensures death regardless of character)
+    await game.call("/root/GameManager", "take_damage", [current_hp])
+
+    # Wait for actual state change instead of fixed sleep
+    success = await wait_for_game_over(game, timeout)
+    assert success, f"Game over should trigger within timeout (dealt {current_hp} damage)"
 
 
 @pytest.mark.asyncio
@@ -67,11 +97,10 @@ async def test_shop_opens_from_game_over(game):
 
     # Click shop button
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
-    await asyncio.sleep(0.5)
 
-    # Check meta shop is visible
-    shop_visible = await game.get_property("/root/Game/UI/MetaShop", "visible")
-    assert shop_visible, "Meta shop should be visible after clicking shop button"
+    # Wait for shop to become visible instead of fixed sleep
+    shop_opened = await wait_for_visible(game, META_SHOP_PATH)
+    assert shop_opened, "Meta shop should be visible after clicking shop button"
 
 
 @pytest.mark.asyncio
@@ -83,7 +112,10 @@ async def test_shop_displays_upgrades(game):
     # Trigger game over and open shop
     await trigger_game_over(game)
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
-    await asyncio.sleep(0.5)
+
+    # Wait for shop to become visible instead of fixed sleep
+    shop_opened = await wait_for_visible(game, META_SHOP_PATH)
+    assert shop_opened, "Meta shop should open"
 
     # Check cards container has children (upgrade cards)
     cards_container = await game.get_node("/root/Game/UI/MetaShop/Panel/VBoxContainer/CardsContainer")
@@ -99,19 +131,17 @@ async def test_shop_close_button(game):
     # Trigger game over and open shop
     await trigger_game_over(game)
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
-    await asyncio.sleep(0.5)
 
-    # Verify shop is open
-    shop_visible = await game.get_property("/root/Game/UI/MetaShop", "visible")
-    assert shop_visible, "Shop should be open"
+    # Wait for shop to become visible instead of fixed sleep
+    shop_opened = await wait_for_visible(game, META_SHOP_PATH)
+    assert shop_opened, "Shop should be open"
 
     # Click close button
     await game.click("/root/Game/UI/MetaShop/Panel/VBoxContainer/CloseButton")
-    await asyncio.sleep(0.3)
 
-    # Verify shop is closed
-    shop_visible = await game.get_property("/root/Game/UI/MetaShop", "visible")
-    assert not shop_visible, "Shop should be closed after clicking close button"
+    # Wait for shop to close instead of fixed sleep
+    shop_closed = await wait_for_not_visible(game, META_SHOP_PATH)
+    assert shop_closed, "Shop should be closed after clicking close button"
 
 
 @pytest.mark.asyncio
@@ -123,7 +153,10 @@ async def test_coin_balance_display(game):
     # Trigger game over and open shop
     await trigger_game_over(game)
     await game.click("/root/Game/UI/GameOverOverlay/Panel/VBoxContainer/ButtonsContainer/ShopButton")
-    await asyncio.sleep(0.5)
+
+    # Wait for shop to become visible instead of fixed sleep
+    shop_opened = await wait_for_visible(game, META_SHOP_PATH)
+    assert shop_opened, "Meta shop should open"
 
     # Check coin label shows balance
     coin_text = await game.get_property(

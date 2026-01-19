@@ -1,9 +1,11 @@
 ---
 title: "implement: Fix flaky meta_progression tests"
-status: active
+status: closed
 priority: 2
 issue-type: task
-created-at: "\"2026-01-19T01:10:38.946236-06:00\""
+created-at: "\"\\\"2026-01-19T01:10:38.946236-06:00\\\"\""
+closed-at: "2026-01-19T02:59:44.892839-06:00"
+close-reason: Fixed flaky tests by replacing fixed asyncio.sleep() with wait_for_* helpers. Added wait_for_visible, wait_for_not_visible, wait_for_game_over helpers. Updated trigger_game_over to use current_hp instead of max_hp and wait for actual state change. All 50 repeated test runs pass.
 ---
 
 ## Description

@@ -91,6 +91,53 @@ async def wait_for_enemy(game, timeout=WAIT_TIMEOUT):
     return await wait_for_condition(game, has_enemy, timeout)
 
 
+async def wait_for_visible(game, node_path, timeout=WAIT_TIMEOUT):
+    """Wait for a node to become visible.
+
+    Args:
+        game: The PlayGodot game instance
+        node_path: Path to the node to check visibility
+        timeout: Maximum wait time in seconds
+
+    Returns:
+        True if node became visible, False if timeout
+    """
+    async def is_visible():
+        return await game.get_property(node_path, "visible")
+
+    return await wait_for_condition(game, is_visible, timeout)
+
+
+async def wait_for_not_visible(game, node_path, timeout=WAIT_TIMEOUT):
+    """Wait for a node to become hidden (not visible).
+
+    Args:
+        game: The PlayGodot game instance
+        node_path: Path to the node to check visibility
+        timeout: Maximum wait time in seconds
+
+    Returns:
+        True if node became hidden, False if timeout
+    """
+    async def is_not_visible():
+        return not await game.get_property(node_path, "visible")
+
+    return await wait_for_condition(game, is_not_visible, timeout)
+
+
+async def wait_for_game_over(game, timeout=WAIT_TIMEOUT):
+    """Wait for game over overlay to become visible.
+
+    Args:
+        game: The PlayGodot game instance
+        timeout: Maximum wait time in seconds
+
+    Returns:
+        True if game over overlay became visible, False if timeout
+    """
+    return await wait_for_visible(game, PATHS["game_over_overlay"], timeout)
+
+
 async def get_joystick_center(game, joystick_path=None):
     """Get the center coordinates of a joystick.
 
