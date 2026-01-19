@@ -54,3 +54,12 @@ Add comprehensive audio coverage including biome music, complete SFX, and audio 
 - [ ] Status effects have audio feedback
 - [ ] Complete UI sound coverage
 - [ ] Audio levels balanced
+
+## Verify
+- [ ] `./test.sh` passes
+- [ ] Play through all biomes - each has distinct background music
+- [ ] Enter boss fight - intense music plays
+- [ ] Fire each ball type - distinct sound per type
+- [ ] Apply status effects - audio feedback for burn, freeze, poison, etc.
+- [ ] Navigate menus - UI sounds on button presses
+- [ ] Win/lose game - appropriate fanfare plays

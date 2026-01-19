@@ -15,6 +15,9 @@ GoPit-aoo (Phase 5 - Polish & Release)
 ## Overview
 Add visual polish including particle effects, screen transitions, and juice.
 
+## Child Tasks
+- GoPit-lbw - Add visual effect particles for status effects
+
 ## Requirements
 1. Ball trails per type (fire trail, ice sparkle, etc)
 2. Status effect particles on enemies
@@ -62,3 +65,12 @@ Add visual polish including particle effects, screen transitions, and juice.
 - [ ] Smooth biome transitions
 - [ ] Satisfying victory animation
 - [ ] UI feels responsive and juicy
+
+## Verify
+- [ ] `./test.sh` passes
+- [ ] Fire each ball type - trail effect visible and distinct
+- [ ] Apply status effects to enemies - particle effects show on enemy
+- [ ] Fight a boss - attack telegraph markers visible before attacks
+- [ ] Transition between biomes - smooth visual transition effect
+- [ ] Win the game - satisfying victory animation plays
+- [ ] Level up - UI animations feel responsive

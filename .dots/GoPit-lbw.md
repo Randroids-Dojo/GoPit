@@ -7,6 +7,9 @@ assignee: randroid
 created-at: 2026-01-07T00:18:33.988475-06:00
 ---
 
+## Parent Task
+GoPit-5tv (Visual Effects Polish)
+
 ## Description
 
 Add visual particle effects for status effects that are currently missing particles.

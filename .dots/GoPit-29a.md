@@ -66,3 +66,13 @@ Optimize for mobile performance, test on devices, and prepare exports.
 - [ ] Android export works
 - [ ] Web export works
 - [ ] All PlayGodot tests pass
+
+## Verify
+- [ ] `./test.sh` passes
+- [ ] Profile on iPhone 12 - maintains 60fps during intense gameplay
+- [ ] Profile on mid-range Android (Pixel 6) - maintains 60fps
+- [ ] Play 30-minute session - memory usage stays under 200MB
+- [ ] Touch input latency < 16ms on mobile devices
+- [ ] Export iOS build successfully
+- [ ] Export Android build successfully
+- [ ] Web export plays correctly in Chrome, Safari, Firefox
