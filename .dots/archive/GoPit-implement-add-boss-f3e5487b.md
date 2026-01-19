@@ -1,9 +1,11 @@
 ---
 title: "implement: Add boss fight music mode to MusicManager"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:05:52.842396-06:00"
+created-at: "\"\\\"2026-01-19T11:05:52.842396-06:00\\\"\""
+closed-at: "2026-01-19T11:14:11.234691-06:00"
+close-reason: Added boss fight music mode with faster tempo, heavier drums, and suppressed melody. Tests pass.
 blocks:
   - GoPit-implement-add-per-2623a39b
 ---

@@ -1,10 +1,11 @@
-"""Tests for per-biome music system in MusicManager."""
+"""Tests for per-biome music system and boss fight music in MusicManager."""
 
 import asyncio
 import pytest
 
 # Node paths
 MUSIC_MANAGER = "/root/MusicManager"
+STAGE_MANAGER = "/root/StageManager"
 
 
 @pytest.mark.asyncio
@@ -83,3 +84,73 @@ async def test_unknown_biome_is_ignored(game):
     # Root should be unchanged
     new_root = await game.get_property(MUSIC_MANAGER, "_root_note")
     assert new_root == original_root, "Unknown biome should not change root note"
+
+
+# Boss music tests
+
+
+@pytest.mark.asyncio
+async def test_music_manager_has_set_boss_mode(game):
+    """MusicManager should have a set_boss_mode method."""
+    has_method = await game.call(MUSIC_MANAGER, "has_method", ["set_boss_mode"])
+    assert has_method, "MusicManager should have set_boss_mode method"
+
+
+@pytest.mark.asyncio
+async def test_boss_mode_initially_false(game):
+    """Boss mode should be off by default."""
+    is_boss = await game.get_property(MUSIC_MANAGER, "is_boss_fight")
+    assert is_boss == False, "Boss fight mode should be off initially"
+
+
+@pytest.mark.asyncio
+async def test_set_boss_mode_enables_boss_fight(game):
+    """set_boss_mode(true) should enable boss fight mode."""
+    # Ensure starting state
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [False])
+
+    # Enable boss mode
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [True])
+
+    is_boss = await game.get_property(MUSIC_MANAGER, "is_boss_fight")
+    assert is_boss == True, "Boss fight mode should be enabled"
+
+
+@pytest.mark.asyncio
+async def test_boss_mode_changes_tempo(game):
+    """Boss mode should make the tempo faster."""
+    # Set to a known biome first
+    await game.call(MUSIC_MANAGER, "set_biome", ["The Pit"])
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [False])
+    await asyncio.sleep(0.1)
+
+    # Get normal beat timer wait time (via the stored pre-boss tempo after enable)
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [True])
+
+    # Check that boss mode is active
+    is_boss = await game.get_property(MUSIC_MANAGER, "is_boss_fight")
+    assert is_boss == True, "Boss fight mode should be enabled"
+
+    # The _pre_boss_tempo stores the original tempo before boss mode
+    pre_boss = await game.get_property(MUSIC_MANAGER, "_pre_boss_tempo")
+    assert pre_boss > 0, "Pre-boss tempo should be stored"
+
+
+@pytest.mark.asyncio
+async def test_boss_mode_restores_on_disable(game):
+    """Disabling boss mode should restore previous settings."""
+    # Set to known state
+    await game.call(MUSIC_MANAGER, "set_biome", ["The Pit"])
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [False])
+    await asyncio.sleep(0.1)
+
+    # Enable then disable boss mode
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [True])
+    boss_active = await game.get_property(MUSIC_MANAGER, "is_boss_fight")
+    assert boss_active == True, "Boss mode should be active"
+
+    await game.call(MUSIC_MANAGER, "set_boss_mode", [False])
+
+    # Verify restored
+    is_boss = await game.get_property(MUSIC_MANAGER, "is_boss_fight")
+    assert is_boss == False, "Boss mode should be disabled after restore"

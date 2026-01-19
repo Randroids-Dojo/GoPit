@@ -58,6 +58,13 @@ var _root_note: float = 110.0  # A2
 
 # Drum pattern (1 = kick, 2 = snare, 3 = hihat)
 var _drum_pattern: Array[int] = [1, 3, 2, 3, 1, 3, 2, 3]
+var _boss_drum_pattern: Array[int] = [1, 1, 2, 1, 1, 1, 2, 1]  # Double kicks for intensity
+
+# Boss fight state
+var is_boss_fight: bool = false
+var _pre_boss_tempo: float = 120.0
+var _pre_boss_drum_volume: float = -6.0
+var _pre_boss_melody_volume: float = -10.0
 
 
 func _ready() -> void:
@@ -65,6 +72,9 @@ func _ready() -> void:
 	_setup_timer()
 	# Connect to biome changes for per-biome music
 	StageManager.biome_changed.connect(_on_biome_changed)
+	# Connect to boss events for intense music
+	StageManager.boss_wave_reached.connect(_on_boss_wave_reached)
+	StageManager.stage_completed.connect(_on_stage_completed)
 
 
 func _setup_players() -> void:
@@ -135,6 +145,38 @@ func _on_biome_changed(biome: Biome) -> void:
 	set_biome(biome.biome_name)
 
 
+func _on_boss_wave_reached(_stage: int) -> void:
+	set_boss_mode(true)
+
+
+func _on_stage_completed(_stage: int) -> void:
+	set_boss_mode(false)
+
+
+## Enable or disable boss fight music mode
+func set_boss_mode(enabled: bool) -> void:
+	if is_boss_fight == enabled:
+		return
+
+	is_boss_fight = enabled
+
+	if enabled:
+		# Save current state for restoration
+		_pre_boss_tempo = _beat_timer.wait_time
+		_pre_boss_drum_volume = _drum_player.volume_db
+		_pre_boss_melody_volume = _melody_player.volume_db
+
+		# Apply boss mode: faster tempo, louder drums, suppressed melody
+		_beat_timer.wait_time *= 0.8  # 20% faster
+		_drum_player.volume_db += 3.0
+		_melody_player.volume_db -= 6.0
+	else:
+		# Restore pre-boss state
+		_beat_timer.wait_time = _pre_boss_tempo
+		_drum_player.volume_db = _pre_boss_drum_volume
+		_melody_player.volume_db = _pre_boss_melody_volume
+
+
 func _on_beat() -> void:
 	if not is_playing:
 		return
@@ -144,12 +186,13 @@ func _on_beat() -> void:
 	# Play bass on every beat
 	_play_bass(_bass_pattern[beat_index])
 
-	# Play drums
-	var drum_type: int = _drum_pattern[beat_index]
+	# Play drums - use boss pattern during boss fights
+	var pattern: Array[int] = _boss_drum_pattern if is_boss_fight else _drum_pattern
+	var drum_type: int = pattern[beat_index]
 	_play_drum(drum_type)
 
-	# Occasional melody at higher intensity
-	if current_intensity >= 2.0 and randf() < 0.2:
+	# Occasional melody at higher intensity (suppressed during boss fights)
+	if not is_boss_fight and current_intensity >= 2.0 and randf() < 0.2:
 		_play_melody_note()
 
 	_current_beat += 1
