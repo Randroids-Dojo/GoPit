@@ -1,10 +1,11 @@
 ---
 title: Biome System Architecture
-status: done
+status: closed
 priority: 2
 issue-type: task
 assignee: randroid
-created-at: 2026-01-05T23:37:53.360749-06:00
+created-at: "2026-01-05T23:37:53.360749-06:00"
+closed-at: "2026-01-19T01:55:05.578757-06:00"
 ---
 
 # Biome System Architecture
