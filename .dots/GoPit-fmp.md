@@ -7,6 +7,9 @@ assignee: randroid
 created-at: 2026-01-08T19:57:14.902458-06:00
 ---
 
+## Parent Epic
+GoPit-u6z (Code Review Cleanup)
+
 ## Description
 
 Remaining hardcoded scene paths should use group-based lookups for consistency and refactoring safety.

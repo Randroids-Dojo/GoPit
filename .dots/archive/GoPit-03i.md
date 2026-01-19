@@ -1,10 +1,11 @@
 ---
 title: Complete character speed stat implementation
-status: open
+status: closed
 priority: 4
 issue-type: task
 assignee: randroid
-created-at: 2026-01-08T19:57:15.362181-06:00
+created-at: "2026-01-08T19:57:15.362181-06:00"
+closed-at: "2026-01-18T23:39:24.799251-06:00"
 ---
 
 ## Description

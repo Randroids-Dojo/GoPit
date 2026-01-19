@@ -7,6 +7,9 @@ assignee: randroid
 created-at: 2026-01-08T19:57:15.135295-06:00
 ---
 
+## Parent Epic
+GoPit-u6z (Code Review Cleanup)
+
 ## Description
 
 Fix void ball effect alternation so it works consistently with multiple void balls hitting enemies in the same frame.
