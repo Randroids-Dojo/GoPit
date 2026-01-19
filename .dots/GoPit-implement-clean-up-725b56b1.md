@@ -1,9 +1,9 @@
 ---
 title: "implement: Clean up stale salvo-firing branch and worktree"
-status: open
+status: active
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:46:28.074547-06:00"
+created-at: "\"2026-01-19T11:46:28.074547-06:00\""
 ---
 
 ## Description
