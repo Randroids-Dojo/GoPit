@@ -49,8 +49,10 @@ SFX gaps to fill:
 - ~~Status effect particles~~ **DONE**
 - ~~Boss attack telegraphs~~ **DONE**
 - ~~Screen transitions between biomes~~ **DONE**
-- Victory/defeat animations
-- UI animations (level-up flourish)
+- ~~Victory/defeat animations~~ **DONE**
+- ~~UI animations (level-up flourish)~~ **DONE**
+
+**All visual polish complete (GoPit-5tv closed)**
 
 ## Performance
 - Profile on mobile devices
@@ -59,20 +61,16 @@ SFX gaps to fill:
 - Memory management for long sessions
 
 ## Child Tasks
-1. GoPit-64u - Add audio settings with volume controls
+1. ~~GoPit-64u - Add audio settings with volume controls~~ **CLOSED**
 2. GoPit-0it - Complete Audio Pass (includes biome music & SFX)
-3. GoPit-5tv - Visual Effects Polish (4/6 items done)
-   - ~~GoPit-lbw - Add visual effect particles for status effects~~ **CLOSED**
-   - ~~GoPit-implement-add-biome-8c222354 - Add biome transition effect~~ **CLOSED**
-   - GoPit-implement-add-victory-58a877c8 - Add victory and defeat animations
-   - GoPit-implement-add-ui-8d3db9b7 - Add UI animations for level-up and cards
+3. ~~GoPit-5tv - Visual Effects Polish~~ **CLOSED** (6/6 items done)
 4. GoPit-29a - Mobile Optimization & Testing
 
 **Created from research (COMPLETED):**
 - ~~GoPit-implement-add-first-bd018b35 - Tutorial hints for level-up and shop~~ **CLOSED**
 - ~~GoPit-implement-add-web-162122e6 - Web export CI verification~~ **CLOSED**
 
-**Note:** GoPit-a0p (Ultimate ability) is implemented in `feature/salvo-firing` branch - merge pending.
+**Note:** Ultimate ability (GoPit-a0p) was intentionally removed per BallxPit alignment - feature in stale salvo-firing branch.
 
 ## Dependencies
 Depends on all prior phases being feature-complete
