@@ -92,6 +92,25 @@ async def wait_for_enemy(game, timeout=WAIT_TIMEOUT):
     return await wait_for_condition(game, has_enemy, timeout)
 
 
+async def wait_for_can_fire(game, timeout=WAIT_TIMEOUT):
+    """Wait for salvo to return (main_balls_in_flight == 0).
+
+    The salvo mechanic requires all main balls to return before
+    the player can fire again. This helper waits for that state.
+
+    Args:
+        game: The PlayGodot game instance
+        timeout: Maximum wait time in seconds
+
+    Returns:
+        True if can_fire() became True, False if timeout
+    """
+    async def can_fire():
+        return await game.call(PATHS["ball_spawner"], "can_fire")
+
+    return await wait_for_condition(game, can_fire, timeout)
+
+
 async def wait_for_visible(game, node_path, timeout=WAIT_TIMEOUT):
     """Wait for a node to become visible.
 

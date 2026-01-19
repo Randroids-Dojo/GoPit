@@ -2,26 +2,10 @@
 import asyncio
 import pytest
 
-GAME = "/root/Game"
-FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
-BALLS_CONTAINER = "/root/Game/GameArea/Balls"
-BALL_SPAWNER = "/root/Game/GameArea/BallSpawner"
+from helpers import PATHS, wait_for_fire_ready, wait_for_can_fire
 
-# Timeout for waiting operations (seconds)
-WAIT_TIMEOUT = 5.0
-
-
-async def wait_for_fire_ready(game, timeout=WAIT_TIMEOUT):
-    """Wait for fire button to be ready with timeout."""
-    elapsed = 0
-    while elapsed < timeout:
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        balls_avail = await game.get_property(FIRE_BUTTON, "_balls_available")
-        if is_ready and balls_avail:
-            return True
-        await asyncio.sleep(0.1)
-        elapsed += 0.1
-    return False
+FIRE_BUTTON = PATHS["fire_button"]
+BALL_SPAWNER = PATHS["ball_spawner"]
 
 
 @pytest.mark.asyncio
@@ -32,17 +16,9 @@ async def test_ball_spawner_tracks_balls_in_flight(game):
     await asyncio.sleep(0.2)
 
     # Wait for salvo to return (main_balls_in_flight == 0)
-    # This is more reliable than waiting for total balls
-    elapsed = 0
-    timeout = 5.0
-    while elapsed < timeout:
-        main_in_flight = await game.call(BALL_SPAWNER, "get_main_balls_in_flight")
-        if main_in_flight == 0:
-            break
-        await asyncio.sleep(0.1)
-        elapsed += 0.1
+    await wait_for_can_fire(game)
 
-    # Verify we can fire (main_balls_in_flight is 0)
+    # Verify we can fire
     can_fire_before = await game.call(BALL_SPAWNER, "can_fire")
     assert can_fire_before, "Should be able to fire when main_balls_in_flight is 0"
 
@@ -68,26 +44,26 @@ async def test_ball_returns_at_bottom_of_screen(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
     await asyncio.sleep(0.2)
 
-    # Wait for existing balls to clear
-    await asyncio.sleep(2.0)
+    # Wait for salvo to return
+    await wait_for_can_fire(game)
 
     # Fire a ball aimed downward (toward bottom of screen)
     await game.call(BALL_SPAWNER, "set_aim_direction_xy", [0.0, 1.0])
     await wait_for_fire_ready(game)
     await game.click(FIRE_BUTTON)
 
-    # Wait for ball to spawn from queue (fire_rate=3 means ~0.33s per ball)
-    await asyncio.sleep(0.5)
+    # Wait briefly for salvo to register
+    await asyncio.sleep(0.1)
 
-    # Get balls in flight immediately after
-    in_flight_after = await game.call(BALL_SPAWNER, "get_balls_in_flight")
-    assert in_flight_after > 0, "Should have ball in flight after firing"
+    # Get main balls in flight immediately after
+    in_flight_after = await game.call(BALL_SPAWNER, "get_main_balls_in_flight")
+    assert in_flight_after > 0, "Should have main balls in flight after firing salvo"
 
-    # Wait for ball to reach bottom and return (extra time for CI)
+    # Wait for balls to reach bottom and return (extra time for CI)
     await asyncio.sleep(4.0)
 
-    # Balls in flight should decrease as balls return
-    final_in_flight = await game.call(BALL_SPAWNER, "get_balls_in_flight")
+    # Main balls in flight should decrease as balls return
+    final_in_flight = await game.call(BALL_SPAWNER, "get_main_balls_in_flight")
     assert final_in_flight < in_flight_after, f"Balls should return, in_flight went from {in_flight_after} to {final_in_flight}"
 
     # Re-enable autofire
