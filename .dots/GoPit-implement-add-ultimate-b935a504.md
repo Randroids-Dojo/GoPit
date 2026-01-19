@@ -30,6 +30,10 @@ The Ultimate ability was fully implemented in the salvo-firing branch, but that 
 7. `scripts/game/game_controller.gd` - Wire charge gain and activation
 8. `scenes/game.tscn` - Add ultimate button to UI
 
+### TEST FILE (copy from salvo-firing)
+
+9. `tests/test_ultimate.py` - Tests for ultimate ability
+
 ## Implementation Notes
 
 ### 1. NEW: scripts/effects/ultimate_blast.gd
@@ -108,8 +112,9 @@ func get_special_fire_multiplier() -> int:
     return 1
 ```
 
-Add to reset() function:
+Add to reset() function (line 849, after line 880 with `invincibility_timer = 0.0`):
 ```gdscript
+# Reset ultimate charge
 ultimate_charge = 0.0
 ```
 
@@ -171,12 +176,12 @@ SoundType.ULTIMATE:
 
 ### 7. MODIFY: scripts/game/game_controller.gd
 
-Add to _on_enemy_died (or equivalent):
+Add to `_on_enemy_died` (line 407, after `GameManager.record_enemy_kill()` at line 411):
 ```gdscript
 GameManager.add_ultimate_charge(GameManager.CHARGE_PER_KILL)
 ```
 
-Add to _on_gem_collected (or equivalent):
+Add to `_on_gem_collected` (line 440, after `GameManager.record_gem_collected()` at line 442):
 ```gdscript
 GameManager.add_ultimate_charge(GameManager.CHARGE_PER_GEM)
 ```
@@ -196,7 +201,25 @@ func _on_ultimate_activated() -> void:
 
 ### 8. MODIFY: scenes/game.tscn
 
-Add UltimateButton to UI node hierarchy (near FireButton).
+Add UltimateButton to UI node hierarchy (near FireButton). The node path should be:
+`UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer/UltimateButton`
+
+### 9. NEW: tests/test_ultimate.py
+
+Copy from salvo-firing branch:
+```bash
+git show feature/salvo-firing:tests/test_ultimate.py > tests/test_ultimate.py
+```
+
+This includes tests for:
+- `test_ultimate_charge_starts_at_zero`
+- `test_ultimate_charge_max_constant`
+- `test_add_ultimate_charge`
+- `test_ultimate_charge_caps_at_max`
+- `test_is_ultimate_ready_when_full`
+- `test_use_ultimate_when_ready`
+- `test_use_ultimate_when_not_ready`
+- `test_ultimate_button_exists`
 
 ## Post-Implementation: Clean Up Stale Branch
 
