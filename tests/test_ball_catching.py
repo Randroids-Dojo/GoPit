@@ -2,26 +2,11 @@
 import asyncio
 import pytest
 
-GAME = "/root/Game"
-FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
-BALLS_CONTAINER = "/root/Game/GameArea/Balls"
-BALL_SPAWNER = "/root/Game/GameArea/BallSpawner"
+from helpers import PATHS, wait_for_fire_ready, wait_for_can_fire
 
-# Timeout for waiting operations (seconds)
-WAIT_TIMEOUT = 5.0
-
-
-async def wait_for_fire_ready(game, timeout=WAIT_TIMEOUT):
-    """Wait for fire button to be ready with timeout."""
-    elapsed = 0
-    while elapsed < timeout:
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        balls_avail = await game.get_property(FIRE_BUTTON, "_balls_available")
-        if is_ready and balls_avail:
-            return True
-        await asyncio.sleep(0.1)
-        elapsed += 0.1
-    return False
+FIRE_BUTTON = PATHS["fire_button"]
+BALLS_CONTAINER = PATHS["balls"]
+BALL_SPAWNER = PATHS["ball_spawner"]
 
 
 @pytest.mark.asyncio
@@ -156,8 +141,8 @@ async def test_ball_is_catchable_when_returning(game):
     await game.call(FIRE_BUTTON, "set_autofire", [False])
     await asyncio.sleep(0.3)
 
-    # Wait for existing balls to clear
-    await asyncio.sleep(2.0)
+    # Wait for salvo to return
+    await wait_for_can_fire(game)
 
     # Fire a ball aimed downward (will hit bottom and return faster)
     await game.call(BALL_SPAWNER, "set_aim_direction_xy", [0.0, 1.0])

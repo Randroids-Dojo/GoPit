@@ -2,27 +2,9 @@
 import asyncio
 import pytest
 
-FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
+from helpers import PATHS, wait_for_fire_ready
 
-# Timeout for waiting operations (seconds)
-WAIT_TIMEOUT = 5.0
-
-
-async def wait_for_fire_ready(game, timeout=WAIT_TIMEOUT):
-    """Wait for fire button to be ready with timeout.
-
-    With salvo firing, both cooldown (is_ready) and ball availability
-    (_balls_available) must be true before firing is possible.
-    """
-    elapsed = 0
-    while elapsed < timeout:
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        balls_available = await game.get_property(FIRE_BUTTON, "_balls_available")
-        if is_ready and balls_available:
-            return True
-        await asyncio.sleep(0.1)
-        elapsed += 0.1
-    return False
+FIRE_BUTTON = PATHS["fire_button"]
 
 
 @pytest.mark.asyncio

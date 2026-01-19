@@ -2,13 +2,15 @@
 import asyncio
 import pytest
 
-GAME = "/root/Game"
-ENEMIES_CONTAINER = "/root/Game/GameArea/Enemies"
-BALLS_CONTAINER = "/root/Game/GameArea/Balls"
-FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
+from helpers import PATHS, wait_for_fire_ready
+
+GAME = PATHS["game"]
+ENEMIES_CONTAINER = PATHS["enemies"]
+BALLS_CONTAINER = PATHS["balls"]
+FIRE_BUTTON = PATHS["fire_button"]
 
 
-async def wait_for_enemy(game, timeout: float = 3.0) -> str:
+async def wait_for_enemy_with_path(game, timeout: float = 3.0) -> str:
     """Wait for an enemy to spawn and return its path."""
     start = asyncio.get_event_loop().time()
     while asyncio.get_event_loop().time() - start < timeout:
@@ -28,23 +30,6 @@ async def get_enemy_hp(game, enemy_path: str) -> int:
         return await game.get_property(enemy_path, "hp")
     except:
         return -1
-
-
-async def wait_for_fire_ready(game, timeout: float = 5.0) -> bool:
-    """Wait for fire button to be ready with timeout.
-
-    With salvo firing, both cooldown (is_ready) and ball availability
-    (_balls_available) must be true before firing is possible.
-    """
-    elapsed = 0
-    while elapsed < timeout:
-        is_ready = await game.get_property(FIRE_BUTTON, "is_ready")
-        balls_available = await game.get_property(FIRE_BUTTON, "_balls_available")
-        if is_ready and balls_available:
-            return True
-        await asyncio.sleep(0.1)
-        elapsed += 0.1
-    return False
 
 
 async def get_enemy_speed(game, enemy_path: str) -> float:
@@ -67,7 +52,7 @@ async def test_status_effect_class_exists(game):
 async def test_enemy_has_status_effect_methods(game):
     """Verify enemies have the status effect methods."""
     # Wait for an enemy to spawn
-    enemy_path = await wait_for_enemy(game)
+    enemy_path = await wait_for_enemy_with_path(game)
     if enemy_path is None:
         # No enemy spawned, just pass (may happen in early waves)
         pytest.skip("No enemy spawned in time")
@@ -82,7 +67,7 @@ async def test_enemy_has_status_effect_methods(game):
 async def test_burn_deals_damage_over_time(game):
     """Burn effect should deal damage over time."""
     # Wait for enemy
-    enemy_path = await wait_for_enemy(game)
+    enemy_path = await wait_for_enemy_with_path(game)
     if enemy_path is None:
         pytest.skip("No enemy spawned in time")
         return
@@ -116,7 +101,7 @@ async def test_burn_deals_damage_over_time(game):
 async def test_freeze_slows_enemy(game):
     """Freeze effect should reduce enemy movement speed."""
     # Wait for enemy
-    enemy_path = await wait_for_enemy(game)
+    enemy_path = await wait_for_enemy_with_path(game)
     if enemy_path is None:
         pytest.skip("No enemy spawned in time")
         return
@@ -143,7 +128,7 @@ async def test_freeze_slows_enemy(game):
 async def test_enemy_effect_tracking_initialized(game):
     """Verify enemy effect tracking is properly initialized."""
     # Wait for enemy
-    enemy_path = await wait_for_enemy(game)
+    enemy_path = await wait_for_enemy_with_path(game)
     if enemy_path is None:
         pytest.skip("No enemy spawned in time")
         return
