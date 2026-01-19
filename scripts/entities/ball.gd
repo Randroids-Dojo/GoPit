@@ -1154,22 +1154,28 @@ func _do_magma_pool(pos: Vector2) -> void:
 
 
 # Track void alternation state (static so all void balls share state)
-static var _void_use_burn: bool = true
+# Using counter instead of boolean ensures consistent alternation even when
+# multiple void balls hit enemies in the same physics frame
+static var _void_hit_count: int = 0
 
 func _do_void_effect(enemy: Node2D) -> void:
 	"""VOID effect - Alternates between burn and freeze each hit"""
+	# Determine effect BEFORE incrementing (even count = burn, odd = freeze)
+	var use_burn := _void_hit_count % 2 == 0
+
 	if enemy.has_method("apply_status_effect"):
-		if _void_use_burn:
+		if use_burn:
 			var burn = StatusEffect.new(StatusEffect.Type.BURN)
 			enemy.apply_status_effect(burn)
 		else:
 			var freeze = StatusEffect.new(StatusEffect.Type.FREEZE)
 			enemy.apply_status_effect(freeze)
 
-	_void_use_burn = not _void_use_burn
+	_void_hit_count += 1
 
-	# Visual void effect
-	var void_color := Color(0.3, 0.0, 0.5) if _void_use_burn else Color(0.0, 0.3, 0.5)
+	# Visual void effect - color matches the effect that WAS applied
+	# Purple for burn (fire), Blue-ish for freeze (ice)
+	var void_color := Color(0.3, 0.0, 0.5) if use_burn else Color(0.0, 0.3, 0.5)
 	enemy.modulate = void_color
 	var tween := enemy.create_tween()
 	tween.tween_property(enemy, "modulate", Color.WHITE, 0.3)
