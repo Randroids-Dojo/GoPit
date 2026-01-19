@@ -28,8 +28,8 @@ Status effects provide important gameplay feedback. Currently, 4 of 9 status eff
 - `scenes/effects/charm_particles.tscn` - Pink hearts/sparkles
 
 ### Modify
-- `scripts/entities/enemies/enemy_base.gd:45-49` - Add preload constants for new particle scenes
-- `scripts/entities/enemies/enemy_base.gd` - Add spawning logic in `_spawn_effect_particles()`
+- `scripts/entities/enemies/enemy_base.gd:46-49` - Add preload constants for new particle scenes
+- `scripts/entities/enemies/enemy_base.gd:771-780` - Add cases in `_ensure_effect_particles()`
 
 ## Current Implementation
 
@@ -45,9 +45,47 @@ const BLEED_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/bleed_p
 
 Reference existing particles for consistency:
 - Use GPUParticles2D for performance
-- Keep particle counts low (8-16 particles)
-- Match colors from `status_effect.gd:get_color()`
-- Duration should match effect duration or loop
+- Keep particle counts low (6-8 particles)
+- Match colors from `scripts/effects/status_effect.gd:get_color()` (lines 137-158)
+- Use lifetime 0.5-0.8 seconds with emitting=true (continuous)
+- Use emission_sphere_radius 15-20 for spread
+
+### Existing Pattern Example (burn_particles.tscn)
+
+```tscn
+[gd_scene load_steps=2 format=3 uid="uid://burn_particles"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_burn"]
+emission_shape = 1
+emission_sphere_radius = 15.0
+direction = Vector3(0, -1, 0)
+spread = 30.0
+initial_velocity_min = 20.0
+initial_velocity_max = 40.0
+gravity = Vector3(0, -50, 0)
+scale_min = 2.0
+scale_max = 4.0
+color = Color(1, 0.5, 0.1, 0.8)
+
+[node name="BurnParticles" type="GPUParticles2D"]
+amount = 6
+process_material = SubResource("ParticleProcessMaterial_burn")
+lifetime = 0.5
+speed_scale = 1.5
+```
+
+### Implementation Steps
+
+1. Create 5 new .tscn files following the pattern above
+2. Customize each with appropriate colors from get_color()
+3. Adjust motion (direction, gravity, spread) for visual theme:
+   - Radiation: pulsing outward glow
+   - Disease: slow dripping down
+   - Frostburn: slow rising ice mist
+   - Wind: circular swirling motion
+   - Charm: floating hearts upward
+4. Add preload constants to enemy_base.gd (after line 49)
+5. Add match cases to `_ensure_effect_particles()` (after line 780)
 
 ## Status Effect Colors (from status_effect.gd)
 
