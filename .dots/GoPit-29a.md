@@ -13,66 +13,146 @@ created-at: 2026-01-05T23:42:47.222251-06:00
 GoPit-aoo (Phase 5 - Polish & Release)
 
 ## Overview
-Optimize for mobile performance, test on devices, and prepare exports.
+Optimize for mobile performance, profile on devices, and prepare iOS/Android exports.
+
+## Current State
+
+**Already Implemented:**
+- Object pooling for balls, gems, damage numbers (`scripts/autoload/pool_manager.gd`)
+- Pool sizes: balls (20-50), damage numbers (30-100), gems (30-100)
+- Renderer: `gl_compatibility` mode (mobile-optimized)
+- Web export preset configured with custom shell
+
+**Gaps:**
+- No iOS export preset
+- No Android export preset
+- No profiling data on actual devices
+- No particle system limits
+- Enemies not pooled (could be added)
 
 ## Requirements
-1. Maintain 60fps on mid-range devices
-2. Memory management for long sessions
-3. Touch controls feel responsive
-4. Battery usage reasonable
-5. iOS and Android exports working
-6. Web export functional
+
+### 1. Export Presets
+Add iOS and Android export presets to `export_presets.cfg`:
+
+**iOS Requirements:**
+- Team ID and provisioning profile
+- App icons (multiple resolutions)
+- Launch screen storyboard
+- Capabilities declarations
+
+**Android Requirements:**
+- Keystore for signing
+- App icons and adaptive icons
+- Min SDK version (API 24+ recommended for Godot 4)
+- Permissions declarations
+
+### 2. Performance Profiling
+Use Godot's built-in profiler and platform tools:
+
+**Desktop Profiling (baseline):**
+1. Run game with `--verbose` flag
+2. Use Debugger > Profiler in editor
+3. Monitor: frame time, physics time, script time
+
+**Web Profiling:**
+1. Use Chrome DevTools Performance tab
+2. Check for long frame times, GC spikes
+3. Monitor memory via Performance > Memory
+
+**iOS Profiling (Instruments):**
+1. Build with debug symbols
+2. Use Time Profiler and Allocations
+3. Check for CPU spikes, memory leaks
+
+**Android Profiling:**
+1. Use Android Studio Profiler (CPU, Memory, Energy)
+2. Or `adb shell dumpsys gfxinfo <package>` for frame stats
+3. Check logcat for performance warnings
+
+### 3. Optimization Opportunities
+
+**Particle Systems:**
+- Audit all GPUParticles2D/CPUParticles2D usage
+- Set `amount` limits based on device class
+- Consider quality settings toggle (low/medium/high)
+
+**Enemy Pooling (Optional):**
+- Add enemy pool to pool_manager.gd
+- More complex due to different enemy types
+- May not be needed if enemy count stays low
+
+**Draw Call Batching:**
+- Check CanvasItem usage in profiler
+- Combine static UI elements where possible
+- Use AtlasTexture for sprite sheets
 
 ## Performance Targets
-- 60fps stable gameplay
+- 60fps stable (16.67ms frame budget)
 - < 200MB memory usage
-- < 5% CPU idle
-- Responsive touch (< 16ms latency)
-
-## Optimization Areas
-**Rendering:**
-- Batch draw calls where possible
-- Limit active particle systems
-- Use object pooling for balls/gems
-- Reduce overdraw
-
-**Memory:**
-- Pool frequently created objects
-- Clear unused resources between stages
-- Monitor for memory leaks
-
-**Touch:**
-- Profile input latency
-- Ensure hit targets are adequate
-- Test with various screen sizes
+- < 5% CPU when idle/paused
+- Touch latency < 16ms (1 frame)
 
 ## Testing Matrix
-| Platform | Devices |
-|----------|---------|
-| iOS | iPhone 12, iPad |
-| Android | Pixel 6, budget device |
-| Web | Chrome, Safari, Firefox |
+| Platform | Device | Target FPS | Notes |
+|----------|--------|------------|-------|
+| iOS | iPhone 12 | 60fps | Primary target |
+| iOS | iPad (any recent) | 60fps | Larger screen |
+| Android | Pixel 6 | 60fps | Mid-range reference |
+| Android | Budget device | 30fps min | Graceful degradation |
+| Web | Chrome (desktop) | 60fps | Already working |
+| Web | Safari (macOS) | 60fps | WebGL testing |
+| Web | Mobile Safari | 30fps min | Limited GPU |
 
-## Files to Modify
-- MODIFY: Various scripts for pooling
-- MODIFY: export_presets.cfg
-- MODIFY: project.godot (renderer settings)
+## Files to Modify/Create
+
+- MODIFY: `export_presets.cfg` - Add iOS and Android presets
+- NEW: `android/build/` - Gradle project if custom build needed
+- NEW: `ios/` - Xcode project assets if needed
+- POTENTIALLY: `scripts/autoload/pool_manager.gd` - Add enemy pool
+- POTENTIALLY: `project.godot` - Quality settings
+
+## Export Preset Templates
+
+**iOS Preset (add to export_presets.cfg):**
+```ini
+[preset.1]
+name="iOS"
+platform="iOS"
+runnable=true
+# ... additional iOS options
+```
+
+**Android Preset:**
+```ini
+[preset.2]
+name="Android"
+platform="Android"
+runnable=true
+# ... additional Android options
+```
 
 ## Acceptance Criteria
-- [ ] 60fps on target devices
-- [ ] Memory stable during long sessions
-- [ ] Touch controls responsive
-- [ ] iOS export works
-- [ ] Android export works
-- [ ] Web export works
+- [ ] iOS export builds without errors
+- [ ] Android export builds without errors
+- [ ] 60fps maintained on iPhone 12 during intense gameplay (10+ enemies, particles)
+- [ ] 60fps maintained on Pixel 6 during intense gameplay
+- [ ] Memory usage under 200MB during 30-minute session
+- [ ] No memory leaks (memory stable over time)
+- [ ] Touch controls responsive (no perceptible lag)
+- [ ] Web export continues working (no regression)
 - [ ] All PlayGodot tests pass
 
 ## Verify
 - [ ] `./test.sh` passes
-- [ ] Profile on iPhone 12 - maintains 60fps during intense gameplay
-- [ ] Profile on mid-range Android (Pixel 6) - maintains 60fps
-- [ ] Play 30-minute session - memory usage stays under 200MB
-- [ ] Touch input latency < 16ms on mobile devices
-- [ ] Export iOS build successfully
-- [ ] Export Android build successfully
-- [ ] Web export plays correctly in Chrome, Safari, Firefox
+- [ ] `godot --export-release "iOS" build/gopit.ipa` succeeds
+- [ ] `godot --export-release "Android" build/gopit.apk` succeeds
+- [ ] Install iOS build on test device - launches and plays
+- [ ] Install Android build on test device - launches and plays
+- [ ] Profile on iPhone 12:
+  - Frame time < 16ms during boss fights
+  - Memory < 200MB after 30 minutes
+- [ ] Profile on Pixel 6:
+  - Frame time < 16ms during normal gameplay
+  - No GC stutters visible
+- [ ] Web build works in Chrome, Safari, Firefox (no regression)
