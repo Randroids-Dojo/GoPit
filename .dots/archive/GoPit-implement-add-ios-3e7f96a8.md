@@ -1,9 +1,11 @@
 ---
 title: "implement: Add iOS and Android export presets"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T11:06:25.315668-06:00"
+created-at: "\"\\\"2026-01-19T11:06:25.315668-06:00\\\"\""
+closed-at: "2026-01-19T11:21:18.525598-06:00"
+close-reason: Added iOS and Android export presets to export_presets.cfg. Tests pass.
 ---
 
 ## Description
