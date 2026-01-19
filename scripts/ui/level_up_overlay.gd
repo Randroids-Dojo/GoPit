@@ -20,17 +20,26 @@ const HEAL_DATA := {
 	"description": "Restore 30 HP"
 }
 
+const SETTINGS_PATH := "user://settings.save"
+const HINT_TEXT := "Choose an upgrade! Tap a card to power up."
+const HINT_DURATION := 3.0  # Seconds before auto-dismiss
+
 @onready var cards_container: HBoxContainer = $Panel/VBoxContainer/CardsContainer
 @onready var title_label: Label = $Panel/VBoxContainer/TitleLabel
+@onready var hint_label: Label = $Panel/VBoxContainer/HintLabel
 
 # Each card is a Dictionary with: card_type, passive_type (for passive), ball_type (for ball cards)
 var _available_cards: Array[Dictionary] = []
+var _first_levelup_seen: bool = false
+var _hint_tween: Tween = null
 
 
 func _ready() -> void:
 	visible = false
+	_first_levelup_seen = _load_hint_state()
 	GameManager.level_up_triggered.connect(_on_level_up)
 	_setup_cards()
+	_setup_hint_label()
 
 
 func _setup_cards() -> void:
@@ -39,11 +48,30 @@ func _setup_cards() -> void:
 		card.pressed.connect(_on_card_pressed.bind(i))
 
 
+func _setup_hint_label() -> void:
+	# The hint label will be created dynamically if it doesn't exist in the scene
+	if not hint_label:
+		hint_label = Label.new()
+		hint_label.name = "HintLabel"
+		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3, 1.0))
+		hint_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+		hint_label.add_theme_constant_override("outline_size", 3)
+		hint_label.add_theme_font_size_override("font_size", 16)
+		# Insert after title label
+		var vbox := title_label.get_parent()
+		vbox.add_child(hint_label)
+		vbox.move_child(hint_label, title_label.get_index() + 1)
+	hint_label.text = ""
+	hint_label.visible = false
+
+
 func _on_level_up() -> void:
 	_randomize_cards()
 	_update_cards()
 	visible = true
 	get_tree().paused = true
+	_show_first_time_hint()
 
 
 func _randomize_cards() -> void:
@@ -236,7 +264,91 @@ func _on_card_pressed(index: int) -> void:
 
 	upgrade_selected.emit(selected_name)
 
+	# Hide hint on card selection
+	_dismiss_hint()
+
 	# Resume game
 	get_tree().paused = false
 	visible = false
 	GameManager.complete_level_up()
+
+
+# =============================================================================
+# FIRST-TIME HINT SYSTEM
+# =============================================================================
+
+func _show_first_time_hint() -> void:
+	"""Show hint text on first level-up."""
+	if _first_levelup_seen:
+		return
+
+	if hint_label:
+		hint_label.text = HINT_TEXT
+		hint_label.visible = true
+		hint_label.modulate.a = 0.0
+
+		# Fade in animation
+		_hint_tween = create_tween()
+		_hint_tween.tween_property(hint_label, "modulate:a", 1.0, 0.3)
+
+		# Auto-dismiss after duration (but save state immediately)
+		_hint_tween.tween_interval(HINT_DURATION)
+		_hint_tween.tween_callback(_fade_out_hint)
+
+	# Mark as seen and save immediately
+	_first_levelup_seen = true
+	_save_hint_state()
+
+
+func _dismiss_hint() -> void:
+	"""Dismiss hint immediately (on card selection)."""
+	if _hint_tween and _hint_tween.is_running():
+		_hint_tween.kill()
+	if hint_label:
+		hint_label.visible = false
+
+
+func _fade_out_hint() -> void:
+	"""Fade out the hint label."""
+	if hint_label and hint_label.visible:
+		var tween := create_tween()
+		tween.tween_property(hint_label, "modulate:a", 0.0, 0.3)
+		tween.tween_callback(func(): hint_label.visible = false)
+
+
+func _load_hint_state() -> bool:
+	"""Load first_levelup_seen state from settings."""
+	if not FileAccess.file_exists(SETTINGS_PATH):
+		return false
+
+	var file := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+	if not file:
+		return false
+
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	if data and data.has("first_levelup_seen"):
+		return data["first_levelup_seen"]
+	return false
+
+
+func _save_hint_state() -> void:
+	"""Save first_levelup_seen state to settings."""
+	var data := {}
+
+	# Load existing settings first
+	if FileAccess.file_exists(SETTINGS_PATH):
+		var file := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+		if file:
+			var existing = JSON.parse_string(file.get_as_text())
+			file.close()
+			if existing:
+				data = existing
+
+	data["first_levelup_seen"] = true
+
+	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data))
+		file.close()

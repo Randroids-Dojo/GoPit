@@ -1,9 +1,11 @@
 ---
 title: "implement: Add first-time hints for level-up and shop"
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-19T03:21:56.321488-06:00"
+created-at: "\"\\\"2026-01-19T03:21:56.321488-06:00\\\"\""
+closed-at: "2026-01-19T04:02:40.733987-06:00"
+close-reason: Added first-time hints for level-up (3s auto-dismiss) and shop (pulsing until clicked)
 ---
 
 ## Description
