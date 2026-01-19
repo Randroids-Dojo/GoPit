@@ -712,7 +712,7 @@ func spawn_test_boss() -> String:
 	# Get container (may be null if @onready hasn't run yet)
 	var container := enemies_container
 	if not container:
-		container = get_node_or_null("GameArea/Enemies")
+		container = get_tree().get_first_node_in_group("enemies_container")
 	if not container:
 		push_error("spawn_test_boss: Could not find enemies container")
 		return ""
@@ -734,7 +734,7 @@ func spawn_test_enemy(scene_path: String) -> String:
 	# Get container
 	var container := enemies_container
 	if not container:
-		container = get_node_or_null("GameArea/Enemies")
+		container = get_tree().get_first_node_in_group("enemies_container")
 	if not container:
 		push_error("spawn_test_enemy: Could not find enemies container")
 		return ""
@@ -749,7 +749,10 @@ func spawn_test_enemy(scene_path: String) -> String:
 
 func get_enemy_spawner_path() -> String:
 	"""Return the enemy spawner path for testing."""
-	return "/root/Game/GameArea/Enemies/EnemySpawner"
+	var spawner := get_tree().get_first_node_in_group("enemy_spawner")
+	if spawner:
+		return spawner.get_path()
+	return ""
 
 
 func _spawn_boss(stage: int) -> void:

@@ -1,10 +1,12 @@
 ---
 title: Consolidate hardcoded scene paths to use groups
-status: open
+status: closed
 priority: 4
 issue-type: refactor
 assignee: randroid
-created-at: 2026-01-08T19:57:14.902458-06:00
+created-at: "\"2026-01-08T19:57:14.902458-06:00\""
+closed-at: "2026-01-19T09:46:58.250782-06:00"
+close-reason: Converted 3 hardcoded scene paths in game_controller.gd to use group-based lookups for consistency
 ---
 
 ## Parent Epic

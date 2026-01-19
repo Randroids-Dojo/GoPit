@@ -42,6 +42,7 @@ var _screen_width: float
 
 
 func _ready() -> void:
+	add_to_group("enemy_spawner")
 	_screen_width = get_viewport().get_visible_rect().size.x
 	_setup_timer()
 

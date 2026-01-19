@@ -7,6 +7,21 @@ assignee: randroid
 created-at: 2026-01-05T02:15:33.520331-06:00
 ---
 
+## Implementation Note (2026-01-19)
+
+**IMPORTANT:** This feature is already implemented in the `feature/salvo-firing` branch (worktree: `GoPit-salvo-firing/`).
+
+Files implemented:
+- `scripts/autoload/game_manager.gd` - Ultimate charge system
+- `scripts/ui/ultimate_button.gd` - UI with charge ring visualization
+- `scripts/effects/ultimate_blast.gd` - Screen-clearing blast effect
+- `scenes/effects/ultimate_blast.tscn`
+- `scenes/ui/ultimate_button.tscn`
+
+**Remaining work**: Wire charge gain to enemy kills/gem collection, Empty Nester 2x specials passive.
+
+---
+
 ## Problem
 No power moment. Just steady fire. Players need satisfying payoff.
 
