@@ -75,9 +75,7 @@ enum SoundType {
 	EVOLUTION,       # Success fanfare
 	FISSION,         # Energy burst
 	# Combat feedback
-	WEAK_POINT_HIT,  # Critical weak point hit (boss crown, etc.)
-	# Ultimate ability
-	ULTIMATE         # Screen-clearing blast
+	WEAK_POINT_HIT  # Critical weak point hit (boss crown, etc.)
 }
 
 # Per-sound pitch/volume variance settings
@@ -109,9 +107,7 @@ const SOUND_SETTINGS := {
 	SoundType.EVOLUTION: {"pitch_var": 0.0, "vol_var": 0.0},
 	SoundType.FISSION: {"pitch_var": 0.1, "vol_var": 0.1},
 	# Combat feedback
-	SoundType.WEAK_POINT_HIT: {"pitch_var": 0.1, "vol_var": 0.05},
-	# Ultimate ability
-	SoundType.ULTIMATE: {"pitch_var": 0.0, "vol_var": 0.0}
+	SoundType.WEAK_POINT_HIT: {"pitch_var": 0.1, "vol_var": 0.05}
 }
 
 
@@ -315,9 +311,6 @@ func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
 		# Combat feedback
 		SoundType.WEAK_POINT_HIT:
 			data = _generate_weak_point_hit()
-		# Ultimate ability
-		SoundType.ULTIMATE:
-			data = _generate_ultimate_blast_sound()
 
 	wav.data = data
 	return wav
@@ -744,46 +737,6 @@ func _generate_weak_point_hit() -> PackedByteArray:
 			punch = sin(t * 200.0 * TAU) * (1.0 - progress / 0.1) * 0.3
 
 		var sample := (hit + sparkle + punch) * envelope * 0.25
-		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
-
-	return data
-
-
-# ============================================================================
-# Ultimate Ability Sounds
-# ============================================================================
-
-func _generate_ultimate_blast_sound() -> PackedByteArray:
-	"""Ultimate ability: Epic power blast with rising tone and explosion"""
-	var samples := int(SAMPLE_RATE * 0.6)
-	var data := PackedByteArray()
-	data.resize(samples * 2)
-
-	for i in samples:
-		var t := float(i) / SAMPLE_RATE
-		var progress := float(i) / samples
-
-		# Rising tone followed by explosion
-		var freq: float
-		var sample: float
-
-		if progress < 0.3:
-			# Rising phase
-			freq = 200.0 + progress * 1000.0
-			sample = sin(t * TAU * freq)
-		else:
-			# Explosion phase
-			freq = 80.0
-			var explosion := sin(t * TAU * freq) * (1.0 - (progress - 0.3) / 0.7)
-			var noise := (randf() * 2.0 - 1.0) * 0.5 * (1.0 - progress)
-			sample = explosion + noise
-
-		# Envelope
-		var envelope := 1.0
-		if progress > 0.7:
-			envelope = 1.0 - (progress - 0.7) / 0.3
-
-		sample *= envelope * 0.4
 		data.encode_s16(i * 2, int(clampf(sample, -1.0, 1.0) * 32767))
 
 	return data

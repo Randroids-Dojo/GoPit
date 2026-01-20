@@ -28,7 +28,6 @@ extends Node2D
 @onready var fusion_overlay: Control = $UI/FusionOverlay
 @onready var boss_hp_bar: Control = $UI/BossHPBar
 @onready var save_slot_select: CanvasLayer = $UI/SaveSlotSelect
-@onready var ultimate_button: Control = $UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer/UltimateButton
 
 var gem_scene: PackedScene = preload("res://scenes/entities/gem.tscn")
 # NOTE: Boss scenes use load() not preload() to avoid class resolution issues during import
@@ -99,10 +98,6 @@ func _ready() -> void:
 	if auto_toggle and fire_button:
 		auto_toggle.toggled.connect(_on_auto_toggle_pressed)
 		fire_button.autofire_toggled.connect(_on_autofire_state_changed)
-
-	# Wire up ultimate button
-	if ultimate_button:
-		ultimate_button.ultimate_activated.connect(_on_ultimate_activated)
 
 	# Set up ball spawner
 	if ball_spawner:
@@ -414,7 +409,6 @@ func _on_enemy_died(enemy: EnemyBase) -> void:
 	_maybe_spawn_fusion_reactor(enemy.global_position)
 	_check_wave_progress()
 	GameManager.record_enemy_kill()
-	GameManager.add_ultimate_charge(GameManager.CHARGE_PER_KILL)
 
 
 func _on_enemy_took_damage(_enemy: EnemyBase, _amount: int) -> void:
@@ -446,7 +440,6 @@ func _spawn_gem(pos: Vector2, xp_value: int) -> void:
 func _on_gem_collected(_gem: Node2D) -> void:
 	# Gems no longer give XP - XP is awarded on kill instead
 	GameManager.record_gem_collected()
-	GameManager.add_ultimate_charge(GameManager.CHARGE_PER_GEM)
 
 
 func _check_wave_progress() -> void:
@@ -555,18 +548,6 @@ func _on_autofire_state_changed(enabled: bool) -> void:
 	# Keep toggle button in sync with fire button state
 	if auto_toggle:
 		auto_toggle.set_pressed_no_signal(enabled)
-
-
-func _on_ultimate_activated() -> void:
-	## Handle ultimate ability activation - creates screen-clearing blast
-	var blast_scene: PackedScene = load("res://scenes/effects/ultimate_blast.tscn")
-	var multiplier: int = GameManager.get_special_fire_multiplier()
-	for i in range(multiplier):
-		var blast: Node2D = blast_scene.instantiate()
-		add_child(blast)
-		blast.execute()
-		if i < multiplier - 1:
-			await get_tree().create_timer(0.2).timeout
 
 
 func _process(_delta: float) -> void:

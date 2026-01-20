@@ -29,7 +29,6 @@
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 [ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
 [ext_resource type="Script" path="res://scripts/ui/queue_display.gd" id="queue_display"]
-[ext_resource type="Script" path="res://scripts/ui/ultimate_button.gd" id="ultimate_button"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -316,16 +315,6 @@ layout_mode = 2
 script = ExtResource("3_joystick")
 base_color = Color(0.5, 0.25, 0.2, 0.5)
 knob_color = Color(1.0, 0.5, 0.3, 0.8)
-
-[node name="UltimateButtonContainer" type="CenterContainer" parent="UI/HUD/InputContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 2
-
-[node name="UltimateButton" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/UltimateButtonContainer"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-size_flags_horizontal = 4
-script = ExtResource("ultimate_button")
 
 [node name="BossHPBar" parent="UI" instance=ExtResource("21_boss_hp")]
 
