@@ -93,4 +93,4 @@ async def test_different_characters_different_fire_rates(game):
 async def test_ball_spawner_has_base_fire_rate(game):
     """BallSpawner should have fire_rate property as fallback."""
     base_rate = await game.get_property(BALL_SPAWNER, "fire_rate")
-    assert base_rate == 2.0, f"Base fire_rate should be 2.0, got {base_rate}"
+    assert base_rate == 3.0, f"Base fire_rate should be 3.0, got {base_rate}"

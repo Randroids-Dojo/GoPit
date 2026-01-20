@@ -96,7 +96,7 @@ async def test_clear_queue_empties_queue(game):
 async def test_get_max_queue_size(game):
     """get_max_queue_size should return the max queue size."""
     max_size = await game.call(BALL_SPAWNER, "get_max_queue_size")
-    assert max_size == 20, f"Default max_queue_size should be 20, got {max_size}"
+    assert max_size == 30, f"Default max_queue_size should be 30, got {max_size}"
 
 
 @pytest.mark.asyncio

@@ -35,8 +35,9 @@ const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position - start return
 const RETURN_COMPLETE_Y: float = 350.0  # Near player position - complete return
 const CATCH_ZONE_Y: float = 600.0  # Ball is catchable when y < this (in catch zone)
 const RETURN_SPEED_MULT: float = 1.5  # Return speed is faster than normal
+const CATCH_MAGNETISM_RADIUS: float = 80.0  # Auto-catch radius around player (BallxPit style)
 var is_returning: bool = false  # True when ball is flying back to player
-var is_catchable: bool = false  # True when ball can be caught (returning and in catch zone)
+var is_catchable: bool = false  # True when ball can be caught (after first bounce)
 
 
 # Trail particle scenes per ball type (preloaded for performance)
@@ -243,8 +244,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		# Continuously update direction to home toward player (BallxPit-style)
 		_update_return_direction()
-		# Check if ball is in catch zone (can be caught by player)
-		is_catchable = global_position.y < CATCH_ZONE_Y
+		# Returning balls are always catchable (in addition to post-bounce catchability)
+		is_catchable = true
 		# Check if ball has returned to player area (close to player position)
 		var player_pos := _get_player_position()
 		if global_position.distance_to(player_pos) < 50.0:
@@ -268,6 +269,9 @@ func _physics_process(delta: float) -> void:
 		# Bounce off walls
 		if collider.collision_layer & 1:  # walls layer
 			_bounce_count += 1
+			# Ball becomes catchable after first bounce (BallxPit style)
+			if _bounce_count >= 1:
+				is_catchable = true
 			# Removed despawn on max_bounces - balls now return at bottom of screen
 			direction = direction.bounce(collision.get_normal())
 			SoundManager.play(SoundManager.SoundType.HIT_WALL)
@@ -378,6 +382,26 @@ func _physics_process(delta: float) -> void:
 			caught.emit()
 
 			# Use call_deferred for cleanup to ensure it happens
+			call_deferred("queue_free")
+			return
+
+	# MAGNETISM AUTO-CATCH: Catchable balls within magnetism radius are pulled and caught
+	# This is the BallxPit-style magnetism for catching balls
+	if is_catchable and _bounce_count > 0:
+		var player_pos := _get_player_position()
+		var dist_to_player := global_position.distance_to(player_pos)
+		if dist_to_player < CATCH_MAGNETISM_RADIUS:
+			# Auto-catch the ball (within magnetism radius)
+			velocity = Vector2.ZERO
+			direction = Vector2.ZERO
+			set_physics_process(false)
+			set_process(false)
+			collision_layer = 0
+			collision_mask = 0
+			_show_catch_effect()
+			global_position = Vector2(-9999, -9999)
+			hide()
+			caught.emit()
 			call_deferred("queue_free")
 			return
 

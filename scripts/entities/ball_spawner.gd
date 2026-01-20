@@ -2,14 +2,14 @@ extends Node2D
 ## Spawns balls in the aimed direction when fire is triggered
 ## Now integrates with BallRegistry for ball types and levels
 ## Ball Return Mechanic: Balls return when reaching bottom of screen
-## Salvo System: All balls fire at once, must return before firing again (BallxPit style)
+## Queue System: Balls fire one at a time from a queue (BallxPit style)
 
 signal ball_spawned(ball: Node2D)
 signal ball_returned  # Emitted when a ball returns to player
 signal ball_caught  # Emitted when a ball is caught (active play bonus)
 signal balls_available_changed(available: bool)  # For fire button UI
-signal all_balls_returned  # Emitted when salvo is complete (all main balls back)
-signal queue_changed(queue_size: int, max_size: int)  # For baby ball queue UI
+signal all_balls_returned  # Emitted when all balls have returned (legacy compat)
+signal queue_changed(queue_size: int, max_size: int)  # For queue UI
 signal cooldown_changed(ball_type: int, remaining: float)  # For cooldown UI
 
 @export var ball_scene: PackedScene
@@ -31,19 +31,18 @@ var ball_type: int = 0  # Legacy: 0=NORMAL, 1=FIRE, 2=ICE, 3=LIGHTNING
 var _damage_bonus: int = 0
 var _speed_bonus: float = 0.0
 
-# Salvo-based Ball Return Mechanic (BallxPit style)
-# Main balls: fired by player, must ALL return before firing again
-# Baby balls: auto-spawned, don't block main firing
-var main_balls_in_flight: int = 0  # Blocks firing until 0
-var baby_balls_in_flight: int = 0  # Doesn't block firing
+# Queue-based firing (BallxPit style) - balls fire one at a time
+# No restriction on adding to queue - can always fire
+var main_balls_in_flight: int = 0  # For tracking only, doesn't block firing
+var baby_balls_in_flight: int = 0  # For tracking only
 var balls_in_flight: int = 0  # Total (for compatibility)
 var _previous_available: bool = true
 
-# Queue system for BABY BALLS ONLY (main balls fire immediately as salvo)
-# Each entry is {type: BallType, spread: float}
+# Queue system for ALL balls (main + baby fire from same queue)
+# Each entry is {type: BallType, spread: float, is_baby: bool, direction: Vector2}
 var _fire_queue: Array[Dictionary] = []
-var fire_rate: float = 2.0  # Baby ball queue drain rate
-var max_queue_size: int = 20  # Prevent infinite stacking
+var fire_rate: float = 3.0  # Queue drain rate (balls per second)
+var max_queue_size: int = 30  # Prevent infinite stacking
 var _fire_timer: float = 0.0  # Timer for queue drain
 
 # Ball-specific cooldowns (per-type, not global)
@@ -90,8 +89,8 @@ func set_aim_direction_xy(x: float, y: float) -> void:
 
 
 func can_fire() -> bool:
-	"""Check if player can fire (salvo mechanic: all main balls must have returned)"""
-	return main_balls_in_flight == 0
+	"""Check if player can fire (queue system: always true if queue not full)"""
+	return _fire_queue.size() < max_queue_size
 
 
 func get_balls_in_flight() -> int:
@@ -110,11 +109,11 @@ func get_baby_balls_in_flight() -> int:
 
 
 func fire() -> void:
-	"""Fire a salvo - all slot balls + baby balls spawn immediately (BallxPit style)"""
+	"""Add balls to the fire queue (BallxPit queue style - balls fire one at a time)"""
 	if current_aim_direction == Vector2.ZERO:
 		return
 
-	# Salvo mechanic: cannot fire until ALL main balls have returned
+	# Queue system: can always add if queue not full
 	if not can_fire():
 		return
 
@@ -127,11 +126,14 @@ func fire() -> void:
 	if slot_balls.is_empty():
 		slot_balls = [BallRegistry.active_ball_type if BallRegistry else 0]
 
-	# Fire ALL balls immediately as a salvo (not queued)
-	var fired_any: bool = false
+	# Add balls to queue (they fire one at a time)
+	var queued_any: bool = false
 	# Include multi-shot bonus from passive evolutions
 	var meta_multi_shot_bonus: int = MetaManager.get_multi_shot_bonus() if MetaManager else 0
 	var effective_ball_count: int = ball_count + meta_multi_shot_bonus
+
+	# Capture current aim direction for queued balls
+	var aim_dir := current_aim_direction
 
 	for slot_ball_type in slot_balls:
 		# Skip this ball type if on cooldown
@@ -141,34 +143,62 @@ func fire() -> void:
 		# Record fire time for cooldown tracking
 		_record_fire_time(slot_ball_type)
 
-		# Each slot fires effective_ball_count balls (multi-shot + evolution bonus)
+		# Each slot queues effective_ball_count balls (multi-shot + evolution bonus)
 		for i in range(effective_ball_count):
 			# Calculate spread offset for multi-shot
 			var spread_offset: float = 0.0
 			if effective_ball_count > 1:
 				spread_offset = (i - (effective_ball_count - 1) / 2.0) * ball_spread
 
-			# Apply spread offset to current aim direction
-			var dir := current_aim_direction.rotated(spread_offset)
+			# Add main ball to queue with captured direction
+			if _add_to_queue(slot_ball_type, spread_offset, false, aim_dir):
+				queued_any = true
 
-			# Spawn ball immediately (salvo firing)
-			_spawn_ball_typed(dir, slot_ball_type)
-			fired_any = true
-
-	# Fire baby balls as part of the salvo (BallxPit style)
-	if fired_any:
-		_fire_baby_balls_with_salvo(slot_balls)
+	# Add baby balls to queue (BallxPit style - they queue with main balls)
+	if queued_any:
+		_queue_baby_balls(slot_balls, aim_dir)
 		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
-func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false) -> bool:
+func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false, direction: Vector2 = Vector2.ZERO) -> bool:
 	"""Add a ball to the fire queue. Returns false if queue is full."""
 	if _fire_queue.size() >= max_queue_size:
 		return false
 
-	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby})
+	# Use provided direction or current aim direction
+	var aim_dir := direction if direction != Vector2.ZERO else current_aim_direction
+	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby, "direction": aim_dir})
 	queue_changed.emit(_fire_queue.size(), max_queue_size)
 	return true
+
+
+func _queue_baby_balls(slot_balls: Array[int], aim_dir: Vector2) -> void:
+	"""Add baby balls to the queue (BallxPit style - queue with main balls)."""
+	# Get baby ball spawner for count calculation
+	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
+	if not baby_spawner:
+		return
+
+	# Empty Nester passive disables baby ball spawning entirely
+	if GameManager.has_no_baby_balls():
+		return
+
+	# Get baby ball count (based on Leadership)
+	var baby_count: int = baby_spawner.get_max_baby_balls() if baby_spawner.has_method("get_max_baby_balls") else 1
+	if baby_count <= 0:
+		return
+
+	# Get ball types for baby balls (cycle through slot balls)
+	var ball_types: Array[int] = slot_balls if not slot_balls.is_empty() else [0]
+
+	# Add baby balls to queue with slight spread
+	for i in range(baby_count):
+		if _fire_queue.size() >= max_queue_size:
+			break
+		var type_index: int = i % ball_types.size()
+		var ball_type: int = ball_types[type_index]
+		var spread: float = randf_range(-0.3, 0.3)
+		_add_to_queue(ball_type, spread, true, aim_dir)
 
 
 func add_baby_balls_to_queue(count: int, ball_types: Array[int]) -> int:
@@ -188,31 +218,32 @@ func add_baby_balls_to_queue(count: int, ball_types: Array[int]) -> int:
 
 
 func _fire_from_queue() -> void:
-	"""Fire one ball from the queue (baby balls fire continuously)."""
+	"""Fire one ball from the queue (BallxPit style - one at a time)."""
 	if _fire_queue.is_empty():
 		return
 
 	var entry: Dictionary = _fire_queue.pop_front()
 	queue_changed.emit(_fire_queue.size(), max_queue_size)
 
-	var ball_type: int = entry.get("type", 0)
+	var reg_ball_type: int = entry.get("type", 0)
 	var spread: float = entry.get("spread", 0.0)
 	var is_baby: bool = entry.get("is_baby", false)
+	var stored_direction: Vector2 = entry.get("direction", current_aim_direction)
 
 	# Record fire time for cooldown tracking (skip for baby balls)
 	if not is_baby:
-		_record_fire_time(ball_type)
+		_record_fire_time(reg_ball_type)
 
-	# Apply spread offset to current aim direction
-	var dir := current_aim_direction.rotated(spread)
+	# Use stored direction with spread offset (direction was captured when fire() was called)
+	var dir := stored_direction.rotated(spread)
 
 	# Enforce ball limit before spawning
 	_enforce_ball_limit(1)
 
 	if is_baby:
-		_spawn_baby_ball_from_queue(dir, ball_type)
+		_spawn_baby_ball_from_queue(dir, reg_ball_type)
 	else:
-		_spawn_ball_typed(dir, ball_type)
+		_spawn_ball_typed(dir, reg_ball_type)
 
 
 func get_queue_size() -> int:
@@ -361,13 +392,12 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	else:
 		get_parent().add_child(ball)
 
-	# Track ball return/catch (connect signals) - main balls block firing
+	# Track ball return/catch (connect signals)
 	ball.returned.connect(_on_main_ball_returned.bind(ball), CONNECT_ONE_SHOT)
 	ball.caught.connect(_on_main_ball_caught.bind(ball), CONNECT_ONE_SHOT)
 	ball.despawned.connect(_on_main_ball_returned.bind(ball), CONNECT_ONE_SHOT)
 	main_balls_in_flight += 1
 	balls_in_flight += 1
-	_check_availability_changed()
 
 	ball_spawned.emit(ball)
 
@@ -375,88 +405,6 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 # Baby ball configuration
 const BABY_BALL_SCALE: float = 0.6
 const BABY_BALL_DAMAGE_MULT: float = 0.5
-
-
-func _fire_baby_balls_with_salvo(slot_balls: Array[int]) -> void:
-	"""Fire baby balls as part of the salvo (BallxPit style).
-	Baby balls fire immediately with the special balls, not from a queue."""
-	# Get baby ball spawner for count calculation
-	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
-	if not baby_spawner:
-		return
-
-	# Empty Nester passive disables baby ball spawning entirely
-	if GameManager.has_no_baby_balls():
-		return
-
-	# Get baby ball count (based on Leadership)
-	var baby_count: int = baby_spawner.get_max_baby_balls() if baby_spawner.has_method("get_max_baby_balls") else 1
-	if baby_count <= 0:
-		return
-
-	# Get ball types for baby balls (cycle through slot balls)
-	var ball_types: Array[int] = slot_balls if not slot_balls.is_empty() else [0]
-
-	# Spawn baby balls with slight spread for visual variety
-	for i in range(baby_count):
-		var type_index: int = i % ball_types.size()
-		var ball_type: int = ball_types[type_index]
-		var spread: float = randf_range(-0.3, 0.3)
-		var dir := current_aim_direction.rotated(spread)
-		_spawn_baby_ball_immediate(dir, ball_type)
-
-
-func _spawn_baby_ball_immediate(direction: Vector2, registry_ball_type: int) -> void:
-	"""Spawn a baby ball immediately (part of salvo, not from queue)."""
-	# Get ball from pool if available, otherwise instantiate
-	var ball: Node
-	if PoolManager:
-		ball = PoolManager.get_ball()
-	else:
-		ball = ball_scene.instantiate()
-	ball.position = global_position + direction * spawn_offset
-	ball.set_direction(direction)
-	ball.scale = Vector2(BABY_BALL_SCALE, BABY_BALL_SCALE)
-	ball.is_baby_ball = true
-
-	# Get baby ball spawner for Leadership damage bonus
-	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
-	var leadership_bonus: float = 1.0
-	if baby_spawner and baby_spawner.has_method("get_leadership_damage_bonus"):
-		leadership_bonus = baby_spawner.get_leadership_damage_bonus()
-
-	# Calculate damage: base damage * baby mult * leadership bonus
-	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
-	var speed_mult: float = GameManager.character_speed_mult
-	if use_registry:
-		var registry_damage: int = BallRegistry.get_damage(registry_ball_type)
-		var registry_speed: float = BallRegistry.get_speed(registry_ball_type)
-		var ball_level: int = BallRegistry.get_ball_level(registry_ball_type)
-
-		ball.damage = int(registry_damage * BABY_BALL_DAMAGE_MULT * leadership_bonus)
-		ball.speed = (registry_speed + _speed_bonus) * speed_mult
-		ball.ball_level = ball_level
-		ball.registry_type = registry_ball_type
-		ball.set_ball_type(_registry_to_ball_type(registry_ball_type))
-	else:
-		ball.damage = int(ball_damage * BABY_BALL_DAMAGE_MULT * leadership_bonus)
-		ball.speed = (ball_speed + _speed_bonus) * speed_mult
-
-	ball.pierce_count = 0  # Baby balls don't pierce
-	ball.max_bounces = max_bounces
-	ball.crit_chance = crit_chance * 0.5  # Reduced crit for babies
-
-	if balls_container:
-		balls_container.add_child(ball)
-	else:
-		get_parent().add_child(ball)
-
-	# Track ball return (baby balls DON'T block main firing)
-	ball.returned.connect(_on_baby_ball_returned.bind(ball), CONNECT_ONE_SHOT)
-	ball.caught.connect(_on_baby_ball_caught.bind(ball), CONNECT_ONE_SHOT)
-	ball.despawned.connect(_on_baby_ball_returned.bind(ball), CONNECT_ONE_SHOT)
-	baby_balls_in_flight += 1
-	balls_in_flight += 1
 
 
 func _spawn_baby_ball_from_queue(direction: Vector2, registry_ball_type: int) -> void:
@@ -547,33 +495,33 @@ func _registry_to_ball_type(registry_type: int) -> int:
 
 
 func _on_main_ball_returned(_ball: Node) -> void:
-	"""Called when a main salvo ball returns to player"""
+	"""Called when a main ball returns to player"""
 	main_balls_in_flight = maxi(0, main_balls_in_flight - 1)
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_returned.emit()
-	_check_availability_changed()
-	# Emit all_balls_returned when salvo is complete
-	if main_balls_in_flight == 0:
+	# Emit all_balls_returned for legacy compatibility
+	if main_balls_in_flight == 0 and baby_balls_in_flight == 0:
 		all_balls_returned.emit()
 
 
 func _on_main_ball_caught(_ball: Node) -> void:
-	"""Called when a main salvo ball is caught by the player"""
+	"""Called when a main ball is caught by the player"""
 	main_balls_in_flight = maxi(0, main_balls_in_flight - 1)
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_caught.emit()
-	_check_availability_changed()
-	# Emit all_balls_returned when salvo is complete
-	if main_balls_in_flight == 0:
+	# Emit all_balls_returned for legacy compatibility
+	if main_balls_in_flight == 0 and baby_balls_in_flight == 0:
 		all_balls_returned.emit()
 
 
 func _on_baby_ball_returned(_ball: Node) -> void:
-	"""Called when a baby ball returns to player (doesn't affect can_fire)"""
+	"""Called when a baby ball returns to player"""
 	baby_balls_in_flight = maxi(0, baby_balls_in_flight - 1)
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_returned.emit()
-	# Don't call _check_availability_changed() - baby balls don't affect firing
+	# Emit all_balls_returned for legacy compatibility
+	if main_balls_in_flight == 0 and baby_balls_in_flight == 0:
+		all_balls_returned.emit()
 
 
 func _on_baby_ball_caught(_ball: Node) -> void:
@@ -581,7 +529,9 @@ func _on_baby_ball_caught(_ball: Node) -> void:
 	baby_balls_in_flight = maxi(0, baby_balls_in_flight - 1)
 	balls_in_flight = maxi(0, balls_in_flight - 1)
 	ball_caught.emit()
-	# Don't call _check_availability_changed() - baby balls don't affect firing
+	# Emit all_balls_returned for legacy compatibility
+	if main_balls_in_flight == 0 and baby_balls_in_flight == 0:
+		all_balls_returned.emit()
 
 
 func try_catch_ball() -> bool:
@@ -609,11 +559,16 @@ func has_catchable_balls() -> bool:
 
 
 func _check_availability_changed() -> void:
-	"""Emit signal if ball availability changed"""
+	"""Emit signal if ball availability changed (queue-based system)"""
 	var now_available := can_fire()
 	if now_available != _previous_available:
 		_previous_available = now_available
 		balls_available_changed.emit(now_available)
+
+
+func is_queue_full() -> bool:
+	"""Check if the fire queue is full"""
+	return _fire_queue.size() >= max_queue_size
 
 
 func increase_damage(amount: int) -> void:
