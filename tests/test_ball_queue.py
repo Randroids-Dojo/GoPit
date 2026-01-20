@@ -81,6 +81,10 @@ async def test_queue_drains_over_time(game):
 @pytest.mark.asyncio
 async def test_clear_queue_empties_queue(game):
     """clear_queue should empty the queue."""
+    # Disable autofire to prevent it from adding to queue
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+    await asyncio.sleep(0.1)
+
     # Fire to add balls
     await game.call(BALL_SPAWNER, "fire")
 
@@ -90,6 +94,9 @@ async def test_clear_queue_empties_queue(game):
     # Queue should be empty
     queue_size = await game.call(BALL_SPAWNER, "get_queue_size")
     assert queue_size == 0, f"Queue should be empty after clear, got {queue_size}"
+
+    # Re-enable autofire
+    await game.call(FIRE_BUTTON, "set_autofire", [True])
 
 
 @pytest.mark.asyncio
