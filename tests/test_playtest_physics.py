@@ -55,8 +55,8 @@ async def test_ball_wall_bounce(game, report):
 
 
 @pytest.mark.asyncio
-async def test_ball_despawn_offscreen(game, report):
-    """Test balls despawn when going off screen."""
+async def test_ball_return_mechanic(game, report):
+    """Test balls return to player (BallxPit style return mechanic)."""
     # Disable autofire so we control when balls spawn
     await game.call(PATHS["fire_button"], "set_autofire", [False])
 
@@ -64,30 +64,26 @@ async def test_ball_despawn_offscreen(game, report):
     ready = await wait_for_fire_ready(game, PATHS["fire_button"])
     assert ready, "Fire button should become ready within timeout"
 
-    # Stop baby ball spawner to prevent auto-spawned balls from affecting count
-    await game.call(PATHS["baby_ball_spawner"], "stop")
+    # Clear queue
+    await game.call(PATHS["ball_spawner"], "clear_queue")
 
-    # Clear any existing balls first
-    balls_before_fire = await game.call(PATHS["balls"], "get_child_count")
-
-    # Fire straight up
+    # Fire downward (toward bottom of screen to trigger return)
+    await game.call(PATHS["ball_spawner"], "set_aim_direction_xy", [0.0, 1.0])
     await game.click(PATHS["fire_button"])
 
-    # Wait for ball to spawn from queue (fire_rate=2 means ~0.5s per ball)
-    await asyncio.sleep(0.7)
+    # Wait for balls to spawn from queue and travel (fire_rate=3 means ~0.33s per ball)
+    await asyncio.sleep(1.0)
 
-    balls_initial = await game.call(PATHS["balls"], "get_child_count")
-    assert balls_initial >= 1, "Should have at least 1 ball after firing"
+    # Get balls in flight
+    balls_initial = await game.call(PATHS["ball_spawner"], "get_balls_in_flight")
 
-    # Wait for ball to go off top of screen (800 speed, ~1280 height = ~1.6s)
-    # Extra time for CI environment
-    await asyncio.sleep(3.0)
+    # Wait for balls to reach bottom and return
+    await asyncio.sleep(4.0)
 
-    balls_after = await game.call(PATHS["balls"], "get_child_count")
-    assert balls_after < balls_initial, "Ball should despawn when off screen"
-
-    # Restart baby ball spawner
-    await game.call(PATHS["baby_ball_spawner"], "start")
+    # After enough time, balls should have returned (count decreases)
+    balls_after = await game.call(PATHS["ball_spawner"], "get_balls_in_flight")
+    # Balls that return are removed from flight count
+    assert balls_after <= balls_initial, f"Balls should return, was {balls_initial}, now {balls_after}"
 
 
 @pytest.mark.asyncio
