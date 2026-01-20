@@ -122,16 +122,16 @@ async def test_fired_ball_has_correct_properties(game):
 
 @pytest.mark.asyncio
 async def test_baby_ball_spawner_uses_leadership_mult(game):
-    """Verify baby ball spawner respects leadership multiplier (queue-based)."""
+    """Verify baby ball spawner respects leadership multiplier (BallxPit style salvo)."""
     baby_spawner = "/root/Game/GameArea/BabyBallSpawner"
 
     # Baby ball spawner should exist
     spawner_node = await game.get_node(baby_spawner)
     assert spawner_node is not None, "Baby ball spawner should exist"
 
-    # Queue-based system: check base_baby_count and leadership multiplier
+    # BallxPit style: check base_baby_count (3 per salvo) and leadership multiplier
     base_count = await game.get_property(baby_spawner, "base_baby_count")
-    assert base_count == 1, f"Default base baby count should be 1, got {base_count}"
+    assert base_count == 3, f"Default base baby count should be 3 (BallxPit style), got {base_count}"
 
     # Verify leadership multiplier exists
     leadership_mult = await game.get_property(baby_spawner, "leadership_baby_multiplier")

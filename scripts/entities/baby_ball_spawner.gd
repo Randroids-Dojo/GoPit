@@ -1,12 +1,13 @@
 class_name BabyBallSpawner
 extends Node2D
-## Queue-based baby ball spawner - adds baby balls to the firing queue
-## Baby balls are added when parent balls are fired, based on Leadership stat
+## Baby ball spawner - provides baby ball count and damage calculations
+## Baby balls now fire WITH the salvo (BallxPit style), not from a separate queue
+## The ball_spawner calls get_max_baby_balls() to determine how many to spawn
 
-signal baby_balls_queued(count: int)
+signal baby_balls_spawned(count: int)
 
-## Base number of baby balls to queue per fire action
-@export var base_baby_count: int = 1
+## Base number of baby balls per salvo (BallxPit starts characters with several)
+@export var base_baby_count: int = 3
 ## Extra baby balls per point of Leadership bonus
 @export var leadership_baby_multiplier: float = 2.0
 ## Damage multiplier for baby balls (applied by ball_spawner)
@@ -23,30 +24,21 @@ var _leadership_bonus: float = 0.0
 
 func _ready() -> void:
 	add_to_group("baby_ball_spawner")
-	# Defer connection to ensure ball_spawner is ready
+	# Get reference to ball_spawner for counting active baby balls
 	call_deferred("_connect_to_ball_spawner")
 
 
 func _connect_to_ball_spawner() -> void:
 	_ball_spawner = get_tree().get_first_node_in_group("ball_spawner")
-	if _ball_spawner and _ball_spawner.has_signal("ball_spawned"):
-		# Connect to ball_spawned to add baby balls after each parent fires
-		_ball_spawner.ball_spawned.connect(_on_parent_ball_fired)
 
 
 func start() -> void:
 	_player = get_tree().get_first_node_in_group("player")
-	# Reconnect to ball_spawner signal if not connected
-	if _ball_spawner and _ball_spawner.has_signal("ball_spawned"):
-		if not _ball_spawner.ball_spawned.is_connected(_on_parent_ball_fired):
-			_ball_spawner.ball_spawned.connect(_on_parent_ball_fired)
 
 
 func stop() -> void:
-	# Disconnect from ball_spawner signal to stop queueing baby balls
-	if _ball_spawner and _ball_spawner.has_signal("ball_spawned"):
-		if _ball_spawner.ball_spawned.is_connected(_on_parent_ball_fired):
-			_ball_spawner.ball_spawned.disconnect(_on_parent_ball_fired)
+	# Nothing to stop - baby balls are spawned directly by ball_spawner
+	pass
 
 
 func set_leadership(value: float) -> void:
@@ -79,69 +71,6 @@ func get_leadership_damage_bonus() -> float:
 	"""Returns the Leadership damage bonus multiplier (1.0 = no bonus)"""
 	var char_mult: float = GameManager.character_leadership_mult
 	return 1.0 + (_leadership_bonus * char_mult * leadership_damage_per_point)
-
-
-func _on_parent_ball_fired(_ball: Node) -> void:
-	"""Called when a parent ball is fired - add baby balls to queue"""
-	if not _ball_spawner:
-		return
-
-	if GameManager.current_state != GameManager.GameState.PLAYING:
-		return
-
-	# Empty Nester passive disables baby ball spawning entirely
-	if GameManager.has_no_baby_balls():
-		return
-
-	# Skip if the fired ball is already a baby ball (avoid recursion)
-	if _ball and _ball.get("is_baby_ball") == true:
-		return
-
-	# Calculate how many baby balls to add
-	var baby_count: int = get_max_baby_balls()
-	if baby_count <= 0:
-		return
-
-	# Get ball types from active slots (baby balls cycle through them)
-	var ball_types: Array[int] = []
-	if BallRegistry:
-		ball_types = BallRegistry.get_filled_slots()
-	if ball_types.is_empty():
-		ball_types = [0]  # Fallback to basic
-
-	# Add baby balls to the queue
-	var added: int = _ball_spawner.add_baby_balls_to_queue(baby_count, ball_types)
-	if added > 0:
-		baby_balls_queued.emit(added)
-
-
-# Public method for testing and manual triggering
-
-func queue_baby_balls() -> void:
-	"""Manually queue baby balls (for testing or manual triggering)."""
-	if not _ball_spawner:
-		return
-
-	# Empty Nester passive disables baby ball spawning entirely
-	if GameManager.has_no_baby_balls():
-		return
-
-	# Calculate how many baby balls to add
-	var baby_count: int = get_max_baby_balls()
-	if baby_count <= 0:
-		return
-
-	# Get ball types from active slots (baby balls cycle through them)
-	var ball_types: Array[int] = []
-	if BallRegistry:
-		ball_types = BallRegistry.get_filled_slots()
-	if ball_types.is_empty():
-		ball_types = [0]  # Fallback to basic
-
-	# Add baby balls to the queue
-	var added: int = _ball_spawner.add_baby_balls_to_queue(baby_count, ball_types)
-	if added > 0:
-		baby_balls_queued.emit(added)
 
 
 # Legacy methods for compatibility with existing tests

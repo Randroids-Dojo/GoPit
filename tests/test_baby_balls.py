@@ -1,4 +1,4 @@
-"""Tests for queue-based baby ball system."""
+"""Tests for baby ball system (BallxPit style - fire with salvo)."""
 import asyncio
 import pytest
 
@@ -21,28 +21,28 @@ async def test_baby_ball_spawner_exists(game):
 
 @pytest.mark.asyncio
 async def test_baby_balls_spawn_on_fire(game):
-    """Baby balls should be added to queue when baby_ball_spawner queues them.
+    """Baby balls should spawn with the salvo when player fires (BallxPit style).
 
-    With salvo firing, main balls spawn immediately (not queued).
-    Baby balls are added to queue via baby_ball_spawner.queue_baby_balls().
+    With the new salvo firing, baby balls spawn immediately with special balls,
+    not through a separate queue.
     """
     # Disable autofire to control firing
     await game.call(PATHS["fire_button"], "set_autofire", [False])
     await asyncio.sleep(0.3)
 
-    # Clear any existing balls from queue
-    await game.call(PATHS["ball_spawner"], "clear_queue")
+    # Wait for any balls to return
+    await asyncio.sleep(0.5)
 
-    # Get initial queue size
-    initial_queue = await game.call(PATHS["ball_spawner"], "get_queue_size")
+    # Get initial ball count
+    initial_count = await game.call(PATHS["balls"], "get_child_count")
 
-    # Queue baby balls directly (simulates what happens on fire button press)
-    await game.call(PATHS["baby_spawner"], "queue_baby_balls")
+    # Fire a salvo (this now spawns special balls + baby balls together)
+    await game.call(PATHS["ball_spawner"], "fire")
     await asyncio.sleep(0.1)
 
-    # Check queue has baby balls added
-    queue_size = await game.call(PATHS["ball_spawner"], "get_queue_size")
-    assert queue_size > initial_queue, "Baby balls should be added to queue"
+    # Should have spawned balls (both special and baby)
+    final_count = await game.call(PATHS["balls"], "get_child_count")
+    assert final_count > initial_count, f"Should have spawned balls, was {initial_count}, now {final_count}"
 
     # Re-enable autofire
     await game.call(PATHS["fire_button"], "set_autofire", [True])

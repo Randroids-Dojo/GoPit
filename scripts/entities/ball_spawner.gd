@@ -110,7 +110,7 @@ func get_baby_balls_in_flight() -> int:
 
 
 func fire() -> void:
-	"""Fire a salvo - all slot balls spawn immediately (BallxPit style)"""
+	"""Fire a salvo - all slot balls + baby balls spawn immediately (BallxPit style)"""
 	if current_aim_direction == Vector2.ZERO:
 		return
 
@@ -155,7 +155,9 @@ func fire() -> void:
 			_spawn_ball_typed(dir, slot_ball_type)
 			fired_any = true
 
+	# Fire baby balls as part of the salvo (BallxPit style)
 	if fired_any:
+		_fire_baby_balls_with_salvo(slot_balls)
 		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
@@ -186,12 +188,8 @@ func add_baby_balls_to_queue(count: int, ball_types: Array[int]) -> int:
 
 
 func _fire_from_queue() -> void:
-	"""Fire one ball from the queue."""
+	"""Fire one ball from the queue (baby balls fire continuously)."""
 	if _fire_queue.is_empty():
-		return
-
-	# Check ball availability (return mechanic)
-	if not can_fire():
 		return
 
 	var entry: Dictionary = _fire_queue.pop_front()
@@ -374,9 +372,91 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	ball_spawned.emit(ball)
 
 
-# Baby ball configuration (used when spawning from queue)
+# Baby ball configuration
 const BABY_BALL_SCALE: float = 0.6
 const BABY_BALL_DAMAGE_MULT: float = 0.5
+
+
+func _fire_baby_balls_with_salvo(slot_balls: Array[int]) -> void:
+	"""Fire baby balls as part of the salvo (BallxPit style).
+	Baby balls fire immediately with the special balls, not from a queue."""
+	# Get baby ball spawner for count calculation
+	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
+	if not baby_spawner:
+		return
+
+	# Empty Nester passive disables baby ball spawning entirely
+	if GameManager.has_no_baby_balls():
+		return
+
+	# Get baby ball count (based on Leadership)
+	var baby_count: int = baby_spawner.get_max_baby_balls() if baby_spawner.has_method("get_max_baby_balls") else 1
+	if baby_count <= 0:
+		return
+
+	# Get ball types for baby balls (cycle through slot balls)
+	var ball_types: Array[int] = slot_balls if not slot_balls.is_empty() else [0]
+
+	# Spawn baby balls with slight spread for visual variety
+	for i in range(baby_count):
+		var type_index: int = i % ball_types.size()
+		var ball_type: int = ball_types[type_index]
+		var spread: float = randf_range(-0.3, 0.3)
+		var dir := current_aim_direction.rotated(spread)
+		_spawn_baby_ball_immediate(dir, ball_type)
+
+
+func _spawn_baby_ball_immediate(direction: Vector2, registry_ball_type: int) -> void:
+	"""Spawn a baby ball immediately (part of salvo, not from queue)."""
+	# Get ball from pool if available, otherwise instantiate
+	var ball: Node
+	if PoolManager:
+		ball = PoolManager.get_ball()
+	else:
+		ball = ball_scene.instantiate()
+	ball.position = global_position + direction * spawn_offset
+	ball.set_direction(direction)
+	ball.scale = Vector2(BABY_BALL_SCALE, BABY_BALL_SCALE)
+	ball.is_baby_ball = true
+
+	# Get baby ball spawner for Leadership damage bonus
+	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
+	var leadership_bonus: float = 1.0
+	if baby_spawner and baby_spawner.has_method("get_leadership_damage_bonus"):
+		leadership_bonus = baby_spawner.get_leadership_damage_bonus()
+
+	# Calculate damage: base damage * baby mult * leadership bonus
+	var use_registry := BallRegistry != null and BallRegistry.owned_balls.size() > 0
+	var speed_mult: float = GameManager.character_speed_mult
+	if use_registry:
+		var registry_damage: int = BallRegistry.get_damage(registry_ball_type)
+		var registry_speed: float = BallRegistry.get_speed(registry_ball_type)
+		var ball_level: int = BallRegistry.get_ball_level(registry_ball_type)
+
+		ball.damage = int(registry_damage * BABY_BALL_DAMAGE_MULT * leadership_bonus)
+		ball.speed = (registry_speed + _speed_bonus) * speed_mult
+		ball.ball_level = ball_level
+		ball.registry_type = registry_ball_type
+		ball.set_ball_type(_registry_to_ball_type(registry_ball_type))
+	else:
+		ball.damage = int(ball_damage * BABY_BALL_DAMAGE_MULT * leadership_bonus)
+		ball.speed = (ball_speed + _speed_bonus) * speed_mult
+
+	ball.pierce_count = 0  # Baby balls don't pierce
+	ball.max_bounces = max_bounces
+	ball.crit_chance = crit_chance * 0.5  # Reduced crit for babies
+
+	if balls_container:
+		balls_container.add_child(ball)
+	else:
+		get_parent().add_child(ball)
+
+	# Track ball return (baby balls DON'T block main firing)
+	ball.returned.connect(_on_baby_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.caught.connect(_on_baby_ball_caught.bind(ball), CONNECT_ONE_SHOT)
+	ball.despawned.connect(_on_baby_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	baby_balls_in_flight += 1
+	balls_in_flight += 1
 
 
 func _spawn_baby_ball_from_queue(direction: Vector2, registry_ball_type: int) -> void:
