@@ -66,15 +66,6 @@ async def test_hud_updates(game, report):
     assert wave_label is not None, "Wave label should exist"
     assert xp_bar is not None, "XP bar should exist"
 
-    # Issue: No combo/streak display
-    report.add_issue(
-        "suggestion", "gameplay",
-        "No combo or streak tracking",
-        "Players have no motivation to hit multiple enemies quickly - no combo system",
-        "Play the game",
-        "Add combo counter for rapid enemy kills, with bonus XP"
-    )
-
 
 @pytest.mark.asyncio
 async def test_ui_readability(game, report):

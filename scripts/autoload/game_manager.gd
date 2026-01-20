@@ -19,16 +19,10 @@ signal level_up_completed
 signal player_damaged(amount: int)
 signal wave_changed(new_wave: int)
 signal hp_changed(current_hp: int, max_hp: int)
-signal combo_changed(combo: int, multiplier: float)
 signal leadership_changed(new_value: float)
 signal invincibility_changed(is_invincible: bool)
 signal shooting_changed(is_shooting: bool)
 signal speed_tier_changed(tier: int, multiplier: float, loot_bonus: float)
-
-# Combo system
-var combo_count: int = 0
-var combo_timer: float = 0.0
-var combo_timeout: float = 2.0  # Seconds before combo resets
 
 # Invincibility frames (i-frames) system
 const INVINCIBILITY_DURATION: float = 0.5  # Seconds of invincibility after damage
@@ -144,11 +138,6 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if current_state == GameState.PLAYING:
 		stats["time_survived"] += delta
-		# Update combo timer
-		if combo_count > 0:
-			combo_timer -= delta
-			if combo_timer <= 0:
-				_reset_combo()
 		# Update invincibility timer
 		if is_invincible:
 			invincibility_timer -= delta
@@ -159,29 +148,6 @@ func _process(delta: float) -> void:
 
 func record_enemy_kill() -> void:
 	stats["enemies_killed"] += 1
-	_increment_combo()
-
-
-func _increment_combo() -> void:
-	combo_count += 1
-	combo_timer = combo_timeout
-	combo_changed.emit(combo_count, get_combo_multiplier())
-
-
-func _reset_combo() -> void:
-	if combo_count > 0:
-		combo_count = 0
-		combo_timer = 0.0
-		combo_changed.emit(combo_count, 1.0)
-
-
-func get_combo_multiplier() -> float:
-	# 1x at 1-2 combo, 1.5x at 3-4, 2x at 5+
-	if combo_count >= 5:
-		return 2.0
-	elif combo_count >= 3:
-		return 1.5
-	return 1.0
 
 
 func record_ball_fired() -> void:
@@ -454,14 +420,12 @@ func return_to_menu() -> void:
 
 func add_xp(amount: int) -> void:
 	# Calculate all XP multipliers:
-	# - Combo multiplier (kill streak)
 	# - XP multiplier (Quick Learner passive + Veteran's Hut meta)
 	# - Loot multiplier (game speed tier)
 	# - Difficulty multiplier (+15% per level)
 	# - Early XP multiplier (Abbey meta - first 5 levels)
 	var final_xp: int = int(
 		amount *
-		get_combo_multiplier() *
 		get_xp_multiplier() *
 		get_loot_multiplier() *
 		get_difficulty_xp_multiplier() *
@@ -481,8 +445,6 @@ func take_damage(amount: int) -> void:
 	SoundManager.play(SoundManager.SoundType.PLAYER_DAMAGE)
 	player_damaged.emit(amount)
 	hp_changed.emit(player_hp, max_hp)
-	# Reset combo on damage
-	_reset_combo()
 	# Big screen shake on player damage
 	CameraShake.shake(15.0, 3.0)
 

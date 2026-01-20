@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
 [ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
 [ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
-[ext_resource type="Script" path="res://scripts/ui/wave_announcement.gd" id="14_wave"]
 [ext_resource type="Script" path="res://scripts/effects/danger_indicator.gd" id="15_danger"]
 [ext_resource type="PackedScene" uid="uid://meta_shop_scene" path="res://scenes/ui/meta_shop.tscn" id="16_meta_shop"]
 [ext_resource type="PackedScene" uid="uid://char_select_scene" path="res://scenes/ui/character_select.tscn" id="17_charselect"]
@@ -210,24 +209,6 @@ grow_horizontal = 2
 grow_vertical = 0
 alignment = 1
 script = ExtResource("24_passive_slots")
-
-[node name="ComboLabel" type="Label" parent="UI/HUD"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -150.0
-offset_top = 480.0
-offset_right = 150.0
-offset_bottom = 530.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 28
-text = "5x COMBO!"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="FissionCounter" type="Label" parent="UI/HUD"]
 layout_mode = 1
@@ -837,28 +818,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 0.8, 0.2, 0.3)
-
-[node name="WaveAnnouncement" type="CanvasLayer" parent="UI"]
-layer = 5
-script = ExtResource("14_wave")
-
-[node name="CenterContainer" type="CenterContainer" parent="UI/WaveAnnouncement"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="WaveLabel" type="Label" parent="UI/WaveAnnouncement/CenterContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 72
-text = "WAVE 1"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="DangerIndicator" type="Control" parent="UI"]
 layout_mode = 1

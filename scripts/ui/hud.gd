@@ -1,5 +1,5 @@
 extends Control
-## HUD - displays HP bar, wave counter, XP progress, and combo
+## HUD - displays HP bar, wave counter, and XP progress
 
 @onready var hp_bar: ProgressBar = $TopBar/HPBar
 @onready var hp_label: Label = $TopBar/HPBar/HPLabel
@@ -8,11 +8,9 @@ extends Control
 @onready var pause_button: Button = $TopBar/PauseButton
 @onready var xp_bar: ProgressBar = $XPBarContainer/XPBar
 @onready var level_label: Label = $XPBarContainer/LevelLabel
-@onready var combo_label: Label = $ComboLabel
 @onready var fission_counter: Label = $FissionCounter
 
 var pause_overlay: CanvasLayer
-var _combo_tween: Tween
 
 # Speaker icons (ASCII-compatible)
 const SPEAKER_ON := ")))"  # Sound waves
@@ -23,10 +21,6 @@ func _ready() -> void:
 	_update_hp()
 	_update_wave()
 	_update_xp()
-
-	# Hide combo label initially
-	if combo_label:
-		combo_label.visible = false
 
 	# Hide fission counter initially (shows when first fission used)
 	if fission_counter:
@@ -49,7 +43,6 @@ func _ready() -> void:
 
 	# Connect to GameManager signals
 	GameManager.state_changed.connect(_on_state_changed)
-	GameManager.combo_changed.connect(_on_combo_changed)
 
 	# Connect to FusionRegistry for fission counter
 	if FusionRegistry:
@@ -107,34 +100,6 @@ func _on_state_changed(_old_state: GameManager.GameState, _new_state: GameManage
 	_update_hp()
 	_update_wave()
 	_update_xp()
-
-
-func _on_combo_changed(combo: int, multiplier: float) -> void:
-	if not combo_label:
-		return
-
-	if combo >= 2:
-		combo_label.visible = true
-		combo_label.text = "%dx COMBO!" % combo
-		if multiplier > 1.0:
-			combo_label.text += " (%.1fx XP)" % multiplier
-
-		# Color based on multiplier
-		if multiplier >= 2.0:
-			combo_label.modulate = Color(1.0, 0.3, 0.3)  # Red for max
-		elif multiplier >= 1.5:
-			combo_label.modulate = Color(1.0, 0.8, 0.2)  # Yellow
-		else:
-			combo_label.modulate = Color.WHITE
-
-		# Pop animation
-		if _combo_tween and _combo_tween.is_valid():
-			_combo_tween.kill()
-		_combo_tween = create_tween()
-		combo_label.scale = Vector2(1.3, 1.3)
-		_combo_tween.tween_property(combo_label, "scale", Vector2.ONE, 0.15).set_ease(Tween.EASE_OUT)
-	else:
-		combo_label.visible = false
 
 
 func _on_fission_upgrades_changed(total: int) -> void:
