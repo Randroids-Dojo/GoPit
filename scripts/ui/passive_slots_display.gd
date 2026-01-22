@@ -1,8 +1,8 @@
 extends HBoxContainer
-## Displays 4 passive slots in the HUD
+## Displays 5 passive slots in the HUD
 ## Shows equipped passives and their current stack/level
 
-const MAX_SLOTS: int = 4
+const MAX_SLOTS: int = 5
 
 # Slot container references (will be created dynamically)
 var _slots: Array[PanelContainer] = []
@@ -54,7 +54,7 @@ func _ready() -> void:
 
 
 func _create_slots() -> void:
-	"""Create the 4 passive slot containers"""
+	"""Create the 5 passive slot containers"""
 	for i in MAX_SLOTS:
 		var slot := _create_slot_container()
 		add_child(slot)
@@ -111,8 +111,9 @@ func _update_display() -> void:
 	if not FusionRegistry:
 		return
 
-	# Get equipped passives directly from slot system
+	# Get equipped passives and unlocked slot count
 	var equipped_passives := FusionRegistry.get_equipped_passives()
+	var unlocked_slots := FusionRegistry.get_unlocked_passive_slots()
 
 	for i in MAX_SLOTS:
 		var slot: PanelContainer = _slots[i]
@@ -121,38 +122,50 @@ func _update_display() -> void:
 		var level_label: Label = vbox.get_node("LevelLabel")
 		var style: StyleBoxFlat = slot.get_theme_stylebox("panel")
 
-		# Find passive in slot i (if any)
-		var passive_data: Dictionary = {}
-		for eq in equipped_passives:
-			if eq["slot"] == i:
-				passive_data = eq
-				break
+		var is_locked := i >= unlocked_slots
 
-		if not passive_data.is_empty():
-			var passive_type: int = passive_data["type"]
-			var level: int = passive_data["level"]
-
-			# Get passive info
-			var passive_name: String = FusionRegistry.get_passive_name(passive_type)
-			var category: String = PASSIVE_CATEGORIES.get(passive_type, "utility")
-			var color: Color = CATEGORY_COLORS.get(category, Color.WHITE)
-
-			# Update icon (first 2 letters of name)
-			icon_label.text = passive_name.substr(0, 2).to_upper()
-			icon_label.add_theme_color_override("font_color", color)
-
-			# Update level
-			level_label.text = "L%d" % level
-			level_label.visible = true
-
-			# Update border color to match category
-			style.border_color = color.lerp(Color.WHITE, 0.3)
-		else:
-			# Empty slot
-			icon_label.text = "+"
-			icon_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+		if is_locked:
+			# Locked slot
+			icon_label.text = "🔒"
+			icon_label.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
 			level_label.visible = false
-			style.border_color = Color(0.3, 0.3, 0.35, 0.6)
+			style.border_color = Color(0.2, 0.2, 0.25, 0.4)
+			slot.modulate.a = 0.5  # Grayed out
+		else:
+			# Find passive in slot i (if any)
+			var passive_data: Dictionary = {}
+			for eq in equipped_passives:
+				if eq["slot"] == i:
+					passive_data = eq
+					break
+
+			if not passive_data.is_empty():
+				var passive_type: int = passive_data["type"]
+				var level: int = passive_data["level"]
+
+				# Get passive info
+				var passive_name: String = FusionRegistry.get_passive_name(passive_type)
+				var category: String = PASSIVE_CATEGORIES.get(passive_type, "utility")
+				var color: Color = CATEGORY_COLORS.get(category, Color.WHITE)
+
+				# Update icon (first 2 letters of name)
+				icon_label.text = passive_name.substr(0, 2).to_upper()
+				icon_label.add_theme_color_override("font_color", color)
+
+				# Update level
+				level_label.text = "L%d" % level
+				level_label.visible = true
+
+				# Update border color to match category
+				style.border_color = color.lerp(Color.WHITE, 0.3)
+				slot.modulate.a = 1.0  # Full opacity
+			else:
+				# Empty unlocked slot
+				icon_label.text = "+"
+				icon_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+				level_label.visible = false
+				style.border_color = Color(0.3, 0.3, 0.35, 0.6)
+				slot.modulate.a = 1.0  # Full opacity
 
 
 func refresh() -> void:

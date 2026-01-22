@@ -31,13 +31,13 @@ async def test_passive_slots_has_refresh_method(game):
 
 @pytest.mark.asyncio
 async def test_passive_slots_creates_slot_children(game):
-    """Verify the display creates 4 slot containers."""
+    """Verify the display creates 5 slot containers."""
     # Wait a moment for _ready to complete
     await asyncio.sleep(0.3)
 
-    # Get child count - should have 4 slots
+    # Get child count - should have 5 slots
     count = await game.call(PASSIVE_SLOTS, "get_child_count")
-    assert count == 4, f"PassiveSlotsDisplay should have 4 slot children, got {count}"
+    assert count == 5, f"PassiveSlotsDisplay should have 5 slot children, got {count}"
 
 
 @pytest.mark.asyncio
@@ -89,13 +89,23 @@ async def test_multiple_passives_tracked(game):
 
 
 @pytest.mark.asyncio
-async def test_passive_slot_system_has_4_slots(game):
-    """Verify FusionRegistry has 4 passive slots."""
+async def test_passive_slot_system_has_5_max_slots(game):
+    """Verify FusionRegistry has 5 maximum passive slots."""
     await game.call(FUSION_REGISTRY, "reset")
     await asyncio.sleep(0.1)
 
     max_slots = await game.get_property(FUSION_REGISTRY, "MAX_PASSIVE_SLOTS")
-    assert max_slots == 4, "Should have 4 passive slots"
+    assert max_slots == 5, "Should have 5 max passive slots"
+
+
+@pytest.mark.asyncio
+async def test_passive_slot_system_starts_with_3_unlocked(game):
+    """Verify FusionRegistry starts with 3 unlocked passive slots."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    unlocked = await game.call(FUSION_REGISTRY, "get_unlocked_passive_slots")
+    assert unlocked == 3, "Should start with 3 unlocked passive slots"
 
 
 @pytest.mark.asyncio
@@ -160,24 +170,76 @@ async def test_cannot_level_beyond_l3(game):
 
 
 @pytest.mark.asyncio
-async def test_max_4_passives_equipped(game):
-    """Only 4 passives can be equipped at once."""
+async def test_max_3_passives_equipped_initially(game):
+    """Only 3 passives can be equipped initially (3 unlocked slots)."""
     await game.call(FUSION_REGISTRY, "reset")
     await asyncio.sleep(0.1)
 
-    # Fill all 4 slots with different passives
+    # Fill all 3 unlocked slots with different passives
     await game.call(FUSION_REGISTRY, "apply_passive", [0])  # DAMAGE
     await game.call(FUSION_REGISTRY, "apply_passive", [1])  # FIRE_RATE
     await game.call(FUSION_REGISTRY, "apply_passive", [2])  # MAX_HP
-    await game.call(FUSION_REGISTRY, "apply_passive", [3])  # MULTI_SHOT
 
     equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
-    assert len(equipped) == 4, "Should have 4 equipped passives"
+    assert len(equipped) == 3, "Should have 3 equipped passives"
 
-    # Try to add a 5th passive
-    result = await game.call(FUSION_REGISTRY, "apply_passive", [4])  # BALL_SPEED
-    assert result is False, "Should fail to add 5th passive"
+    # Try to add a 4th passive (should fail - only 3 slots unlocked)
+    result = await game.call(FUSION_REGISTRY, "apply_passive", [3])  # MULTI_SHOT
+    assert result is False, "Should fail to add 4th passive with only 3 unlocked slots"
 
-    # Still only 4 equipped
+    # Still only 3 equipped
     equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
-    assert len(equipped) == 4, "Still only 4 passives should be equipped"
+    assert len(equipped) == 3, "Still only 3 passives should be equipped"
+
+
+@pytest.mark.asyncio
+async def test_unlock_passive_slot_increases_count(game):
+    """unlock_passive_slot() should increase unlocked slot count."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    unlocked_before = await game.call(FUSION_REGISTRY, "get_unlocked_passive_slots")
+    assert unlocked_before == 3, "Should start with 3"
+
+    # Unlock a slot
+    success = await game.call(FUSION_REGISTRY, "unlock_passive_slot")
+    assert success, "Should successfully unlock slot"
+
+    unlocked_after = await game.call(FUSION_REGISTRY, "get_unlocked_passive_slots")
+    assert unlocked_after == 4, "Should now have 4 unlocked slots"
+
+
+@pytest.mark.asyncio
+async def test_can_equip_4th_passive_after_unlock(game):
+    """After unlocking 4th slot, should be able to equip 4th passive."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    # Fill 3 unlocked slots
+    await game.call(FUSION_REGISTRY, "apply_passive", [0])  # DAMAGE
+    await game.call(FUSION_REGISTRY, "apply_passive", [1])  # FIRE_RATE
+    await game.call(FUSION_REGISTRY, "apply_passive", [2])  # MAX_HP
+
+    # Unlock 4th slot
+    await game.call(FUSION_REGISTRY, "unlock_passive_slot")
+
+    # Now should be able to add 4th passive
+    result = await game.call(FUSION_REGISTRY, "apply_passive", [3])  # MULTI_SHOT
+    assert result is True, "Should successfully add 4th passive after unlock"
+
+    equipped = await game.call(FUSION_REGISTRY, "get_equipped_passives")
+    assert len(equipped) == 4, "Should now have 4 equipped passives"
+
+
+@pytest.mark.asyncio
+async def test_unlock_passive_slot_to_max_5(game):
+    """Can unlock up to maximum of 5 passive slots."""
+    await game.call(FUSION_REGISTRY, "reset")
+    await asyncio.sleep(0.1)
+
+    # Unlock until we hit max
+    for _ in range(10):  # Try to unlock more than max
+        await game.call(FUSION_REGISTRY, "unlock_passive_slot")
+
+    unlocked = await game.call(FUSION_REGISTRY, "get_unlocked_passive_slots")
+    assert unlocked == 5, "Should cap at 5 unlocked passive slots"
