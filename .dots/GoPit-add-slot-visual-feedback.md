@@ -1,6 +1,6 @@
 ---
 title: Add Visual Feedback for Locked/Unlocked Slots
-status: open
+status: completed
 priority: 4
 issue-type: implement
 created-at: 2026-01-22T05:30:00Z

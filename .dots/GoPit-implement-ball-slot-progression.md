@@ -1,6 +1,6 @@
 ---
 title: Implement Ball Slot Progression (3→4→5)
-status: open
+status: completed
 priority: 2
 issue-type: implement
 created-at: 2026-01-22T05:30:00Z

@@ -1,6 +1,6 @@
 ---
 title: Add Slot Unlock System (XP Milestones)
-status: open
+status: completed
 priority: 3
 issue-type: implement
 created-at: 2026-01-22T05:30:00Z
