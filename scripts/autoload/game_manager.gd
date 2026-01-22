@@ -397,8 +397,37 @@ func complete_level_up() -> void:
 	player_level += 1
 	current_xp = 0
 	xp_to_next_level = _calculate_xp_requirement(player_level)
+
+	# Check for slot unlocks at specific levels
+	_check_slot_unlocks(player_level)
+
 	current_state = GameState.PLAYING
 	level_up_completed.emit()
+
+
+func _check_slot_unlocks(level: int) -> void:
+	"""Check if player reached a level that unlocks slots."""
+	match level:
+		5:
+			# Unlock 4th ball and passive slots
+			var ball_unlocked := BallRegistry.unlock_slot()
+			var passive_unlocked := FusionRegistry.unlock_passive_slot()
+			if ball_unlocked or passive_unlocked:
+				_show_slot_unlock_notification("4th Slot Unlocked!")
+		15:
+			# Unlock 5th ball and passive slots
+			var ball_unlocked := BallRegistry.unlock_slot()
+			var passive_unlocked := FusionRegistry.unlock_passive_slot()
+			if ball_unlocked or passive_unlocked:
+				_show_slot_unlock_notification("5th Slot Unlocked!")
+
+
+func _show_slot_unlock_notification(message: String) -> void:
+	"""Show a notification when slots are unlocked."""
+	# TODO: Add a proper toast notification system
+	# For now, just print to console (will be visible in dev)
+	print("[SLOT UNLOCK] ", message)
+	# Could also emit a signal that HUD listens to for visual feedback
 
 
 func pause_game() -> void:
