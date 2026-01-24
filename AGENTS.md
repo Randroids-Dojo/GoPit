@@ -115,6 +115,56 @@ async def test_my_feature(game):
     assert result == expected_value
 ```
 
+### CRITICAL: Test Isolation (Reset State First!)
+
+**Tests run in parallel.** Each test MUST reset any state it depends on at the START of the test, not assume clean state.
+
+```python
+# ❌ BAD - assumes registry is in default state
+@pytest.mark.asyncio
+async def test_ball_starts_at_level_1(game):
+    level = await game.call(BALL_REGISTRY, "get_ball_level", [1])
+    assert level == 1  # FAILS if another test modified registry!
+
+# ✅ GOOD - explicitly reset state first, then wait for it to settle
+@pytest.mark.asyncio
+async def test_ball_starts_at_level_1(game):
+    await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle!
+
+    await game.call(BALL_REGISTRY, "add_ball", [1])
+    level = await game.call(BALL_REGISTRY, "get_ball_level", [1])
+    assert level == 1
+```
+
+**Key rules:**
+
+1. **Always reset at START** - Call `reset()` or `set_property(..., False)` before testing initial state
+2. **Always sleep after reset** - `await asyncio.sleep(0.1)` gives Godot time to process
+3. **Clean up UI state** - If testing visibility, ensure hidden/visible at test start
+4. **Don't rely on test order** - Tests may run in any order across parallel workers
+
+```python
+# For UI visibility tests:
+@pytest.mark.asyncio
+async def test_overlay_starts_hidden(game):
+    # Reset visibility state first (another test may have shown it)
+    await game.set_property(OVERLAY, "visible", False)
+    await asyncio.sleep(0.1)
+
+    visible = await game.get_property(OVERLAY, "visible")
+    assert visible is False
+```
+
+**For button clicks in headless mode**, use `emit_signal` instead of `click`:
+```python
+# ❌ BAD - clicks don't always work in headless mode
+await game.click(BUTTON_PATH)
+
+# ✅ GOOD - directly emit the signal
+await game.call(BUTTON_PATH, "emit_signal", ["pressed"])
+```
+
 ### Common Node Paths
 
 ```python
