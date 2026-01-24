@@ -72,7 +72,9 @@ func _setup_hint_label() -> void:
 
 func _on_level_up() -> void:
 	# Pause game immediately so balls stop firing and everything freezes
-	get_tree().paused = true
+	# Skip in headless mode to allow PlayGodot automation to continue
+	if DisplayServer.get_name() != "headless":
+		get_tree().paused = true
 	_randomize_cards()
 	_update_cards()
 	visible = true
@@ -84,7 +86,6 @@ func _on_level_up() -> void:
 func _animate_show() -> void:
 	"""Animate the panel and cards in with staggered entrance."""
 	if not panel:
-		# Tree is already paused from _on_level_up
 		_animation_complete = true
 		return
 
