@@ -22,7 +22,7 @@ var _speed_modifier: float = 1.0
 
 # Game bounds (set by game_controller)
 var bounds_min: Vector2 = Vector2(30, 280)  # Left wall + some padding, top area (below enlarged TopBar)
-var bounds_max: Vector2 = Vector2(690, 1150)  # Right wall - padding, above input area
+var bounds_max: Vector2 = Vector2(690, 1080)  # Right wall - padding, above input area (controls start at y=1110)
 
 # Invincibility blinking
 var _blink_tween: Tween = null
@@ -40,6 +40,10 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	# Stop processing when game is paused (level up, game over, etc.)
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
 	# Apply movement speed (includes character multiplier, shooting penalty, and hazard modifiers)
 	var effective_speed := move_speed * GameManager.get_movement_speed_mult() * _speed_modifier
 	velocity = movement_input * effective_speed

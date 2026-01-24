@@ -88,6 +88,10 @@ func _scale_with_wave() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Stop processing when game is paused (level up, game over, etc.)
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
 	# Process status effects first
 	_process_status_effects(delta)
 

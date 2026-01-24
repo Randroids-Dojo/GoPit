@@ -169,6 +169,9 @@ func _flash_red() -> void:
 
 
 func can_fire() -> bool:
+	# Can only fire when game is actively playing
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return false
 	return is_ready and _balls_available
 
 

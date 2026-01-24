@@ -83,7 +83,7 @@ slime_scene = ExtResource("7_slime")
 [node name="Hazards" type="Node2D" parent="GameArea" groups=["hazards_container"]]
 
 [node name="Player" parent="GameArea" instance=ExtResource("16_player")]
-position = Vector2(360, 1000)
+position = Vector2(360, 900)
 
 [node name="PlayerZone" type="Area2D" parent="GameArea"]
 position = Vector2(360, 1200)
@@ -94,7 +94,7 @@ collision_mask = 12
 shape = SubResource("RectangleShape2D_player_zone")
 
 [node name="BallSpawner" type="Node2D" parent="GameArea"]
-position = Vector2(360, 1100)
+position = Vector2(360, 900)
 script = ExtResource("2_spawner")
 
 [node name="AimLine" type="Line2D" parent="GameArea"]
@@ -195,32 +195,33 @@ grow_vertical = 2
 text = "Lv.1"
 vertical_alignment = 1
 
-[node name="PassiveSlotsDisplay" type="HBoxContainer" parent="UI/HUD"]
+[node name="PassiveSlotsDisplay" type="VBoxContainer" parent="UI/HUD"]
 layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -170.0
-offset_top = -280.0
-offset_right = 170.0
-offset_bottom = -220.0
-grow_horizontal = 2
-grow_vertical = 0
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -70.0
+offset_top = -165.0
+offset_right = -10.0
+offset_bottom = 165.0
+grow_horizontal = 0
+grow_vertical = 2
 alignment = 1
 script = ExtResource("24_passive_slots")
 
-[node name="BallSlotsDisplay" type="HBoxContainer" parent="UI/HUD"]
+[node name="BallSlotsDisplay" type="VBoxContainer" parent="UI/HUD"]
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -350.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = 80.0
-grow_horizontal = 0
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 10.0
+offset_top = -165.0
+offset_right = 70.0
+offset_bottom = 165.0
+grow_horizontal = 1
+grow_vertical = 2
 alignment = 1
 script = ExtResource("26_ball_slots")
 

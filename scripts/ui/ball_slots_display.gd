@@ -1,5 +1,5 @@
-extends HBoxContainer
-## Displays 5 ball slots in the HUD
+extends VBoxContainer
+## Displays 5 ball slots in the HUD (vertically on left side)
 ## Shows equipped balls and their current level
 
 const MAX_SLOTS: int = 5
