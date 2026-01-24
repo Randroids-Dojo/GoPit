@@ -115,17 +115,17 @@ async def test_adding_ball_fills_empty_slot(game):
 
 @pytest.mark.asyncio
 async def test_multiple_balls_in_slots(game):
-    """Multiple different balls can be equipped."""
+    """Multiple different balls can be equipped (up to unlocked slots)."""
     await game.call(BALL_REGISTRY, "reset")
     await asyncio.sleep(0.1)
 
-    # Add multiple ball types
-    await game.call(BALL_REGISTRY, "add_ball", [1])  # BURN
-    await game.call(BALL_REGISTRY, "add_ball", [2])  # FREEZE
-    await game.call(BALL_REGISTRY, "add_ball", [3])  # POISON
+    # Only 3 slots unlocked initially (basic in slot 0)
+    # Add 2 more balls to fill all 3 unlocked slots
+    await game.call(BALL_REGISTRY, "add_ball", [1])  # BURN -> slot 1
+    await game.call(BALL_REGISTRY, "add_ball", [2])  # FREEZE -> slot 2
 
     filled = await game.call(BALL_REGISTRY, "get_filled_slots")
-    assert len(filled) == 4, f"Should have 4 balls equipped, got {len(filled)}"
+    assert len(filled) == 3, f"Should have 3 balls equipped (3 unlocked slots), got {len(filled)}"
 
 
 @pytest.mark.asyncio
@@ -149,11 +149,15 @@ async def test_display_updates_on_slots_changed_signal(game):
 
 @pytest.mark.asyncio
 async def test_max_5_balls_in_slots(game):
-    """Cannot equip more than 5 balls at once."""
+    """Cannot equip more than 5 balls at once (after unlocking all slots)."""
     await game.call(BALL_REGISTRY, "reset")
     await asyncio.sleep(0.1)
 
-    # Try to fill all 5 slots (basic already in slot 0)
+    # Unlock all 5 slots first (start with 3, need to unlock 2 more)
+    await game.call(BALL_REGISTRY, "unlock_slot")  # 4 slots
+    await game.call(BALL_REGISTRY, "unlock_slot")  # 5 slots
+
+    # Fill all 5 slots (basic already in slot 0)
     await game.call(BALL_REGISTRY, "add_ball", [1])  # BURN
     await game.call(BALL_REGISTRY, "add_ball", [2])  # FREEZE
     await game.call(BALL_REGISTRY, "add_ball", [3])  # POISON
