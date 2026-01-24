@@ -54,6 +54,9 @@ async def test_encyclopedia_has_close_button(game):
 @pytest.mark.asyncio
 async def test_encyclopedia_shows_when_method_called(game):
     """Encyclopedia should become visible when show_encyclopedia is called."""
+    # Wait for UI to fully initialize
+    await asyncio.sleep(0.2)
+
     # Call show method
     await game.call(ENCYCLOPEDIA, "show_encyclopedia")
     await asyncio.sleep(0.1)

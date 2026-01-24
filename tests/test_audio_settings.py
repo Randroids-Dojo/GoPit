@@ -63,6 +63,9 @@ async def test_mute_button_exists_in_hud(game):
 @pytest.mark.asyncio
 async def test_mute_button_click_toggles_mute(game):
     """Clicking mute button should toggle mute state."""
+    # Wait for UI to fully initialize
+    await asyncio.sleep(0.2)
+
     initial_muted = await game.get_property(SOUND_MANAGER, "is_muted")
 
     # Click mute button

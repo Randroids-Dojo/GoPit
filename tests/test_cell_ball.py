@@ -101,6 +101,7 @@ async def test_cell_ball_can_be_added_to_registry(game):
     """Cell ball should be addable to owned balls."""
     # Reset registry
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
 
     # Add cell ball
     await game.call(BALL_REGISTRY, "add_ball", [CELL_BALL_TYPE])
@@ -117,6 +118,7 @@ async def test_cell_ball_can_level_up(game):
     """Cell ball should be able to level up to L3."""
     # Reset registry and add cell ball
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
     await game.call(BALL_REGISTRY, "add_ball", [CELL_BALL_TYPE])
 
     # Level up to L2
@@ -139,6 +141,7 @@ async def test_cell_ball_speed_calculation(game):
     """Cell ball speed should use correct formula: BASE × 0.9 × level_mult."""
     # Reset registry and add cell ball
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
     await game.call(BALL_REGISTRY, "add_ball", [CELL_BALL_TYPE])
 
     # L1: 800 × 0.9 × 1.0 = 720
