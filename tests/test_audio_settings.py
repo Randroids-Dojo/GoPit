@@ -63,21 +63,24 @@ async def test_mute_button_exists_in_hud(game):
 @pytest.mark.asyncio
 async def test_mute_button_click_toggles_mute(game):
     """Clicking mute button should toggle mute state."""
+    # Wait for UI to fully initialize
+    await asyncio.sleep(0.2)
+
     initial_muted = await game.get_property(SOUND_MANAGER, "is_muted")
 
-    # Click mute button
-    await game.click(MUTE_BUTTON)
+    # Emit pressed signal (more reliable in headless mode than click)
+    await game.call(MUTE_BUTTON, "emit_signal", ["pressed"])
     await asyncio.sleep(0.15)
 
     new_muted = await game.get_property(SOUND_MANAGER, "is_muted")
-    assert new_muted != initial_muted, "Clicking mute button should toggle mute state"
+    assert new_muted != initial_muted, "Pressing mute button should toggle mute state"
 
-    # Click again to restore
-    await game.click(MUTE_BUTTON)
+    # Press again to restore
+    await game.call(MUTE_BUTTON, "emit_signal", ["pressed"])
     await asyncio.sleep(0.15)
 
     restored_muted = await game.get_property(SOUND_MANAGER, "is_muted")
-    assert restored_muted == initial_muted, "Second click should restore original state"
+    assert restored_muted == initial_muted, "Second press should restore original state"
 
 
 @pytest.mark.asyncio

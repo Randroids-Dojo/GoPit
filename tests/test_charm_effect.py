@@ -112,6 +112,7 @@ async def test_charm_ball_can_be_added_to_registry(game):
     """Charm ball should be addable to owned balls."""
     # Reset registry
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
 
     # Add charm ball
     await game.call(BALL_REGISTRY, "add_ball", [CHARM_BALL_TYPE])
@@ -128,6 +129,7 @@ async def test_charm_ball_can_level_up(game):
     """Charm ball should be able to level up to L3."""
     # Reset registry and add charm ball
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
     await game.call(BALL_REGISTRY, "add_ball", [CHARM_BALL_TYPE])
 
     # Level up to L2

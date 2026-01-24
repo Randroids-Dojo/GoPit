@@ -68,19 +68,17 @@ async def test_passive_max_stacks(game):
 async def test_get_available_passives(game):
     """get_available_passives should return passives below max stacks."""
     await reset_fusion_registry(game)
-    # Initially only 4 passives available (limited by slot count)
-    # because we have 4 slots and 20 passives, only 4 can be equipped
+    # Initially all 20 passives available (slots empty)
     available = await game.call(FUSION_REGISTRY, "get_available_passives")
-    # With slot system: all 20 passives available when slots empty
     assert len(available) == 20, "All 20 passives should be available with empty slots"
 
-    # Fill all 4 slots
-    for passive_type in [0, 1, 2, 3]:  # DAMAGE, FIRE_RATE, MAX_HP, MULTI_SHOT
+    # Fill all 3 unlocked slots (start with 3 unlocked)
+    for passive_type in [0, 1, 2]:  # DAMAGE, FIRE_RATE, MAX_HP
         await game.call(FUSION_REGISTRY, "apply_passive", [passive_type])
 
-    # Now only 4 passives available (the 4 that are equipped and can level up)
+    # Now only 3 passives available (the 3 that are equipped and can level up)
     available = await game.call(FUSION_REGISTRY, "get_available_passives")
-    assert len(available) == 4, "Only 4 equipped passives available when slots full"
+    assert len(available) == 3, "Only 3 equipped passives available when slots full"
 
 
 @pytest.mark.asyncio
