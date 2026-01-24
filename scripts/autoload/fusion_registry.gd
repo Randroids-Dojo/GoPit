@@ -718,11 +718,12 @@ const PASSIVE_DATA := {
 }
 
 # =============================================================================
-# PASSIVE SLOT SYSTEM (4 slots with levels L1-L3)
+# PASSIVE SLOT SYSTEM (5 slots with levels L1-L3, start with 3 unlocked)
 # =============================================================================
 
-const MAX_PASSIVE_SLOTS: int = 4
+const MAX_PASSIVE_SLOTS: int = 5  # Maximum of 5 slots
 const MAX_PASSIVE_LEVEL: int = 3
+var unlocked_passive_slots: int = 3  # Start with 3 slots, unlock up to 5
 
 # Each slot: {"type": PassiveType or -1 for empty, "level": 0-3}
 var passive_slots: Array[Dictionary] = []
@@ -731,8 +732,9 @@ signal passive_slots_changed()
 
 
 func _init_passive_slots() -> void:
-	"""Initialize empty passive slots"""
+	"""Initialize empty passive slots (all 5, but only first 3 unlocked)"""
 	passive_slots.clear()
+	unlocked_passive_slots = 3  # Start with 3 unlocked
 	for i in MAX_PASSIVE_SLOTS:
 		passive_slots.append({"type": -1, "level": 0})
 
@@ -748,7 +750,7 @@ func get_passive_stacks(passive_type: PassiveType) -> int:
 
 func get_passive_slot_index(passive_type: PassiveType) -> int:
 	"""Get the slot index where a passive is equipped, or -1 if not found"""
-	for i in MAX_PASSIVE_SLOTS:
+	for i in unlocked_passive_slots:
 		if passive_slots[i]["type"] == passive_type:
 			return i
 	return -1
@@ -770,9 +772,9 @@ func get_passive_description(passive_type: PassiveType) -> String:
 
 
 func get_equipped_passives() -> Array[Dictionary]:
-	"""Get all equipped passives with their slot index and level"""
+	"""Get all equipped passives with their slot index and level (within unlocked slots)"""
 	var equipped: Array[Dictionary] = []
-	for i in MAX_PASSIVE_SLOTS:
+	for i in unlocked_passive_slots:
 		if passive_slots[i]["type"] != -1:
 			equipped.append({
 				"slot": i,
@@ -783,20 +785,34 @@ func get_equipped_passives() -> Array[Dictionary]:
 
 
 func get_empty_slot_count() -> int:
-	"""Get number of empty passive slots"""
+	"""Get number of empty passive slots (within unlocked slots)"""
 	var count: int = 0
-	for slot in passive_slots:
-		if slot["type"] == -1:
+	for i in unlocked_passive_slots:
+		if passive_slots[i]["type"] == -1:
 			count += 1
 	return count
 
 
 func has_empty_slot() -> bool:
-	"""Check if there's an empty passive slot"""
-	for slot in passive_slots:
-		if slot["type"] == -1:
+	"""Check if there's an empty passive slot (within unlocked slots)"""
+	for i in unlocked_passive_slots:
+		if passive_slots[i]["type"] == -1:
 			return true
 	return false
+
+
+func unlock_passive_slot() -> bool:
+	"""Unlock next passive slot. Returns true if successful."""
+	if unlocked_passive_slots >= MAX_PASSIVE_SLOTS:
+		return false  # Already at max
+	unlocked_passive_slots += 1
+	passive_slots_changed.emit()
+	return true
+
+
+func get_unlocked_passive_slots() -> int:
+	"""Get number of unlocked passive slots."""
+	return unlocked_passive_slots
 
 
 func get_available_passives() -> Array[PassiveType]:
@@ -824,14 +840,14 @@ func apply_passive(passive_type: PassiveType) -> bool:
 	var current_level: int = get_passive_stacks(passive_type)
 
 	if current_level == 0:
-		# Not equipped - try to fill an empty slot
-		for i in MAX_PASSIVE_SLOTS:
+		# Not equipped - try to fill an empty unlocked slot
+		for i in unlocked_passive_slots:
 			if passive_slots[i]["type"] == -1:
 				passive_slots[i] = {"type": passive_type, "level": 1}
 				_apply_passive_effect(passive_type)
 				passive_slots_changed.emit()
 				return true
-		return false  # No empty slots
+		return false  # No empty unlocked slots
 	elif current_level < MAX_PASSIVE_LEVEL:
 		# Already equipped - level it up
 		var slot_idx: int = get_passive_slot_index(passive_type)
@@ -967,7 +983,8 @@ func get_session_state() -> Dictionary:
 		"owned_fused_balls": owned_fused_balls.duplicate(true),
 		"active_evolved_type": active_evolved_type,
 		"active_fused_id": active_fused_id,
-		"passive_slots": passive_slots_json
+		"passive_slots": passive_slots_json,
+		"unlocked_passive_slots": unlocked_passive_slots
 	}
 
 
@@ -999,5 +1016,16 @@ func restore_session_state(data: Dictionary) -> void:
 			"type": slot_data.get("type", -1),
 			"level": slot_data.get("level", 0)
 		}
+
+	# Restore unlocked passive slots (backward compatibility: infer from filled slots if not saved)
+	if data.has("unlocked_passive_slots"):
+		unlocked_passive_slots = data.get("unlocked_passive_slots", 3)
+	else:
+		# Old save - count filled slots and ensure at least that many unlocked
+		var filled_count := 0
+		for slot in passive_slots:
+			if slot["type"] != -1:
+				filled_count += 1
+		unlocked_passive_slots = maxi(filled_count, 3)
 
 	passive_slots_changed.emit()

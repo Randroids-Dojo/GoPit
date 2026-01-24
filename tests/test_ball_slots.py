@@ -131,3 +131,95 @@ async def test_clear_slot(game):
     # Verify slot was cleared
     slots_after = await game.call(BALL_REGISTRY, "get_active_slots")
     assert slots_after[1] == -1, "Slot 1 should be empty after clearing"
+
+
+@pytest.mark.asyncio
+async def test_starts_with_3_unlocked_slots(game):
+    """BallRegistry should start with 3 unlocked slots."""
+    await reset_ball_registry(game)
+    unlocked = await game.call(BALL_REGISTRY, "get_unlocked_slots")
+    assert unlocked == 3, "Should start with 3 unlocked slots"
+
+
+@pytest.mark.asyncio
+async def test_unlock_slot_increases_count(game):
+    """unlock_slot() should increase unlocked slot count."""
+    await reset_ball_registry(game)
+    unlocked_before = await game.call(BALL_REGISTRY, "get_unlocked_slots")
+
+    # Unlock a slot
+    success = await game.call(BALL_REGISTRY, "unlock_slot")
+    assert success, "Should successfully unlock slot"
+
+    unlocked_after = await game.call(BALL_REGISTRY, "get_unlocked_slots")
+    assert unlocked_after == unlocked_before + 1, "Should have one more unlocked slot"
+
+
+@pytest.mark.asyncio
+async def test_unlock_slot_to_max_5(game):
+    """Can unlock up to maximum of 5 slots."""
+    await reset_ball_registry(game)
+
+    # Unlock until we hit max
+    for _ in range(10):  # Try to unlock more than max
+        await game.call(BALL_REGISTRY, "unlock_slot")
+
+    unlocked = await game.call(BALL_REGISTRY, "get_unlocked_slots")
+    assert unlocked == 5, "Should cap at 5 unlocked slots"
+
+
+@pytest.mark.asyncio
+async def test_cannot_unlock_beyond_max(game):
+    """unlock_slot() should return false when already at max."""
+    await reset_ball_registry(game)
+
+    # Unlock to max (5)
+    for _ in range(5):
+        await game.call(BALL_REGISTRY, "unlock_slot")
+
+    # Try to unlock beyond max
+    success = await game.call(BALL_REGISTRY, "unlock_slot")
+    assert success is False, "Should fail to unlock beyond max"
+
+
+@pytest.mark.asyncio
+async def test_cannot_assign_to_locked_slot(game):
+    """Should not be able to assign balls to locked slots."""
+    await reset_ball_registry(game)
+
+    # Start with 3 unlocked slots, fill them
+    await game.call(BALL_REGISTRY, "add_ball", [1])  # Slot 1: BURN
+    await game.call(BALL_REGISTRY, "add_ball", [2])  # Slot 2: FREEZE
+
+    # Slots 0, 1, 2 are now filled (3 unlocked slots)
+    filled = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled) == 3, "Should have 3 filled slots"
+
+    # Try to add 4th ball - should fail because only 3 slots unlocked
+    await game.call(BALL_REGISTRY, "add_ball", [3])  # POISON
+
+    # Should still have only 3 balls in slots
+    filled_after = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_after) == 3, "Should still have only 3 balls in slots (locked slot blocks)"
+
+
+@pytest.mark.asyncio
+async def test_unlocking_slot_allows_assignment(game):
+    """After unlocking a slot, should be able to assign to it."""
+    await reset_ball_registry(game)
+
+    # Fill 3 unlocked slots
+    await game.call(BALL_REGISTRY, "add_ball", [1])  # Slot 1
+    await game.call(BALL_REGISTRY, "add_ball", [2])  # Slot 2
+
+    filled_before = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_before) == 3, "Should have 3 filled slots"
+
+    # Unlock 4th slot
+    await game.call(BALL_REGISTRY, "unlock_slot")
+
+    # Now should be able to add 4th ball
+    await game.call(BALL_REGISTRY, "add_ball", [3])  # POISON
+
+    filled_after = await game.call(BALL_REGISTRY, "get_filled_slots")
+    assert len(filled_after) == 4, "Should now have 4 filled slots after unlock"

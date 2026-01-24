@@ -209,6 +209,7 @@ var active_ball_type: BallType = BallType.BASIC
 # All equipped slots fire simultaneously per shot
 # -1 means empty slot, otherwise holds a BallType value
 const MAX_SLOTS: int = 5
+var unlocked_slots: int = 3  # Start with 3 slots, unlock up to 5
 var active_ball_slots: Array[int] = [-1, -1, -1, -1, -1]
 
 signal slots_changed()
@@ -226,6 +227,8 @@ func reset() -> void:
 	"""Reset the registry to initial state (for new runs and tests)"""
 	owned_balls.clear()
 	active_ball_type = BallType.BASIC
+	# Reset unlocked slots to 3 (start with 3, unlock to 5)
+	unlocked_slots = 3
 	# Reset all slots to empty
 	active_ball_slots = [-1, -1, -1, -1, -1]
 	# Start with basic ball at L1 in first slot
@@ -405,13 +408,13 @@ func get_owned_ball_types() -> Array[BallType]:
 # =============================================================================
 
 func _assign_to_empty_slot(ball_type: BallType) -> bool:
-	"""Assign ball to first empty slot. Returns true if successful."""
-	for i in range(MAX_SLOTS):
+	"""Assign ball to first empty slot (within unlocked slots). Returns true if successful."""
+	for i in range(unlocked_slots):
 		if active_ball_slots[i] == -1:
 			active_ball_slots[i] = ball_type
 			slots_changed.emit()
 			return true
-	return false  # No empty slots
+	return false  # No empty unlocked slots
 
 
 func get_active_slots() -> Array[int]:
@@ -472,12 +475,26 @@ func is_ball_in_slot(ball_type: BallType) -> bool:
 
 
 func get_empty_slot_count() -> int:
-	"""Get number of empty slots available"""
+	"""Get number of empty slots available (within unlocked slots)"""
 	var count: int = 0
-	for slot in active_ball_slots:
-		if slot == -1:
+	for i in range(unlocked_slots):
+		if active_ball_slots[i] == -1:
 			count += 1
 	return count
+
+
+func unlock_slot() -> bool:
+	"""Unlock next ball slot. Returns true if successful."""
+	if unlocked_slots >= MAX_SLOTS:
+		return false  # Already at max
+	unlocked_slots += 1
+	slots_changed.emit()
+	return true
+
+
+func get_unlocked_slots() -> int:
+	"""Get number of unlocked ball slots."""
+	return unlocked_slots
 
 
 # =============================================================================
@@ -494,7 +511,8 @@ func get_session_state() -> Dictionary:
 	return {
 		"owned_balls": owned_balls_json,
 		"active_ball_type": active_ball_type,
-		"active_ball_slots": active_ball_slots.duplicate()
+		"active_ball_slots": active_ball_slots.duplicate(),
+		"unlocked_slots": unlocked_slots
 	}
 
 
@@ -516,5 +534,17 @@ func restore_session_state(data: Dictionary) -> void:
 	var saved_slots: Array = data.get("active_ball_slots", [-1, -1, -1, -1, -1])
 	for i in range(mini(saved_slots.size(), MAX_SLOTS)):
 		active_ball_slots[i] = saved_slots[i]
+
+	# Restore unlocked slots (backward compatibility: if not saved, infer from filled slots)
+	if data.has("unlocked_slots"):
+		unlocked_slots = data.get("unlocked_slots", 3)
+	else:
+		# Old save - set unlocked_slots based on filled slots
+		var filled_count := 0
+		for slot in active_ball_slots:
+			if slot != -1:
+				filled_count += 1
+		# Ensure at least as many unlocked as filled
+		unlocked_slots = maxi(filled_count, 3)
 
 	slots_changed.emit()

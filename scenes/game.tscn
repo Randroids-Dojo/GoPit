@@ -1,10 +1,11 @@
-[gd_scene load_steps=27 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=28 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://biome_transition_scene" path="res://scenes/ui/biome_transition.tscn" id="biome_transition"]
 [ext_resource type="Script" path="res://scripts/ui/evolution_encyclopedia.gd" id="encyclopedia"]
 [ext_resource type="PackedScene" uid="uid://save_slot_select" path="res://scenes/ui/save_slot_select.tscn" id="25_slotselect"]
 [ext_resource type="Script" path="res://scripts/ui/passive_slots_display.gd" id="24_passive_slots"]
+[ext_resource type="Script" path="res://scripts/ui/ball_slots_display.gd" id="26_ball_slots"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="16_player"]
 [ext_resource type="Script" path="res://scripts/effects/damage_vignette.gd" id="12_vignette"]
 [ext_resource type="Script" path="res://scripts/ui/tutorial_overlay.gd" id="13_tutorial"]
@@ -201,14 +202,27 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -130.0
+offset_left = -170.0
 offset_top = -280.0
-offset_right = 130.0
+offset_right = 170.0
 offset_bottom = -220.0
 grow_horizontal = 2
 grow_vertical = 0
 alignment = 1
 script = ExtResource("24_passive_slots")
+
+[node name="BallSlotsDisplay" type="HBoxContainer" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -350.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 80.0
+grow_horizontal = 0
+alignment = 1
+script = ExtResource("26_ball_slots")
 
 [node name="FissionCounter" type="Label" parent="UI/HUD"]
 layout_mode = 1
