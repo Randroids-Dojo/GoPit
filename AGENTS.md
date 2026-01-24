@@ -450,6 +450,107 @@ gh run watch
 gh run view <RUN_ID> --log-failed
 ```
 
+## GDScript Safe Node References
+
+**CRITICAL: Prevent "Node not found" and nil reference errors in CI/headless mode.**
+
+### The Problem
+
+Using `$Path/To/Node` syntax with `@onready` throws errors if the node doesn't exist in the scene tree. This breaks tests in CI where scenes may have different structures or nodes are created dynamically.
+
+**Error signatures:**
+```
+ERROR: Node not found: "Panel/VBoxContainer/HintLabel" (relative to "/root/Game/UI/LevelUpOverlay").
+SCRIPT ERROR: Invalid assignment of property 'visible' on Nil.
+```
+
+### Rule 1: Use `get_node_or_null()` for Optional Nodes
+
+If a node might not exist (dynamically created, different scene variants, etc.):
+
+```gdscript
+# ❌ BAD - throws error if node doesn't exist
+@onready var hint_label: Label = $Panel/VBoxContainer/HintLabel
+
+# ✅ GOOD - returns null safely if node doesn't exist
+@onready var hint_label: Label = get_node_or_null("Panel/VBoxContainer/HintLabel")
+```
+
+### Rule 2: Guard Dynamically Created UI Elements
+
+When creating UI elements in code (not from scene), add null guards before using them:
+
+```gdscript
+# In _ready() - elements created dynamically
+func _create_dynamic_ui() -> void:
+    # Guard against missing dependencies
+    if not parent_container:
+        return
+
+    _my_button = Button.new()
+    parent_container.add_child(_my_button)
+
+# Later usage - always guard
+func _update_ui() -> void:
+    # Guard against missing dynamic elements
+    if not _my_button:
+        return
+
+    _my_button.visible = true
+```
+
+### Rule 3: Check Before Accessing Properties
+
+Always null-check before setting properties on potentially-nil nodes:
+
+```gdscript
+# ❌ BAD - crashes if hint_label is nil
+hint_label.visible = false
+
+# ✅ GOOD - safe property access
+if hint_label:
+    hint_label.visible = false
+```
+
+### Common Patterns
+
+**Optional hint/helper labels:**
+```gdscript
+@onready var hint_label: Label = get_node_or_null("Panel/VBoxContainer/HintLabel")
+
+func _setup_hint_label() -> void:
+    # Create dynamically if not in scene
+    if not hint_label:
+        hint_label = Label.new()
+        hint_label.name = "HintLabel"
+        $Panel/VBoxContainer.add_child(hint_label)
+    hint_label.visible = false
+```
+
+**Dynamically created button groups:**
+```gdscript
+var _buttons: Array[Button] = []
+
+func _create_buttons() -> void:
+    if not button_container:
+        return
+    # ... create buttons ...
+
+func _update_buttons() -> void:
+    if _buttons.is_empty():
+        return
+    # ... update buttons ...
+```
+
+### Checklist for Node References
+
+- [ ] Optional nodes use `get_node_or_null()` instead of `$`
+- [ ] Dynamic UI creation guards against missing dependencies
+- [ ] All property access on potentially-nil nodes is guarded
+- [ ] Functions that use dynamic nodes return early if they're nil
+
+---
+
 ## Godot Class Loading in CI/Headless Mode
 
 **CRITICAL: Read this before creating ANY new GDScript that extends another custom class!**
