@@ -227,6 +227,10 @@ func _draw() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Stop processing when game is paused (level up, game over, etc.)
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
 	# Returning balls move faster and home toward player
 	var current_speed := speed * RETURN_SPEED_MULT if is_returning else speed
 	velocity = direction * current_speed

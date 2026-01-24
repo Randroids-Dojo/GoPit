@@ -71,10 +71,8 @@ func _setup_hint_label() -> void:
 
 
 func _on_level_up() -> void:
-	# Pause game immediately so balls stop firing and everything freezes
-	# Skip in headless mode to allow PlayGodot automation to continue
-	if DisplayServer.get_name() != "headless":
-		get_tree().paused = true
+	# Game state is already set to LEVEL_UP by GameManager.trigger_level_up()
+	# Game objects (balls, enemies, player) check this state and stop processing
 	_randomize_cards()
 	_update_cards()
 	visible = true

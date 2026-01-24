@@ -175,6 +175,11 @@ func _fallback_enemy_choice() -> PackedScene:
 
 
 func _on_spawn_timer_timeout() -> void:
+	# Don't spawn when game is paused (level up, game over, etc.)
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		_start_spawn_timer()  # Restart timer but don't spawn
+		return
+
 	# Check for formation spawn (higher priority than burst)
 	if randf() < formation_chance:
 		_formation_spawn()

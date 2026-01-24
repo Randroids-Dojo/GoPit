@@ -40,6 +40,10 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	# Stop processing when game is paused (level up, game over, etc.)
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
 	# Apply movement speed (includes character multiplier, shooting penalty, and hazard modifiers)
 	var effective_speed := move_speed * GameManager.get_movement_speed_mult() * _speed_modifier
 	velocity = movement_input * effective_speed

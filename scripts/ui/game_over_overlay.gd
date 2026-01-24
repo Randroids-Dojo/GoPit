@@ -35,10 +35,8 @@ func _ready() -> void:
 
 
 func _on_game_over() -> void:
-	# Pause game immediately so all animations stop
-	# Skip in headless mode to allow PlayGodot automation to continue
-	if DisplayServer.get_name() != "headless":
-		get_tree().paused = true
+	# Game state is already set to GAME_OVER by GameManager.end_game()
+	# Game objects (balls, enemies, player) check this state and stop processing
 
 	# Record run end with session stats and earn coins
 	if MetaManager:
