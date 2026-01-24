@@ -100,6 +100,7 @@ async def test_laser_ball_can_be_added_to_registry(game):
     """Laser ball should be addable to owned balls."""
     # Reset registry
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
 
     # Add laser ball
     await game.call(BALL_REGISTRY, "add_ball", [LASER_BALL_TYPE])
@@ -116,6 +117,7 @@ async def test_laser_ball_can_level_up(game):
     """Laser ball should be able to level up to L3."""
     # Reset registry and add laser ball
     await game.call(BALL_REGISTRY, "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
     await game.call(BALL_REGISTRY, "add_ball", [LASER_BALL_TYPE])
 
     # Level up to L2
