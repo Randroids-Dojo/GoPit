@@ -27,7 +27,7 @@ const HINT_DURATION := 3.0  # Seconds before auto-dismiss
 @onready var panel: Panel = $Panel
 @onready var cards_container: HBoxContainer = $Panel/VBoxContainer/CardsContainer
 @onready var title_label: Label = $Panel/VBoxContainer/TitleLabel
-@onready var hint_label: Label = $Panel/VBoxContainer/HintLabel
+@onready var hint_label: Label = get_node_or_null("Panel/VBoxContainer/HintLabel")
 
 # Each card is a Dictionary with: card_type, passive_type (for passive), ball_type (for ball cards)
 var _available_cards: Array[Dictionary] = []

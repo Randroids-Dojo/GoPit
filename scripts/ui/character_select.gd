@@ -107,6 +107,10 @@ func _create_dots() -> void:
 
 
 func _create_dual_character_ui() -> void:
+	# Guard against missing start button (required for positioning)
+	if not start_button:
+		return
+
 	# Create partner selection label (shows selected primary character)
 	_partner_label = Label.new()
 	_partner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -275,6 +279,10 @@ func _update_display() -> void:
 
 func _update_dual_character_ui(character: Resource, is_unlocked: bool) -> void:
 	"""Update visibility and state of dual character UI elements."""
+	# Guard against missing dynamic UI elements
+	if not _partner_label or not _partner_button or not _solo_button:
+		return
+
 	var matchmaker_available := MetaManager.is_matchmaker_unlocked()
 
 	if _selecting_secondary:

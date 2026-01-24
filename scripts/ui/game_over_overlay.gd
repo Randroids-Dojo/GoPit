@@ -13,7 +13,7 @@ const SHOP_HINT_TEXT := "Spend Pit Coins on permanent upgrades!"
 @onready var coins_label: Label = $Panel/VBoxContainer/CoinsLabel
 @onready var shop_button: Button = $Panel/VBoxContainer/ButtonsContainer/ShopButton
 @onready var restart_button: Button = $Panel/VBoxContainer/ButtonsContainer/RestartButton
-@onready var shop_hint_label: Label = $Panel/VBoxContainer/ShopHintLabel
+@onready var shop_hint_label: Label = get_node_or_null("Panel/VBoxContainer/ShopHintLabel")
 
 var _coins_earned: int = 0
 var _shop_hint_seen: bool = false
