@@ -29,6 +29,8 @@ var registry_type: int = -1  # BallRegistry.BallType if set from registry
 var _trail_points: Array[Vector2] = []
 const MAX_TRAIL_POINTS: int = 8
 var _particle_trail: GPUParticles2D = null
+var _trail_redraw_counter: int = 0  # Throttle trail redraws for performance
+const TRAIL_REDRAW_INTERVAL: int = 3  # Only redraw every N physics frames
 
 # Ball return mechanic - balls return when crossing bottom of screen
 const RETURN_Y_THRESHOLD: float = 1150.0  # Below player position - start return
@@ -229,12 +231,16 @@ func _physics_process(delta: float) -> void:
 	var current_speed := speed * RETURN_SPEED_MULT if is_returning else speed
 	velocity = direction * current_speed
 
-	# Update trail
+	# Update trail with throttled redraw for performance
 	if ball_type != BallType.NORMAL:
 		_trail_points.append(global_position)
 		while _trail_points.size() > MAX_TRAIL_POINTS:
 			_trail_points.remove_at(0)
-		queue_redraw()
+		# Only redraw every TRAIL_REDRAW_INTERVAL frames to reduce draw calls
+		_trail_redraw_counter += 1
+		if _trail_redraw_counter >= TRAIL_REDRAW_INTERVAL:
+			_trail_redraw_counter = 0
+			queue_redraw()
 
 	# Ball return mechanic with return path damage
 	if not is_returning:
@@ -569,6 +575,7 @@ func reset() -> void:
 
 	# Clear trail
 	_trail_points.clear()
+	_trail_redraw_counter = 0
 	if _particle_trail:
 		_particle_trail.queue_free()
 		_particle_trail = null

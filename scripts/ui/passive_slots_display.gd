@@ -1,5 +1,5 @@
-extends HBoxContainer
-## Displays 5 passive slots in the HUD
+extends VBoxContainer
+## Displays 5 passive slots in the HUD (vertically on right side)
 ## Shows equipped passives and their current stack/level
 
 const MAX_SLOTS: int = 5

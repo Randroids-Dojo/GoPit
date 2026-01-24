@@ -71,6 +71,8 @@ func _setup_hint_label() -> void:
 
 
 func _on_level_up() -> void:
+	# Pause game immediately so balls stop firing and everything freezes
+	get_tree().paused = true
 	_randomize_cards()
 	_update_cards()
 	visible = true
@@ -82,7 +84,7 @@ func _on_level_up() -> void:
 func _animate_show() -> void:
 	"""Animate the panel and cards in with staggered entrance."""
 	if not panel:
-		get_tree().paused = true
+		# Tree is already paused from _on_level_up
 		_animation_complete = true
 		return
 
@@ -117,9 +119,8 @@ func _animate_show() -> void:
 	if SoundManager:
 		tween.tween_callback(func(): SoundManager.play(SoundManager.SoundType.LEVEL_UP))
 
-	# Pause after cards are shown
+	# Mark animation as complete (tree is already paused from _on_level_up)
 	tween.tween_callback(func():
-		get_tree().paused = true
 		_animation_complete = true
 	)
 

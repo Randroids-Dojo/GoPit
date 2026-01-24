@@ -35,6 +35,9 @@ func _ready() -> void:
 
 
 func _on_game_over() -> void:
+	# Pause game immediately so all animations stop
+	get_tree().paused = true
+
 	# Record run end with session stats and earn coins
 	if MetaManager:
 		MetaManager.record_run_end(
