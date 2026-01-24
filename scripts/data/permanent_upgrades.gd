@@ -111,6 +111,47 @@ static var UPGRADES: Dictionary = {
 		2.5,  # 300, 750, 1875
 		3,
 		"+10%% XP (lvl 1-5)"
+	),
+	# Stat buildings (BallxPit style: +1 flat stat per level)
+	"strength": UpgradeData.new(
+		"strength",
+		"Barracks",
+		"Train soldiers to hit harder",
+		"⚔️",
+		150,
+		2.0,  # 150, 300, 600, 1200, 2400
+		5,
+		"+%d Strength"
+	),
+	"dexterity": UpgradeData.new(
+		"dexterity",
+		"Gunsmith",
+		"Precision tools for faster firing",
+		"🎯",
+		150,
+		2.0,  # 150, 300, 600, 1200, 2400
+		5,
+		"+%d Dexterity"
+	),
+	"intelligence": UpgradeData.new(
+		"intelligence",
+		"Schoolhouse",
+		"Knowledge amplifies your effects",
+		"📖",
+		150,
+		2.0,  # 150, 300, 600, 1200, 2400
+		5,
+		"+%d Intelligence"
+	),
+	"leadership": UpgradeData.new(
+		"leadership",
+		"Consulate",
+		"Command a larger baby ball army",
+		"👑",
+		150,
+		2.0,  # 150, 300, 600, 1200, 2400
+		5,
+		"+%d Leadership"
 	)
 }
 

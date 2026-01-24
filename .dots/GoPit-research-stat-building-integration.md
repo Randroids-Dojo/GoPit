@@ -1,81 +1,102 @@
 ---
 title: Research stat building integration points
-status: open
+status: completed
 priority: 1
 issue-type: research
 created-at: 2026-01-24T12:00:00Z
+completed-at: 2026-01-24T12:30:00Z
 ---
 
 ## Overview
 
 Research how stat bonuses from meta-progression buildings should integrate with the existing character stat system.
 
-## Context
+## Research Findings
 
-The GDD specifies 4 stat-specific buildings that are currently missing:
-- **Armory**: +2% starting STR per level (5 max = +10%)
-- **Dojo**: +2% starting DEX per level (5 max = +10%)
-- **Library**: +2% starting INT per level (5 max = +10%)
-- **Barracks**: +2% starting LEAD per level (5 max = +10%)
+### BallxPit Building System
 
-## Research Questions
+Per [BallxPit Wiki](https://ballxpit.wiki.gg/wiki/Buildings), there are two categories of stat buildings:
 
-### 1. Stat Application Point
-Where should stat bonuses be applied?
+**Capped buildings (max level 5):**
+| Building | Stat | Effect |
+|----------|------|--------|
+| Barracks | Strength | +1 per level |
+| Gunsmith | Dexterity | +1 per level |
+| Schoolhouse | Intelligence | +1 per level |
+| Consulate | Leadership | +1 per level |
+| Clinic | Endurance | +1 per level |
+| Shoemaker | Speed | +1 per level |
 
-**Current stat flow:**
+**Key insight:** BallxPit uses **+1 flat stat per level**, NOT percentage bonuses.
+
+### GoPit Current Stat System
+
+**Stats with base+scaling system:**
+- `base_strength` (8-10) + scaling grade (S/A/B/C/D/E)
+- `base_dexterity` (5) + scaling grade
+- `base_intelligence` (5) + scaling grade
+
+**Stats still using old multiplier system:**
+- `leadership` (float multiplier, e.g., 1.0, 1.5)
+
+### Recommended Approach
+
+**Match BallxPit: +1 flat stat per building level**
+
+This is simpler and more impactful than percentages:
+- +1 STR = +1 base damage (significant early game)
+- +1 DEX = +2% crit chance, +5% fire rate
+- +1 INT = +10% status duration, +5% status damage
+- +1 LEAD = more baby balls, +15% baby damage
+
+**Integration Point: GameManager stat getters**
+
+Modify `GameManager.get_character_*()` to add MetaManager bonus:
+
+```gdscript
+func get_character_strength() -> int:
+    var base := selected_character.get_strength_at_level(player_level)
+    return base + MetaManager.get_strength_bonus()  # +1 per building level
 ```
-Character.get_strength_at_level(level)
-  → GameManager.get_character_strength()
-    → ball_spawner.ball_damage
-```
 
-**Options:**
-- **Option A:** Modify `GameManager.get_character_*()` to add MetaManager bonus
-- **Option B:** Modify `Character.get_*_at_level()` to accept bonus parameter
-- **Option C:** Apply bonus at usage site (ball_spawner, baby_ball_spawner, etc.)
+### Stat Usage Audit
 
-**Recommendation:** Option A - keeps bonus logic centralized in GameManager
-
-### 2. Percentage vs Flat Bonus
-GDD says "+2% starting STR" - clarify implementation:
-
-- **Percentage of base stat:** `base_strength * (1 + 0.02 * level)`
-- **Percentage of scaled stat:** `get_strength_at_level(lvl) * (1 + 0.02 * level)`
-- **Flat bonus:** `get_strength_at_level(lvl) + 2 * level`
-
-**Recommendation:** Percentage of base stat (matches GDD wording "starting")
-
-### 3. Stat Usage Audit
-Document where each stat is consumed:
-
-| Stat | Usage | File |
-|------|-------|------|
+| Stat | Effect | Usage Location |
+|------|--------|----------------|
 | STR | Ball damage | `ball_spawner.gd:381` |
-| STR | Baby ball damage | `baby_ball_spawner.gd` |
-| DEX | Fire rate / crit chance | `ball_spawner.gd` |
-| INT | Status effect duration | `status_effect.gd` |
-| LEAD | Baby ball spawn count | `baby_ball_spawner.gd` |
+| STR | Baby ball damage | `ball_spawner.gd:429` |
+| DEX | Crit chance | `character.gd:186` (2% per point) |
+| DEX | Fire rate mult | `character.gd:194` (5% per point above 5) |
+| INT | Status duration | `character.gd:230` (10% per point above 5) |
+| INT | Status damage | `character.gd:237` (5% per point above 5) |
+| LEAD | Baby ball count | `baby_ball_spawner.gd:52` |
+| LEAD | Baby damage bonus | `baby_ball_spawner.gd:73` |
 
-### 4. UI Considerations
-- Should stat bonuses show in character select screen?
-- Should they show in a "bonuses active" tooltip?
+### Edge Cases
 
-## Files to Review
+1. **Leadership uses old system:** Currently uses `character_leadership_mult` multiplier instead of base+scaling. Bonus will need to be applied differently (add to `_leadership_bonus`).
 
-- `scripts/autoload/game_manager.gd:171-230` - Stat getter functions
-- `scripts/autoload/meta_manager.gd:324-340` - Bonus calculation pattern
-- `scripts/data/permanent_upgrades.gd` - Upgrade definitions
-- `scripts/resources/character.gd` - Character stat definitions
+2. **Dual character mode:** Both characters benefit from stat bonuses (bonuses are global, not per-character).
 
-## Acceptance Criteria
+3. **Level 1 characters:** With +5 bonus, a character with base_strength=8 would have 13 effective strength at level 1 - still balanced.
 
-- [ ] Document recommended integration approach
-- [ ] Confirm percentage vs flat bonus interpretation
-- [ ] List all stat usage points that need updating
-- [ ] Note any edge cases (dual character mode, etc.)
+### Building Names (Matching BallxPit)
+
+| GDD Name | BallxPit Name | Recommendation |
+|----------|---------------|----------------|
+| Armory | Barracks | Use **Barracks** |
+| Dojo | Gunsmith | Use **Gunsmith** |
+| Library | Schoolhouse | Use **Schoolhouse** |
+| Barracks | Consulate | Use **Consulate** |
+
+### Final Recommendation
+
+1. Use BallxPit building names for familiarity
+2. Use +1 flat stat per level (not %)
+3. Cap at level 5 (max +5 per stat)
+4. Apply bonus in GameManager getters
+5. Leadership requires special handling via `_leadership_bonus`
 
 ## Related Tasks
 
-- Depends on: None
 - Blocks: GoPit-implement-stat-buildings.md
