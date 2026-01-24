@@ -109,6 +109,12 @@ var bonus_damage: float = 0.0
 var bonus_fire_rate: float = 0.0
 var bonus_xp_percent: float = 0.0  # +X% XP from Veteran's Hut
 var bonus_early_xp_percent: float = 0.0  # +X% XP for first N levels from Abbey
+
+# Stat bonuses from buildings (BallxPit style: +1 flat stat per level)
+var bonus_strength: int = 0
+var bonus_dexterity: int = 0
+var bonus_intelligence: int = 0
+var bonus_leadership: int = 0
 const EARLY_XP_LEVEL_CAP: int = 5  # Abbey bonus applies to first 5 levels
 
 # Passive evolution bonuses (from unlocked passive evolutions)
@@ -337,6 +343,12 @@ func _calculate_bonuses() -> void:
 	# Early XP bonus: +10% per level for first 5 levels (max 30%)
 	bonus_early_xp_percent = get_upgrade_level("early_xp") * 0.10
 
+	# Stat bonuses: +1 per level (BallxPit style)
+	bonus_strength = get_upgrade_level("strength")
+	bonus_dexterity = get_upgrade_level("dexterity")
+	bonus_intelligence = get_upgrade_level("intelligence")
+	bonus_leadership = get_upgrade_level("leadership")
+
 	# Calculate passive evolution bonuses
 	_calculate_evolution_bonuses()
 
@@ -379,6 +391,26 @@ func get_ricochet_bonus() -> int:
 func get_critical_bonus() -> float:
 	# Bonus crit chance from passive evolutions
 	return evo_bonus_critical
+
+
+func get_strength_bonus() -> int:
+	# Bonus strength from Barracks building
+	return bonus_strength
+
+
+func get_dexterity_bonus() -> int:
+	# Bonus dexterity from Gunsmith building
+	return bonus_dexterity
+
+
+func get_intelligence_bonus() -> int:
+	# Bonus intelligence from Schoolhouse building
+	return bonus_intelligence
+
+
+func get_leadership_bonus() -> int:
+	# Bonus leadership from Consulate building
+	return bonus_leadership
 
 
 func get_xp_gain_multiplier() -> float:

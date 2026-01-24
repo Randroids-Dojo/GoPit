@@ -1,6 +1,6 @@
 # Known Issues
 
-## UI Overlay Input Blocking (2026-01-05)
+## UI Overlay Input Blocking (2026-01-05) - RESOLVED
 
 ### Problem
 Touch/click input was blocked on mobile when tutorial overlay was visible. The fire button couldn't be tapped during the FIRE tutorial step.
@@ -15,14 +15,8 @@ Added `mouse_filter = 2` to `HighlightRing` in `scenes/ui/tutorial_overlay.tscn`
 mouse_filter = 2
 ```
 
-### Emergency Workaround
-The fix didn't seem to deploy correctly to Vercel (possibly Godot version mismatch - CI uses 4.4.1, project targets 4.5+). As a workaround, tutorial is **disabled by default** in `scripts/ui/tutorial_overlay.gd`:
-```gdscript
-func _load_tutorial_state() -> bool:
-    # EMERGENCY: Tutorial disabled by default due to input blocking bug
-    if not FileAccess.file_exists(SETTINGS_PATH):
-        return true  # Treat as completed (skip tutorial)
-```
+### Status
+- **Fixed** (2026-01-05) - Tutorial is now enabled by default and working correctly.
 
 ### Prevention
 See `AGENTS.md` for Godot UI best practices on `mouse_filter` settings.

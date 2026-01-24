@@ -171,14 +171,16 @@ func record_gem_collected() -> void:
 func get_character_strength() -> int:
 	"""Get the character's Strength stat at current player level.
 	This is the base damage for all ball types (not per-ball-type damage).
-	Uses the new base_strength + scaling system from Character resource."""
+	Uses the new base_strength + scaling system from Character resource.
+	Includes bonus from Barracks building."""
+	var meta_bonus: int = MetaManager.get_strength_bonus() if MetaManager else 0
 	if selected_character == null:
-		return 10  # Default base damage when no character selected
+		return 10 + meta_bonus  # Default base damage when no character selected
 	# Use the new get_strength_at_level method from Character resource
 	if selected_character.has_method("get_strength_at_level"):
-		return selected_character.get_strength_at_level(player_level)
+		return selected_character.get_strength_at_level(player_level) + meta_bonus
 	# Fallback for old characters without the method
-	return int(10 * character_damage_mult)
+	return int(10 * character_damage_mult) + meta_bonus
 
 
 func get_character_fire_rate() -> float:
@@ -202,45 +204,45 @@ func get_character_fire_rate() -> float:
 
 
 func get_character_dexterity() -> int:
-	"""Get the character's Dexterity stat at current player level."""
+	"""Get the character's Dexterity stat at current player level.
+	Includes bonus from Gunsmith building."""
+	var meta_bonus: int = MetaManager.get_dexterity_bonus() if MetaManager else 0
 	if selected_character == null:
-		return 5  # Default dexterity when no character selected
+		return 5 + meta_bonus  # Default dexterity when no character selected
 	if selected_character.has_method("get_dexterity_at_level"):
-		return selected_character.get_dexterity_at_level(player_level)
+		return selected_character.get_dexterity_at_level(player_level) + meta_bonus
 	# Fallback for old characters
-	return int(5 * character_crit_mult)
+	return int(5 * character_crit_mult) + meta_bonus
 
 
 func get_character_intelligence() -> int:
-	"""Get the character's Intelligence stat at current player level."""
+	"""Get the character's Intelligence stat at current player level.
+	Includes bonus from Schoolhouse building."""
+	var meta_bonus: int = MetaManager.get_intelligence_bonus() if MetaManager else 0
 	if selected_character == null:
-		return 5  # Default intelligence when no character selected
+		return 5 + meta_bonus  # Default intelligence when no character selected
 	if selected_character.has_method("get_intelligence_at_level"):
-		return selected_character.get_intelligence_at_level(player_level)
+		return selected_character.get_intelligence_at_level(player_level) + meta_bonus
 	# Fallback for old characters
-	return int(5 * character_intelligence_mult)
+	return int(5 * character_intelligence_mult) + meta_bonus
 
 
 func get_status_duration_mult() -> float:
 	"""Get the status effect duration multiplier from Intelligence.
-	Formula: 1.0 + (intelligence - 5) × 10% (e.g., 10 INT = 1.5× duration)"""
-	if selected_character == null:
-		return 1.0  # Default when no character selected
-	if selected_character.has_method("get_status_duration_mult_from_intelligence"):
-		return selected_character.get_status_duration_mult_from_intelligence(player_level)
-	# Fallback for old characters using legacy multiplier
-	return character_intelligence_mult
+	Formula: 1.0 + (intelligence - 5) × 10% (e.g., 10 INT = 1.5× duration)
+	Uses get_character_intelligence() to include Schoolhouse bonus."""
+	var intel: int = get_character_intelligence()
+	# Base duration at intelligence 5, each point adds 10%
+	return 1.0 + (intel - 5) * 0.10
 
 
 func get_status_damage_mult() -> float:
 	"""Get the status effect damage multiplier from Intelligence.
-	Formula: 1.0 + (intelligence - 5) × 5% (e.g., 10 INT = 1.25× damage)"""
-	if selected_character == null:
-		return 1.0  # Default when no character selected
-	if selected_character.has_method("get_status_damage_mult_from_intelligence"):
-		return selected_character.get_status_damage_mult_from_intelligence(player_level)
-	# Fallback for old characters
-	return 1.0
+	Formula: 1.0 + (intelligence - 5) × 5% (e.g., 10 INT = 1.25× damage)
+	Uses get_character_intelligence() to include Schoolhouse bonus."""
+	var intel: int = get_character_intelligence()
+	# Base damage at intelligence 5, each point adds 5%
+	return 1.0 + (intel - 5) * 0.05
 
 
 func set_character(character: Resource) -> void:

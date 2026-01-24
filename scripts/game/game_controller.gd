@@ -347,6 +347,9 @@ func _on_game_started() -> void:
 		enemy_spawner.start_spawning()
 	if baby_ball_spawner:
 		baby_ball_spawner.start()
+		# Apply initial leadership including Consulate bonus
+		var meta_bonus: float = float(MetaManager.get_leadership_bonus()) if MetaManager else 0.0
+		baby_ball_spawner.set_leadership(GameManager.leadership + meta_bonus)
 	MusicManager.start_music()
 
 
@@ -695,6 +698,9 @@ func _on_stage_completed(_stage: int) -> void:
 	# Resume baby ball spawner
 	if baby_ball_spawner:
 		baby_ball_spawner.start()
+		# Apply leadership including Consulate bonus
+		var meta_bonus: float = float(MetaManager.get_leadership_bonus()) if MetaManager else 0.0
+		baby_ball_spawner.set_leadership(GameManager.leadership + meta_bonus)
 
 
 func _on_game_won() -> void:
@@ -709,7 +715,9 @@ func _on_game_won() -> void:
 
 func _on_leadership_changed(new_value: float) -> void:
 	if baby_ball_spawner:
-		baby_ball_spawner.set_leadership(new_value)
+		# Add leadership bonus from Consulate building
+		var meta_bonus: float = float(MetaManager.get_leadership_bonus()) if MetaManager else 0.0
+		baby_ball_spawner.set_leadership(new_value + meta_bonus)
 
 
 func _maybe_spawn_fusion_reactor(pos: Vector2) -> void:
