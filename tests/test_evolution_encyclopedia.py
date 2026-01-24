@@ -19,6 +19,10 @@ async def test_encyclopedia_node_exists(game):
 @pytest.mark.asyncio
 async def test_encyclopedia_starts_hidden(game):
     """Encyclopedia should start hidden."""
+    # Ensure encyclopedia is hidden (reset state from any previous test)
+    await game.set_property(ENCYCLOPEDIA, "visible", False)
+    await asyncio.sleep(0.1)
+
     visible = await game.get_property(ENCYCLOPEDIA, "visible")
     assert visible is False, "Encyclopedia should start hidden"
 
