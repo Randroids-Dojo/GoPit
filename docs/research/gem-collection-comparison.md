@@ -36,11 +36,33 @@ The scrolling creates organic urgency:
 - Player must actively navigate to collect
 - Trade-off: chase gems vs. stay safe vs. keep progressing
 
-### Unverified Details (Needs Gameplay Testing)
-- Do gems scroll with the world or stay screen-relative?
-- Is there also a despawn timer?
-- What is the base pickup radius without Magnet?
-- How fast does the screen scroll?
+### Verified Details (January 2026 Research)
+
+**Q1: Do gems scroll with the world?**
+- **Likely yes** - Gems appear to stay in world-space
+- Higher scroll speeds make drops harder to collect (Steam discussions confirm this)
+- Players report "move speed too great at higher levels" affecting drop collection
+
+**Q2: Is there a gem despawn timer?**
+- **No direct evidence found** - Pressure comes from scrolling, not timers
+- Gems scroll off-screen if not collected quickly enough
+
+**Q3: Screen scroll speed**
+- Base run: **15 minutes**
+- Fast difficulty: **12 minutes**
+- Fast+: **10 minutes**
+- Up to **Fast+9**: ~5 minutes
+- **In-game speed toggle**: 3 speed settings player can adjust during run
+
+**Q4: Base gem pickup radius**
+- **Tile-based system** - Player must touch/be adjacent to gem
+- Magnet passive adds **+1 tile per level**
+- Effectively **0-1 tile base radius** without passives
+
+**Q5: Player vertical movement range**
+- Player **can move freely about entire vertical field**
+- "Your character can freely move up, down, and across most of the lane"
+- **Grid-based movement** system
 
 ### Default Behavior
 - Player must physically move over gems to collect them
