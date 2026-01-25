@@ -185,8 +185,8 @@ async def test_fired_ball_has_correct_level(game):
     # Clear any existing balls
     existing_count = await game.call(BALLS_CONTAINER, "get_child_count")
 
-    # Fire a ball using emit_signal (more reliable in headless mode)
-    await game.call(FIRE_BUTTON, "emit_signal", ["pressed"])
+    # Fire a ball by calling _try_fire directly (fire button uses TextureButton which may not emit pressed in headless)
+    await game.call(FIRE_BUTTON, "_try_fire")
     await asyncio.sleep(0.3)
 
     # Get the ball and check its level
