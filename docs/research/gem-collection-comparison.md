@@ -10,28 +10,37 @@ This document compares gem collection mechanics between BallxPit (the reference 
 
 | Aspect | BallxPit | GoPit |
 |--------|----------|-------|
-| **World structure** | Scrolling level | Static arena |
-| **Enemy placement** | Pre-placed in level | Waves descend from top |
-| **Camera behavior** | Constantly scrolls upward | Fixed viewport |
-| **Gem behavior** | Stay where dropped | Fall toward player |
+| **World structure** | Scrolling level (upward) | Static arena |
+| **Player position** | Bottom of screen | Bottom of screen |
+| **Enemy behavior** | Descend toward player | Descend toward player |
+| **Camera behavior** | Auto-scrolls upward at set pace | Fixed viewport |
+| **Gem behavior** | Stay where dropped, NO auto-collect | Fall toward player |
 
-This is the **core difference** that affects gem collection difficulty.
+**Key similarity:** Both games have player at bottom with enemies descending.
+**Key difference:** BallxPit scrolls through a level; GoPit has fixed arena with spawning waves.
 
 ---
 
 ## BallxPit Gem Collection Mechanics
 
-### Scrolling World Model
-- The game continuously scrolls upward through the "pit"
-- Enemies are placed throughout the level (not spawned in waves)
-- When enemies die, gems drop and **stay at that world position**
-- As the screen scrolls, uncollected gems **scroll off the bottom** and are lost
+### Scrolling World Model (Confirmed)
+- Screen continuously scrolls upward through the "pit"
+- Stages scroll at a **set pace** (auto-scroll, not player-controlled)
+- Player stays at bottom, enemies descend from above
+- When enemies die, gems drop at that position
+- **"XP crystals don't auto-collect, so you need to actively pick them up"**
 
 ### Natural Collection Pressure
 The scrolling creates organic urgency:
-- No despawn timer needed - the viewport moves past gems
+- Gems likely scroll off-screen if not collected (needs verification)
 - Player must actively navigate to collect
 - Trade-off: chase gems vs. stay safe vs. keep progressing
+
+### Unverified Details (Needs Gameplay Testing)
+- Do gems scroll with the world or stay screen-relative?
+- Is there also a despawn timer?
+- What is the base pickup radius without Magnet?
+- How fast does the screen scroll?
 
 ### Default Behavior
 - Player must physically move over gems to collect them
@@ -115,30 +124,36 @@ var current_speed := lerpf(fall_speed, MAGNETISM_SPEED, pull_strength)
 
 ## Why BallxPit Feels Harder
 
-### 1. Scrolling World = Constant Pressure
-The screen never stops scrolling. Gems left behind are **permanently lost** once they scroll off-screen. This creates constant decision-making:
-- Do I backtrack for that gem cluster?
-- Can I reach it before it scrolls away?
-- Will backtracking put me in danger?
+### 1. No Auto-Collection
+**Confirmed:** "XP crystals don't auto-collect, so you need to actively pick them up."
+- Gems don't fall toward player
+- Gems don't have attraction behavior by default
+- Player must physically move to each gem
 
-### 2. Stationary Gems (No Falling)
-Gems stay exactly where enemies die. The player must actively navigate to collect them - gems never come to you (unless you have Magnet passive or auto-collect triggers).
+### 2. Scrolling Creates Pressure (Likely)
+The screen auto-scrolls upward at a set pace:
+- Gems (probably) scroll off the bottom if not collected
+- Creates time pressure without explicit despawn timer
+- Player must balance collecting vs. staying safe
 
-### 3. Player Movement is Risky
-In BallxPit, moving to collect gems means:
-- Moving backward against the scroll direction
-- Potentially colliding with enemies you already passed
-- Losing "safe" positioning
-- Missing shot opportunities on new enemies
+### 3. Movement Trade-offs
+Moving up to collect gems means:
+- Moving toward incoming enemies
+- Less reaction time for new threats
+- Potentially getting hit while collecting
+- Missing shot opportunities
 
 ### 4. No Distance-Based Attraction
-BallxPit's Magnet passive is a simple **radius increase** (+1 tile per level), not an attraction force. Gems don't fly toward you - you must still move into range.
+BallxPit's Magnet passive is a simple **radius increase** (+1 tile per level):
+- Gems still don't fly toward you
+- Must still move into range to collect
+- Just expands the "touch to collect" radius
 
-### 5. GoPit's Passive Collection
+### 5. GoPit's Passive Collection (Much Easier)
 In contrast, GoPit gems:
-- Fall toward the player at 150px/sec
-- Get attracted at up to 400px/sec with magnetism
-- Have a generous 40px pickup radius
+- **Fall toward the player** at 150px/sec
+- Get **attracted** at up to 400px/sec with magnetism
+- Have a generous **40px pickup radius**
 - Come to you rather than you going to them
 
 ---
