@@ -76,6 +76,12 @@ func set_ball_type(new_type: BallType) -> void:
 	_apply_ball_type_visuals()
 
 
+func set_color(new_color: Color) -> void:
+	"""Set ball color directly (used for evolved balls)"""
+	ball_color = new_color
+	queue_redraw()
+
+
 func _apply_ball_type_visuals() -> void:
 	match ball_type:
 		BallType.NORMAL:

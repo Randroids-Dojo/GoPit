@@ -151,7 +151,23 @@ func fire() -> void:
 				spread_offset = (i - (effective_ball_count - 1) / 2.0) * ball_spread
 
 			# Add main ball to queue with captured direction
-			if _add_to_queue(slot_ball_type, spread_offset, false, aim_dir):
+			if _add_to_queue(slot_ball_type, spread_offset, false, aim_dir, false):
+				queued_any = true
+
+	# Also queue evolved balls from evolved slots
+	var evolved_slot_balls: Array[int] = []
+	if FusionRegistry:
+		evolved_slot_balls = FusionRegistry.get_filled_evolved_slots()
+
+	for evolved_ball_type in evolved_slot_balls:
+		# Each evolved slot queues effective_ball_count balls
+		for i in range(effective_ball_count):
+			var spread_offset: float = 0.0
+			if effective_ball_count > 1:
+				spread_offset = (i - (effective_ball_count - 1) / 2.0) * ball_spread
+
+			# Add evolved ball to queue (marked as evolved)
+			if _add_to_queue(evolved_ball_type, spread_offset, false, aim_dir, true):
 				queued_any = true
 
 	# Add baby balls to queue (BallxPit style - they queue with main balls)
@@ -160,14 +176,14 @@ func fire() -> void:
 		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
-func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false, direction: Vector2 = Vector2.ZERO) -> bool:
+func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false, direction: Vector2 = Vector2.ZERO, is_evolved: bool = false) -> bool:
 	"""Add a ball to the fire queue. Returns false if queue is full."""
 	if _fire_queue.size() >= max_queue_size:
 		return false
 
 	# Use provided direction or current aim direction
 	var aim_dir := direction if direction != Vector2.ZERO else current_aim_direction
-	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby, "direction": aim_dir})
+	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby, "direction": aim_dir, "is_evolved": is_evolved})
 	queue_changed.emit(_fire_queue.size(), max_queue_size)
 	return true
 
@@ -228,10 +244,11 @@ func _fire_from_queue() -> void:
 	var reg_ball_type: int = entry.get("type", 0)
 	var spread: float = entry.get("spread", 0.0)
 	var is_baby: bool = entry.get("is_baby", false)
+	var is_evolved: bool = entry.get("is_evolved", false)
 	var stored_direction: Vector2 = entry.get("direction", current_aim_direction)
 
-	# Record fire time for cooldown tracking (skip for baby balls)
-	if not is_baby:
+	# Record fire time for cooldown tracking (skip for baby balls and evolved balls)
+	if not is_baby and not is_evolved:
 		_record_fire_time(reg_ball_type)
 
 	# Use stored direction with spread offset (direction was captured when fire() was called)
@@ -242,6 +259,8 @@ func _fire_from_queue() -> void:
 
 	if is_baby:
 		_spawn_baby_ball_from_queue(dir, reg_ball_type)
+	elif is_evolved:
+		_spawn_evolved_ball(dir, reg_ball_type)
 	else:
 		_spawn_ball_typed(dir, reg_ball_type)
 
@@ -341,6 +360,67 @@ func _spawn_ball(direction: Vector2) -> void:
 	"""Legacy spawn using active_ball_type. Kept for backward compatibility."""
 	var active_type: int = BallRegistry.active_ball_type if BallRegistry else 0
 	_spawn_ball_typed(direction, active_type)
+
+
+func _spawn_evolved_ball(direction: Vector2, evolved_type: int) -> void:
+	"""Spawn an evolved ball of a specific type from FusionRegistry"""
+	# Get ball from pool if available, otherwise instantiate
+	var ball: Node
+	if PoolManager:
+		ball = PoolManager.get_ball()
+	else:
+		ball = ball_scene.instantiate()
+	ball.position = global_position + direction * spawn_offset
+	ball.set_direction(direction)
+
+	# Get evolved ball data from FusionRegistry
+	var evolved_data := FusionRegistry.get_evolved_ball_data(evolved_type)
+	var tier: int = FusionRegistry.get_evolution_tier(evolved_type)
+	var level: int = FusionRegistry.get_evolved_ball_level(evolved_type)
+	var tier_mult: float = FusionRegistry.get_tier_damage_multiplier(tier)
+	var level_mult: float = FusionRegistry.get_evolved_ball_level_multiplier(level)
+
+	# Calculate damage and speed
+	var base_damage: int = evolved_data.get("base_damage", 10)
+	var base_speed: float = evolved_data.get("base_speed", 800.0)
+	var speed_mult: float = GameManager.character_speed_mult
+
+	# Get MetaManager permanent bonuses
+	var meta_damage_bonus: float = MetaManager.get_damage_bonus() if MetaManager else 0.0
+	var meta_speed_bonus: float = MetaManager.get_ball_speed_bonus() if MetaManager else 0.0
+	var meta_pierce_bonus: int = MetaManager.get_piercing_bonus() if MetaManager else 0
+	var meta_ricochet_bonus: int = MetaManager.get_ricochet_bonus() if MetaManager else 0
+	var meta_crit_bonus: float = MetaManager.get_critical_bonus() if MetaManager else 0.0
+
+	ball.damage = int(base_damage * tier_mult * level_mult) + _damage_bonus + int(meta_damage_bonus)
+	ball.speed = (base_speed + _speed_bonus + meta_speed_bonus) * speed_mult
+	ball.ball_level = level
+
+	# Mark as evolved ball
+	ball.is_evolved = true
+	ball.evolved_type = evolved_type
+
+	# Set color from evolved ball data
+	var color: Color = evolved_data.get("color", Color.WHITE)
+	ball.set_color(color)
+
+	ball.pierce_count = pierce_count + meta_pierce_bonus + evolved_data.get("pierce_count", 0)
+	ball.max_bounces = max_bounces + meta_ricochet_bonus
+	ball.crit_chance = crit_chance + meta_crit_bonus
+
+	if balls_container:
+		balls_container.add_child(ball)
+	else:
+		get_parent().add_child(ball)
+
+	# Track ball return/catch (connect signals)
+	ball.returned.connect(_on_main_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	ball.caught.connect(_on_main_ball_caught.bind(ball), CONNECT_ONE_SHOT)
+	ball.despawned.connect(_on_main_ball_returned.bind(ball), CONNECT_ONE_SHOT)
+	main_balls_in_flight += 1
+	balls_in_flight += 1
+
+	ball_spawned.emit(ball)
 
 
 func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
