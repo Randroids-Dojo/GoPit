@@ -120,6 +120,7 @@ func _ready() -> void:
 	GameManager.game_over.connect(_on_game_over)
 	GameManager.player_damaged.connect(_on_player_damaged)
 	GameManager.leadership_changed.connect(_on_leadership_changed)
+	GameManager.level_up_triggered.connect(_on_level_up_for_fusion)
 
 	# Connect to stage manager for biome changes
 	StageManager.biome_changed.connect(_on_biome_changed)
@@ -409,7 +410,7 @@ func _on_enemy_spawned(enemy: EnemyBase) -> void:
 
 func _on_enemy_died(enemy: EnemyBase) -> void:
 	_spawn_gem(enemy.global_position, enemy.xp_value)
-	_maybe_spawn_fusion_reactor(enemy.global_position)
+	# Fusion reactors now spawn on level-up (see _on_level_up_for_fusion)
 	_check_wave_progress()
 	GameManager.record_enemy_kill()
 
@@ -720,12 +721,20 @@ func _on_leadership_changed(new_value: float) -> void:
 		baby_ball_spawner.set_leadership(new_value + meta_bonus)
 
 
-func _maybe_spawn_fusion_reactor(pos: Vector2) -> void:
-	"""Chance to spawn a fusion reactor when enemy dies"""
-	# Base 2% chance, +0.1% per wave
-	var chance := 0.02 + GameManager.current_wave * 0.001
-	if randf() < chance:
-		_spawn_fusion_reactor(pos)
+func _on_level_up_for_fusion() -> void:
+	"""Called when player levels up - spawn fusion reactor if 2+ L3 balls"""
+	var fusion_ready_balls := BallRegistry.get_fusion_ready_balls()
+	if fusion_ready_balls.size() >= 2:
+		# Spawn fusion reactor near player (center of game area)
+		var spawn_pos := Vector2(360, 600)  # Center of game area
+		if player:
+			spawn_pos = player.global_position + Vector2(0, -100)  # Above player
+		_spawn_fusion_reactor(spawn_pos)
+
+
+func can_spawn_fusion_reactor() -> bool:
+	"""Check if player has 2+ L3 balls (for UI indicator)"""
+	return BallRegistry.get_fusion_ready_balls().size() >= 2
 
 
 func _spawn_fusion_reactor(pos: Vector2) -> void:

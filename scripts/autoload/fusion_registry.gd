@@ -5,6 +5,7 @@ extends Node
 
 signal evolution_completed(evolved_type: EvolvedBallType)
 signal evolution_upgraded(evolved_type: EvolvedBallType, new_tier: int)
+signal evolved_ball_leveled_up(evolved_type: EvolvedBallType, new_level: int)
 signal fusion_completed(fused_ball_id: String)
 signal fission_upgrades_changed(total: int)
 
@@ -12,37 +13,57 @@ signal fission_upgrades_changed(total: int)
 enum EvolutionTier {
 	TIER_1 = 1,  # Base evolution: 1.5x damage (from L3 + L3)
 	TIER_2 = 2,  # Advanced: 2.5x damage (evolved + L3)
-	TIER_3 = 3   # Ultimate: 4x damage (advanced + L3)
+	TIER_3 = 3,  # Ultimate: 4x damage (advanced + L3)
+	TIER_4 = 4   # Legendary: 6x damage (three-way fusion)
 }
 
 # Tier damage multipliers
 const TIER_DAMAGE_MULTIPLIERS := {
 	EvolutionTier.TIER_1: 1.5,
 	EvolutionTier.TIER_2: 2.5,
-	EvolutionTier.TIER_3: 4.0
+	EvolutionTier.TIER_3: 4.0,
+	EvolutionTier.TIER_4: 6.0
 }
 
 # Tier name prefixes for display
 const TIER_PREFIXES := {
 	EvolutionTier.TIER_1: "",          # No prefix for base
 	EvolutionTier.TIER_2: "Advanced ",
-	EvolutionTier.TIER_3: "Ultimate "
+	EvolutionTier.TIER_3: "Ultimate ",
+	EvolutionTier.TIER_4: "Legendary "
 }
 
 # Evolved ball types from specific recipes
 enum EvolvedBallType {
 	NONE,
+	# Tier 1: Two L3 basic balls
 	BOMB,      # Burn + Iron
 	BLIZZARD,  # Freeze + Lightning
 	VIRUS,     # Poison + Bleed
 	MAGMA,     # Burn + Poison
 	VOID,      # Burn + Freeze
-	# New evolutions (added to reach 10 total)
 	GLACIER,   # Freeze + Iron - Heavy ice shards that pierce
 	STORM,     # Lightning + Poison - Chains spread poison
 	PLASMA,    # Lightning + Bleed - Chains cause bleed
 	CLEAVER,   # Bleed + Iron - Massive bleed on heavy hits
-	FROSTBITE  # Freeze + Bleed - Frozen enemies bleed when thawed
+	FROSTBITE, # Freeze + Bleed - Frozen enemies bleed when thawed
+	# Multi-evolution (Tier 2): Evolved L3 + L3 basic ball
+	NUCLEAR_BOMB,   # Bomb + Poison - Radioactive explosions with DoT
+	BLACK_HOLE,     # Blizzard + Dark - Pulls enemies in, massive damage
+	PLAGUE,         # Virus + Radiation - Spreading radiation sickness
+	HELLFIRE,       # Magma + Lightning - Chain lightning through fire
+	ANTIMATTER,     # Void + Iron - Massive knockback + alternating damage
+	AVALANCHE,      # Glacier + Burn - Shattering ice + fire damage
+	HURRICANE,      # Storm + Freeze - Freezing vortex that chains
+	SUPERNOVA,      # Plasma + Burn - Explosive chain reactions
+	GUILLOTINE,     # Cleaver + Poison - Execute + spreading poison
+	NECROSIS,       # Frostbite + Dark - Death mark on frozen enemies
+	# Ultimate evolution (Tier 4): Three L3 evolved balls
+	APOCALYPSE,     # Bomb + Virus + Storm - World-ending destruction
+	ABSOLUTE_ZERO,  # Blizzard + Glacier + Frostbite - Complete freeze
+	RAGNAROK,       # Hellfire + Supernova + Magma - Divine fire
+	OBLIVION,       # Black Hole + Antimatter + Void - Reality collapse
+	EXTINCTION      # Plague + Necrosis + Guillotine - Death incarnate
 }
 
 # Recipe definitions: sorted [BallType, BallType] -> EvolvedBallType
@@ -59,6 +80,31 @@ const EVOLUTION_RECIPES := {
 	"BLEED_LIGHTNING": EvolvedBallType.PLASMA,
 	"BLEED_IRON": EvolvedBallType.CLEAVER,
 	"BLEED_FREEZE": EvolvedBallType.FROSTBITE
+}
+
+# Multi-evolution recipes: EvolvedBallType + L3 basic ball -> higher tier evolved
+# Format: "EVOLVED_BALL" (base evolved type as string) + "_" + BallType name
+const MULTI_EVOLUTION_RECIPES := {
+	"BOMB_POISON": EvolvedBallType.NUCLEAR_BOMB,
+	"BLIZZARD_DARK": EvolvedBallType.BLACK_HOLE,
+	"VIRUS_RADIATION": EvolvedBallType.PLAGUE,
+	"MAGMA_LIGHTNING": EvolvedBallType.HELLFIRE,
+	"VOID_IRON": EvolvedBallType.ANTIMATTER,
+	"GLACIER_BURN": EvolvedBallType.AVALANCHE,
+	"STORM_FREEZE": EvolvedBallType.HURRICANE,
+	"PLASMA_BURN": EvolvedBallType.SUPERNOVA,
+	"CLEAVER_POISON": EvolvedBallType.GUILLOTINE,
+	"FROSTBITE_DARK": EvolvedBallType.NECROSIS
+}
+
+# Ultimate (three-way) fusion recipes: Three L3 evolved balls -> Tier 4 legendary
+# Format: Alphabetically sorted evolved type names joined with "_"
+const ULTIMATE_RECIPES := {
+	"BOMB_STORM_VIRUS": EvolvedBallType.APOCALYPSE,
+	"BLIZZARD_FROSTBITE_GLACIER": EvolvedBallType.ABSOLUTE_ZERO,
+	"HELLFIRE_MAGMA_SUPERNOVA": EvolvedBallType.RAGNAROK,
+	"ANTIMATTER_BLACK_HOLE_VOID": EvolvedBallType.OBLIVION,
+	"GUILLOTINE_NECROSIS_PLAGUE": EvolvedBallType.EXTINCTION
 }
 
 # Evolved ball stats and effects
@@ -162,11 +208,185 @@ const EVOLVED_BALL_DATA := {
 		"effect": "frostbite",
 		"freeze_duration": 1.5,
 		"thaw_bleed_stacks": 3
+	},
+	# Multi-evolution balls (Tier 2)
+	EvolvedBallType.NUCLEAR_BOMB: {
+		"name": "Nuclear Bomb",
+		"description": "Radioactive explosions with spreading DoT",
+		"base_damage": 35,
+		"base_speed": 650.0,
+		"color": Color(0.5, 1.0, 0.0),  # Radioactive green
+		"effect": "nuclear",
+		"aoe_radius": 150.0,
+		"radiation_duration": 5.0,
+		"radiation_dps": 8
+	},
+	EvolvedBallType.BLACK_HOLE: {
+		"name": "Black Hole",
+		"description": "Creates gravity well that pulls and damages",
+		"base_damage": 40,
+		"base_speed": 500.0,
+		"color": Color(0.1, 0.0, 0.15),  # Deep void
+		"effect": "black_hole",
+		"pull_radius": 200.0,
+		"pull_force": 500.0,
+		"duration": 3.0
+	},
+	EvolvedBallType.PLAGUE: {
+		"name": "Plague",
+		"description": "Spreading radiation sickness amplifies all damage",
+		"base_damage": 25,
+		"base_speed": 750.0,
+		"color": Color(0.3, 0.5, 0.1),  # Sickly green
+		"effect": "plague",
+		"spread_radius": 120.0,
+		"damage_amp": 0.5,
+		"duration": 6.0
+	},
+	EvolvedBallType.HELLFIRE: {
+		"name": "Hellfire",
+		"description": "Chain lightning through burning enemies",
+		"base_damage": 30,
+		"base_speed": 900.0,
+		"color": Color(1.0, 0.2, 0.0),  # Hellish red-orange
+		"effect": "hellfire",
+		"chain_count": 5,
+		"burn_chain_bonus": 2.0
+	},
+	EvolvedBallType.ANTIMATTER: {
+		"name": "Antimatter",
+		"description": "Annihilating impact with massive knockback",
+		"base_damage": 45,
+		"base_speed": 700.0,
+		"color": Color(0.2, 0.0, 0.3),  # Dark purple
+		"effect": "antimatter",
+		"knockback": 150.0,
+		"phase_damage_mult": 1.5
+	},
+	EvolvedBallType.AVALANCHE: {
+		"name": "Avalanche",
+		"description": "Shattering ice creates burning fragments",
+		"base_damage": 28,
+		"base_speed": 600.0,
+		"color": Color(0.8, 0.5, 0.3),  # Heated ice
+		"effect": "avalanche",
+		"fragment_count": 4,
+		"fragment_damage": 10,
+		"burn_duration": 2.0
+	},
+	EvolvedBallType.HURRICANE: {
+		"name": "Hurricane",
+		"description": "Freezing vortex that chains to enemies",
+		"base_damage": 22,
+		"base_speed": 950.0,
+		"color": Color(0.5, 0.8, 0.9),  # Icy wind
+		"effect": "hurricane",
+		"chain_count": 6,
+		"freeze_duration": 1.0,
+		"vortex_radius": 80.0
+	},
+	EvolvedBallType.SUPERNOVA: {
+		"name": "Supernova",
+		"description": "Explosive chain reactions on hit",
+		"base_damage": 35,
+		"base_speed": 850.0,
+		"color": Color(1.0, 0.8, 0.2),  # Solar gold
+		"effect": "supernova",
+		"explosion_radius": 120.0,
+		"chain_explosion_chance": 0.5
+	},
+	EvolvedBallType.GUILLOTINE: {
+		"name": "Guillotine",
+		"description": "Execute low HP enemies, poison spreads on kill",
+		"base_damage": 38,
+		"base_speed": 550.0,
+		"color": Color(0.3, 0.5, 0.2),  # Venomous steel
+		"effect": "guillotine",
+		"execute_threshold": 0.25,
+		"poison_on_kill_radius": 100.0
+	},
+	EvolvedBallType.NECROSIS: {
+		"name": "Necrosis",
+		"description": "Marks frozen enemies for death",
+		"base_damage": 32,
+		"base_speed": 750.0,
+		"color": Color(0.3, 0.1, 0.3),  # Deathly purple
+		"effect": "necrosis",
+		"mark_duration": 4.0,
+		"mark_damage_mult": 2.0,
+		"shatter_on_death": true
+	},
+	# Ultimate (Tier 4) evolved balls - Three-way fusions
+	EvolvedBallType.APOCALYPSE: {
+		"name": "Apocalypse",
+		"description": "World-ending storm of explosions, poison, and lightning",
+		"base_damage": 50,
+		"base_speed": 800.0,
+		"color": Color(0.8, 0.2, 0.0),  # Apocalyptic red
+		"effect": "apocalypse",
+		"aoe_radius": 200.0,
+		"chain_count": 5,
+		"poison_spread": true,
+		"storm_duration": 4.0
+	},
+	EvolvedBallType.ABSOLUTE_ZERO: {
+		"name": "Absolute Zero",
+		"description": "Freezes all enemies to absolute zero, shattering on touch",
+		"base_damage": 45,
+		"base_speed": 600.0,
+		"color": Color(0.9, 0.95, 1.0),  # Pure white-blue
+		"effect": "absolute_zero",
+		"freeze_radius": 250.0,
+		"freeze_duration": 5.0,
+		"shatter_damage_mult": 3.0,
+		"slow_aura": true
+	},
+	EvolvedBallType.RAGNAROK: {
+		"name": "Ragnarok",
+		"description": "Divine flames that consume everything",
+		"base_damage": 55,
+		"base_speed": 750.0,
+		"color": Color(1.0, 0.9, 0.3),  # Divine gold
+		"effect": "ragnarok",
+		"explosion_chain": true,
+		"burn_radius": 180.0,
+		"chain_count": 8,
+		"divine_damage_mult": 2.0
+	},
+	EvolvedBallType.OBLIVION: {
+		"name": "Oblivion",
+		"description": "Collapses reality, erasing enemies from existence",
+		"base_damage": 60,
+		"base_speed": 500.0,
+		"color": Color(0.0, 0.0, 0.05),  # Pure void
+		"effect": "oblivion",
+		"void_radius": 300.0,
+		"instant_kill_threshold": 0.3,
+		"gravity_pull": 800.0,
+		"phase_shift": true
+	},
+	EvolvedBallType.EXTINCTION: {
+		"name": "Extinction",
+		"description": "Death incarnate - spreading doom that cannot be stopped",
+		"base_damage": 48,
+		"base_speed": 700.0,
+		"color": Color(0.2, 0.15, 0.1),  # Death brown
+		"effect": "extinction",
+		"death_spread_radius": 200.0,
+		"execute_threshold": 0.4,
+		"mark_all": true,
+		"doom_duration": 6.0
 	}
 }
 
 # Owned evolved balls for current run
 var owned_evolved_balls: Dictionary = {}  # EvolvedBallType -> EvolutionTier
+
+# Evolved ball levels (like regular ball levels L1 -> L2 -> L3)
+# Evolved balls can earn XP and level up to become fusion-ready for multi-evolution
+var evolved_ball_levels: Dictionary = {}  # EvolvedBallType -> level (1-3)
+var evolved_ball_xp: Dictionary = {}  # EvolvedBallType -> current_xp
+const EVOLVED_BALL_XP_PER_LEVEL: Array[int] = [0, 20, 50]  # XP needed for L2, L3
 
 # Owned fused balls for current run (generic fusions)
 # Key: "TYPE1_TYPE2" (sorted), Value: { "name": "...", "effects": [...], ... }
@@ -175,10 +395,24 @@ var owned_fused_balls: Dictionary = {}
 # Fission upgrades tracking for current run
 var fission_upgrades: int = 0
 
+# Recipe discovery tracking (persistent across runs - saved via MetaManager)
+# Tracks which recipes the player has discovered (seen the result of)
+var discovered_recipes: Dictionary = {}  # recipe_key -> bool
+signal recipe_discovered(recipe_key: String, recipe_type: String)
+
 # Currently active evolved/fused ball (if any)
 var active_evolved_type: EvolvedBallType = EvolvedBallType.NONE
 var active_evolved_tier: EvolutionTier = EvolutionTier.TIER_1
 var active_fused_id: String = ""
+
+# Evolved ball slot system: parallel to BallRegistry's ball slots
+# Allows evolved balls to be equipped and fired like regular balls
+# -1 means empty slot, otherwise holds an EvolvedBallType value
+const MAX_EVOLVED_SLOTS: int = 5
+var unlocked_evolved_slots: int = 1  # Start with 1 evolved slot
+var active_evolved_slots: Array[int] = [-1, -1, -1, -1, -1]
+
+signal evolved_slots_changed()
 
 
 func _ready() -> void:
@@ -191,14 +425,25 @@ func _reset_for_new_run() -> void:
 
 
 func reset() -> void:
-	"""Reset the registry to initial state (for new runs and tests)"""
+	"""Reset the registry to initial state (for new runs and tests)
+	Note: discovered_recipes is NOT reset - it persists across runs"""
 	owned_evolved_balls.clear()
+	evolved_ball_levels.clear()
+	evolved_ball_xp.clear()
 	owned_fused_balls.clear()
 	active_evolved_type = EvolvedBallType.NONE
 	active_evolved_tier = EvolutionTier.TIER_1
 	active_fused_id = ""
 	fission_upgrades = 0
+	# Reset evolved slots
+	unlocked_evolved_slots = 1
+	active_evolved_slots = [-1, -1, -1, -1, -1]
 	_init_passive_slots()
+
+
+func reset_discoveries() -> void:
+	"""Reset discovered recipes (for testing only)"""
+	discovered_recipes.clear()
 
 
 # ===== EVOLUTION (Specific Recipes) =====
@@ -282,13 +527,44 @@ func evolve_balls(ball_a: BallRegistry.BallType, ball_b: BallRegistry.BallType) 
 	BallRegistry.owned_balls.erase(ball_a)
 	BallRegistry.owned_balls.erase(ball_b)
 
-	# Add evolved ball at Tier 1
+	# Add evolved ball at Tier 1 and Level 1
 	owned_evolved_balls[result] = EvolutionTier.TIER_1
+	evolved_ball_levels[result] = 1
+	evolved_ball_xp[result] = 0
 	active_evolved_type = result
 	active_evolved_tier = EvolutionTier.TIER_1
 
+	# Auto-assign to first empty evolved slot
+	assign_evolved_to_empty_slot(result)
+
+	# Discover this recipe
+	var recipe_key := get_recipe_key(ball_a, ball_b)
+	_discover_recipe(recipe_key, "evolution")
+
 	evolution_completed.emit(result)
 	return result
+
+
+func _discover_recipe(recipe_key: String, recipe_type: String) -> void:
+	"""Mark a recipe as discovered"""
+	if not discovered_recipes.has(recipe_key):
+		discovered_recipes[recipe_key] = true
+		recipe_discovered.emit(recipe_key, recipe_type)
+
+
+func is_recipe_discovered(recipe_key: String) -> bool:
+	"""Check if a recipe has been discovered"""
+	return discovered_recipes.get(recipe_key, false)
+
+
+func get_discovered_recipe_count() -> int:
+	"""Get total number of discovered recipes"""
+	return discovered_recipes.size()
+
+
+func get_total_recipe_count() -> int:
+	"""Get total number of recipes in the game"""
+	return EVOLUTION_RECIPES.size() + MULTI_EVOLUTION_RECIPES.size() + ULTIMATE_RECIPES.size()
 
 
 func can_upgrade_evolution(evolved_type: EvolvedBallType) -> bool:
@@ -315,6 +591,7 @@ func get_tier_name(tier: int) -> String:
 		EvolutionTier.TIER_1: return "Evolved"
 		EvolutionTier.TIER_2: return "Advanced"
 		EvolutionTier.TIER_3: return "Ultimate"
+		EvolutionTier.TIER_4: return "Legendary"
 		_: return "Unknown"
 
 
@@ -375,6 +652,411 @@ func get_available_upgrades() -> Array[Dictionary]:
 		})
 
 	return available
+
+
+# ===== MULTI-EVOLUTION (Evolved L3 + L3 Ball) =====
+
+func get_multi_evolution_recipe_key(evolved_type: EvolvedBallType, ball_type: BallRegistry.BallType) -> String:
+	"""Generate consistent recipe key for multi-evolution lookup"""
+	var evolved_name: String = EvolvedBallType.keys()[evolved_type]
+	var ball_name: String = BallRegistry.BallType.keys()[ball_type]
+	return evolved_name + "_" + ball_name
+
+
+func has_multi_evolution_recipe(evolved_type: EvolvedBallType, ball_type: BallRegistry.BallType) -> bool:
+	"""Check if a multi-evolution recipe exists"""
+	var key := get_multi_evolution_recipe_key(evolved_type, ball_type)
+	return key in MULTI_EVOLUTION_RECIPES
+
+
+func get_multi_evolution_result(evolved_type: EvolvedBallType, ball_type: BallRegistry.BallType) -> EvolvedBallType:
+	"""Get the result of a multi-evolution (NONE if no recipe)"""
+	var key := get_multi_evolution_recipe_key(evolved_type, ball_type)
+	return MULTI_EVOLUTION_RECIPES.get(key, EvolvedBallType.NONE)
+
+
+func get_available_multi_evolutions() -> Array[Dictionary]:
+	"""Get all multi-evolutions possible with current L3 evolved balls and L3 basic balls"""
+	var available: Array[Dictionary] = []
+	var fusion_ready_evolved := get_fusion_ready_evolved_balls()
+	var fusion_ready_basic := BallRegistry.get_fusion_ready_balls()
+
+	if fusion_ready_evolved.is_empty() or fusion_ready_basic.is_empty():
+		return available
+
+	for key in MULTI_EVOLUTION_RECIPES:
+		# Parse the key to get evolved type and ball type
+		var parts: PackedStringArray = key.split("_")
+		if parts.size() < 2:
+			continue
+
+		var evolved_name: String = parts[0]
+		var ball_name: String = parts[1]
+
+		# Find the evolved type
+		var evolved_type: int = -1
+		for et in EvolvedBallType.values():
+			if EvolvedBallType.keys()[et] == evolved_name:
+				evolved_type = et
+				break
+
+		if evolved_type == -1:
+			continue
+
+		# Find the ball type
+		var ball_type: int = -1
+		for bt in BallRegistry.BallType.values():
+			if BallRegistry.BallType.keys()[bt] == ball_name:
+				ball_type = bt
+				break
+
+		if ball_type == -1:
+			continue
+
+		# Check if we have both required balls at L3
+		var has_evolved := evolved_type in fusion_ready_evolved
+		var has_basic := ball_type in fusion_ready_basic
+
+		var result_type: EvolvedBallType = MULTI_EVOLUTION_RECIPES[key]
+		var result_data := get_evolved_ball_data(result_type)
+
+		available.append({
+			"recipe_key": key,
+			"evolved_type": evolved_type,
+			"ball_type": ball_type,
+			"result": result_type,
+			"result_name": result_data.get("name", "Unknown"),
+			"can_create": has_evolved and has_basic,
+			"has_evolved": has_evolved,
+			"has_basic": has_basic
+		})
+
+	return available
+
+
+func multi_evolve_ball(evolved_type: EvolvedBallType, ball_type: BallRegistry.BallType) -> EvolvedBallType:
+	"""Perform multi-evolution: combine L3 evolved ball with L3 basic ball.
+	Returns the new evolved type or NONE if invalid."""
+	var result := get_multi_evolution_result(evolved_type, ball_type)
+	if result == EvolvedBallType.NONE:
+		return EvolvedBallType.NONE
+
+	# Check evolved ball is L3
+	if not is_evolved_ball_fusion_ready(evolved_type):
+		return EvolvedBallType.NONE
+
+	# Check basic ball is L3
+	if not BallRegistry.is_fusion_ready(ball_type):
+		return EvolvedBallType.NONE
+
+	# Remove the source evolved ball from slots
+	for i in range(unlocked_evolved_slots):
+		if active_evolved_slots[i] == evolved_type:
+			active_evolved_slots[i] = -1
+			break
+
+	# Remove the source evolved ball from ownership
+	owned_evolved_balls.erase(evolved_type)
+	evolved_ball_levels.erase(evolved_type)
+	evolved_ball_xp.erase(evolved_type)
+
+	# Remove the basic ball from registry
+	BallRegistry.owned_balls.erase(ball_type)
+
+	# Add the new multi-evolved ball at Tier 2 (multi-evolutions start at tier 2)
+	owned_evolved_balls[result] = EvolutionTier.TIER_2
+	evolved_ball_levels[result] = 1
+	evolved_ball_xp[result] = 0
+	active_evolved_type = result
+	active_evolved_tier = EvolutionTier.TIER_2
+
+	# Auto-assign to first empty evolved slot
+	assign_evolved_to_empty_slot(result)
+
+	# Discover this multi-evolution recipe
+	var recipe_key := get_multi_evolution_recipe_key(evolved_type, ball_type)
+	_discover_recipe(recipe_key, "multi_evolution")
+
+	evolution_completed.emit(result)
+	return result
+
+
+# ===== ULTIMATE FUSION (Three L3 Evolved Balls) =====
+
+func get_ultimate_recipe_key(type_a: EvolvedBallType, type_b: EvolvedBallType, type_c: EvolvedBallType) -> String:
+	"""Generate consistent recipe key for ultimate fusion lookup (alphabetically sorted)"""
+	var names: Array[String] = [
+		EvolvedBallType.keys()[type_a],
+		EvolvedBallType.keys()[type_b],
+		EvolvedBallType.keys()[type_c]
+	]
+	names.sort()
+	return names[0] + "_" + names[1] + "_" + names[2]
+
+
+func has_ultimate_recipe(type_a: EvolvedBallType, type_b: EvolvedBallType, type_c: EvolvedBallType) -> bool:
+	"""Check if an ultimate three-way fusion recipe exists"""
+	var key := get_ultimate_recipe_key(type_a, type_b, type_c)
+	return key in ULTIMATE_RECIPES
+
+
+func get_ultimate_result(type_a: EvolvedBallType, type_b: EvolvedBallType, type_c: EvolvedBallType) -> EvolvedBallType:
+	"""Get the result of an ultimate fusion (NONE if no recipe)"""
+	var key := get_ultimate_recipe_key(type_a, type_b, type_c)
+	return ULTIMATE_RECIPES.get(key, EvolvedBallType.NONE)
+
+
+func get_available_ultimate_fusions() -> Array[Dictionary]:
+	"""Get all ultimate fusions possible with current L3 evolved balls"""
+	var available: Array[Dictionary] = []
+	var fusion_ready_evolved := get_fusion_ready_evolved_balls()
+
+	if fusion_ready_evolved.size() < 3:
+		return available  # Need at least 3 L3 evolved balls
+
+	for key in ULTIMATE_RECIPES:
+		# Parse the key to get the three evolved types
+		var parts: PackedStringArray = key.split("_")
+		if parts.size() != 3:
+			continue
+
+		var types: Array[int] = []
+		var all_found := true
+
+		for part in parts:
+			var found := false
+			for et in EvolvedBallType.values():
+				if EvolvedBallType.keys()[et] == part:
+					types.append(et)
+					found = true
+					break
+			if not found:
+				all_found = false
+				break
+
+		if not all_found or types.size() != 3:
+			continue
+
+		# Check if we have all three evolved balls at L3
+		var has_all := true
+		for et in types:
+			if et not in fusion_ready_evolved:
+				has_all = false
+				break
+
+		var result_type: EvolvedBallType = ULTIMATE_RECIPES[key]
+		var result_data := get_evolved_ball_data(result_type)
+
+		available.append({
+			"recipe_key": key,
+			"evolved_types": types,
+			"result": result_type,
+			"result_name": result_data.get("name", "Unknown"),
+			"can_create": has_all
+		})
+
+	return available
+
+
+func ultimate_fuse_balls(type_a: EvolvedBallType, type_b: EvolvedBallType, type_c: EvolvedBallType) -> EvolvedBallType:
+	"""Perform ultimate three-way fusion: combine three L3 evolved balls.
+	Returns the new evolved type or NONE if invalid."""
+	var result := get_ultimate_result(type_a, type_b, type_c)
+	if result == EvolvedBallType.NONE:
+		return EvolvedBallType.NONE
+
+	# Check all three evolved balls are L3
+	if not is_evolved_ball_fusion_ready(type_a):
+		return EvolvedBallType.NONE
+	if not is_evolved_ball_fusion_ready(type_b):
+		return EvolvedBallType.NONE
+	if not is_evolved_ball_fusion_ready(type_c):
+		return EvolvedBallType.NONE
+
+	var source_types: Array[EvolvedBallType] = [type_a, type_b, type_c]
+
+	# Remove all three source evolved balls from slots and ownership
+	for source_type in source_types:
+		for i in range(unlocked_evolved_slots):
+			if active_evolved_slots[i] == source_type:
+				active_evolved_slots[i] = -1
+				break
+
+		owned_evolved_balls.erase(source_type)
+		evolved_ball_levels.erase(source_type)
+		evolved_ball_xp.erase(source_type)
+
+	# Add the new ultimate ball at Tier 4 (ultimate fusions are legendary tier)
+	owned_evolved_balls[result] = EvolutionTier.TIER_4
+	evolved_ball_levels[result] = 1
+	evolved_ball_xp[result] = 0
+	active_evolved_type = result
+	active_evolved_tier = EvolutionTier.TIER_4
+
+	# Auto-assign to first empty evolved slot
+	assign_evolved_to_empty_slot(result)
+
+	# Discover this ultimate recipe
+	var recipe_key := get_ultimate_recipe_key(type_a, type_b, type_c)
+	_discover_recipe(recipe_key, "ultimate")
+
+	evolution_completed.emit(result)
+	return result
+
+
+# ===== EVOLVED BALL LEVELING (L1 -> L2 -> L3) =====
+
+func get_evolved_ball_level(evolved_type: EvolvedBallType) -> int:
+	"""Get the level of an evolved ball (0 if not owned)"""
+	return evolved_ball_levels.get(evolved_type, 0)
+
+
+func get_evolved_ball_xp(evolved_type: EvolvedBallType) -> int:
+	"""Get current XP of an evolved ball"""
+	return evolved_ball_xp.get(evolved_type, 0)
+
+
+func get_evolved_ball_xp_to_next_level(evolved_type: EvolvedBallType) -> int:
+	"""Get XP needed for next level"""
+	var level := get_evolved_ball_level(evolved_type)
+	if level <= 0 or level >= 3:
+		return 0  # Not owned or already max level
+	return EVOLVED_BALL_XP_PER_LEVEL[level]
+
+
+func add_evolved_ball_xp(evolved_type: EvolvedBallType, xp: int) -> void:
+	"""Add XP to an evolved ball and check for level up"""
+	if not owned_evolved_balls.has(evolved_type):
+		return
+
+	var current_level := get_evolved_ball_level(evolved_type)
+	if current_level >= 3:
+		return  # Already max level
+
+	evolved_ball_xp[evolved_type] = evolved_ball_xp.get(evolved_type, 0) + xp
+
+	# Check for level up
+	var xp_needed := EVOLVED_BALL_XP_PER_LEVEL[current_level]
+	if evolved_ball_xp[evolved_type] >= xp_needed:
+		_level_up_evolved_ball(evolved_type)
+
+
+func _level_up_evolved_ball(evolved_type: EvolvedBallType) -> void:
+	"""Level up an evolved ball"""
+	var current_level := get_evolved_ball_level(evolved_type)
+	if current_level >= 3:
+		return
+
+	var new_level := current_level + 1
+	evolved_ball_levels[evolved_type] = new_level
+	evolved_ball_xp[evolved_type] = 0  # Reset XP for next level
+
+	evolved_ball_leveled_up.emit(evolved_type, new_level)
+
+
+func is_evolved_ball_fusion_ready(evolved_type: EvolvedBallType) -> bool:
+	"""Check if an evolved ball is L3 and ready for multi-evolution"""
+	return get_evolved_ball_level(evolved_type) >= 3
+
+
+func get_fusion_ready_evolved_balls() -> Array[EvolvedBallType]:
+	"""Get all evolved balls that are L3 and ready for multi-evolution"""
+	var ready: Array[EvolvedBallType] = []
+	for evolved_type in evolved_ball_levels:
+		if evolved_ball_levels[evolved_type] >= 3:
+			ready.append(evolved_type)
+	return ready
+
+
+func get_evolved_ball_level_multiplier(level: int) -> float:
+	"""Get stat multiplier for an evolved ball level"""
+	match level:
+		1: return 1.0
+		2: return 1.5
+		3: return 2.0
+		_: return 1.0
+
+
+# ===== EVOLVED BALL SLOTS =====
+
+func get_active_evolved_slots() -> Array[int]:
+	"""Get all active evolved ball slots"""
+	return active_evolved_slots
+
+
+func get_filled_evolved_slots() -> Array[int]:
+	"""Get only non-empty evolved slots (evolved types that will fire)"""
+	var filled: Array[int] = []
+	for i in range(unlocked_evolved_slots):
+		if active_evolved_slots[i] != -1:
+			filled.append(active_evolved_slots[i])
+	return filled
+
+
+func get_evolved_slot_count() -> int:
+	"""Get number of filled evolved slots"""
+	var count: int = 0
+	for i in range(unlocked_evolved_slots):
+		if active_evolved_slots[i] != -1:
+			count += 1
+	return count
+
+
+func set_evolved_slot(slot_index: int, evolved_type: int) -> bool:
+	"""Set a specific evolved slot to an evolved ball type. Use -1 to clear slot."""
+	if slot_index < 0 or slot_index >= MAX_EVOLVED_SLOTS:
+		return false
+	if evolved_type != -1 and evolved_type not in owned_evolved_balls:
+		return false  # Can't equip evolved ball we don't own
+
+	active_evolved_slots[slot_index] = evolved_type
+	evolved_slots_changed.emit()
+	return true
+
+
+func clear_evolved_slot(slot_index: int) -> void:
+	"""Clear an evolved slot (set to empty)"""
+	if slot_index >= 0 and slot_index < MAX_EVOLVED_SLOTS:
+		active_evolved_slots[slot_index] = -1
+		evolved_slots_changed.emit()
+
+
+func assign_evolved_to_empty_slot(evolved_type: EvolvedBallType) -> bool:
+	"""Assign evolved ball to first empty slot. Returns true if successful."""
+	for i in range(unlocked_evolved_slots):
+		if active_evolved_slots[i] == -1:
+			active_evolved_slots[i] = evolved_type
+			evolved_slots_changed.emit()
+			return true
+	return false  # No empty unlocked slots
+
+
+func is_evolved_ball_in_slot(evolved_type: EvolvedBallType) -> bool:
+	"""Check if an evolved ball type is currently equipped in any slot"""
+	return evolved_type in active_evolved_slots
+
+
+func get_empty_evolved_slot_count() -> int:
+	"""Get number of empty evolved slots (within unlocked slots)"""
+	var count: int = 0
+	for i in range(unlocked_evolved_slots):
+		if active_evolved_slots[i] == -1:
+			count += 1
+	return count
+
+
+func unlock_evolved_slot() -> bool:
+	"""Unlock next evolved ball slot. Returns true if successful."""
+	if unlocked_evolved_slots >= MAX_EVOLVED_SLOTS:
+		return false  # Already at max
+	unlocked_evolved_slots += 1
+	evolved_slots_changed.emit()
+	return true
+
+
+func get_unlocked_evolved_slots() -> int:
+	"""Get number of unlocked evolved ball slots."""
+	return unlocked_evolved_slots
 
 
 # ===== GENERIC FUSION (Any Two L3 Balls) =====
@@ -460,14 +1142,16 @@ func get_evolved_ball_name(evolved_type: EvolvedBallType, include_tier: bool = t
 
 
 func get_evolved_ball_damage(evolved_type: EvolvedBallType) -> int:
-	"""Get damage for an evolved ball (scaled by tier if owned)"""
+	"""Get damage for an evolved ball (scaled by tier and level if owned)"""
 	var data := get_evolved_ball_data(evolved_type)
 	var base_damage: int = data.get("base_damage", 10)
 
 	if owned_evolved_balls.has(evolved_type):
 		var tier: int = owned_evolved_balls[evolved_type]
-		var mult: float = get_tier_damage_multiplier(tier)
-		return int(base_damage * mult)
+		var tier_mult: float = get_tier_damage_multiplier(tier)
+		var level: int = get_evolved_ball_level(evolved_type)
+		var level_mult: float = get_evolved_ball_level_multiplier(level)
+		return int(base_damage * tier_mult * level_mult)
 
 	return base_damage
 
@@ -970,6 +1654,16 @@ func get_session_state() -> Dictionary:
 	for evolved_type in owned_evolved_balls:
 		evolved_balls_json[str(evolved_type)] = owned_evolved_balls[evolved_type]
 
+	# Convert evolved ball levels to JSON
+	var evolved_levels_json := {}
+	for evolved_type in evolved_ball_levels:
+		evolved_levels_json[str(evolved_type)] = evolved_ball_levels[evolved_type]
+
+	# Convert evolved ball XP to JSON
+	var evolved_xp_json := {}
+	for evolved_type in evolved_ball_xp:
+		evolved_xp_json[str(evolved_type)] = evolved_ball_xp[evolved_type]
+
 	# Passive slots need to convert enum to int for JSON
 	var passive_slots_json: Array[Dictionary] = []
 	for slot in passive_slots:
@@ -980,11 +1674,15 @@ func get_session_state() -> Dictionary:
 
 	return {
 		"owned_evolved_balls": evolved_balls_json,
+		"evolved_ball_levels": evolved_levels_json,
+		"evolved_ball_xp": evolved_xp_json,
 		"owned_fused_balls": owned_fused_balls.duplicate(true),
 		"active_evolved_type": active_evolved_type,
 		"active_fused_id": active_fused_id,
 		"passive_slots": passive_slots_json,
-		"unlocked_passive_slots": unlocked_passive_slots
+		"unlocked_passive_slots": unlocked_passive_slots,
+		"active_evolved_slots": active_evolved_slots.duplicate(),
+		"unlocked_evolved_slots": unlocked_evolved_slots
 	}
 
 
@@ -992,6 +1690,8 @@ func restore_session_state(data: Dictionary) -> void:
 	"""Restore fusion registry state from session save."""
 	# Clear current state
 	owned_evolved_balls.clear()
+	evolved_ball_levels.clear()
+	evolved_ball_xp.clear()
 	owned_fused_balls.clear()
 	_init_passive_slots()
 
@@ -1000,6 +1700,24 @@ func restore_session_state(data: Dictionary) -> void:
 	for evolved_type_str in saved_evolved:
 		var evolved_type: int = int(evolved_type_str)
 		owned_evolved_balls[evolved_type] = saved_evolved[evolved_type_str]
+
+	# Restore evolved ball levels
+	var saved_levels: Dictionary = data.get("evolved_ball_levels", {})
+	for evolved_type_str in saved_levels:
+		var evolved_type: int = int(evolved_type_str)
+		evolved_ball_levels[evolved_type] = saved_levels[evolved_type_str]
+
+	# Restore evolved ball XP
+	var saved_xp: Dictionary = data.get("evolved_ball_xp", {})
+	for evolved_type_str in saved_xp:
+		var evolved_type: int = int(evolved_type_str)
+		evolved_ball_xp[evolved_type] = saved_xp[evolved_type_str]
+
+	# Backward compatibility: if no levels saved, set all owned evolved balls to L1
+	if saved_levels.is_empty() and not saved_evolved.is_empty():
+		for evolved_type in owned_evolved_balls:
+			evolved_ball_levels[evolved_type] = 1
+			evolved_ball_xp[evolved_type] = 0
 
 	# Restore fused balls
 	owned_fused_balls = data.get("owned_fused_balls", {}).duplicate(true)
@@ -1028,4 +1746,21 @@ func restore_session_state(data: Dictionary) -> void:
 				filled_count += 1
 		unlocked_passive_slots = maxi(filled_count, 3)
 
+	# Restore evolved ball slots
+	var saved_evolved_slots: Array = data.get("active_evolved_slots", [-1, -1, -1, -1, -1])
+	for i in range(mini(saved_evolved_slots.size(), MAX_EVOLVED_SLOTS)):
+		active_evolved_slots[i] = saved_evolved_slots[i]
+
+	# Restore unlocked evolved slots (backward compatibility: default to 1 if not saved)
+	if data.has("unlocked_evolved_slots"):
+		unlocked_evolved_slots = data.get("unlocked_evolved_slots", 1)
+	else:
+		# Old save - count filled slots and ensure at least that many unlocked
+		var filled_evolved_count := 0
+		for slot in active_evolved_slots:
+			if slot != -1:
+				filled_evolved_count += 1
+		unlocked_evolved_slots = maxi(filled_evolved_count, 1)
+
 	passive_slots_changed.emit()
+	evolved_slots_changed.emit()

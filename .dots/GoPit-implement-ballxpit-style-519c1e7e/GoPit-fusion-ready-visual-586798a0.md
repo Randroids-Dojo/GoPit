@@ -1,9 +1,10 @@
 ---
 title: Fusion Ready visual indicator
-status: open
+status: closed
 priority: 2
 issue-type: task
-created-at: "2026-01-24T21:53:47.208555+00:00"
+created-at: "\"2026-01-24T21:53:47.208555+00:00\""
+closed-at: "2026-01-25T01:34:50.003975+00:00"
 ---
 
 Add HUD indicator showing 'FUSION READY\!' when player has 2+ L3 balls. Create anticipation for upcoming level-up fusion opportunity. Subtle pulsing effect.
