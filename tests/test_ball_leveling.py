@@ -4,6 +4,7 @@ import pytest
 
 BALL_REGISTRY = "/root/BallRegistry"
 BALLS_CONTAINER = "/root/Game/GameArea/Balls"
+BALL_SPAWNER = "/root/Game/GameArea/BallSpawner"
 FIRE_BUTTON = "/root/Game/UI/HUD/InputContainer/HBoxContainer/FireButtonContainer/FireButton"
 
 
@@ -173,25 +174,45 @@ async def test_fired_ball_has_correct_level(game):
     """Fired balls should have the correct level from registry."""
     await reset_ball_registry(game)
 
+    # Disable autofire first to prevent auto-firing
+    await game.call(FIRE_BUTTON, "set_autofire", [False])
+    await asyncio.sleep(0.3)
+
+    # Clear queue and wait for any in-flight balls to return
+    await game.call(BALL_SPAWNER, "clear_queue")
+    await asyncio.sleep(0.5)
+
     # Level up BASIC to L2
     success = await game.call(BALL_REGISTRY, "level_up_ball", [0])
     assert success == True, "Level up should succeed"
-    await asyncio.sleep(0.1)
 
-    # Disable autofire and wait for fire button to be ready
-    await game.call(FIRE_BUTTON, "set_autofire", [False])
-    await asyncio.sleep(0.3)  # Wait for fire cooldown to be ready
+    # Verify level is now 2
+    level = await game.call(BALL_REGISTRY, "get_ball_level", [0])
+    assert level == 2, f"BASIC should be L2, got {level}"
 
-    # Clear any existing balls
+    # Wait for balls container to be empty (balls returned)
+    for _ in range(30):  # Max 3 seconds wait
+        ball_count = await game.call(BALLS_CONTAINER, "get_child_count")
+        if ball_count == 0:
+            break
+        await asyncio.sleep(0.1)
+
+    # Record count before firing (should be 0 now)
     existing_count = await game.call(BALLS_CONTAINER, "get_child_count")
 
-    # Fire a ball by calling _try_fire directly (fire button uses TextureButton which may not emit pressed in headless)
-    await game.call(FIRE_BUTTON, "_try_fire")
-    await asyncio.sleep(0.3)
+    # Set aim direction (required for fire() - defaults to Vector2.UP but set explicitly)
+    await game.call(BALL_SPAWNER, "set_aim_direction_xy", [0.0, -1.0])  # Aim upward
+    await asyncio.sleep(0.1)
+
+    # Fire a ball (adds to queue)
+    await game.call(BALL_SPAWNER, "fire")
+
+    # Wait for queue to drain and ball to spawn (fire_rate=3.0 means ~0.33s per ball)
+    await asyncio.sleep(1.0)
 
     # Get the ball and check its level
     ball_count = await game.call(BALLS_CONTAINER, "get_child_count")
-    assert ball_count > existing_count, "Should have spawned a new ball"
+    assert ball_count > existing_count, f"Should have spawned a new ball, had {existing_count}, now have {ball_count}"
 
     # Check ball_level property - balls are named dynamically so find any ball child
     if ball_count > 0:
