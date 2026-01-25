@@ -37,6 +37,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# Stop processing when game is paused (level up, game over, etc.)
+	if GameManager.current_state != GameManager.GameState.PLAYING:
+		return
+
 	_time += delta
 
 	# Check for player proximity and collect
