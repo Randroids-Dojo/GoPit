@@ -140,9 +140,45 @@ async def test_ball_starts_at_level_1(game):
 **Key rules:**
 
 1. **Always reset at START** - Call `reset()` or `set_property(..., False)` before testing initial state
-2. **Always sleep after reset** - `await asyncio.sleep(0.1)` gives Godot time to process
+2. **Always sleep after state changes** - `await asyncio.sleep(0.1)` gives Godot time to process
 3. **Clean up UI state** - If testing visibility, ensure hidden/visible at test start
 4. **Don't rely on test order** - Tests may run in any order across parallel workers
+
+### Why Sleeps Are Required
+
+Godot autoloads (like `BallRegistry`, `GameManager`) connect to signals like `game_started` in their `_ready()` function. When tests run, these signals may fire and trigger state resets that race with your test code.
+
+**Example race condition:**
+```
+Test calls reset() → Ball at L1
+Test calls level_up_ball() → Ball at L2
+[game_started signal fires] → reset() called again → Ball back to L1!
+Test calls get_speed() → Gets L1 speed (800) instead of L2 speed (1200)
+```
+
+**The fix:** Sleep after ANY state-modifying call to let Godot's signal processing complete:
+
+```python
+# ✅ GOOD - sleep after each state modification
+await game.call("BallRegistry", "reset")
+await asyncio.sleep(0.1)  # Let signals settle
+
+await game.call("BallRegistry", "level_up_ball", [0])
+await asyncio.sleep(0.1)  # Let level change process
+
+speed = await game.call("BallRegistry", "get_speed", [0])
+assert speed == 1200.0  # Now correctly gets L2 speed
+```
+
+### State-Modifying Calls That Need Sleeps
+
+Always add `await asyncio.sleep(0.1)` after:
+- `reset()` - Resets registry/manager state
+- `add_ball()` - Adds or levels up a ball
+- `level_up_ball()` - Changes ball level
+- `set_property()` - Changes node properties
+- `emit_signal()` - Triggers signal handlers
+- Any method that modifies game state
 
 ```python
 # For UI visibility tests:
@@ -150,10 +186,22 @@ async def test_ball_starts_at_level_1(game):
 async def test_overlay_starts_hidden(game):
     # Reset visibility state first (another test may have shown it)
     await game.set_property(OVERLAY, "visible", False)
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.1)  # Always sleep after state change!
 
     visible = await game.get_property(OVERLAY, "visible")
     assert visible is False
+
+# For registry state tests:
+@pytest.mark.asyncio
+async def test_ball_levels_up_correctly(game):
+    await game.call("BallRegistry", "reset")
+    await asyncio.sleep(0.1)  # Sleep after reset
+
+    await game.call("BallRegistry", "level_up_ball", [0])
+    await asyncio.sleep(0.1)  # Sleep after level up
+
+    level = await game.call("BallRegistry", "get_ball_level", [0])
+    assert level == 2
 ```
 
 **For button clicks in headless mode**, use `emit_signal` instead of `click`:

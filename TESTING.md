@@ -106,6 +106,39 @@ async def test_example(game):
     assert result == expected_value
 ```
 
+## CRITICAL: Sleep After State Changes
+
+**Always add `await asyncio.sleep(0.1)` after any state-modifying call.**
+
+Godot autoloads connect to signals like `game_started` that can fire during tests. Without sleeps, these signals can race with your test code and reset state unexpectedly.
+
+```python
+# ❌ BAD - race condition with game_started signal
+await game.call("BallRegistry", "reset")
+await game.call("BallRegistry", "level_up_ball", [0])
+speed = await game.call("BallRegistry", "get_speed", [0])
+# May get L1 speed (800) instead of L2 speed (1200)!
+
+# ✅ GOOD - sleeps prevent race conditions
+await game.call("BallRegistry", "reset")
+await asyncio.sleep(0.1)  # Let reset complete
+
+await game.call("BallRegistry", "level_up_ball", [0])
+await asyncio.sleep(0.1)  # Let level up process
+
+speed = await game.call("BallRegistry", "get_speed", [0])
+assert speed == 1200.0  # Correctly gets L2 speed
+```
+
+**Calls that need sleeps:**
+- `reset()` - Registry/manager resets
+- `add_ball()`, `level_up_ball()` - Ball state changes
+- `set_property()` - Property changes
+- `emit_signal()` - Signal triggers
+- Any method that modifies game state
+
+See [AGENTS.md](AGENTS.md) for comprehensive test isolation guidelines.
+
 ## Common Node Paths
 
 ```python
