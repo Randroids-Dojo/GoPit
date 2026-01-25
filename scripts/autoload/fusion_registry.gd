@@ -395,6 +395,11 @@ var owned_fused_balls: Dictionary = {}
 # Fission upgrades tracking for current run
 var fission_upgrades: int = 0
 
+# Recipe discovery tracking (persistent across runs - saved via MetaManager)
+# Tracks which recipes the player has discovered (seen the result of)
+var discovered_recipes: Dictionary = {}  # recipe_key -> bool
+signal recipe_discovered(recipe_key: String, recipe_type: String)
+
 # Currently active evolved/fused ball (if any)
 var active_evolved_type: EvolvedBallType = EvolvedBallType.NONE
 var active_evolved_tier: EvolutionTier = EvolutionTier.TIER_1
@@ -420,7 +425,8 @@ func _reset_for_new_run() -> void:
 
 
 func reset() -> void:
-	"""Reset the registry to initial state (for new runs and tests)"""
+	"""Reset the registry to initial state (for new runs and tests)
+	Note: discovered_recipes is NOT reset - it persists across runs"""
 	owned_evolved_balls.clear()
 	evolved_ball_levels.clear()
 	evolved_ball_xp.clear()
@@ -433,6 +439,11 @@ func reset() -> void:
 	unlocked_evolved_slots = 1
 	active_evolved_slots = [-1, -1, -1, -1, -1]
 	_init_passive_slots()
+
+
+func reset_discoveries() -> void:
+	"""Reset discovered recipes (for testing only)"""
+	discovered_recipes.clear()
 
 
 # ===== EVOLUTION (Specific Recipes) =====
@@ -526,8 +537,34 @@ func evolve_balls(ball_a: BallRegistry.BallType, ball_b: BallRegistry.BallType) 
 	# Auto-assign to first empty evolved slot
 	assign_evolved_to_empty_slot(result)
 
+	# Discover this recipe
+	var recipe_key := get_recipe_key(ball_a, ball_b)
+	_discover_recipe(recipe_key, "evolution")
+
 	evolution_completed.emit(result)
 	return result
+
+
+func _discover_recipe(recipe_key: String, recipe_type: String) -> void:
+	"""Mark a recipe as discovered"""
+	if not discovered_recipes.has(recipe_key):
+		discovered_recipes[recipe_key] = true
+		recipe_discovered.emit(recipe_key, recipe_type)
+
+
+func is_recipe_discovered(recipe_key: String) -> bool:
+	"""Check if a recipe has been discovered"""
+	return discovered_recipes.get(recipe_key, false)
+
+
+func get_discovered_recipe_count() -> int:
+	"""Get total number of discovered recipes"""
+	return discovered_recipes.size()
+
+
+func get_total_recipe_count() -> int:
+	"""Get total number of recipes in the game"""
+	return EVOLUTION_RECIPES.size() + MULTI_EVOLUTION_RECIPES.size() + ULTIMATE_RECIPES.size()
 
 
 func can_upgrade_evolution(evolved_type: EvolvedBallType) -> bool:
@@ -736,6 +773,10 @@ func multi_evolve_ball(evolved_type: EvolvedBallType, ball_type: BallRegistry.Ba
 	# Auto-assign to first empty evolved slot
 	assign_evolved_to_empty_slot(result)
 
+	# Discover this multi-evolution recipe
+	var recipe_key := get_multi_evolution_recipe_key(evolved_type, ball_type)
+	_discover_recipe(recipe_key, "multi_evolution")
+
 	evolution_completed.emit(result)
 	return result
 
@@ -854,6 +895,10 @@ func ultimate_fuse_balls(type_a: EvolvedBallType, type_b: EvolvedBallType, type_
 
 	# Auto-assign to first empty evolved slot
 	assign_evolved_to_empty_slot(result)
+
+	# Discover this ultimate recipe
+	var recipe_key := get_ultimate_recipe_key(type_a, type_b, type_c)
+	_discover_recipe(recipe_key, "ultimate")
 
 	evolution_completed.emit(result)
 	return result
