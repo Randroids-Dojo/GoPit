@@ -72,6 +72,7 @@ async def test_get_speed_uses_multiplier(game):
     """get_speed should calculate: BASE_BALL_SPEED × speed_multiplier × level_multiplier."""
     # Reset registry and add basic ball
     await game.call("BallRegistry", "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
 
     # Basic ball at L1: 800 × 1.0 × 1.0 = 800
     basic_speed = await game.call("BallRegistry", "get_speed", [0])  # BallType.BASIC
@@ -82,7 +83,9 @@ async def test_get_speed_uses_multiplier(game):
 async def test_iron_speed_calculation(game):
     """Iron ball speed should be 800 × 0.75 × level_mult."""
     await game.call("BallRegistry", "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
     await game.call("BallRegistry", "add_ball", [6])  # Add iron ball (BallType.IRON)
+    await asyncio.sleep(0.1)  # Wait for add to process
 
     # Iron ball at L1: 800 × 0.75 × 1.0 = 600
     iron_speed = await game.call("BallRegistry", "get_speed", [6])
@@ -93,9 +96,11 @@ async def test_iron_speed_calculation(game):
 async def test_speed_scales_with_level(game):
     """Ball speed should scale with level multiplier."""
     await game.call("BallRegistry", "reset")
+    await asyncio.sleep(0.1)  # Wait for state to settle
 
     # Level up basic ball to L2
-    await game.call("BallRegistry", "level_up_ball", [0])
+    result = await game.call("BallRegistry", "level_up_ball", [0])
+    await asyncio.sleep(0.1)  # Wait for level up to process
 
     # Basic ball at L2: 800 × 1.0 × 1.5 = 1200
     l2_speed = await game.call("BallRegistry", "get_speed", [0])
@@ -103,6 +108,7 @@ async def test_speed_scales_with_level(game):
 
     # Level up to L3
     await game.call("BallRegistry", "level_up_ball", [0])
+    await asyncio.sleep(0.1)  # Wait for level up to process
 
     # Basic ball at L3: 800 × 1.0 × 2.0 = 1600
     l3_speed = await game.call("BallRegistry", "get_speed", [0])
