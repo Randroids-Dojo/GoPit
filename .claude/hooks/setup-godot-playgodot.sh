@@ -87,10 +87,21 @@ if [ ! -f "$GODOT_PATH" ]; then
   echo "Godot binary installed: $GODOT_PATH"
 fi
 
-# 2. Clone PlayGodot if not present
+# 2. Clone PlayGodot if not present (or update to specified version)
+PLAYGODOT_VERSION="0.5.1"
 if [ ! -d "$PLAYGODOT_DIR" ]; then
-  echo "Cloning PlayGodot..."
-  git clone --depth 1 https://github.com/Randroids-Dojo/PlayGodot.git "$PLAYGODOT_DIR"
+  echo "Cloning PlayGodot ${PLAYGODOT_VERSION}..."
+  git clone --depth 1 --branch "$PLAYGODOT_VERSION" https://github.com/Randroids-Dojo/PlayGodot.git "$PLAYGODOT_DIR"
+elif [ -d "$PLAYGODOT_DIR/.git" ]; then
+  # Check if we need to update to the specified version
+  cd "$PLAYGODOT_DIR"
+  CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo "")
+  if [ "$CURRENT_TAG" != "$PLAYGODOT_VERSION" ]; then
+    echo "Updating PlayGodot to ${PLAYGODOT_VERSION}..."
+    git fetch --depth 1 origin tag "$PLAYGODOT_VERSION"
+    git checkout "$PLAYGODOT_VERSION"
+  fi
+  cd "$PROJECT_DIR"
 fi
 
 # 3. Setup Python venv and install PlayGodot
