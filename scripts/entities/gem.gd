@@ -3,16 +3,26 @@ extends Area2D
 
 signal collected(gem: Node2D)
 
+## Gem movement modes to simulate different collection difficulty
+enum GemMovementMode {
+	FALL_DOWN,   ## Default: gems fall toward player (easier)
+	DRIFT_UP,    ## BallxPit-style: gems drift away from player (harder)
+	STATIONARY   ## Gems stay where they spawn (hardest)
+}
+
 @export var xp_value: int = 10
 @export var gem_color: Color = Color(0.2, 0.9, 0.5)
 @export var radius: float = 14.0
-@export var fall_speed: float = 150.0
+@export var base_speed: float = 150.0  ## Base movement speed (fall or drift)
 @export var sparkle_speed: float = 3.0
 @export var despawn_time: float = 10.0
 
 const MAGNETISM_SPEED: float = 400.0
 const COLLECTION_RADIUS: float = 40.0
 const HEALTH_GEM_HEAL: int = 10  # HP restored by health gems
+
+## Current movement mode - defaults to DRIFT_UP for BallxPit-style feel
+static var movement_mode: GemMovementMode = GemMovementMode.DRIFT_UP
 
 var _time: float = 0.0
 var is_health_gem: bool = false:
@@ -59,19 +69,20 @@ func _process(delta: float) -> void:
 			var direction := (_player.global_position - global_position).normalized()
 			# Speed increases as gem gets closer
 			var pull_strength := 1.0 - (distance_to_player / magnetism_range)
-			var current_speed := lerpf(fall_speed, MAGNETISM_SPEED, pull_strength)
+			var current_speed := lerpf(base_speed, MAGNETISM_SPEED, pull_strength)
 			global_position += direction * current_speed * delta
 		else:
-			# Normal falling
-			position.y += fall_speed * delta
+			# Apply movement based on mode
+			_apply_movement(delta)
 	else:
-		# No magnetism, just fall
-		position.y += fall_speed * delta
+		# No magnetism, apply normal movement
+		_apply_movement(delta)
 
 	queue_redraw()
 
-	# Despawn after timeout or if off screen
-	if _time > despawn_time or position.y > 1400:
+	# Despawn after timeout or if off screen (check both top and bottom)
+	var off_screen := position.y > 1400 or position.y < -100
+	if _time > despawn_time or off_screen:
 		_release_to_pool()
 
 
@@ -101,6 +112,20 @@ func _draw() -> void:
 	# Draw highlight
 	var highlight := gem_color.lightened(0.5 + sparkle * 0.3)
 	draw_circle(Vector2(-2, -2), 2, highlight)
+
+
+func _apply_movement(delta: float) -> void:
+	"""Apply movement based on current mode"""
+	match movement_mode:
+		GemMovementMode.FALL_DOWN:
+			# Classic: gems fall toward player (easier collection)
+			position.y += base_speed * delta
+		GemMovementMode.DRIFT_UP:
+			# BallxPit-style: gems drift away from player (harder collection)
+			position.y -= base_speed * delta
+		GemMovementMode.STATIONARY:
+			# Gems stay in place (player must come to them)
+			pass
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -148,3 +173,30 @@ func get_xp_value() -> int:
 	if is_health_gem:
 		return 0  # Health gems give no XP
 	return xp_value
+
+
+## Static methods to control gem movement mode globally
+
+static func set_movement_mode(mode: GemMovementMode) -> void:
+	"""Set the movement mode for all gems"""
+	movement_mode = mode
+
+
+static func get_movement_mode() -> GemMovementMode:
+	"""Get the current movement mode"""
+	return movement_mode
+
+
+static func set_drift_up_mode() -> void:
+	"""Enable BallxPit-style upward drift"""
+	movement_mode = GemMovementMode.DRIFT_UP
+
+
+static func set_fall_down_mode() -> void:
+	"""Enable classic fall-toward-player mode"""
+	movement_mode = GemMovementMode.FALL_DOWN
+
+
+static func set_stationary_mode() -> void:
+	"""Enable stationary gems (hardest mode)"""
+	movement_mode = GemMovementMode.STATIONARY
