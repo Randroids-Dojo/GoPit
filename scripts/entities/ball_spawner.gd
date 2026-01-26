@@ -4,6 +4,9 @@ extends Node2D
 ## Ball Return Mechanic: Balls return when reaching bottom of screen
 ## Queue System: Balls fire one at a time from a queue (BallxPit style)
 
+# Preload LazerLine script to avoid class_name loading order issues in CI
+const LazerLineScript = preload("res://scripts/entities/lazer_line.gd")
+
 signal ball_spawned(ball: Node2D)
 signal ball_returned  # Emitted when a ball returns to player
 signal ball_caught  # Emitted when a ball is caught (active play bonus)
@@ -490,15 +493,16 @@ func _spawn_lazer_line(registry_ball_type: int) -> void:
 	if not player:
 		return
 
-	# Create LazerLine instance
-	var lazer := LazerLine.new()
+	# Create LazerLine instance using preloaded script (avoids class_name loading issues in CI)
+	var lazer: Node2D = LazerLineScript.new()
 
 	# Set orientation based on ball type
+	# LazerLine.Orientation: HORIZONTAL=0, VERTICAL=1
 	var effect: String = BallRegistry.get_effect(registry_ball_type) if BallRegistry else ""
 	if effect == "laser_h":
-		lazer.orientation = LazerLine.Orientation.HORIZONTAL
+		lazer.orientation = 0  # HORIZONTAL
 	else:
-		lazer.orientation = LazerLine.Orientation.VERTICAL
+		lazer.orientation = 1  # VERTICAL
 
 	# Set damage from registry (with level multiplier)
 	var base_damage: int = BallRegistry.get_damage(registry_ball_type) if BallRegistry else 12
