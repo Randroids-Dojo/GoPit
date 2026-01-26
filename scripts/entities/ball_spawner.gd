@@ -132,9 +132,6 @@ func fire() -> void:
 	var meta_multi_shot_bonus: int = MetaManager.get_multi_shot_bonus() if MetaManager else 0
 	var effective_ball_count: int = ball_count + meta_multi_shot_bonus
 
-	# Capture current aim direction for queued balls
-	var aim_dir := current_aim_direction
-
 	for slot_ball_type in slot_balls:
 		# Skip this ball type if on cooldown
 		if is_on_cooldown(slot_ball_type):
@@ -150,8 +147,8 @@ func fire() -> void:
 			if effective_ball_count > 1:
 				spread_offset = (i - (effective_ball_count - 1) / 2.0) * ball_spread
 
-			# Add main ball to queue with captured direction
-			if _add_to_queue(slot_ball_type, spread_offset, false, aim_dir, false):
+			# Add main ball to queue
+			if _add_to_queue(slot_ball_type, spread_offset, false, false):
 				queued_any = true
 
 	# Also queue evolved balls from evolved slots
@@ -167,28 +164,27 @@ func fire() -> void:
 				spread_offset = (i - (effective_ball_count - 1) / 2.0) * ball_spread
 
 			# Add evolved ball to queue (marked as evolved)
-			if _add_to_queue(evolved_ball_type, spread_offset, false, aim_dir, true):
+			if _add_to_queue(evolved_ball_type, spread_offset, false, true):
 				queued_any = true
 
 	# Add baby balls to queue (BallxPit style - they queue with main balls)
 	if queued_any:
-		_queue_baby_balls(slot_balls, aim_dir)
+		_queue_baby_balls(slot_balls)
 		SoundManager.play(SoundManager.SoundType.FIRE)
 
 
-func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false, direction: Vector2 = Vector2.ZERO, is_evolved: bool = false) -> bool:
-	"""Add a ball to the fire queue. Returns false if queue is full."""
+func _add_to_queue(ball_type: int, spread: float = 0.0, is_baby: bool = false, is_evolved: bool = false) -> bool:
+	"""Add a ball to the fire queue. Returns false if queue is full.
+	Direction is determined at spawn time (current_aim_direction), not queue time."""
 	if _fire_queue.size() >= max_queue_size:
 		return false
 
-	# Use provided direction or current aim direction
-	var aim_dir := direction if direction != Vector2.ZERO else current_aim_direction
-	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby, "direction": aim_dir, "is_evolved": is_evolved})
+	_fire_queue.append({"type": ball_type, "spread": spread, "is_baby": is_baby, "is_evolved": is_evolved})
 	queue_changed.emit(_fire_queue.size(), max_queue_size)
 	return true
 
 
-func _queue_baby_balls(slot_balls: Array[int], aim_dir: Vector2) -> void:
+func _queue_baby_balls(slot_balls: Array[int]) -> void:
 	"""Add baby balls to the queue (BallxPit style - queue with main balls)."""
 	# Get baby ball spawner for count calculation
 	var baby_spawner := get_tree().get_first_node_in_group("baby_ball_spawner")
@@ -214,7 +210,7 @@ func _queue_baby_balls(slot_balls: Array[int], aim_dir: Vector2) -> void:
 		var type_index: int = i % ball_types.size()
 		var ball_type: int = ball_types[type_index]
 		var spread: float = randf_range(-0.3, 0.3)
-		_add_to_queue(ball_type, spread, true, aim_dir)
+		_add_to_queue(ball_type, spread, true)
 
 
 func add_baby_balls_to_queue(count: int, ball_types: Array[int]) -> int:
@@ -245,14 +241,13 @@ func _fire_from_queue() -> void:
 	var spread: float = entry.get("spread", 0.0)
 	var is_baby: bool = entry.get("is_baby", false)
 	var is_evolved: bool = entry.get("is_evolved", false)
-	var stored_direction: Vector2 = entry.get("direction", current_aim_direction)
+	# Use CURRENT aim direction so balls fire where player is aiming NOW
+	# (not the direction when fire() was originally called)
+	var dir := current_aim_direction.rotated(spread)
 
 	# Record fire time for cooldown tracking (skip for baby balls and evolved balls)
 	if not is_baby and not is_evolved:
 		_record_fire_time(reg_ball_type)
-
-	# Use stored direction with spread offset (direction was captured when fire() was called)
-	var dir := stored_direction.rotated(spread)
 
 	# Enforce ball limit before spawning
 	_enforce_ball_limit(1)

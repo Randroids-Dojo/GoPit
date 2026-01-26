@@ -67,7 +67,7 @@ var enemies_per_wave: int = 5
 
 # Keyboard input tracking
 var _keyboard_aim_direction: Vector2 = Vector2.ZERO
-var _last_keyboard_aim: Vector2 = Vector2.UP  # Default aim upward
+var _last_keyboard_aim: Vector2 = Vector2.ZERO  # Only set when keyboard is used
 
 # Catch zone for touch input (tap above this Y to try catching)
 const CATCH_TAP_ZONE_MAX_Y: float = 900.0  # Don't trigger on HUD area
@@ -1058,9 +1058,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("fire"):
 		if GameManager.current_state == GameManager.GameState.PLAYING:
 			if fire_button and fire_button.can_fire():
-				# If no aim direction, use last known aim or default up
+				# If keyboard aim was used, ensure both spawner and aim line are in sync
 				if ball_spawner and _last_keyboard_aim.length() > 0:
 					ball_spawner.set_aim_direction(_last_keyboard_aim)
+					if aim_line and player:
+						aim_line.show_line(_last_keyboard_aim, player.global_position)
 				fire_button._try_fire()
 
 	# Toggle autofire with Tab
