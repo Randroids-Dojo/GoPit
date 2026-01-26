@@ -245,14 +245,13 @@ func _fire_from_queue() -> void:
 	var spread: float = entry.get("spread", 0.0)
 	var is_baby: bool = entry.get("is_baby", false)
 	var is_evolved: bool = entry.get("is_evolved", false)
-	var stored_direction: Vector2 = entry.get("direction", current_aim_direction)
+	# Use CURRENT aim direction so balls fire where player is aiming NOW
+	# (not the direction when fire() was originally called)
+	var dir := current_aim_direction.rotated(spread)
 
 	# Record fire time for cooldown tracking (skip for baby balls and evolved balls)
 	if not is_baby and not is_evolved:
 		_record_fire_time(reg_ball_type)
-
-	# Use stored direction with spread offset (direction was captured when fire() was called)
-	var dir := stored_direction.rotated(spread)
 
 	# Enforce ball limit before spawning
 	_enforce_ball_limit(1)
