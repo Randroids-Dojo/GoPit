@@ -1,18 +1,21 @@
 class_name EnemySpawner
 extends Node2D
 ## Spawns enemies at random X positions at the top of the screen
-## Supports various spawn formations for visual variety
+## Supports BallxPit-style spawn formations for organized wave patterns
 
 signal enemy_spawned(enemy: EnemyBase)
 signal enemy_died(enemy: EnemyBase)
 
-## Spawn formation types
+## Spawn formation types (BallxPit-style)
 enum Formation {
-	SINGLE,      # Single enemy (default)
-	LINE,        # Horizontal line
-	V_SHAPE,     # V-shaped arrow pattern
-	CLUSTER,     # Tight cluster group
-	DIAGONAL,    # Diagonal line
+	SINGLE,         # Single enemy (default)
+	LINE,           # Horizontal line - most common in BallxPit
+	V_SHAPE,        # V-shaped arrow pattern pointing up (wings lead)
+	ARROW,          # Arrow pointing down at player (leader at front)
+	CLUSTER,        # Tight cluster group
+	DIAGONAL,       # Diagonal line
+	STAGGERED_ROWS, # Two offset rows (checkerboard pattern)
+	WALL,           # Dense horizontal barrier (2-3 rows)
 }
 
 @export var slime_scene: PackedScene
@@ -20,10 +23,10 @@ enum Formation {
 @export var spawn_margin: float = 40.0  # Margin from screen edges
 @export var spawn_y_offset: float = -50.0  # Spawn above screen
 @export var spawn_variance: float = 0.5  # ±0.5 seconds random variance
-@export var burst_chance: float = 0.1  # 10% chance for burst spawn
+@export var burst_chance: float = 0.05  # 5% chance for burst spawn (reduced - formations handle groups)
 @export var burst_count_min: int = 2
 @export var burst_count_max: int = 3
-@export var formation_chance: float = 0.15  # 15% chance for formation spawn
+@export var formation_chance: float = 0.60  # 60% chance for formation spawn (BallxPit-style)
 
 # Enemy variety
 var bat_scene: PackedScene = preload("res://scenes/entities/enemies/bat.tscn")
@@ -200,11 +203,45 @@ func _burst_spawn() -> void:
 
 
 func _formation_spawn() -> void:
-	"""Spawn enemies in a formation pattern."""
-	# Choose random formation (excluding SINGLE and CLUSTER which are handled separately)
-	var formations: Array[Formation] = [Formation.LINE, Formation.V_SHAPE, Formation.DIAGONAL]
-	var formation: Formation = formations[randi() % formations.size()]
+	"""Spawn enemies in a formation pattern based on current wave."""
+	var wave: int = GameManager.current_wave
+	var formation: Formation = _choose_formation_for_wave(wave)
 	spawn_formation(formation)
+
+
+func _choose_formation_for_wave(wave: int) -> Formation:
+	"""Choose appropriate formation based on wave progression (BallxPit-style)."""
+	# Wave 1-3: Simple patterns - lines and basic arrows
+	if wave <= 3:
+		var formations: Array[Formation] = [Formation.LINE, Formation.LINE, Formation.ARROW]
+		return formations[randi() % formations.size()]
+
+	# Wave 4-6: Introduce V-shapes and diagonals
+	if wave <= 6:
+		var formations: Array[Formation] = [
+			Formation.LINE, Formation.LINE,
+			Formation.ARROW, Formation.V_SHAPE,
+			Formation.DIAGONAL
+		]
+		return formations[randi() % formations.size()]
+
+	# Wave 7-10: Add staggered rows
+	if wave <= 10:
+		var formations: Array[Formation] = [
+			Formation.LINE, Formation.ARROW,
+			Formation.V_SHAPE, Formation.DIAGONAL,
+			Formation.STAGGERED_ROWS, Formation.STAGGERED_ROWS
+		]
+		return formations[randi() % formations.size()]
+
+	# Wave 11+: Full variety including walls
+	var formations: Array[Formation] = [
+		Formation.LINE, Formation.ARROW,
+		Formation.V_SHAPE, Formation.DIAGONAL,
+		Formation.STAGGERED_ROWS, Formation.WALL,
+		Formation.CLUSTER
+	]
+	return formations[randi() % formations.size()]
 
 
 func spawn_formation(formation: Formation, count: int = 0) -> Array[EnemyBase]:
@@ -217,10 +254,16 @@ func spawn_formation(formation: Formation, count: int = 0) -> Array[EnemyBase]:
 			return _spawn_line_formation(count if count > 0 else randi_range(3, 5))
 		Formation.V_SHAPE:
 			return _spawn_v_formation(count if count > 0 else randi_range(5, 7))
+		Formation.ARROW:
+			return _spawn_arrow_formation(count if count > 0 else randi_range(5, 7))
 		Formation.CLUSTER:
 			return _spawn_cluster_formation(count if count > 0 else randi_range(3, 5))
 		Formation.DIAGONAL:
 			return _spawn_diagonal_formation(count if count > 0 else randi_range(3, 5))
+		Formation.STAGGERED_ROWS:
+			return _spawn_staggered_formation(count if count > 0 else randi_range(6, 8))
+		Formation.WALL:
+			return _spawn_wall_formation(count if count > 0 else randi_range(8, 12))
 	return []
 
 
@@ -346,9 +389,139 @@ func _spawn_diagonal_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
+func _spawn_arrow_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in arrow formation pointing DOWN at player (leader at front).
+	This is the inverse of V_SHAPE - leader descends first, wings trail behind."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene
+
+	# Arrow formation parameters
+	var center_x: float = _screen_width / 2.0
+	var spacing_x: float = 45.0
+	var spacing_y: float = 35.0
+
+	# Calculate positions - leader at bottom (will reach player first), wings trail above
+	var positions: Array[Vector2] = []
+	var half: int = count / 2
+
+	# Leader position (front/bottom of arrow - spawns at normal Y)
+	positions.append(Vector2(center_x, spawn_y_offset))
+
+	# Left and right wings trail behind (spawn higher up, further from screen)
+	for i in range(1, half + 1):
+		# Left wing (higher Y = further from player)
+		positions.append(Vector2(center_x - spacing_x * i, spawn_y_offset - spacing_y * i))
+		# Right wing
+		if positions.size() < count:
+			positions.append(Vector2(center_x + spacing_x * i, spawn_y_offset - spacing_y * i))
+
+	# Spawn enemies at positions
+	for i in range(mini(count, positions.size())):
+		var enemy: EnemyBase = scene.instantiate()
+		enemy.global_position = positions[i]
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+		enemies.append(enemy)
+
+	return enemies
+
+
+func _spawn_staggered_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in staggered rows (checkerboard pattern).
+	Two rows with offset X positions - like BallxPit's common spawn pattern."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene
+
+	# Staggered formation parameters
+	var row_spacing_y: float = 40.0
+	var enemies_per_row: int = (count + 1) / 2  # Split between two rows
+	var total_width: float = _screen_width - (spawn_margin * 2)
+	var spacing_x: float = total_width / (enemies_per_row + 1)
+
+	# First row (front)
+	var row1_start_x: float = spawn_margin + spacing_x
+	for i in range(enemies_per_row):
+		var enemy: EnemyBase = scene.instantiate()
+		var x_pos: float = row1_start_x + (spacing_x * i)
+		enemy.global_position = Vector2(x_pos, spawn_y_offset)
+		enemy.died.connect(_on_enemy_died)
+
+		get_parent().add_child(enemy)
+		enemy_spawned.emit(enemy)
+		enemies.append(enemy)
+
+	# Second row (behind, offset by half spacing)
+	var remaining: int = count - enemies_per_row
+	if remaining > 0:
+		var row2_start_x: float = spawn_margin + spacing_x + (spacing_x / 2.0)
+		for i in range(remaining):
+			var enemy: EnemyBase = scene.instantiate()
+			var x_pos: float = row2_start_x + (spacing_x * i)
+			# Clamp to screen bounds
+			x_pos = clampf(x_pos, spawn_margin, _screen_width - spawn_margin)
+			enemy.global_position = Vector2(x_pos, spawn_y_offset - row_spacing_y)
+			enemy.died.connect(_on_enemy_died)
+
+			get_parent().add_child(enemy)
+			enemy_spawned.emit(enemy)
+			enemies.append(enemy)
+
+	return enemies
+
+
+func _spawn_wall_formation(count: int) -> Array[EnemyBase]:
+	"""Spawn enemies in a dense wall formation (2-3 rows filling screen width).
+	Creates pressure - player must break through or be overwhelmed."""
+	var enemies: Array[EnemyBase] = []
+	var scene: PackedScene = _choose_enemy_type()
+	if not scene or scene == swarm_scene:
+		scene = slime_scene
+
+	# Wall formation parameters
+	var row_spacing_y: float = 35.0
+	var num_rows: int = 2 if count <= 8 else 3
+	var enemies_per_row: int = ceili(float(count) / float(num_rows))
+
+	var total_width: float = _screen_width - (spawn_margin * 2)
+	var spacing_x: float = total_width / (enemies_per_row + 1)
+
+	var spawned: int = 0
+	for row in range(num_rows):
+		if spawned >= count:
+			break
+
+		var row_y: float = spawn_y_offset - (row_spacing_y * row)
+		var row_start_x: float = spawn_margin + spacing_x
+
+		for col in range(enemies_per_row):
+			if spawned >= count:
+				break
+
+			var enemy: EnemyBase = scene.instantiate()
+			var x_pos: float = row_start_x + (spacing_x * col)
+			enemy.global_position = Vector2(x_pos, row_y)
+			enemy.died.connect(_on_enemy_died)
+
+			get_parent().add_child(enemy)
+			enemy_spawned.emit(enemy)
+			enemies.append(enemy)
+			spawned += 1
+
+	return enemies
+
+
 func get_available_formations() -> Array[Formation]:
 	"""Get list of all available spawn formations."""
-	return [Formation.SINGLE, Formation.LINE, Formation.V_SHAPE, Formation.CLUSTER, Formation.DIAGONAL]
+	return [
+		Formation.SINGLE, Formation.LINE, Formation.V_SHAPE, Formation.ARROW,
+		Formation.CLUSTER, Formation.DIAGONAL, Formation.STAGGERED_ROWS, Formation.WALL
+	]
 
 
 func _on_enemy_died(enemy: EnemyBase) -> void:
