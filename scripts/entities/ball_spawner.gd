@@ -249,6 +249,11 @@ func _fire_from_queue() -> void:
 	if not is_baby and not is_evolved:
 		_record_fire_time(reg_ball_type)
 
+	# Check if this is an instant-fire type (like Lazer)
+	if BallRegistry and BallRegistry.is_instant_type(reg_ball_type):
+		_spawn_lazer_line(reg_ball_type)
+		return
+
 	# Enforce ball limit before spawning
 	_enforce_ball_limit(1)
 
@@ -477,6 +482,46 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 	ball_spawned.emit(ball)
 
 
+func _spawn_lazer_line(registry_ball_type: int) -> void:
+	"""Spawn an instant lazer line effect at player position (BallxPit style).
+	Lazer balls don't launch projectiles - they create instant full-screen lines."""
+	# Get player position for the line
+	var player := get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+
+	# Create LazerLine instance
+	var lazer := LazerLine.new()
+
+	# Set orientation based on ball type
+	var effect: String = BallRegistry.get_effect(registry_ball_type) if BallRegistry else ""
+	if effect == "laser_h":
+		lazer.orientation = LazerLine.Orientation.HORIZONTAL
+	else:
+		lazer.orientation = LazerLine.Orientation.VERTICAL
+
+	# Set damage from registry (with level multiplier)
+	var base_damage: int = BallRegistry.get_damage(registry_ball_type) if BallRegistry else 12
+	lazer.damage = base_damage + _damage_bonus
+
+	# Set color from registry
+	var color: Color = BallRegistry.get_color(registry_ball_type) if BallRegistry else Color(1.0, 0.1, 0.1)
+	lazer.line_color = Color(color.r, color.g, color.b, 0.9)
+	lazer.glow_color = Color(color.r, color.g, color.b, 0.4)
+
+	# Position at player's current location
+	lazer.global_position = player.global_position
+
+	# Add to balls container or parent
+	if balls_container:
+		balls_container.add_child(lazer)
+	else:
+		get_parent().add_child(lazer)
+
+	# Play sound
+	SoundManager.play(SoundManager.SoundType.FIRE)
+
+
 # Baby ball configuration
 const BABY_BALL_SCALE: float = 0.6
 const BABY_BALL_DAMAGE_MULT: float = 0.5
@@ -543,10 +588,11 @@ func _registry_to_ball_type(registry_type: int) -> int:
 	"""Map BallRegistry.BallType to ball.gd BallType enum"""
 	# BallRegistry: BASIC=0, BURN=1, FREEZE=2, POISON=3, BLEED=4, LIGHTNING=5, IRON=6,
 	#               RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12,
-	#               BROOD_MOTHER=13, DARK=14, CELL=15, CHARM=16, LASER=17
+	#               BROOD_MOTHER=13, DARK=14, CELL=15, CHARM=16, LASER_H=17, LASER_V=18
 	# ball.gd: NORMAL=0, FIRE=1, ICE=2, LIGHTNING=3, POISON=4, BLEED=5, IRON=6,
 	#          RADIATION=7, DISEASE=8, FROSTBURN=9, WIND=10, GHOST=11, VAMPIRE=12,
-	#          BROOD_MOTHER=13, DARK=14, CELL=15, CHARM=16, LASER=17
+	#          BROOD_MOTHER=13, DARK=14, CELL=15, CHARM=16
+	# Note: LASER_H/LASER_V are instant-fire types that don't spawn ball projectiles
 	match registry_type:
 		0: return 0  # BASIC -> NORMAL
 		1: return 1  # BURN -> FIRE
@@ -565,7 +611,7 @@ func _registry_to_ball_type(registry_type: int) -> int:
 		14: return 14  # DARK -> DARK
 		15: return 15  # CELL -> CELL
 		16: return 16  # CHARM -> CHARM
-		17: return 17  # LASER -> LASER
+		# 17, 18: LASER_H/LASER_V are instant types, handled by _spawn_lazer_line()
 	return 0
 
 
