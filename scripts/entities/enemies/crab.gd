@@ -28,7 +28,8 @@ func _ready() -> void:
 func _move(delta: float) -> void:
 	# Side-to-side movement with slower descent
 	var horizontal := _side_speed * _move_direction
-	var vertical := speed * _down_speed_factor
+	# Combine individual speed with world scroll (BallxPit-style)
+	var vertical := (speed * _down_speed_factor) + GameManager.get_world_scroll_speed()
 
 	# Bounce off screen edges
 	var viewport_width: float = 720.0  # Hardcoded for now

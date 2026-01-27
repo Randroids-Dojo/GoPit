@@ -28,7 +28,9 @@ func _move(delta: float) -> void:
 	var target_x: float = _base_x + sin(_zigzag_time * _zigzag_frequency * TAU) * _zigzag_amplitude
 	var dx: float = (target_x - global_position.x) * 5.0 * delta
 
-	velocity = Vector2(dx / delta if delta > 0 else 0, speed)
+	# Combine individual speed with world scroll (BallxPit-style)
+	var vertical := speed + GameManager.get_world_scroll_speed()
+	velocity = Vector2(dx / delta if delta > 0 else 0, vertical)
 	move_and_slide()
 
 

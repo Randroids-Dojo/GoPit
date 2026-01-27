@@ -30,7 +30,8 @@ func _move(delta: float) -> void:
 	_wobble_offset += _wobble_speed * delta
 
 	var horizontal := sin(_wobble_offset) * _wobble_amplitude * delta * 60.0
-	var vertical := speed
+	# Combine individual speed with world scroll (BallxPit-style)
+	var vertical := speed + GameManager.get_world_scroll_speed()
 
 	velocity = Vector2(horizontal, vertical)
 	move_and_slide()

@@ -42,12 +42,33 @@ const SWARM_GROUP_SIZE_MAX: int = 5
 
 var _spawn_timer: Timer
 var _screen_width: float
+var _active_formations: Array[FormationGroup] = []  # Track active formation groups
 
 
 func _ready() -> void:
 	add_to_group("enemy_spawner")
 	_screen_width = get_viewport().get_visible_rect().size.x
 	_setup_timer()
+
+
+func _physics_process(delta: float) -> void:
+	# Update active formations
+	_update_formations(delta)
+
+
+func _update_formations(delta: float) -> void:
+	"""Update all active formations and clean up dissolved ones"""
+	var formations_to_remove: Array[FormationGroup] = []
+
+	for formation in _active_formations:
+		if formation.is_active and formation.has_active_members():
+			formation.update(delta)
+		else:
+			formations_to_remove.append(formation)
+
+	# Remove inactive formations
+	for formation in formations_to_remove:
+		_active_formations.erase(formation)
 
 
 func _setup_timer() -> void:
@@ -67,7 +88,10 @@ func stop_spawning() -> void:
 
 func _start_spawn_timer() -> void:
 	var variance := randf_range(-spawn_variance, spawn_variance)
-	var next_spawn := maxf(0.3, spawn_interval + variance)
+	var base_spawn := spawn_interval + variance
+	# Apply difficulty spawn rate multiplier (higher difficulty = faster spawns = shorter interval)
+	var difficulty_mult := GameManager.get_difficulty_spawn_rate_multiplier()
+	var next_spawn := maxf(0.3, base_spawn / difficulty_mult)
 	_spawn_timer.wait_time = next_spawn
 	_spawn_timer.start()
 
@@ -246,25 +270,45 @@ func _choose_formation_for_wave(wave: int) -> Formation:
 
 func spawn_formation(formation: Formation, count: int = 0) -> Array[EnemyBase]:
 	"""Spawn enemies in the specified formation. Returns array of spawned enemies."""
+	var enemies: Array[EnemyBase] = []
+
 	match formation:
 		Formation.SINGLE:
 			var enemy := spawn_enemy()
 			return [enemy] if enemy else []
 		Formation.LINE:
-			return _spawn_line_formation(count if count > 0 else randi_range(3, 5))
+			enemies = _spawn_line_formation(count if count > 0 else randi_range(3, 5))
 		Formation.V_SHAPE:
-			return _spawn_v_formation(count if count > 0 else randi_range(5, 7))
+			enemies = _spawn_v_formation(count if count > 0 else randi_range(5, 7))
 		Formation.ARROW:
-			return _spawn_arrow_formation(count if count > 0 else randi_range(5, 7))
+			enemies = _spawn_arrow_formation(count if count > 0 else randi_range(5, 7))
 		Formation.CLUSTER:
-			return _spawn_cluster_formation(count if count > 0 else randi_range(3, 5))
+			enemies = _spawn_cluster_formation(count if count > 0 else randi_range(3, 5))
 		Formation.DIAGONAL:
-			return _spawn_diagonal_formation(count if count > 0 else randi_range(3, 5))
+			enemies = _spawn_diagonal_formation(count if count > 0 else randi_range(3, 5))
 		Formation.STAGGERED_ROWS:
-			return _spawn_staggered_formation(count if count > 0 else randi_range(6, 8))
+			enemies = _spawn_staggered_formation(count if count > 0 else randi_range(6, 8))
 		Formation.WALL:
-			return _spawn_wall_formation(count if count > 0 else randi_range(8, 12))
-	return []
+			enemies = _spawn_wall_formation(count if count > 0 else randi_range(8, 12))
+
+	# Create formation group for cohesive movement (except SINGLE)
+	if enemies.size() > 1:
+		_create_formation_group(enemies)
+
+	return enemies
+
+
+func _create_formation_group(enemies: Array[EnemyBase]) -> void:
+	"""Create a formation group to keep enemies moving together"""
+	var formation := FormationGroup.new()
+	formation.setup(enemies)
+	formation.formation_dissolved.connect(_on_formation_dissolved)
+	_active_formations.append(formation)
+
+
+func _on_formation_dissolved(group: FormationGroup) -> void:
+	"""Handle formation dissolution"""
+	_active_formations.erase(group)
 
 
 func _spawn_line_formation(count: int) -> Array[EnemyBase]:

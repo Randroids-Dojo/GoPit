@@ -34,13 +34,13 @@ const SHOOTING_SPEED_MULT: float = 0.5  # 50% speed while shooting
 var is_shooting: bool = false
 
 # Game speed toggle system (like BallxPit)
-# Press R to cycle: Normal -> Fast -> Fast+2 -> Fast+3 -> Normal
-enum SpeedTier { NORMAL, FAST, FAST_2, FAST_3 }
+# Keys 1/2/3 to set: Slow -> Normal -> Fast
+# Press R to cycle through speeds
+enum SpeedTier { SLOW, NORMAL, FAST }
 const SPEED_TIER_DATA := {
+	SpeedTier.SLOW: {"speed": 0.5, "loot": 1.0, "name": "Slow"},
 	SpeedTier.NORMAL: {"speed": 1.0, "loot": 1.0, "name": "Normal"},
-	SpeedTier.FAST: {"speed": 1.5, "loot": 1.25, "name": "Fast"},
-	SpeedTier.FAST_2: {"speed": 2.5, "loot": 1.5, "name": "Fast+2"},
-	SpeedTier.FAST_3: {"speed": 4.0, "loot": 2.0, "name": "Fast+3"},
+	SpeedTier.FAST: {"speed": 2.0, "loot": 1.5, "name": "Fast"},
 }
 var current_speed_tier: SpeedTier = SpeedTier.NORMAL
 
@@ -737,14 +737,15 @@ func get_movement_speed_mult() -> float:
 # === Game speed toggle system ===
 
 func toggle_speed() -> void:
-	## Cycle to next speed tier (R key)
-	var next_tier := (current_speed_tier + 1) % 4
+	## Cycle to next speed tier (R key): SLOW -> NORMAL -> FAST -> SLOW
+	var next_tier := (current_speed_tier + 1) % 3
 	set_speed_tier(next_tier)
 
 
 func set_speed_tier(tier: int) -> void:
-	## Set specific speed tier (0-3)
-	tier = clampi(tier, 0, 3)
+	## Set specific speed tier (0=SLOW, 1=NORMAL, 2=FAST)
+	## Can be called with keys 1/2/3 (subtract 1 to get tier index)
+	tier = clampi(tier, 0, 2)
 	if current_speed_tier == tier:
 		return
 
@@ -828,6 +829,30 @@ func is_difficulty_unlocked(level: int, stage_index: int) -> bool:
 		return true
 	# Must have beaten previous level on this stage to unlock next
 	return MetaManager.has_beaten_difficulty(stage_index, level - 1)
+
+
+# === World Scroll Speed System ===
+# BallxPit-style continuous scrolling - enemies descend WITH the world scroll
+# Higher difficulty = faster scroll = shorter runs
+
+const BASE_WORLD_SCROLL_SPEED: float = 50.0  # Base scroll speed in px/sec
+
+var world_scroll_speed: float = BASE_WORLD_SCROLL_SPEED
+
+
+func get_world_scroll_speed() -> float:
+	## Returns the effective world scroll speed (base × difficulty multiplier)
+	## This is added to enemy descent speed and affects gem drift
+	return world_scroll_speed * get_difficulty_scroll_multiplier()
+
+
+func get_difficulty_scroll_multiplier() -> float:
+	## Returns scroll speed multiplier based on difficulty level
+	## Level 1 = 1.0x, each level adds 20% more scroll speed
+	## Fast scroll = faster runs, more pressure
+	if selected_difficulty_level <= 1:
+		return 1.0
+	return 1.0 + (0.2 * (selected_difficulty_level - 1))
 
 
 func advance_wave() -> void:
