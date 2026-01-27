@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Level/Stage selection screen - shown after character select
 
-signal stage_selected(stage_index: int)
+signal stage_selected(stage_index: int, difficulty_level: int)
 
 const STAGE_COLORS := [
 	Color(0.102, 0.102, 0.18),  # The Pit - dark blue
@@ -20,6 +20,8 @@ var _stages: Array[Resource] = []
 var _current_index: int = 0
 var _dots: Array[ColorRect] = []
 var _unlocked_stages: int = 1  # Start with first stage unlocked
+var _selected_difficulty: int = 1  # 1-10, selected difficulty for the run
+var _difficulty_buttons: Array[Button] = []
 
 @onready var name_label: Label = $DimBackground/Panel/VBoxContainer/StagePanel/InfoContainer/NameLabel
 @onready var desc_label: Label = $DimBackground/Panel/VBoxContainer/StagePanel/InfoContainer/DescLabel
@@ -32,6 +34,8 @@ var _unlocked_stages: int = 1  # Start with first stage unlocked
 @onready var dots_container: HBoxContainer = $DimBackground/Panel/VBoxContainer/NavContainer/DotsContainer
 @onready var locked_overlay: ColorRect = $DimBackground/Panel/LockedOverlay
 @onready var lock_label: Label = $DimBackground/Panel/LockedOverlay/LockLabel
+@onready var difficulty_container: HBoxContainer = get_node_or_null("DimBackground/Panel/VBoxContainer/DifficultySection/DifficultyContainer")
+@onready var difficulty_label: Label = get_node_or_null("DimBackground/Panel/VBoxContainer/DifficultySection/DifficultyLabel")
 
 
 func _ready() -> void:
@@ -39,6 +43,7 @@ func _ready() -> void:
 	_load_stages()
 	_load_progress()
 	_create_dots()
+	_create_difficulty_buttons()
 	_connect_signals()
 	_update_display()
 	visible = false
@@ -77,6 +82,30 @@ func _create_dots() -> void:
 		_dots.append(dot)
 
 
+func _create_difficulty_buttons() -> void:
+	if not difficulty_container:
+		return
+
+	for i in range(GameManager.MAX_DIFFICULTY_LEVEL):
+		var level := i + 1
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(42, 42)
+		btn.text = str(level)
+		btn.pressed.connect(_on_difficulty_selected.bind(level))
+		difficulty_container.add_child(btn)
+		_difficulty_buttons.append(btn)
+
+
+func _on_difficulty_selected(level: int) -> void:
+	if not GameManager.is_difficulty_unlocked(level, _current_index):
+		SoundManager.play(SoundManager.SoundType.BLOCKED)
+		return
+
+	_selected_difficulty = level
+	SoundManager.play(SoundManager.SoundType.HIT_WALL)
+	_update_difficulty_display()
+
+
 func _connect_signals() -> void:
 	prev_button.pressed.connect(_on_prev_pressed)
 	next_button.pressed.connect(_on_next_pressed)
@@ -86,6 +115,7 @@ func _connect_signals() -> void:
 func show_select() -> void:
 	visible = true
 	_load_progress()  # Refresh in case progress changed
+	_selected_difficulty = 1  # Reset to level 1 when opening
 	_update_display()
 
 
@@ -110,8 +140,11 @@ func _on_start_pressed() -> void:
 		SoundManager.play(SoundManager.SoundType.BLOCKED)
 		return
 
+	# Set the selected difficulty in GameManager before starting
+	GameManager.set_difficulty_level(_selected_difficulty)
+
 	SoundManager.play(SoundManager.SoundType.LEVEL_UP)
-	stage_selected.emit(_current_index)
+	stage_selected.emit(_current_index, _selected_difficulty)
 	hide_select()
 
 
@@ -160,6 +193,65 @@ func _update_display() -> void:
 	# Update start button
 	start_button.disabled = not is_unlocked
 
+	# Update difficulty selection (reset to highest unlocked when switching stages)
+	_selected_difficulty = _get_smart_default_difficulty()
+	_update_difficulty_display()
+
+
+func _get_smart_default_difficulty() -> int:
+	# Default to highest unlocked difficulty for this stage, capped at 1 above beaten
+	var highest_beaten := MetaManager.get_highest_difficulty_for_stage(_current_index) if MetaManager else 0
+	# Start at the next challenge level (or 1 if never beaten)
+	return mini(highest_beaten + 1, GameManager.MAX_DIFFICULTY_LEVEL)
+
+
+func _update_difficulty_display() -> void:
+	if _difficulty_buttons.is_empty():
+		return
+
+	var highest_unlocked := _get_highest_unlocked_difficulty()
+
+	# Update each difficulty button
+	for i in range(_difficulty_buttons.size()):
+		var level := i + 1
+		var btn := _difficulty_buttons[i]
+		var is_unlocked := level <= highest_unlocked
+
+		btn.disabled = not is_unlocked
+
+		# Style: selected, unlocked, or locked
+		if level == _selected_difficulty:
+			btn.modulate = Color(1, 0.9, 0.3)  # Gold for selected
+		elif is_unlocked:
+			btn.modulate = Color(1, 1, 1)  # Normal for unlocked
+		else:
+			btn.modulate = Color(0.4, 0.4, 0.4)  # Gray for locked
+
+	# Update difficulty info label
+	if difficulty_label:
+		var diff_name: String = GameManager.DIFFICULTY_NAMES.get(_selected_difficulty, "Unknown")
+		var hp_mult := _get_difficulty_hp_multiplier(_selected_difficulty)
+		var xp_mult := _get_difficulty_xp_multiplier(_selected_difficulty)
+		difficulty_label.text = "%s  (HP x%.1f, XP x%.1f)" % [diff_name, hp_mult, xp_mult]
+
+
+func _get_highest_unlocked_difficulty() -> int:
+	# Difficulty N is unlocked if we've beaten N-1 on this stage
+	var highest_beaten := MetaManager.get_highest_difficulty_for_stage(_current_index) if MetaManager else 0
+	return mini(highest_beaten + 1, GameManager.MAX_DIFFICULTY_LEVEL)
+
+
+func _get_difficulty_hp_multiplier(level: int) -> float:
+	if level <= 1:
+		return 1.0
+	return pow(GameManager.DIFFICULTY_SCALE_PER_LEVEL, level - 1)
+
+
+func _get_difficulty_xp_multiplier(level: int) -> float:
+	if level <= 1:
+		return 1.0
+	return 1.0 + (GameManager.DIFFICULTY_XP_BONUS_PER_LEVEL * (level - 1))
+
 
 func _get_stage_description(index: int) -> String:
 	match index:
@@ -176,3 +268,7 @@ func _get_stage_description(index: int) -> String:
 
 func get_selected_stage() -> int:
 	return _current_index
+
+
+func get_selected_difficulty() -> int:
+	return _selected_difficulty

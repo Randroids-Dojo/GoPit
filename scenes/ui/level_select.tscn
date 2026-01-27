@@ -115,6 +115,29 @@ theme_override_font_sizes/font_size = 16
 text = "Waves: 10 + Boss"
 horizontal_alignment = 1
 
+[node name="DifficultySection" type="VBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DifficultyTitle" type="Label" parent="DimBackground/Panel/VBoxContainer/DifficultySection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "SPEED LEVEL"
+horizontal_alignment = 1
+
+[node name="DifficultyContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer/DifficultySection"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 4
+
+[node name="DifficultyLabel" type="Label" parent="DimBackground/Panel/VBoxContainer/DifficultySection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Normal  (HP x1.0, XP x1.0)"
+horizontal_alignment = 1
+
 [node name="NavContainer" type="HBoxContainer" parent="DimBackground/Panel/VBoxContainer"]
 layout_mode = 2
 alignment = 1
