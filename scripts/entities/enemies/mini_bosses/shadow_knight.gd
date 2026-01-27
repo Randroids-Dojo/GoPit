@@ -7,7 +7,7 @@ func _ready() -> void:
 	mini_boss_name = "Shadow Knight"
 	max_hp = 350
 	hp = 350
-	speed = 55.0
+	speed = 33.0
 	damage_to_player = 28
 	xp_value = 70
 	attack_cooldown = 2.0

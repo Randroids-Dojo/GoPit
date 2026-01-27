@@ -256,11 +256,15 @@ func _on_dual_character_selected(primary: Resource, secondary: Resource) -> void
 		GameManager.start_game()
 
 
-func _on_stage_selected(stage_index: int) -> void:
+func _on_stage_selected(stage_index: int, difficulty_level: int = 1) -> void:
 	# Set starting stage in StageManager
 	if StageManager:
 		StageManager.current_stage = stage_index
 		StageManager._apply_biome()
+
+	# Difficulty is already set in level_select.gd before emitting signal
+	# but ensure it's applied if called directly
+	GameManager.set_difficulty_level(difficulty_level)
 
 	# Start the game
 	GameManager.start_game()
@@ -893,6 +897,9 @@ func _on_boss_defeated() -> void:
 		MetaManager.record_stage_completion(StageManager.current_stage, character_name)
 		# Also record for backwards compatibility
 		MetaManager.record_stage_cleared(StageManager.current_stage + 1)  # cleared is 1-indexed
+		# Record difficulty completion for speed level unlocking
+		var current_difficulty := GameManager.get_difficulty_level()
+		MetaManager.record_difficulty_completion(character_name, StageManager.current_stage, current_difficulty)
 
 	# Wait a moment then show stage complete
 	await get_tree().create_timer(1.5).timeout

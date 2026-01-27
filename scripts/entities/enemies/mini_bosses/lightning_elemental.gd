@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Lightning Elemental"
 	max_hp = 260
 	hp = 260
-	speed = 70.0
+	speed = 42.0
 	damage_to_player = 22
 	xp_value = 72
 	attack_cooldown = 1.8

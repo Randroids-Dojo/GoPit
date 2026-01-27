@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Nightmare"
 	max_hp = 450
 	hp = 450
-	speed = 60.0
+	speed = 36.0
 	damage_to_player = 32
 	xp_value = 90
 	attack_cooldown = 1.8

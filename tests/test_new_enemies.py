@@ -103,8 +103,8 @@ async def test_swarm_fast_speed(game):
 
     speed = await game.get_property(enemy_path, "speed")
 
-    # Swarm has 1.6x speed (base is 100, so ~160)
-    assert speed > 140, f"Swarm should be fast, got {speed}"
+    # Swarm has 1.6x speed (base is 60, so ~96)
+    assert speed > 80, f"Swarm should be fast, got {speed}"
 
     await game.call(enemy_path, "queue_free")
 
@@ -191,8 +191,8 @@ async def test_bomber_fast_speed(game):
 
     speed = await game.get_property(enemy_path, "speed")
 
-    # Bomber has 1.2x speed
-    assert speed > 100, f"Bomber should be fast, got {speed}"
+    # Bomber has 1.2x speed (base is 60, so ~72)
+    assert speed > 65, f"Bomber should be fast, got {speed}"
 
     await game.call(enemy_path, "queue_free")
 

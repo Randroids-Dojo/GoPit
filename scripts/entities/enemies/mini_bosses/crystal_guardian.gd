@@ -7,7 +7,7 @@ func _ready() -> void:
 	mini_boss_name = "Crystal Guardian"
 	max_hp = 380
 	hp = 380
-	speed = 30.0
+	speed = 18.0
 	damage_to_player = 28
 	xp_value = 78
 	attack_cooldown = 2.5

@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Storm Harpy"
 	max_hp = 220
 	hp = 220
-	speed = 85.0
+	speed = 51.0
 	damage_to_player = 18
 	xp_value = 68
 	attack_cooldown = 1.6

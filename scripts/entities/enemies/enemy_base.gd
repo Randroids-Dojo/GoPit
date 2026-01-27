@@ -54,7 +54,7 @@ const WIND_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/wind_par
 const CHARM_PARTICLES_SCENE: PackedScene = preload("res://scenes/effects/charm_particles.tscn")
 
 @export var max_hp: int = 10
-@export var speed: float = 100.0
+@export var speed: float = 60.0  # Slower base speed for BallxPit-style pacing
 @export var damage_to_player: int = 10
 @export var xp_value: int = 10
 

@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Frost Golem"
 	max_hp = 250
 	hp = 250
-	speed = 40.0
+	speed = 24.0
 	damage_to_player = 20
 	xp_value = 55
 	attack_cooldown = 2.8
