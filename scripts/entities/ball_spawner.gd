@@ -4,9 +4,6 @@ extends Node2D
 ## Ball Return Mechanic: Balls return when reaching bottom of screen
 ## Queue System: Balls fire one at a time from a queue (BallxPit style)
 
-# Preload LazerLine script to avoid class_name loading order issues in CI
-const LazerLineScript = preload("res://scripts/entities/lazer_line.gd")
-
 signal ball_spawned(ball: Node2D)
 signal ball_returned  # Emitted when a ball returns to player
 signal ball_caught  # Emitted when a ball is caught (active play bonus)
@@ -493,7 +490,8 @@ func _spawn_lazer_line(registry_ball_type: int) -> void:
 	if not player:
 		return
 
-	# Create LazerLine instance using preloaded script (avoids class_name loading issues in CI)
+	# Load LazerLine script lazily to avoid class_name loading order issues in CI
+	var LazerLineScript: GDScript = load("res://scripts/entities/lazer_line.gd")
 	var lazer: Node2D = LazerLineScript.new()
 
 	# Set orientation based on ball type
