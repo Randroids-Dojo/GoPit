@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Gem Spider"
 	max_hp = 300
 	hp = 300
-	speed = 55.0
+	speed = 33.0
 	damage_to_player = 22
 	xp_value = 75
 	attack_cooldown = 2.0

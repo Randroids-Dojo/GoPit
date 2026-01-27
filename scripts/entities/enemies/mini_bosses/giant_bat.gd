@@ -10,7 +10,7 @@ func _ready() -> void:
 	mini_boss_name = "Giant Bat"
 	max_hp = 150
 	hp = 150
-	speed = 80.0
+	speed = 48.0
 	damage_to_player = 15
 	xp_value = 40
 	attack_cooldown = 2.0

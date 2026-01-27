@@ -11,7 +11,7 @@ func _ready() -> void:
 	mini_boss_name = "Elite Slime"
 	max_hp = 200
 	hp = 200
-	speed = 60.0
+	speed = 36.0
 	damage_to_player = 20
 	xp_value = 50
 	attack_cooldown = 2.5

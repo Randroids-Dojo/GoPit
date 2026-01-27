@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Abyss Watcher"
 	max_hp = 400
 	hp = 400
-	speed = 40.0
+	speed = 24.0
 	damage_to_player = 30
 	xp_value = 85
 	attack_cooldown = 2.2

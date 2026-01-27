@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Void Spawn"
 	max_hp = 300
 	hp = 300
-	speed = 45.0
+	speed = 27.0
 	damage_to_player = 25
 	xp_value = 65
 	attack_cooldown = 2.2

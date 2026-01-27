@@ -9,7 +9,7 @@ func _ready() -> void:
 	mini_boss_name = "Ice Wraith"
 	max_hp = 180
 	hp = 180
-	speed = 70.0
+	speed = 42.0
 	damage_to_player = 18
 	xp_value = 50
 	attack_cooldown = 2.0

@@ -7,7 +7,7 @@ func _ready() -> void:
 	mini_boss_name = "Swamp Horror"
 	max_hp = 280
 	hp = 280
-	speed = 35.0
+	speed = 21.0
 	damage_to_player = 25
 	xp_value = 65
 	attack_cooldown = 2.5

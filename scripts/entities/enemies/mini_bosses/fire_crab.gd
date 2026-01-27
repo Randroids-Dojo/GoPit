@@ -7,7 +7,7 @@ func _ready() -> void:
 	mini_boss_name = "Fire Crab"
 	max_hp = 280
 	hp = 280
-	speed = 35.0
+	speed = 21.0
 	damage_to_player = 22
 	xp_value = 60
 	attack_cooldown = 2.5

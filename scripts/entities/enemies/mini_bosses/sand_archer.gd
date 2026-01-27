@@ -7,7 +7,7 @@ func _ready() -> void:
 	mini_boss_name = "Sand Archer"
 	max_hp = 200
 	hp = 200
-	speed = 50.0
+	speed = 30.0
 	damage_to_player = 18
 	xp_value = 55
 	attack_cooldown = 1.8

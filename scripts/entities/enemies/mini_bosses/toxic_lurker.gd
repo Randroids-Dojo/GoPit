@@ -7,7 +7,7 @@ func _ready() -> void:
 	mini_boss_name = "Toxic Lurker"
 	max_hp = 320
 	hp = 320
-	speed = 40.0
+	speed = 24.0
 	damage_to_player = 22
 	xp_value = 70
 	attack_cooldown = 2.3
