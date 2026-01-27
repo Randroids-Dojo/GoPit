@@ -31,7 +31,8 @@ enum BallType {
 	DARK,
 	CELL,
 	CHARM,
-	LASER
+	LASER_H,  # Horizontal Lazer - instant line at player Y position
+	LASER_V   # Vertical Lazer - instant line at player X position
 }
 
 const BALL_DATA := {
@@ -188,14 +189,25 @@ const BALL_DATA := {
 		"color": Color(1.0, 0.4, 0.8),  # Pink/magenta
 		"effect": "charm"
 	},
-	BallType.LASER: {
-		"name": "Laser",
-		"description": "Row/column AoE damage",
-		"base_damage": 7,
-		"speed_multiplier": 1.1,  # Slightly fast (880/800)
-		"cooldown": 0.5,  # Moderate cooldown since it's AoE
+	BallType.LASER_H: {
+		"name": "Laser H",
+		"description": "Instant horizontal line at player position",
+		"base_damage": 12,
+		"speed_multiplier": 0.0,  # Not a projectile - instant effect
+		"cooldown": 0.8,  # Longer cooldown for powerful AoE
 		"color": Color(1.0, 0.1, 0.1),  # Bright red
-		"effect": "laser"
+		"effect": "laser_h",
+		"is_instant": true  # Flag indicating this is not a projectile
+	},
+	BallType.LASER_V: {
+		"name": "Laser V",
+		"description": "Instant vertical line at player position",
+		"base_damage": 12,
+		"speed_multiplier": 0.0,  # Not a projectile - instant effect
+		"cooldown": 0.8,  # Longer cooldown for powerful AoE
+		"color": Color(0.1, 0.5, 1.0),  # Blue (different from horizontal)
+		"effect": "laser_v",
+		"is_instant": true  # Flag indicating this is not a projectile
 	}
 }
 
@@ -331,6 +343,19 @@ func get_cooldown(ball_type: BallType) -> float:
 	"""Get cooldown time in seconds for a ball type (0.0 = no cooldown)"""
 	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
 	return data.get("cooldown", 0.0)
+
+
+func is_instant_type(ball_type: BallType) -> bool:
+	"""Check if a ball type is instant-fire (like Lazer) rather than a projectile.
+	Instant types create immediate effects at player position instead of spawning balls."""
+	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
+	return data.get("is_instant", false)
+
+
+func get_effect(ball_type: BallType) -> String:
+	"""Get the effect type string for a ball type"""
+	var data: Dictionary = BALL_DATA.get(ball_type, BALL_DATA[BallType.BASIC])
+	return data.get("effect", "none")
 
 
 func get_color(ball_type: BallType) -> Color:
