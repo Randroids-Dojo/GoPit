@@ -9,6 +9,8 @@ extends Control
 @onready var xp_bar: ProgressBar = $XPBarContainer/XPBar
 @onready var level_label: Label = $XPBarContainer/LevelLabel
 @onready var fission_counter: Label = $FissionCounter
+@onready var boss_progress_bar: ProgressBar = get_node_or_null("BossProgressContainer/BossProgressBar")
+@onready var boss_label: Label = get_node_or_null("BossProgressContainer/BossLabel")
 
 var pause_overlay: CanvasLayer
 
@@ -26,6 +28,7 @@ func _ready() -> void:
 	_update_hp()
 	_update_wave()
 	_update_xp()
+	_update_boss_progress()
 
 	# Hide fission counter initially (shows when first fission used)
 	if fission_counter:
@@ -84,6 +87,7 @@ func _process(_delta: float) -> void:
 	_update_hp()
 	_update_wave()
 	_update_xp()
+	_update_boss_progress()
 
 
 func _update_hp() -> void:
@@ -109,10 +113,34 @@ func _update_xp() -> void:
 		level_label.text = "Lv.%d" % GameManager.player_level
 
 
+func _update_boss_progress() -> void:
+	if not boss_progress_bar:
+		return
+
+	var waves_before_boss: int = StageManager.current_biome.waves_before_boss if StageManager.current_biome else 10
+	var current_wave: int = StageManager.wave_in_stage
+
+	boss_progress_bar.max_value = waves_before_boss
+	boss_progress_bar.value = current_wave
+
+	# Update label based on progress
+	if boss_label:
+		if current_wave >= waves_before_boss:
+			boss_label.text = "BOSS!"
+			boss_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.2))
+		elif current_wave >= waves_before_boss * 0.8:
+			boss_label.text = "BOSS"
+			boss_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.2))
+		else:
+			boss_label.text = "BOSS"
+			boss_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+
+
 func _on_state_changed(_old_state: GameManager.GameState, _new_state: GameManager.GameState) -> void:
 	_update_hp()
 	_update_wave()
 	_update_xp()
+	_update_boss_progress()
 
 
 func _on_fission_upgrades_changed(total: int) -> void:

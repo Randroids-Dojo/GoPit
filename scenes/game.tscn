@@ -36,6 +36,20 @@ size = Vector2(20, 1280)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player_zone"]
 size = Vector2(720, 80)
 
+[sub_resource type="StyleBoxFlat" id="boss_progress_fill"]
+bg_color = Color(0.9, 0.4, 0.1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="boss_progress_bg"]
+bg_color = Color(0.15, 0.12, 0.1, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [node name="Game" type="Node2D" groups=["game"]]
 script = ExtResource("1_controller")
 
@@ -163,6 +177,43 @@ layout_mode = 2
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "||"
+
+[node name="BossProgressContainer" type="MarginContainer" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 20.0
+offset_top = 95.0
+offset_right = -20.0
+offset_bottom = 115.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_right = 0
+
+[node name="BossProgressBar" type="ProgressBar" parent="UI/HUD/BossProgressContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/fill = SubResource("boss_progress_fill")
+theme_override_styles/background = SubResource("boss_progress_bg")
+max_value = 10.0
+value = 1.0
+show_percentage = false
+
+[node name="BossLabel" type="Label" parent="UI/HUD/BossProgressContainer"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -10.0
+offset_bottom = 10.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "BOSS"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="XPBarContainer" type="MarginContainer" parent="UI/HUD"]
 layout_mode = 1
