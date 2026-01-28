@@ -37,7 +37,9 @@ func _ready() -> void:
 func _move(delta: float) -> void:
 	# Descend until reaching hover position
 	if not _is_hovering and global_position.y < HOVER_Y:
-		velocity = Vector2.DOWN * speed
+		# Combine individual speed with world scroll (BallxPit-style)
+		var total_descent := speed + GameManager.get_world_scroll_speed()
+		velocity = Vector2.DOWN * total_descent
 		move_and_slide()
 	else:
 		_is_hovering = true

@@ -14,6 +14,9 @@ extends Control
 
 var pause_overlay: CanvasLayer
 
+# Speed indicator (dynamically created)
+var speed_indicator: Label = null
+
 # Fusion ready indicator (dynamically created)
 var fusion_ready_label: Label = null
 var _fusion_ready_tween: Tween = null
@@ -63,6 +66,10 @@ func _ready() -> void:
 
 	# Create fusion ready indicator
 	_create_fusion_ready_indicator()
+
+	# Create speed indicator
+	_create_speed_indicator()
+	GameManager.speed_tier_changed.connect(_on_speed_tier_changed)
 
 
 func _on_mute_pressed() -> void:
@@ -260,3 +267,55 @@ func _start_pulse_animation() -> void:
 	_fusion_ready_tween.parallel().tween_property(fusion_ready_label, "modulate", Color(1.2, 1.0, 1.2, 1.0), 0.5).set_ease(Tween.EASE_IN_OUT)
 	_fusion_ready_tween.tween_property(fusion_ready_label, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_IN_OUT)
 	_fusion_ready_tween.parallel().tween_property(fusion_ready_label, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.5).set_ease(Tween.EASE_IN_OUT)
+
+
+# ===== SPEED INDICATOR =====
+
+func _create_speed_indicator() -> void:
+	"""Create the speed indicator label dynamically"""
+	speed_indicator = Label.new()
+	speed_indicator.name = "SpeedIndicator"
+
+	# Style the label
+	speed_indicator.add_theme_font_size_override("font_size", 16)
+	speed_indicator.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0))
+	speed_indicator.add_theme_constant_override("outline_size", 2)
+
+	# Position next to pause button (top-right area)
+	speed_indicator.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	speed_indicator.position = Vector2(-120, 12)  # Left of pause button
+	speed_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+	add_child(speed_indicator)
+
+	# Set initial text
+	_update_speed_indicator()
+
+
+func _on_speed_tier_changed(_tier: int, _multiplier: float, _loot_bonus: float) -> void:
+	"""Handle speed tier change signal"""
+	_update_speed_indicator()
+
+
+func _update_speed_indicator() -> void:
+	"""Update the speed indicator text and color"""
+	if not speed_indicator:
+		return
+
+	var speed_name := GameManager.get_speed_tier_name()
+	var speed_mult := GameManager.get_speed_multiplier()
+
+	# Show multiplier value
+	speed_indicator.text = "%sx" % [speed_mult]
+
+	# Color based on speed: blue for slow, white for normal, orange for fast
+	match GameManager.current_speed_tier:
+		GameManager.SpeedTier.SLOW:
+			speed_indicator.add_theme_color_override("font_color", Color(0.5, 0.7, 1.0))  # Light blue
+			speed_indicator.text = "0.5x"  # Show as fraction
+		GameManager.SpeedTier.NORMAL:
+			speed_indicator.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))  # White
+			speed_indicator.text = "1x"
+		GameManager.SpeedTier.FAST:
+			speed_indicator.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))  # Orange
+			speed_indicator.text = "2x"

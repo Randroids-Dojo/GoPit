@@ -21,7 +21,9 @@ var last_aim_direction: Vector2 = Vector2.UP  # Default aim upward
 var _speed_modifier: float = 1.0
 
 # Game bounds (set by game_controller)
-var bounds_min: Vector2 = Vector2(30, 280)  # Left wall + some padding, top area (below enlarged TopBar)
+# Expanded vertical range: Y 100-1080 instead of 280-1080 (BallxPit-style free movement)
+# This allows players to chase gems and intercept enemies higher up
+var bounds_min: Vector2 = Vector2(30, 100)  # Left wall + padding, top area (allows reaching higher)
 var bounds_max: Vector2 = Vector2(690, 1080)  # Right wall - padding, above input area (controls start at y=1110)
 
 # Invincibility blinking

@@ -63,7 +63,11 @@ var _telegraph_indicator: Node2D = null
 
 func _ready() -> void:
 	# Don't call super._ready() to avoid wave scaling for bosses
-	# Bosses have fixed stats per boss type
+	# Bosses have fixed stats per boss type, but still apply difficulty multipliers
+	# Apply difficulty HP multiplier (bosses should scale with difficulty)
+	max_hp = int(max_hp * GameManager.get_difficulty_enemy_hp_multiplier())
+	# Apply difficulty damage multiplier
+	damage_to_player = int(damage_to_player * GameManager.get_difficulty_enemy_damage_multiplier())
 	hp = max_hp
 	_base_speed = speed
 	_setup_collision()

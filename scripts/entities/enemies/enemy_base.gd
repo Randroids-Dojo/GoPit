@@ -81,10 +81,14 @@ func _scale_with_wave() -> void:
 	max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
 	# Apply post-boss HP spike (~3x per boss defeated)
 	max_hp = int(max_hp * StageManager.get_post_boss_hp_multiplier())
+	# Apply difficulty HP multiplier (compounds: L2=1.5x, L3=2.25x, L5=5x, L10=38x)
+	max_hp = int(max_hp * GameManager.get_difficulty_enemy_hp_multiplier())
 	# Scale speed: +5% per wave (capped at 2x)
 	speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
 	# Scale XP: +5% per wave
 	xp_value = int(xp_value * (1.0 + (wave - 1) * 0.05))
+	# Apply difficulty damage multiplier to enemy attacks
+	damage_to_player = int(damage_to_player * GameManager.get_difficulty_enemy_damage_multiplier())
 
 
 func _physics_process(delta: float) -> void:
@@ -141,8 +145,21 @@ func _setup_collision() -> void:
 
 
 func _move(_delta: float) -> void:
+	# Skip normal movement if part of a formation (formation handles positioning)
+	if has_meta("formation_member"):
+		# Only leader moves, followers are repositioned by FormationGroup.update()
+		var formation_group = get_meta("formation_group") if has_meta("formation_group") else null
+		if formation_group and formation_group.leader == self:
+			# Leader moves, followers will be repositioned by FormationGroup
+			var total_descent_speed := speed + GameManager.get_world_scroll_speed()
+			velocity = Vector2.DOWN * total_descent_speed
+			move_and_slide()
+		return
+
 	# Override in subclasses for specific movement patterns
-	velocity = Vector2.DOWN * speed
+	# Combine individual enemy speed with world scroll speed (BallxPit-style)
+	var total_descent_speed := speed + GameManager.get_world_scroll_speed()
+	velocity = Vector2.DOWN * total_descent_speed
 	move_and_slide()
 
 

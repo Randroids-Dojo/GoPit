@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=29 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://biome_transition_scene" path="res://scenes/ui/biome_transition.tscn" id="biome_transition"]
@@ -29,6 +29,7 @@
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 [ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
 [ext_resource type="Script" path="res://scripts/ui/queue_display.gd" id="queue_display"]
+[ext_resource type="PackedScene" path="res://scenes/effects/parallax_background.tscn" id="parallax_bg"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
@@ -60,6 +61,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.102, 0.102, 0.18, 1)
+
+[node name="ParallaxBackground" parent="." instance=ExtResource("parallax_bg")]
 
 [node name="GameCamera" type="Camera2D" parent="." groups=["game_camera"]]
 position = Vector2(360, 640)

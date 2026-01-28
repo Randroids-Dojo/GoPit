@@ -5,9 +5,10 @@ signal collected(gem: Node2D)
 
 ## Gem movement modes to simulate different collection difficulty
 enum GemMovementMode {
-	FALL_DOWN,   ## Default: gems fall toward player (easier)
-	DRIFT_UP,    ## BallxPit-style: gems drift away from player (harder)
-	STATIONARY   ## Gems stay where they spawn (hardest)
+	FALL_DOWN,      ## Default: gems fall toward player (easier)
+	DRIFT_UP,       ## BallxPit-style: gems drift away from player (harder)
+	STATIONARY,     ## Gems stay where they spawn (hardest)
+	WORLD_RELATIVE  ## Gems are stationary in world coords, move with scroll (BallxPit authentic)
 }
 
 @export var xp_value: int = 10
@@ -115,17 +116,28 @@ func _draw() -> void:
 
 
 func _apply_movement(delta: float) -> void:
-	"""Apply movement based on current mode"""
+	"""Apply movement based on current mode, integrating world scroll speed"""
+	var world_scroll := GameManager.get_world_scroll_speed()
+
 	match movement_mode:
 		GemMovementMode.FALL_DOWN:
 			# Classic: gems fall toward player (easier collection)
-			position.y += base_speed * delta
+			# Falls at base_speed + partial world scroll effect
+			position.y += (base_speed + world_scroll * 0.3) * delta
 		GemMovementMode.DRIFT_UP:
 			# BallxPit-style: gems drift away from player (harder collection)
-			position.y -= base_speed * delta
+			# Gem drifts up, but world scroll reduces the net upward movement
+			# Higher difficulty = faster scroll = less effective upward drift = more pressure
+			var net_drift := base_speed - (world_scroll * 0.5)
+			position.y -= net_drift * delta
 		GemMovementMode.STATIONARY:
-			# Gems stay in place (player must come to them)
+			# Gems stay in screen position (player must come to them)
 			pass
+		GemMovementMode.WORLD_RELATIVE:
+			# BallxPit authentic: gems are stationary in world coords
+			# As world scrolls (enemies moving down), gems appear to rise relative to player
+			# Creates pressure: gems drift off top of screen if not collected
+			position.y += world_scroll * delta
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -200,3 +212,8 @@ static func set_fall_down_mode() -> void:
 static func set_stationary_mode() -> void:
 	"""Enable stationary gems (hardest mode)"""
 	movement_mode = GemMovementMode.STATIONARY
+
+
+static func set_world_relative_mode() -> void:
+	"""Enable world-relative mode (authentic BallxPit - gems move with world scroll)"""
+	movement_mode = GemMovementMode.WORLD_RELATIVE

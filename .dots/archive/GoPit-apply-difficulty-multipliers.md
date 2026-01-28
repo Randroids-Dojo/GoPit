@@ -1,9 +1,10 @@
 ---
 title: Apply difficulty multipliers to gameplay
-status: open
+status: closed
 priority: 2
 issue-type: implement
-created-at: "2026-01-27"
+created-at: "\"2026-01-27\""
+closed-at: "2026-01-27T06:59:25.978625+00:00"
 ---
 
 ## Overview

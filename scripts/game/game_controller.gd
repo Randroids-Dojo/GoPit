@@ -22,6 +22,7 @@ extends Node2D
 @onready var character_select: CanvasLayer = $UI/CharacterSelect
 @onready var level_select: CanvasLayer = $UI/LevelSelect
 @onready var background: ColorRect = $Background
+@onready var parallax_bg: Node = get_node_or_null("ParallaxBackground")  # ParallaxBackground type
 @onready var left_wall: StaticBody2D = $GameArea/Walls/LeftWall
 @onready var right_wall: StaticBody2D = $GameArea/Walls/RightWall
 @onready var stage_complete_overlay: CanvasLayer = $UI/StageCompleteOverlay
@@ -593,6 +594,16 @@ func _on_biome_changed(biome: Biome) -> void:
 	if background:
 		background.color = biome.background_color
 
+	# Update parallax background colors for biome
+	if parallax_bg:
+		var far_color := biome.background_color.darkened(0.3)
+		far_color.a = 0.3
+		var mid_color := biome.background_color.darkened(0.1)
+		mid_color.a = 0.2
+		var near_color := biome.background_color.lightened(0.2)
+		near_color.a = 0.15
+		parallax_bg.set_biome_colors(far_color, mid_color, near_color)
+
 	# Update wall colors (via modulate since walls are StaticBody2D)
 	if left_wall:
 		_set_wall_color(left_wall, biome.wall_color)
@@ -1091,6 +1102,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_speed"):
 		if GameManager.current_state == GameManager.GameState.PLAYING:
 			GameManager.toggle_speed()
+
+	# Direct speed tier selection with number keys 1/2/3
+	if event is InputEventKey and event.pressed and not event.echo:
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			match event.keycode:
+				KEY_1:
+					GameManager.set_speed_tier(0)  # SLOW (0.5x)
+				KEY_2:
+					GameManager.set_speed_tier(1)  # NORMAL (1.0x)
+				KEY_3:
+					GameManager.set_speed_tier(2)  # FAST (2.0x)
 
 
 func _input(event: InputEvent) -> void:

@@ -36,6 +36,15 @@ var _difficulty_buttons: Array[Button] = []
 @onready var lock_label: Label = $DimBackground/Panel/LockedOverlay/LockLabel
 @onready var difficulty_container: HBoxContainer = get_node_or_null("DimBackground/Panel/VBoxContainer/DifficultySection/DifficultyContainer")
 @onready var difficulty_label: Label = get_node_or_null("DimBackground/Panel/VBoxContainer/DifficultySection/DifficultyLabel")
+@onready var stage_panel: Control = get_node_or_null("DimBackground/Panel/VBoxContainer/StagePanel")
+
+# Swipe gesture tracking
+var _swipe_start_x: float = 0.0
+var _is_swiping: bool = false
+const SWIPE_THRESHOLD: float = 50.0
+
+# Best difficulty label (dynamically created)
+var _best_label: Label = null
 
 
 func _ready() -> void:
@@ -44,9 +53,46 @@ func _ready() -> void:
 	_load_progress()
 	_create_dots()
 	_create_difficulty_buttons()
+	_create_best_label()
 	_connect_signals()
 	_update_display()
 	visible = false
+
+
+func _create_best_label() -> void:
+	"""Create the 'Best: X' label to show highest beaten difficulty"""
+	_best_label = Label.new()
+	_best_label.name = "BestLabel"
+	_best_label.add_theme_font_size_override("font_size", 18)
+	_best_label.add_theme_color_override("font_color", Color(1, 0.85, 0.3))  # Gold
+	_best_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Add after name_label if it exists
+	if name_label:
+		name_label.get_parent().add_child(_best_label)
+		name_label.get_parent().move_child(_best_label, name_label.get_index() + 1)
+
+
+func _input(event: InputEvent) -> void:
+	"""Handle swipe gestures for mobile navigation"""
+	if not visible:
+		return
+
+	# Touch swipe handling
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_swipe_start_x = event.position.x
+			_is_swiping = true
+		else:
+			_is_swiping = false
+
+	if event is InputEventScreenDrag and _is_swiping:
+		var swipe_distance := event.position.x - _swipe_start_x
+		if abs(swipe_distance) > SWIPE_THRESHOLD:
+			if swipe_distance > 0:
+				_on_prev_pressed()  # Swipe right = previous
+			else:
+				_on_next_pressed()  # Swipe left = next
+			_is_swiping = false  # Prevent multiple triggers
 
 
 func _load_stages() -> void:
@@ -124,15 +170,35 @@ func hide_select() -> void:
 
 
 func _on_prev_pressed() -> void:
-	_current_index = (_current_index - 1 + _stages.size()) % _stages.size()
+	var new_index := (_current_index - 1 + _stages.size()) % _stages.size()
 	SoundManager.play(SoundManager.SoundType.HIT_WALL)
-	_update_display()
+	_animate_stage_transition(new_index)
 
 
 func _on_next_pressed() -> void:
-	_current_index = (_current_index + 1) % _stages.size()
+	var new_index := (_current_index + 1) % _stages.size()
 	SoundManager.play(SoundManager.SoundType.HIT_WALL)
-	_update_display()
+	_animate_stage_transition(new_index)
+
+
+func _animate_stage_transition(new_index: int) -> void:
+	"""Animate smooth transition between stages"""
+	if not stage_panel:
+		# Fallback: no animation
+		_current_index = new_index
+		_update_display()
+		return
+
+	var tween := create_tween()
+	# Fade out current
+	tween.tween_property(stage_panel, "modulate:a", 0.0, 0.1)
+	# Update index
+	tween.tween_callback(func():
+		_current_index = new_index
+		_update_display()
+	)
+	# Fade in new
+	tween.tween_property(stage_panel, "modulate:a", 1.0, 0.1)
 
 
 func _on_start_pressed() -> void:
@@ -166,6 +232,9 @@ func _update_display() -> void:
 	# Update name and description
 	name_label.text = stage.biome_name.to_upper()
 	desc_label.text = _get_stage_description(_current_index)
+
+	# Update best difficulty display
+	_update_best_label()
 
 	# Update waves info
 	waves_label.text = "Waves: " + str(stage.waves_before_boss) + " + Boss"
@@ -210,22 +279,30 @@ func _update_difficulty_display() -> void:
 		return
 
 	var highest_unlocked := _get_highest_unlocked_difficulty()
+	var highest_beaten := MetaManager.get_highest_difficulty_for_stage(_current_index) if MetaManager else 0
 
 	# Update each difficulty button
 	for i in range(_difficulty_buttons.size()):
 		var level := i + 1
 		var btn := _difficulty_buttons[i]
 		var is_unlocked := level <= highest_unlocked
+		var is_beaten := level <= highest_beaten
 
 		btn.disabled = not is_unlocked
 
-		# Style: selected, unlocked, or locked
+		# Style: selected, beaten, unlocked, or locked
 		if level == _selected_difficulty:
 			btn.modulate = Color(1, 0.9, 0.3)  # Gold for selected
+			btn.text = "[%d]" % level  # Brackets for selected
+		elif is_beaten:
+			btn.modulate = Color(0.5, 1.0, 0.5)  # Green for beaten
+			btn.text = "%d*" % level  # Asterisk for beaten
 		elif is_unlocked:
 			btn.modulate = Color(1, 1, 1)  # Normal for unlocked
+			btn.text = str(level)
 		else:
 			btn.modulate = Color(0.4, 0.4, 0.4)  # Gray for locked
+			btn.text = str(level)
 
 	# Update difficulty info label
 	if difficulty_label:
@@ -233,6 +310,28 @@ func _update_difficulty_display() -> void:
 		var hp_mult := _get_difficulty_hp_multiplier(_selected_difficulty)
 		var xp_mult := _get_difficulty_xp_multiplier(_selected_difficulty)
 		difficulty_label.text = "%s  (HP x%.1f, XP x%.1f)" % [diff_name, hp_mult, xp_mult]
+
+
+func _update_best_label() -> void:
+	"""Update the 'Best: X' label showing highest beaten difficulty"""
+	if not _best_label:
+		return
+
+	var highest_beaten := MetaManager.get_highest_difficulty_for_stage(_current_index) if MetaManager else 0
+
+	if highest_beaten > 0:
+		var diff_name: String = GameManager.DIFFICULTY_NAMES.get(highest_beaten, "Unknown")
+		# Generate stars based on difficulty (1 star per 2 levels)
+		var star_count := (highest_beaten + 1) / 2
+		var stars := ""
+		for i in range(mini(star_count, 5)):
+			stars += "*"
+		_best_label.text = "Best: %s %s" % [diff_name, stars]
+		_best_label.visible = true
+	else:
+		_best_label.text = "Not yet completed"
+		_best_label.visible = true
+		_best_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))  # Gray
 
 
 func _get_highest_unlocked_difficulty() -> int:
