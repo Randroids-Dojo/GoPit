@@ -7,14 +7,14 @@ signal formation_dissolved(group: FormationGroup)
 
 const DISSOLUTION_THRESHOLD: float = 0.5  # Dissolve when < 50% members remain
 
-var leader: EnemyBase  # First enemy is leader, others follow
-var members: Array[EnemyBase] = []
+var leader: Node2D  # First enemy is leader, others follow (EnemyBase type)
+var members: Array = []  # Array of EnemyBase nodes
 var offsets: Array[Vector2] = []  # Relative offsets from leader
 var is_active: bool = true
 var _initial_count: int = 0
 
 
-func setup(enemies: Array[EnemyBase]) -> void:
+func setup(enemies: Array) -> void:
 	"""Initialize formation with spawned enemies"""
 	if enemies.is_empty():
 		return

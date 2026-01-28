@@ -42,7 +42,7 @@ const SWARM_GROUP_SIZE_MAX: int = 5
 
 var _spawn_timer: Timer
 var _screen_width: float
-var _active_formations: Array[FormationGroup] = []  # Track active formation groups
+var _active_formations: Array = []  # Track active FormationGroup instances
 
 
 func _ready() -> void:
@@ -58,7 +58,7 @@ func _physics_process(delta: float) -> void:
 
 func _update_formations(delta: float) -> void:
 	"""Update all active formations and clean up dissolved ones"""
-	var formations_to_remove: Array[FormationGroup] = []
+	var formations_to_remove: Array = []
 
 	for formation in _active_formations:
 		if formation.is_active and formation.has_active_members():

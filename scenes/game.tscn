@@ -29,7 +29,7 @@
 [ext_resource type="PackedScene" uid="uid://boss_hp_bar_scene" path="res://scenes/ui/boss_hp_bar.tscn" id="21_boss_hp"]
 [ext_resource type="Script" path="res://scripts/ui/speed_indicator.gd" id="speed_indicator"]
 [ext_resource type="Script" path="res://scripts/ui/queue_display.gd" id="queue_display"]
-[ext_resource type="PackedScene" uid="uid://df8kyp3xm1h0a" path="res://scenes/effects/parallax_background.tscn" id="parallax_bg"]
+[ext_resource type="PackedScene" path="res://scenes/effects/parallax_background.tscn" id="parallax_bg"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(20, 1280)
