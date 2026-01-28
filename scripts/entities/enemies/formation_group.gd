@@ -56,7 +56,8 @@ func update(delta: float) -> void:
 			continue
 
 		# Check if member entered attack mode - remove from formation
-		if member.current_state == EnemyBase.State.ATTACKING or member.current_state == EnemyBase.State.WARNING:
+		# Use duck-typing to avoid class resolution issues in headless mode
+		if member.has_method("get") and member.get("current_state") in [2, 3]:  # ATTACKING=2, WARNING=3
 			_remove_member(member)
 			continue
 
@@ -93,7 +94,7 @@ func _recalculate_offsets() -> void:
 	offsets = new_offsets
 
 
-func _remove_member(enemy: EnemyBase) -> void:
+func _remove_member(enemy: Node) -> void:
 	"""Remove a member from formation tracking"""
 	var idx := members.find(enemy)
 	if idx >= 0:
@@ -114,7 +115,7 @@ func _count_alive_members() -> int:
 	return count
 
 
-func _on_member_died(enemy: EnemyBase) -> void:
+func _on_member_died(enemy: Node) -> void:
 	"""Handle member death"""
 	_remove_member(enemy)
 
