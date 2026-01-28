@@ -22,7 +22,7 @@ extends Node2D
 @onready var character_select: CanvasLayer = $UI/CharacterSelect
 @onready var level_select: CanvasLayer = $UI/LevelSelect
 @onready var background: ColorRect = $Background
-@onready var parallax_bg: ParallaxBackground = $ParallaxBackground
+@onready var parallax_bg: Node = get_node_or_null("ParallaxBackground")  # ParallaxBackground type
 @onready var left_wall: StaticBody2D = $GameArea/Walls/LeftWall
 @onready var right_wall: StaticBody2D = $GameArea/Walls/RightWall
 @onready var stage_complete_overlay: CanvasLayer = $UI/StageCompleteOverlay
