@@ -52,6 +52,10 @@ const DIFFICULTY_SCALE_PER_LEVEL: float = 1.5  # 1.5x compound per level
 const DIFFICULTY_XP_BONUS_PER_LEVEL: float = 0.15  # +15% XP per level above 1
 const DIFFICULTY_SPAWN_RATE_PER_LEVEL: float = 0.2  # +20% spawn rate per level
 
+# World scroll speed - affects enemy descent and gem drift
+const BASE_WORLD_SCROLL_SPEED: float = 50.0  # px/sec base scroll
+const DIFFICULTY_SCROLL_PER_LEVEL: float = 0.2  # +20% scroll speed per level
+
 # Difficulty level names for UI
 const DIFFICULTY_NAMES := {
 	1: "Normal",
@@ -819,6 +823,15 @@ func get_difficulty_xp_multiplier() -> float:
 	if selected_difficulty_level <= 1:
 		return 1.0
 	return 1.0 + (DIFFICULTY_XP_BONUS_PER_LEVEL * (selected_difficulty_level - 1))
+
+
+func get_world_scroll_speed() -> float:
+	## Returns world scroll speed adjusted for difficulty and speed tier
+	## Higher difficulty = faster scroll = enemies descend faster
+	var difficulty_mult := 1.0
+	if selected_difficulty_level > 1:
+		difficulty_mult = 1.0 + (DIFFICULTY_SCROLL_PER_LEVEL * (selected_difficulty_level - 1))
+	return BASE_WORLD_SCROLL_SPEED * difficulty_mult * get_speed_multiplier()
 
 
 func is_difficulty_unlocked(level: int, stage_index: int) -> bool:
