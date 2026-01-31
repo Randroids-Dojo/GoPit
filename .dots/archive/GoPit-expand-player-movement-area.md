@@ -1,9 +1,10 @@
 ---
 title: Expand player movement area
-status: open
+status: closed
 priority: 1
 issue-type: implement
-created-at: "2026-01-27"
+created-at: "\"2026-01-27\""
+closed-at: "2026-01-31T16:42:35.386579+00:00"
 ---
 
 ## Overview
