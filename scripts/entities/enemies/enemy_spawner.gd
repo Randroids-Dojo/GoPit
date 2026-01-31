@@ -67,7 +67,10 @@ func stop_spawning() -> void:
 
 func _start_spawn_timer() -> void:
 	var variance := randf_range(-spawn_variance, spawn_variance)
-	var next_spawn := maxf(0.3, spawn_interval + variance)
+	var base_interval := spawn_interval + variance
+	# Apply difficulty spawn rate multiplier (faster spawns = shorter interval)
+	var spawn_mult := GameManager.get_difficulty_spawn_rate_multiplier()
+	var next_spawn := maxf(0.3, base_interval / spawn_mult)
 	_spawn_timer.wait_time = next_spawn
 	_spawn_timer.start()
 
