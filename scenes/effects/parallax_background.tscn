@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/parallax_background.gd" id="1_script"]
+
+[node name="ParallaxBackground" type="ParallaxBackground"]
+script = ExtResource("1_script")
+
+[node name="FarLayer" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0, 0.3)
+motion_mirroring = Vector2(0, 1280)
+
+[node name="Background" type="ColorRect" parent="FarLayer"]
+offset_left = -360.0
+offset_top = -1280.0
+offset_right = 1080.0
+offset_bottom = 2560.0
+color = Color(0.05, 0.05, 0.08, 0.3)
+
+[node name="MidLayer" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0, 0.6)
+motion_mirroring = Vector2(0, 1280)
+
+[node name="Background" type="ColorRect" parent="MidLayer"]
+offset_left = -360.0
+offset_top = -1280.0
+offset_right = 1080.0
+offset_bottom = 2560.0
+color = Color(0.08, 0.08, 0.1, 0.2)
+
+[node name="NearLayer" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0, 1)
+motion_mirroring = Vector2(0, 1280)
+
+[node name="Background" type="ColorRect" parent="NearLayer"]
+offset_left = -360.0
+offset_top = -1280.0
+offset_right = 1080.0
+offset_bottom = 2560.0
+color = Color(0.1, 0.1, 0.12, 0.15)
