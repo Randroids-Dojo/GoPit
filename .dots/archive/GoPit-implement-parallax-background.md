@@ -1,9 +1,10 @@
 ---
 title: Implement parallax background scrolling
-status: open
+status: closed
 priority: 1
 issue-type: implement
-created-at: "2026-01-27"
+created-at: "\"2026-01-27\""
+closed-at: "2026-02-01T04:49:16.180831+00:00"
 ---
 
 ## Overview
