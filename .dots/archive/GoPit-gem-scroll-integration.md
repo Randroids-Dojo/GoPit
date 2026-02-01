@@ -1,9 +1,10 @@
 ---
 title: Integrate gems with world scroll system
-status: open
+status: closed
 priority: 3
 issue-type: implement
-created-at: "2026-01-27"
+created-at: "\"2026-01-27\""
+closed-at: "2026-02-01T04:35:37.161286+00:00"
 ---
 
 ## Overview
