@@ -42,12 +42,37 @@ const SWARM_GROUP_SIZE_MAX: int = 5
 
 var _spawn_timer: Timer
 var _screen_width: float
+var _active_formations: Array = []  # Track active formation groups
+
+# Lazy-load FormationGroup to avoid class resolution issues
+var _FormationGroupClass: GDScript = null
+
+func _get_formation_group_class() -> GDScript:
+	if _FormationGroupClass == null:
+		_FormationGroupClass = load("res://scripts/entities/enemies/formation_group.gd")
+	return _FormationGroupClass
 
 
 func _ready() -> void:
 	add_to_group("enemy_spawner")
 	_screen_width = get_viewport().get_visible_rect().size.x
 	_setup_timer()
+
+
+func _physics_process(delta: float) -> void:
+	_update_formations(delta)
+
+
+func _update_formations(delta: float) -> void:
+	"""Update all active formations and clean up dissolved ones"""
+	var to_remove: Array = []
+	for formation in _active_formations:
+		if formation.is_active and formation.has_active_members():
+			formation.update(delta)
+		else:
+			to_remove.append(formation)
+	for formation in to_remove:
+		_active_formations.erase(formation)
 
 
 func _setup_timer() -> void:
@@ -67,7 +92,10 @@ func stop_spawning() -> void:
 
 func _start_spawn_timer() -> void:
 	var variance := randf_range(-spawn_variance, spawn_variance)
-	var next_spawn := maxf(0.3, spawn_interval + variance)
+	var base_interval := spawn_interval + variance
+	# Apply difficulty spawn rate multiplier (faster spawns = shorter interval)
+	var spawn_mult := GameManager.get_difficulty_spawn_rate_multiplier()
+	var next_spawn := maxf(0.3, base_interval / spawn_mult)
 	_spawn_timer.wait_time = next_spawn
 	_spawn_timer.start()
 
@@ -244,32 +272,47 @@ func _choose_formation_for_wave(wave: int) -> Formation:
 	return formations[randi() % formations.size()]
 
 
-func spawn_formation(formation: Formation, count: int = 0) -> Array[EnemyBase]:
+func spawn_formation(formation: Formation, count: int = 0) -> Array:
 	"""Spawn enemies in the specified formation. Returns array of spawned enemies."""
+	var enemies: Array = []
+
 	match formation:
 		Formation.SINGLE:
 			var enemy := spawn_enemy()
 			return [enemy] if enemy else []
 		Formation.LINE:
-			return _spawn_line_formation(count if count > 0 else randi_range(3, 5))
+			enemies = _spawn_line_formation(count if count > 0 else randi_range(3, 5))
 		Formation.V_SHAPE:
-			return _spawn_v_formation(count if count > 0 else randi_range(5, 7))
+			enemies = _spawn_v_formation(count if count > 0 else randi_range(5, 7))
 		Formation.ARROW:
-			return _spawn_arrow_formation(count if count > 0 else randi_range(5, 7))
+			enemies = _spawn_arrow_formation(count if count > 0 else randi_range(5, 7))
 		Formation.CLUSTER:
-			return _spawn_cluster_formation(count if count > 0 else randi_range(3, 5))
+			enemies = _spawn_cluster_formation(count if count > 0 else randi_range(3, 5))
 		Formation.DIAGONAL:
-			return _spawn_diagonal_formation(count if count > 0 else randi_range(3, 5))
+			enemies = _spawn_diagonal_formation(count if count > 0 else randi_range(3, 5))
 		Formation.STAGGERED_ROWS:
-			return _spawn_staggered_formation(count if count > 0 else randi_range(6, 8))
+			enemies = _spawn_staggered_formation(count if count > 0 else randi_range(6, 8))
 		Formation.WALL:
-			return _spawn_wall_formation(count if count > 0 else randi_range(8, 12))
-	return []
+			enemies = _spawn_wall_formation(count if count > 0 else randi_range(8, 12))
+
+	# Create formation group for cohesive movement
+	if enemies.size() > 1:
+		_create_formation_group(enemies)
+
+	return enemies
 
 
-func _spawn_line_formation(count: int) -> Array[EnemyBase]:
+func _create_formation_group(enemies: Array) -> void:
+	"""Create a formation group to keep enemies moving together"""
+	var FormationGroupScript := _get_formation_group_class()
+	var formation = FormationGroupScript.new()
+	formation.setup(enemies)
+	_active_formations.append(formation)
+
+
+func _spawn_line_formation(count: int) -> Array:
 	"""Spawn enemies in a horizontal line formation."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene  # Don't use swarms for formations
@@ -292,9 +335,9 @@ func _spawn_line_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
-func _spawn_v_formation(count: int) -> Array[EnemyBase]:
+func _spawn_v_formation(count: int) -> Array:
 	"""Spawn enemies in a V-shape (arrow) formation."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene
@@ -332,9 +375,9 @@ func _spawn_v_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
-func _spawn_cluster_formation(count: int) -> Array[EnemyBase]:
+func _spawn_cluster_formation(count: int) -> Array:
 	"""Spawn enemies in a tight cluster formation."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene
@@ -357,9 +400,9 @@ func _spawn_cluster_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
-func _spawn_diagonal_formation(count: int) -> Array[EnemyBase]:
+func _spawn_diagonal_formation(count: int) -> Array:
 	"""Spawn enemies in a diagonal line formation."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene
@@ -389,10 +432,10 @@ func _spawn_diagonal_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
-func _spawn_arrow_formation(count: int) -> Array[EnemyBase]:
+func _spawn_arrow_formation(count: int) -> Array:
 	"""Spawn enemies in arrow formation pointing DOWN at player (leader at front).
 	This is the inverse of V_SHAPE - leader descends first, wings trail behind."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene
@@ -430,10 +473,10 @@ func _spawn_arrow_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
-func _spawn_staggered_formation(count: int) -> Array[EnemyBase]:
+func _spawn_staggered_formation(count: int) -> Array:
 	"""Spawn enemies in staggered rows (checkerboard pattern).
 	Two rows with offset X positions - like BallxPit's common spawn pattern."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene
@@ -475,10 +518,10 @@ func _spawn_staggered_formation(count: int) -> Array[EnemyBase]:
 	return enemies
 
 
-func _spawn_wall_formation(count: int) -> Array[EnemyBase]:
+func _spawn_wall_formation(count: int) -> Array:
 	"""Spawn enemies in a dense wall formation (2-3 rows filling screen width).
 	Creates pressure - player must break through or be overwhelmed."""
-	var enemies: Array[EnemyBase] = []
+	var enemies: Array = []
 	var scene: PackedScene = _choose_enemy_type()
 	if not scene or scene == swarm_scene:
 		scene = slime_scene

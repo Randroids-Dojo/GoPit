@@ -1092,6 +1092,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		if GameManager.current_state == GameManager.GameState.PLAYING:
 			GameManager.toggle_speed()
 
+	# Direct speed tier selection with number keys 1/2/3/4
+	if event is InputEventKey and event.pressed and not event.echo:
+		if GameManager.current_state == GameManager.GameState.PLAYING:
+			match event.keycode:
+				KEY_1:
+					GameManager.set_speed_tier(0)  # NORMAL (1.0x)
+				KEY_2:
+					GameManager.set_speed_tier(1)  # FAST (1.5x)
+				KEY_3:
+					GameManager.set_speed_tier(2)  # FAST+2 (2.5x)
+				KEY_4:
+					GameManager.set_speed_tier(3)  # FAST+3 (4.0x)
+
 
 func _input(event: InputEvent) -> void:
 	"""Handle touch/click input for ball catching in game area"""

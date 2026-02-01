@@ -81,6 +81,8 @@ func _scale_with_wave() -> void:
 	max_hp = int(max_hp * (1.0 + (wave - 1) * 0.1))
 	# Apply post-boss HP spike (~3x per boss defeated)
 	max_hp = int(max_hp * StageManager.get_post_boss_hp_multiplier())
+	# Apply difficulty HP multiplier
+	max_hp = int(max_hp * GameManager.get_difficulty_enemy_hp_multiplier())
 	# Scale speed: +5% per wave (capped at 2x)
 	speed = speed * min(2.0, 1.0 + (wave - 1) * 0.05)
 	# Scale XP: +5% per wave
@@ -537,11 +539,13 @@ func _get_charm_tint() -> Color:
 
 func _deal_damage_to_player() -> void:
 	var player := _get_player_node()
+	# Apply difficulty damage multiplier
+	var scaled_damage := int(damage_to_player * GameManager.get_difficulty_enemy_damage_multiplier())
 	if player and player.has_method("take_damage"):
-		player.take_damage(damage_to_player)
+		player.take_damage(scaled_damage)
 	else:
 		# Fallback: use GameManager directly
-		GameManager.take_damage(damage_to_player)
+		GameManager.take_damage(scaled_damage)
 
 	CameraShake.shake(8.0, 15.0)  # Big shake on player hit
 

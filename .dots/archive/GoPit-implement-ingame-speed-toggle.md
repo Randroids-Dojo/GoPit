@@ -1,9 +1,10 @@
 ---
 title: Implement in-game speed toggle
-status: open
+status: closed
 priority: 2
 issue-type: implement
-created-at: "2026-01-27"
+created-at: "\"2026-01-27\""
+closed-at: "2026-02-01T00:00:51.840310+00:00"
 ---
 
 ## Overview

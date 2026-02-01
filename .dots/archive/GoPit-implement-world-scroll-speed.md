@@ -1,9 +1,10 @@
 ---
 title: Implement world scroll speed system
-status: open
+status: closed
 priority: 1
 issue-type: implement
-created-at: "2026-01-27"
+created-at: "\"2026-01-27\""
+closed-at: "2026-01-31T19:25:58.905018+00:00"
 ---
 
 ## Overview
