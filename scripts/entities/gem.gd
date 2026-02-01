@@ -116,16 +116,20 @@ func _draw() -> void:
 
 func _apply_movement(delta: float) -> void:
 	"""Apply movement based on current mode"""
+	var world_scroll := GameManager.get_world_scroll_speed()
+
 	match movement_mode:
 		GemMovementMode.FALL_DOWN:
 			# Classic: gems fall toward player (easier collection)
 			position.y += base_speed * delta
 		GemMovementMode.DRIFT_UP:
-			# BallxPit-style: gems drift away from player (harder collection)
-			position.y -= base_speed * delta
+			# BallxPit-style: gems drift up, but world scroll reduces net drift
+			# Higher difficulty = faster scroll = gems drift up slower = more pressure
+			var net_drift := base_speed - (world_scroll * 0.5)
+			position.y -= net_drift * delta
 		GemMovementMode.STATIONARY:
-			# Gems stay in place (player must come to them)
-			pass
+			# Gems stay in world coords = drift down with scroll
+			position.y += world_scroll * delta
 
 
 func _on_body_entered(body: Node2D) -> void:
