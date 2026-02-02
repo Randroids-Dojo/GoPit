@@ -131,6 +131,39 @@ var wave_patterns = [
 3. **Add mixed-type support** - Tactical depth
 4. **Wave-based pattern system** - Long-term improvement
 
+## First 5 Minutes (Experiment Mode) Settings
+
+To replicate BallxPit's first 5 minutes in Experiment Mode:
+
+### Simplified Spawn Settings
+```gdscript
+var exp_settings := {
+    "spawn_interval": 3.5,         # Slow - time to react
+    "formation_chance": 0.40,      # 40% formations (first level is simpler)
+    "burst_chance": 0.0,           # No bursts
+    "max_enemy_types": 1,          # Slime only
+}
+```
+
+### First-Level Formation Weights
+| Formation | Weight | Description |
+|-----------|--------|-------------|
+| SINGLE | 60% | Most spawns are singles |
+| LINE | 25% | Occasional 3-enemy row |
+| ARROW | 10% | Rare 5-enemy pattern |
+| Others | 5% | Very rare complexity |
+
+### Descent Speed for First Level
+- **Base speed**: 50-60 px/sec (slower than main game)
+- **No speed increase** for first 5 waves
+- **Gradual +5%/wave** after wave 5
+
+### Key Differences from Main Game
+1. **Much slower spawn rate** - 3.5s vs 2.0s
+2. **Fewer formations** - 40% vs 60%
+3. **Only LINE formations** - no complex patterns
+4. **Single enemy type** - no variety chaos
+
 ## Sources
 
 - [Ball x Pit Ultimate Beginner's Guide](https://gam3s.gg/ball-x-pit/guides/ball-x-pit-ultimate-beginners-guide/)
