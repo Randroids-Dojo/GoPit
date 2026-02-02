@@ -20,6 +20,7 @@ signal cooldown_changed(ball_type: int, remaining: float)  # For cooldown UI
 var current_aim_direction: Vector2 = Vector2.UP
 var ball_damage: int = 10  # Base damage, can be modified by upgrades
 var ball_speed: float = 800.0  # Base speed, can be modified by upgrades
+var ball_radius: float = 14.0  # Ball radius, can be tuned in experiment mode
 var ball_count: int = 1
 var ball_spread: float = 0.15  # radians between balls
 var pierce_count: int = 0
@@ -433,6 +434,12 @@ func _spawn_ball_typed(direction: Vector2, registry_ball_type: int) -> void:
 		ball = ball_scene.instantiate()
 	ball.position = global_position + direction * spawn_offset
 	ball.set_direction(direction)
+
+	# Apply ball radius (for experiment mode tuning)
+	ball.radius = ball_radius
+	var collision := ball.get_node_or_null("CollisionShape2D")
+	if collision and collision.shape is CircleShape2D:
+		collision.shape.radius = ball_radius
 
 	# Get MetaManager permanent bonuses (shop upgrades + passive evolutions)
 	var meta_damage_bonus: float = MetaManager.get_damage_bonus() if MetaManager else 0.0

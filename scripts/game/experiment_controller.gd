@@ -8,12 +8,15 @@ extends Node2D
 ## 3/4 - Decrease/Increase Spawn Interval
 ## 5/6 - Decrease/Increase Ball Size (radius)
 ## 7/8 - Decrease/Increase Formation Chance
+## 9/0 - Decrease/Increase Enemy Speed
 ## R - Reset to defaults
 ## P - Pause/Unpause
+## M - Save metrics to file
 
 # Child node references
 @onready var ball_spawner: Node2D = $GameArea/BallSpawner
 @onready var balls_container: Node2D = $GameArea/Balls
+@onready var gems_container: Node2D = $GameArea/Gems
 @onready var enemies_container: Node2D = $GameArea/Enemies
 @onready var enemy_spawner: Node2D = $GameArea/Enemies/EnemySpawner
 @onready var player: CharacterBody2D = $GameArea/Player
@@ -25,6 +28,10 @@ extends Node2D
 @onready var back_button: Button = $UI/BackButton
 @onready var debug_panel: Panel = $UI/DebugPanel
 @onready var debug_label: Label = $UI/DebugPanel/DebugLabel
+@onready var level_up_overlay: Control = $UI/LevelUpOverlay
+
+# Gem scene for spawning
+var gem_scene: PackedScene
 
 # Default settings (based on research)
 const DEFAULT_SETTINGS := {
@@ -35,7 +42,7 @@ const DEFAULT_SETTINGS := {
 
 	# Speed (based on ballxpit-ball-mechanics.md)
 	"ball_speed": 900.0,        # Slightly faster
-	"enemy_descent_speed": 50.0,
+	"enemy_speed": 50.0,        # Slower enemy descent for first level
 
 	# Spawning (based on ballxpit-complexity.md)
 	"spawn_interval": 3.5,      # Slower for first level
@@ -55,6 +62,7 @@ var exp_settings := {
 	"formation_chance": 0.3,
 	"max_enemies": 8,
 	"max_balls": 3,
+	"enemy_speed": 50.0,  # Slower for first level (BallxPit style)
 }
 
 # State tracking
@@ -97,6 +105,20 @@ var _sample_timer := 0.0
 
 
 func _ready() -> void:
+	# Load gem scene for spawning
+	gem_scene = load("res://scenes/entities/gem.tscn")
+
+	# Reset registries for fresh experiment (clean slate like BallxPit first level)
+	if BallRegistry:
+		BallRegistry.reset()
+	if FusionRegistry:
+		FusionRegistry.reset()
+
+	# Reset GameManager XP for fresh level-up progression
+	GameManager.current_xp = 0
+	GameManager.player_level = 1
+	GameManager.xp_to_next_level = GameManager._calculate_xp_requirement(1)
+
 	# Set up basic connections
 	if move_joystick:
 		move_joystick.direction_changed.connect(_on_move_direction_changed)
@@ -137,6 +159,7 @@ func _apply_experiment_settings() -> void:
 		ball_spawner.ball_damage = 10
 		ball_spawner.crit_chance = 0.0
 		ball_spawner.ball_speed = exp_settings["ball_speed"]
+		ball_spawner.ball_radius = exp_settings["ball_radius"]
 		# Limit max balls for clarity
 		ball_spawner.max_balls = exp_settings["max_balls"]
 
@@ -243,6 +266,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				_adjust_setting("formation_chance", -0.1, 0.0, 1.0)
 			KEY_8:
 				_adjust_setting("formation_chance", 0.1, 0.0, 1.0)
+			# Enemy Speed: 9/0
+			KEY_9:
+				_adjust_setting("enemy_speed", -10.0, 20.0, 150.0)
+			KEY_0:
+				_adjust_setting("enemy_speed", 10.0, 20.0, 150.0)
 			# Reset: R
 			KEY_R:
 				_reset_settings()
@@ -275,8 +303,9 @@ func _apply_setting(key: String) -> void:
 			if enemy_spawner:
 				enemy_spawner.formation_chance = exp_settings["formation_chance"]
 		"ball_radius":
-			# Ball radius affects new balls spawned
-			pass  # Applied when balls are created
+			# Apply ball radius to ball spawner (affects new balls)
+			if ball_spawner:
+				ball_spawner.ball_radius = exp_settings["ball_radius"]
 
 
 func _reset_settings() -> void:
@@ -313,13 +342,15 @@ func _update_debug_display() -> void:
 	var text := "=== EXPERIMENT MODE ===\n"
 	if _paused:
 		text += ">>> PAUSED <<<\n"
-	text += "Time: %02d:%02d  Wave: %d\n" % [mins, secs, _current_wave]
+	text += "Time: %02d:%02d  Wave: %d  Lv: %d\n" % [mins, secs, _current_wave, GameManager.player_level]
 	text += "Kills: %d  Balls: %d  Enemies: %d\n" % [_enemies_killed, ball_count, enemy_count]
+	text += "XP: %d/%d\n" % [GameManager.current_xp, GameManager.xp_to_next_level]
 	text += "\n--- TUNING (use keys) ---\n"
 	text += "[1/2] Ball Speed: %.0f\n" % exp_settings["ball_speed"]
 	text += "[3/4] Spawn Int: %.1fs\n" % exp_settings["spawn_interval"]
 	text += "[5/6] Ball Size: %.0f\n" % exp_settings["ball_radius"]
 	text += "[7/8] Formation: %.0f%%\n" % (exp_settings["formation_chance"] * 100)
+	text += "[9/0] Enemy Spd: %.0f\n" % exp_settings["enemy_speed"]
 	text += "\n[R] Reset  [P] Pause  [M] Save\n"
 	text += "[ESC] Return to Menu\n"
 	text += "\n--- METRICS ---\n"
@@ -483,18 +514,56 @@ func _on_player_moved(pos: Vector2) -> void:
 
 
 func _on_enemy_spawned(enemy: Node) -> void:
+	# Apply experiment mode enemy speed
+	if enemy.has_method("set") or "speed" in enemy:
+		enemy.speed = exp_settings["enemy_speed"]
+
 	if enemy.has_signal("died"):
 		enemy.died.connect(_on_enemy_died.bind(enemy))
 
 
-func _on_enemy_died(_enemy: Node) -> void:
+func _on_enemy_died(enemy: Node) -> void:
 	_enemies_killed += 1
 	_metrics["total_hits"] += 1
 	_record_kill()
 
+	# Spawn gem at enemy position (XP is already added by enemy_base.gd)
+	if enemy and gems_container:
+		_spawn_gem(enemy.global_position, enemy.xp_value if enemy.has_method("get") else 1)
+
 	# Check wave progress (simplified for experiment)
 	if _enemies_killed > 0 and _enemies_killed % 10 == 0:
 		_advance_wave()
+
+
+func _spawn_gem(pos: Vector2, xp_value: int) -> void:
+	"""Spawn a gem at the given position."""
+	if not gems_container or not gem_scene:
+		return
+
+	var gem: Node
+	if PoolManager:
+		gem = PoolManager.get_gem()
+	else:
+		gem = gem_scene.instantiate()
+
+	gem.position = pos
+	gem.xp_value = xp_value
+
+	# Connect collection signal
+	if not gem.collected.is_connected(_on_gem_collected):
+		gem.collected.connect(_on_gem_collected)
+
+	gems_container.add_child(gem)
+
+	# Re-acquire player reference after being added to tree
+	if gem.has_method("_player"):
+		gem._player = player
+
+
+func _on_gem_collected(_gem: Node2D) -> void:
+	"""Handle gem collection - visual feedback only (XP added on kill)."""
+	GameManager.record_gem_collected()
 
 
 func _advance_wave() -> void:
