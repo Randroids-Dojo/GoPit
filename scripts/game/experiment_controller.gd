@@ -9,7 +9,8 @@ extends Node2D
 ## 5/6 - Decrease/Increase Ball Size (radius)
 ## 7/8 - Decrease/Increase Formation Chance
 ## 9/0 - Decrease/Increase Enemy Speed
-## R - Reset to defaults
+## R - Reset settings to defaults
+## Backspace - Instant restart (clear all, reset stats)
 ## P - Pause/Unpause
 ## M - Save metrics to file
 
@@ -271,9 +272,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				_adjust_setting("enemy_speed", -10.0, 20.0, 150.0)
 			KEY_0:
 				_adjust_setting("enemy_speed", 10.0, 20.0, 150.0)
-			# Reset: R
+			# Reset settings: R
 			KEY_R:
 				_reset_settings()
+			# Restart experiment: Backspace
+			KEY_BACKSPACE:
+				_restart_experiment()
 			# Pause: P
 			KEY_P:
 				_toggle_pause()
@@ -317,6 +321,84 @@ func _reset_settings() -> void:
 	SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 
 
+func _restart_experiment() -> void:
+	"""Instant restart - clear everything and start fresh."""
+	# Unpause if paused
+	if _paused:
+		_paused = false
+		get_tree().paused = false
+
+	# Stop spawning temporarily
+	if enemy_spawner and enemy_spawner.has_method("stop_spawning"):
+		enemy_spawner.stop_spawning()
+
+	# Clear all enemies
+	if enemies_container:
+		for enemy in enemies_container.get_children():
+			if enemy != enemy_spawner:
+				enemy.queue_free()
+
+	# Clear all balls
+	if balls_container:
+		for ball in balls_container.get_children():
+			ball.queue_free()
+
+	# Clear all gems
+	if gems_container:
+		for gem in gems_container.get_children():
+			gem.queue_free()
+
+	# Reset player position
+	if player:
+		player.position = Vector2(360, 900)
+
+	# Reset GameManager state
+	GameManager.current_xp = 0
+	GameManager.player_level = 1
+	GameManager.xp_to_next_level = GameManager._calculate_xp_requirement(1)
+	GameManager.player_hp = GameManager.max_hp
+	GameManager.current_wave = 1
+
+	# Reset registries
+	if BallRegistry:
+		BallRegistry.reset()
+	if FusionRegistry:
+		FusionRegistry.reset()
+
+	# Reset experiment state
+	_game_active = true
+	_current_wave = 1
+	_enemies_killed = 0
+	_elapsed_time = 0.0
+	_first_kill_recorded = false
+
+	# Reset metrics
+	_metrics = {
+		"time_to_first_kill": 0.0,
+		"time_to_level_2": 0.0,
+		"time_to_level_3": 0.0,
+		"kills_per_minute": [],
+		"total_balls_fired": 0,
+		"total_hits": 0,
+		"accuracy": 0.0,
+		"avg_time_per_kill": 0.0,
+		"max_balls_on_screen": 0,
+		"max_enemies_on_screen": 0,
+		"avg_enemies_on_screen": 0.0,
+		"enemy_samples": [],
+		"damage_taken_count": 0,
+		"close_calls": 0,
+	}
+
+	# Re-apply settings and restart spawning
+	_apply_experiment_settings()
+	if enemy_spawner and enemy_spawner.has_method("start_spawning"):
+		enemy_spawner.start_spawning()
+
+	SoundManager.play(SoundManager.SoundType.WAVE_COMPLETE)
+	_update_debug_display()
+
+
 func _toggle_pause() -> void:
 	"""Toggle pause state."""
 	_paused = not _paused
@@ -351,7 +433,7 @@ func _update_debug_display() -> void:
 	text += "[5/6] Ball Size: %.0f\n" % exp_settings["ball_radius"]
 	text += "[7/8] Formation: %.0f%%\n" % (exp_settings["formation_chance"] * 100)
 	text += "[9/0] Enemy Spd: %.0f\n" % exp_settings["enemy_speed"]
-	text += "\n[R] Reset  [P] Pause  [M] Save\n"
+	text += "\n[R] Reset  [Bksp] Restart  [P] Pause\n"
 	text += "[ESC] Return to Menu\n"
 	text += "\n--- METRICS ---\n"
 	text += "Avg Kill: %.2fs  Hit%%: %.0f\n" % [_metrics["avg_time_per_kill"], _metrics["accuracy"]]
