@@ -17,7 +17,9 @@ Replicate BallxPit's first 5 minutes exactly in GoPit's Experiment Mode.
 | 3/4 | Decrease/Increase Spawn Interval |
 | 5/6 | Decrease/Increase Ball Size |
 | 7/8 | Decrease/Increase Formation Chance |
-| R | Reset to defaults |
+| 9/0 | Decrease/Increase Enemy Speed |
+| R | Reset settings to defaults |
+| Backspace | Instant restart (clear all, reset stats) |
 | P | Pause/Unpause |
 | M | Save metrics to file |
 | ESC | Return to menu |
@@ -30,6 +32,26 @@ Press M to save a metrics report including:
 - Max balls/enemies on screen
 - Kills per minute breakdown
 - Current settings values
+
+### XP and Level-Up System
+Experiment mode includes a simplified level-up system matching BallxPit's first level:
+- **XP from kills**: Each enemy kill grants XP (displayed in debug panel)
+- **Level-up overlay**: Shows when you reach enough XP
+- **Simplified upgrades**: Only Power Up, Vitality, Magnetism, and Heal
+- No ball evolutions or complex options (matches early BallxPit)
+
+### Quick Iteration with Restart
+Press **Backspace** for instant restart:
+- Clears all enemies, balls, and gems
+- Resets player position, XP, level, and health
+- **Keeps your current tuning settings** (ball speed, spawn interval, etc.)
+- Perfect for rapid A/B testing of parameter changes
+
+Typical workflow:
+1. Adjust a setting (e.g., press 2 to increase ball speed)
+2. Play for 30 seconds to feel the change
+3. Press Backspace to restart with same settings
+4. Compare against previous feel
 
 ## Research-Based Starting Settings
 
@@ -47,6 +69,7 @@ Max Balls: 3 (limit visual chaos)
 Spawn Interval: 3.5s (slower for learning)
 Formation Chance: 30% (mostly singles)
 Max Enemies: 8 (cap for clarity)
+Enemy Speed: 50 (slower descent for first level)
 Enemy Type: Slime only (single type)
 ```
 
@@ -108,7 +131,13 @@ If any answer is "no", adjust settings accordingly.
 ### "Enemies too easy"
 - Decrease spawn_interval
 - Increase formation_chance
+- Increase enemy_speed to 80+
 - Add more enemy types (future work)
+
+### "Enemies too threatening"
+- Decrease enemy_speed to 30-40
+- Increase spawn_interval
+- Reduce formation_chance
 
 ## Recording Comparison Data
 
