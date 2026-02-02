@@ -69,6 +69,12 @@ slot_number = 2
 layout_mode = 2
 slot_number = 3
 
+[node name="ExperimentButton" type="Button" parent="DimBackground/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "EXPERIMENT MODE"
+
 [node name="DeleteConfirmDialog" parent="." instance=ExtResource("3_delete")]
 visible = false
 

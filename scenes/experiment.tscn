@@ -1,0 +1,171 @@
+[gd_scene load_steps=9 format=3 uid="uid://experiment_scene"]
+
+[ext_resource type="Script" path="res://scripts/game/experiment_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/entities/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/entities/ball_spawner.gd" id="3_spawner"]
+[ext_resource type="Script" path="res://scripts/input/virtual_joystick.gd" id="4_joystick"]
+[ext_resource type="Script" path="res://scripts/input/fire_button.gd" id="5_fire"]
+[ext_resource type="Script" path="res://scripts/input/aim_line.gd" id="6_aimline"]
+[ext_resource type="Script" path="res://scripts/entities/enemies/enemy_spawner.gd" id="7_enemy_spawner"]
+[ext_resource type="PackedScene" uid="uid://slime_scene" path="res://scenes/entities/enemies/slime.tscn" id="8_slime"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(20, 1280)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player_zone"]
+size = Vector2(720, 80)
+
+[node name="Experiment" type="Node2D" groups=["game"]]
+script = ExtResource("1_controller")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.08, 0.12, 1)
+
+[node name="GameCamera" type="Camera2D" parent="." groups=["game_camera"]]
+position = Vector2(360, 640)
+
+[node name="GameArea" type="Node2D" parent="."]
+
+[node name="Walls" type="Node2D" parent="GameArea"]
+
+[node name="LeftWall" type="StaticBody2D" parent="GameArea/Walls"]
+position = Vector2(10, 640)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameArea/Walls/LeftWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="RightWall" type="StaticBody2D" parent="GameArea/Walls"]
+position = Vector2(710, 640)
+collision_layer = 1
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GameArea/Walls/RightWall"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="Balls" type="Node2D" parent="GameArea"]
+
+[node name="Enemies" type="Node2D" parent="GameArea" groups=["enemies_container"]]
+
+[node name="EnemySpawner" type="Node2D" parent="GameArea/Enemies" groups=["enemy_spawner"]]
+script = ExtResource("7_enemy_spawner")
+slime_scene = ExtResource("8_slime")
+
+[node name="Player" parent="GameArea" instance=ExtResource("2_player")]
+position = Vector2(360, 900)
+
+[node name="PlayerZone" type="Area2D" parent="GameArea"]
+position = Vector2(360, 1200)
+collision_layer = 16
+collision_mask = 12
+
+[node name="PlayerZoneShape" type="CollisionShape2D" parent="GameArea/PlayerZone"]
+shape = SubResource("RectangleShape2D_player_zone")
+
+[node name="BallSpawner" type="Node2D" parent="GameArea"]
+position = Vector2(360, 900)
+script = ExtResource("3_spawner")
+
+[node name="AimLine" type="Line2D" parent="GameArea"]
+script = ExtResource("6_aimline")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InputContainer" type="MarginContainer" parent="UI/HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -180.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/HUD/InputContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 60
+
+[node name="MoveJoystickContainer" type="Control" parent="UI/HUD/InputContainer/HBoxContainer"]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+
+[node name="VirtualJoystick" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/MoveJoystickContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_joystick")
+
+[node name="AimJoystickContainer" type="Control" parent="UI/HUD/InputContainer/HBoxContainer"]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+
+[node name="VirtualJoystick" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/AimJoystickContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_joystick")
+
+[node name="FireButtonContainer" type="Control" parent="UI/HUD/InputContainer/HBoxContainer"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+
+[node name="FireButton" type="Control" parent="UI/HUD/InputContainer/HBoxContainer/FireButtonContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_fire")
+
+[node name="BackButton" type="Button" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 16
+text = "< BACK"
+
+[node name="DebugPanel" type="Panel" parent="UI"]
+offset_left = 520.0
+offset_top = 20.0
+offset_right = 700.0
+offset_bottom = 320.0
+
+[node name="DebugLabel" type="Label" parent="UI/DebugPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 12
+text = "=== EXPERIMENT MODE ==="

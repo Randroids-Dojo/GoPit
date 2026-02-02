@@ -2,12 +2,14 @@ extends CanvasLayer
 ## SaveSlotSelect - Main menu for selecting save slots
 
 signal slot_selected(slot: int)
+signal experiment_requested
 
 @onready var slot1_panel: Panel = $DimBackground/Panel/VBoxContainer/SlotsContainer/Slot1Panel
 @onready var slot2_panel: Panel = $DimBackground/Panel/VBoxContainer/SlotsContainer/Slot2Panel
 @onready var slot3_panel: Panel = $DimBackground/Panel/VBoxContainer/SlotsContainer/Slot3Panel
 @onready var delete_dialog: CanvasLayer = $DeleteConfirmDialog
 @onready var resume_dialog: CanvasLayer = $ResumeRunDialog
+@onready var experiment_button: Button = $DimBackground/Panel/VBoxContainer/ExperimentButton
 
 var _panels: Array[Panel] = []
 var _selected_slot: int = 0
@@ -32,6 +34,10 @@ func _ready() -> void:
 	delete_dialog.cancelled.connect(_on_delete_cancelled)
 	resume_dialog.continue_chosen.connect(_on_continue_chosen)
 	resume_dialog.new_game_chosen.connect(_on_new_game_chosen)
+
+	# Connect experiment button
+	if experiment_button:
+		experiment_button.pressed.connect(_on_experiment_pressed)
 
 
 func show_select() -> void:
@@ -110,3 +116,9 @@ func _complete_slot_selection(has_active_session: bool) -> void:
 		slot_selected.emit(-_selected_slot)
 	else:
 		slot_selected.emit(_selected_slot)
+
+
+func _on_experiment_pressed() -> void:
+	"""Handle experiment button press."""
+	hide_select()
+	experiment_requested.emit()
