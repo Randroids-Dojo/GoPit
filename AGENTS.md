@@ -60,6 +60,9 @@ dot show <id>         # View task details
 dot edit <id>         # Edit task (opens in $EDITOR)
 dot close <id>        # Complete task
 git add .dots && git commit -m "Update tasks" && git push  # Sync with git
+
+# Visualize dots in FluxPanel (when user asks)
+open -n /Applications/FluxPanel.app --args --project /Users/randroid/Documents/Dev/GoPit
 ```
 
 ## Testing Requirements
