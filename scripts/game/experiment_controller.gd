@@ -174,6 +174,8 @@ func _apply_experiment_settings() -> void:
 
 func _start_experiment() -> void:
 	"""Start the experiment mode."""
+	# Ensure tree is not paused (may have been paused in previous scene)
+	get_tree().paused = false
 	_game_active = true
 	_current_wave = 1
 	_enemies_killed = 0
