@@ -145,6 +145,7 @@ func _ready() -> void:
 	# Connect save slot select
 	if save_slot_select:
 		save_slot_select.slot_selected.connect(_on_slot_selected)
+		save_slot_select.experiment_requested.connect(_on_experiment_requested)
 
 	# Connect wave changes for auto-save
 	GameManager.wave_changed.connect(_on_wave_changed_for_autosave)
@@ -281,6 +282,11 @@ func _on_slot_selected(slot: int) -> void:
 			character_select.show_select()
 		else:
 			GameManager.start_game()
+
+
+func _on_experiment_requested() -> void:
+	"""Handle request to enter experiment mode."""
+	get_tree().change_scene_to_file("res://scenes/experiment.tscn")
 
 
 func _restore_session() -> void:

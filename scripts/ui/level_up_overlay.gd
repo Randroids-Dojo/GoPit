@@ -1,8 +1,17 @@
 extends Control
 ## Level Up overlay with upgrade cards - supports ball types, ball leveling, and passive upgrades
 ## Passives are now shared with FusionRegistry so fission and level-up use the same tracking.
+##
+## When experiment_mode is true, only simple passives are offered:
+## - Power Up (DAMAGE)
+## - Vitality (MAX_HP)
+## - Magnetism
+## - Heal
 
 signal upgrade_selected(upgrade_type: String)
+
+## When true, limits card options to simple passives only (no balls, fission, tier upgrades)
+@export var experiment_mode: bool = false
 
 # Upgrade categories for card generation
 enum CardType {
@@ -19,6 +28,13 @@ const HEAL_DATA := {
 	"name": "Heal",
 	"description": "Restore 30 HP"
 }
+
+# Passives allowed in experiment mode (simple first-level options per BallxPit research)
+const EXPERIMENT_PASSIVES: Array[int] = [
+	0,  # FusionRegistry.PassiveType.DAMAGE (Power Up)
+	2,  # FusionRegistry.PassiveType.MAX_HP (Vitality)
+	8,  # FusionRegistry.PassiveType.MAGNETISM
+]
 
 const SETTINGS_PATH := "user://settings.save"
 const HINT_TEXT := "Choose an upgrade! Tap a card to power up."
@@ -138,6 +154,38 @@ func _randomize_cards() -> void:
 	_available_cards.clear()
 	var pool: Array[Dictionary] = []
 
+	# Experiment mode: only simple passives + heal (matches BallxPit first level)
+	if experiment_mode:
+		_randomize_experiment_cards(pool)
+	else:
+		_randomize_full_cards(pool)
+
+	pool.shuffle()
+	# Take first 3 (or fewer if pool is smaller)
+	_available_cards = pool.slice(0, mini(3, pool.size()))
+
+
+func _randomize_experiment_cards(pool: Array[Dictionary]) -> void:
+	"""Generate simplified card pool for experiment mode."""
+	# Only add allowed passives (Power Up, Vitality, Magnetism)
+	if FusionRegistry:
+		var available_passives := FusionRegistry.get_available_passives()
+		for passive_type in available_passives:
+			# Filter to only experiment-allowed passives
+			if int(passive_type) in EXPERIMENT_PASSIVES:
+				pool.append({
+					"card_type": CardType.PASSIVE,
+					"passive_type": passive_type
+				})
+
+	# Always add heal option
+	pool.append({
+		"card_type": CardType.HEAL
+	})
+
+
+func _randomize_full_cards(pool: Array[Dictionary]) -> void:
+	"""Generate full card pool for normal game mode."""
 	# 1. Add new ball types (not yet owned)
 	if BallRegistry:
 		var unowned := BallRegistry.get_unowned_ball_types()
@@ -185,10 +233,6 @@ func _randomize_cards() -> void:
 	pool.append({
 		"card_type": CardType.HEAL
 	})
-
-	pool.shuffle()
-	# Take first 3 (or fewer if pool is smaller)
-	_available_cards = pool.slice(0, mini(3, pool.size()))
 
 
 func _update_cards() -> void:
