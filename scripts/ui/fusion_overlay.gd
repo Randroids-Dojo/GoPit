@@ -38,6 +38,9 @@ var _available_ultimate_fusions: Array[Dictionary] = []
 
 func _ready() -> void:
 	visible = false
+	# CRITICAL: On web builds, invisible Controls can still block input
+	# Set mouse_filter to IGNORE when hidden to allow input pass-through
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	# Connect tab buttons
@@ -76,6 +79,8 @@ func show_fusion_ui() -> void:
 	_selected_evolved_balls.clear()
 	_update_tab_availability()
 	_on_tab_pressed(Tab.FISSION)  # Default to Fission
+	# Enable input capture when showing overlay
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = true
 	get_tree().paused = true
 
@@ -516,4 +521,6 @@ func _on_confirm_pressed() -> void:
 
 	# Close overlay and resume game
 	visible = false
+	# CRITICAL: Disable input capture when hiding to prevent blocking on web
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	get_tree().paused = false
