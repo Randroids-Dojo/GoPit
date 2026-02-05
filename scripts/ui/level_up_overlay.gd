@@ -54,6 +54,9 @@ var _animation_complete: bool = false
 
 func _ready() -> void:
 	visible = false
+	# CRITICAL: On web builds, invisible Controls can still block input
+	# Set mouse_filter to IGNORE when hidden to allow input pass-through
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_first_levelup_seen = _load_hint_state()
 	GameManager.level_up_triggered.connect(_on_level_up)
 	_setup_cards()
@@ -91,6 +94,8 @@ func _on_level_up() -> void:
 	# Game objects (balls, enemies, player) check this state and stop processing
 	_randomize_cards()
 	_update_cards()
+	# Enable input capture when showing overlay
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = true
 	_animation_complete = false
 	_animate_show()
@@ -405,6 +410,8 @@ func _apply_selection(index: int) -> void:
 	# Resume game
 	get_tree().paused = false
 	visible = false
+	# CRITICAL: Disable input capture when hiding to prevent blocking on web
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameManager.complete_level_up()
 
 

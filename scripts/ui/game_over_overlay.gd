@@ -22,6 +22,9 @@ var _pulse_tween: Tween = null
 
 func _ready() -> void:
 	visible = false
+	# CRITICAL: On web builds, invisible Controls can still block input
+	# Set mouse_filter to IGNORE when hidden to allow input pass-through
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_shop_hint_seen = _load_shop_hint_state()
 
 	if restart_button:
@@ -50,6 +53,8 @@ func _on_game_over() -> void:
 		_coins_earned = MetaManager.earn_coins(GameManager.current_wave, GameManager.player_level)
 
 	_update_stats()
+	# Enable input capture when showing overlay
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = true
 	_animate_show()
 	_show_shop_hint()
