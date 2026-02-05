@@ -685,6 +685,111 @@ Godot 4.x processes scripts in this order during `--import`:
 
 Step 2 happens before step 4, so `boss_base.gd` (alphabetically first) tries to resolve `EnemyBase` before `enemy_base.gd` has been processed.
 
+## Scene Initialization and GameManager State
+
+**CRITICAL: When creating new game scenes, you MUST initialize GameManager state correctly or nothing will work.**
+
+### The Problem
+
+`Player` and `EnemySpawner` (and other game systems) check `GameManager.current_state == PLAYING` before processing:
+
+```gdscript
+# From player.gd
+func _physics_process(_delta: float) -> void:
+    if GameManager.current_state != GameManager.GameState.PLAYING:
+        return  # Player won't move!
+
+# From enemy_spawner.gd
+func _on_spawn_timer_timeout() -> void:
+    if GameManager.current_state != GameManager.GameState.PLAYING:
+        _start_spawn_timer()  # Restart timer but don't spawn
+        return  # Enemies won't spawn!
+```
+
+If `GameManager.current_state` isn't set to `PLAYING`, symptoms include:
+- Player doesn't move (even though joystick visually responds)
+- Enemies don't spawn
+- Back/menu buttons may not work
+- Debug panels don't update
+
+### Rule 1: Set Game State at the START of `_ready()`
+
+When creating a new gameplay scene, set the state **immediately** at the top of `_ready()`:
+
+```gdscript
+# ❌ BAD - state set too late, after other initialization
+func _ready() -> void:
+    _setup_player()
+    _connect_signals()
+    enemy_spawner.start_spawning()  # Won't work! State still MENU
+    GameManager.current_state = GameManager.GameState.PLAYING  # Too late!
+
+# ✅ GOOD - state set first, before any game logic
+func _ready() -> void:
+    # CRITICAL: Set state FIRST
+    get_tree().paused = false
+    GameManager.current_state = GameManager.GameState.PLAYING
+
+    # Now other initialization can work
+    _setup_player()
+    _connect_signals()
+    enemy_spawner.start_spawning()  # Works! State is PLAYING
+```
+
+### Rule 2: Unpause the Tree First
+
+Previous scenes may have paused the tree (pause menu, overlays, etc.). Always unpause at the start:
+
+```gdscript
+func _ready() -> void:
+    # CRITICAL: Unpause tree immediately on scene load
+    get_tree().paused = false
+
+    # CRITICAL: Set game state before any game logic
+    GameManager.current_state = GameManager.GameState.PLAYING
+
+    # Rest of initialization...
+```
+
+### Rule 3: Reset State When Leaving
+
+When transitioning away from a gameplay scene, reset the state:
+
+```gdscript
+func _on_back_pressed() -> void:
+    # Ensure tree is not paused so scene change works
+    get_tree().paused = false
+
+    # Reset state before leaving
+    GameManager.current_state = GameManager.GameState.MENU
+
+    get_tree().change_scene_to_file("res://scenes/menu.tscn")
+```
+
+### Checklist for New Gameplay Scenes
+
+When creating a scene where gameplay should happen:
+
+- [ ] `get_tree().paused = false` at the very start of `_ready()`
+- [ ] `GameManager.current_state = GameManager.GameState.PLAYING` before ANY game logic
+- [ ] State set BEFORE starting spawners, timers, or other game systems
+- [ ] State reset to `MENU` when leaving the scene
+- [ ] Tree unpaused before `change_scene_to_file()`
+
+### Common Gotcha: Spawner Started Before State Set
+
+```gdscript
+# ❌ BAD - spawner checks state, but state isn't PLAYING yet
+func _start_experiment() -> void:
+    enemy_spawner.start_spawning()  # Timer starts, but spawns will be skipped
+    GameManager.current_state = GameManager.GameState.PLAYING  # Too late for first timer!
+
+# ✅ GOOD - state set before spawner
+func _start_experiment() -> void:
+    GameManager.current_state = GameManager.GameState.PLAYING  # Set FIRST
+    enemy_spawner.start_spawning()  # Now spawns will work
+```
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
