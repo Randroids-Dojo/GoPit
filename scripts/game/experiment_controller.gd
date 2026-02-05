@@ -75,6 +75,10 @@ var _elapsed_time := 0.0
 var _keyboard_aim_direction := Vector2.ZERO
 var _selected_setting := 0  # Currently selected setting for tuning
 
+# Debug logging for troubleshooting web issues
+var _debug_log: Array[String] = []
+var _copy_log_button: Button = null
+
 # Metrics for side-by-side comparison with BallxPit
 var _metrics := {
 	# Timing metrics
@@ -105,35 +109,88 @@ var _sample_interval := 1.0
 var _sample_timer := 0.0
 
 
+func _log(message: String) -> void:
+	"""Add a timestamped message to the debug log."""
+	var timestamp := "%.2f" % (Time.get_ticks_msec() / 1000.0)
+	var entry := "[%s] %s" % [timestamp, message]
+	_debug_log.append(entry)
+	print(entry)  # Also print to console for desktop debugging
+
+
+func _copy_logs_to_clipboard() -> void:
+	"""Copy all debug logs to clipboard."""
+	var log_text := "\n".join(_debug_log)
+	DisplayServer.clipboard_set(log_text)
+	_log("Logs copied to clipboard (%d entries)" % _debug_log.size())
+
+
+func _create_copy_log_button() -> void:
+	"""Create a button to copy logs to clipboard."""
+	_copy_log_button = Button.new()
+	_copy_log_button.text = "COPY LOGS"
+	_copy_log_button.position = Vector2(20, 70)
+	_copy_log_button.size = Vector2(100, 40)
+	_copy_log_button.pressed.connect(_copy_logs_to_clipboard)
+	$UI.add_child(_copy_log_button)
+	_log("Copy log button created")
+
+
 func _ready() -> void:
+	_log("=== EXPERIMENT _ready() START ===")
+	_log("OS: %s" % OS.get_name())
+	_log("Tree paused: %s" % str(get_tree().paused))
+
 	# CRITICAL: Unpause tree immediately on scene load
 	get_tree().paused = false
+	_log("Tree unpaused")
+
+	# Create copy log button for debugging
+	_create_copy_log_button()
+
+	# Log node availability
+	_log("Nodes - move_joystick: %s" % str(move_joystick != null))
+	_log("Nodes - aim_joystick: %s" % str(aim_joystick != null))
+	_log("Nodes - fire_button: %s" % str(fire_button != null))
+	_log("Nodes - ball_spawner: %s" % str(ball_spawner != null))
+	_log("Nodes - player: %s" % str(player != null))
+	_log("Nodes - enemy_spawner: %s" % str(enemy_spawner != null))
+	_log("Nodes - back_button: %s" % str(back_button != null))
+	_log("Nodes - debug_label: %s" % str(debug_label != null))
 
 	# Connect UI signals immediately (these don't depend on autoloads)
 	if move_joystick:
 		move_joystick.direction_changed.connect(_on_move_direction_changed)
 		move_joystick.released.connect(_on_move_released)
+		_log("Connected move_joystick signals")
 
 	if aim_joystick:
 		aim_joystick.direction_changed.connect(_on_aim_direction_changed)
 		aim_joystick.released.connect(_on_aim_released)
+		_log("Connected aim_joystick signals")
 
 	if fire_button:
 		fire_button.fired.connect(_on_fire_pressed)
+		_log("Connected fire_button signal")
 
 	if ball_spawner:
 		ball_spawner.balls_container = balls_container
 		ball_spawner.ball_caught.connect(_on_ball_caught)
+		_log("Connected ball_spawner signals")
 
 	if player:
 		player.position = Vector2(360, 900)
 		player.moved.connect(_on_player_moved)
+		_log("Connected player signals, position set")
 
 	if enemy_spawner and enemy_spawner.has_signal("enemy_spawned"):
 		enemy_spawner.enemy_spawned.connect(_on_enemy_spawned)
+		_log("Connected enemy_spawner signal")
 
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
+		_log("Connected back_button signal")
+
+	_log("=== _ready() COMPLETE, calling deferred _initialize_game_state ===")
 
 	# Defer autoload-dependent initialization to ensure they're ready
 	# This is critical for web builds where autoload timing can differ
@@ -143,30 +200,53 @@ func _ready() -> void:
 func _initialize_game_state() -> void:
 	"""Initialize game state after autoloads are ready (deferred from _ready).
 	This separation is critical for web builds where autoload timing differs."""
+	_log("=== _initialize_game_state() START ===")
+
+	# Log autoload availability
+	_log("Autoloads - GameManager: %s" % str(GameManager != null))
+	_log("Autoloads - BallRegistry: %s" % str(BallRegistry != null))
+	_log("Autoloads - FusionRegistry: %s" % str(FusionRegistry != null))
+	_log("Autoloads - SoundManager: %s" % str(SoundManager != null))
 
 	# Load gem scene for spawning
 	gem_scene = load("res://scenes/entities/gem.tscn")
+	_log("gem_scene loaded: %s" % str(gem_scene != null))
 
 	# Set game state to PLAYING so Player and EnemySpawner can work
 	if GameManager:
+		_log("GameManager.current_state BEFORE: %s" % str(GameManager.current_state))
 		GameManager.current_state = GameManager.GameState.PLAYING
+		_log("GameManager.current_state AFTER: %s" % str(GameManager.current_state))
 
 		# Reset GameManager XP for fresh level-up progression
 		GameManager.current_xp = 0
 		GameManager.player_level = 1
 		GameManager.xp_to_next_level = GameManager._calculate_xp_requirement(1)
+		_log("GameManager XP reset: xp=0, level=1, xp_to_next=%d" % GameManager.xp_to_next_level)
+	else:
+		_log("ERROR: GameManager is NULL!")
 
 	# Reset registries for fresh experiment (clean slate like BallxPit first level)
 	if BallRegistry:
 		BallRegistry.reset()
+		_log("BallRegistry reset")
+	else:
+		_log("WARNING: BallRegistry is NULL")
+
 	if FusionRegistry:
 		FusionRegistry.reset()
+		_log("FusionRegistry reset")
+	else:
+		_log("WARNING: FusionRegistry is NULL")
 
 	# Apply experiment settings to spawner
+	_log("Applying experiment settings...")
 	_apply_experiment_settings()
 
 	# Start experiment
+	_log("Starting experiment...")
 	_start_experiment()
+	_log("=== _initialize_game_state() COMPLETE ===")
 
 
 func _apply_experiment_settings() -> void:
@@ -190,8 +270,11 @@ func _apply_experiment_settings() -> void:
 
 func _start_experiment() -> void:
 	"""Start the experiment mode."""
+	_log("=== _start_experiment() START ===")
+
 	# Ensure tree is not paused (may have been paused in previous scene)
 	get_tree().paused = false
+	_log("Tree paused: %s" % str(get_tree().paused))
 
 	# Set GameManager state to PLAYING first, before any game logic
 	# This ensures Player._physics_process() and EnemySpawner work immediately
@@ -199,18 +282,26 @@ func _start_experiment() -> void:
 		GameManager.current_state = GameManager.GameState.PLAYING
 		GameManager.current_wave = 1
 		GameManager.player_hp = GameManager.max_hp
+		_log("GameManager state set: PLAYING, wave=1, hp=%d" % GameManager.player_hp)
+	else:
+		_log("ERROR: GameManager is NULL in _start_experiment!")
 
 	# Set experiment controller state
 	_game_active = true
 	_current_wave = 1
 	_enemies_killed = 0
 	_elapsed_time = 0.0
+	_log("Experiment state: _game_active=true, wave=1")
 
 	# Start spawning (now GameManager.current_state is already PLAYING)
 	if enemy_spawner and enemy_spawner.has_method("start_spawning"):
 		enemy_spawner.start_spawning()
+		_log("enemy_spawner.start_spawning() called")
+	else:
+		_log("WARNING: enemy_spawner missing or no start_spawning method")
 
 	_update_debug_display()
+	_log("=== _start_experiment() COMPLETE ===")
 
 
 func _process(delta: float) -> void:
@@ -571,7 +662,13 @@ func _save_metrics_to_file() -> void:
 
 
 # Signal handlers
+var _move_input_count := 0
+var _fire_input_count := 0
+
 func _on_move_direction_changed(direction: Vector2) -> void:
+	_move_input_count += 1
+	if _move_input_count <= 3:  # Only log first few to avoid spam
+		_log("Move input #%d: dir=%s, player=%s" % [_move_input_count, str(direction), str(player != null)])
 	if player and player.has_method("set_movement_input"):
 		player.set_movement_input(direction)
 
@@ -597,6 +694,9 @@ func _on_aim_released() -> void:
 
 
 func _on_fire_pressed() -> void:
+	_fire_input_count += 1
+	if _fire_input_count <= 5:  # Only log first few
+		_log("Fire input #%d: ball_spawner=%s" % [_fire_input_count, str(ball_spawner != null)])
 	if ball_spawner:
 		ball_spawner.fire()
 		_metrics["total_balls_fired"] += 1
