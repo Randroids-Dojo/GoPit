@@ -107,27 +107,9 @@ var _sample_timer := 0.0
 
 func _ready() -> void:
 	# CRITICAL: Unpause tree immediately on scene load
-	# This must happen before ANY game logic to ensure processing works
 	get_tree().paused = false
 
-	# Set game state to PLAYING immediately so Player and EnemySpawner can work
-	GameManager.current_state = GameManager.GameState.PLAYING
-
-	# Load gem scene for spawning
-	gem_scene = load("res://scenes/entities/gem.tscn")
-
-	# Reset registries for fresh experiment (clean slate like BallxPit first level)
-	if BallRegistry:
-		BallRegistry.reset()
-	if FusionRegistry:
-		FusionRegistry.reset()
-
-	# Reset GameManager XP for fresh level-up progression
-	GameManager.current_xp = 0
-	GameManager.player_level = 1
-	GameManager.xp_to_next_level = GameManager._calculate_xp_requirement(1)
-
-	# Set up basic connections
+	# Connect UI signals immediately (these don't depend on autoloads)
 	if move_joystick:
 		move_joystick.direction_changed.connect(_on_move_direction_changed)
 		move_joystick.released.connect(_on_move_released)
@@ -152,6 +134,33 @@ func _ready() -> void:
 
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
+
+	# Defer autoload-dependent initialization to ensure they're ready
+	# This is critical for web builds where autoload timing can differ
+	call_deferred("_initialize_game_state")
+
+
+func _initialize_game_state() -> void:
+	"""Initialize game state after autoloads are ready (deferred from _ready).
+	This separation is critical for web builds where autoload timing differs."""
+
+	# Load gem scene for spawning
+	gem_scene = load("res://scenes/entities/gem.tscn")
+
+	# Set game state to PLAYING so Player and EnemySpawner can work
+	if GameManager:
+		GameManager.current_state = GameManager.GameState.PLAYING
+
+		# Reset GameManager XP for fresh level-up progression
+		GameManager.current_xp = 0
+		GameManager.player_level = 1
+		GameManager.xp_to_next_level = GameManager._calculate_xp_requirement(1)
+
+	# Reset registries for fresh experiment (clean slate like BallxPit first level)
+	if BallRegistry:
+		BallRegistry.reset()
+	if FusionRegistry:
+		FusionRegistry.reset()
 
 	# Apply experiment settings to spawner
 	_apply_experiment_settings()
@@ -182,14 +191,14 @@ func _apply_experiment_settings() -> void:
 func _start_experiment() -> void:
 	"""Start the experiment mode."""
 	# Ensure tree is not paused (may have been paused in previous scene)
-	# NOTE: This is also done in _ready(), but we do it again here for safety
 	get_tree().paused = false
 
 	# Set GameManager state to PLAYING first, before any game logic
 	# This ensures Player._physics_process() and EnemySpawner work immediately
-	GameManager.current_state = GameManager.GameState.PLAYING
-	GameManager.current_wave = 1
-	GameManager.player_hp = GameManager.max_hp
+	if GameManager:
+		GameManager.current_state = GameManager.GameState.PLAYING
+		GameManager.current_wave = 1
+		GameManager.player_hp = GameManager.max_hp
 
 	# Set experiment controller state
 	_game_active = true
