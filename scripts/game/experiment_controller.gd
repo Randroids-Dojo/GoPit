@@ -106,6 +106,13 @@ var _sample_timer := 0.0
 
 
 func _ready() -> void:
+	# CRITICAL: Unpause tree immediately on scene load
+	# This must happen before ANY game logic to ensure processing works
+	get_tree().paused = false
+
+	# Set game state to PLAYING immediately so Player and EnemySpawner can work
+	GameManager.current_state = GameManager.GameState.PLAYING
+
 	# Load gem scene for spawning
 	gem_scene = load("res://scenes/entities/gem.tscn")
 
@@ -175,20 +182,24 @@ func _apply_experiment_settings() -> void:
 func _start_experiment() -> void:
 	"""Start the experiment mode."""
 	# Ensure tree is not paused (may have been paused in previous scene)
+	# NOTE: This is also done in _ready(), but we do it again here for safety
 	get_tree().paused = false
+
+	# Set GameManager state to PLAYING first, before any game logic
+	# This ensures Player._physics_process() and EnemySpawner work immediately
+	GameManager.current_state = GameManager.GameState.PLAYING
+	GameManager.current_wave = 1
+	GameManager.player_hp = GameManager.max_hp
+
+	# Set experiment controller state
 	_game_active = true
 	_current_wave = 1
 	_enemies_killed = 0
 	_elapsed_time = 0.0
 
-	# Start spawning
+	# Start spawning (now GameManager.current_state is already PLAYING)
 	if enemy_spawner and enemy_spawner.has_method("start_spawning"):
 		enemy_spawner.start_spawning()
-
-	# Reset GameManager state for experiment
-	GameManager.current_state = GameManager.GameState.PLAYING
-	GameManager.current_wave = 1
-	GameManager.player_hp = GameManager.max_hp
 
 	_update_debug_display()
 
@@ -665,6 +676,9 @@ func _on_back_pressed() -> void:
 	"""Return to main menu."""
 	_game_active = false
 
+	# Ensure tree is not paused so scene change works
+	get_tree().paused = false
+
 	# Stop spawning
 	if enemy_spawner and enemy_spawner.has_method("stop_spawning"):
 		enemy_spawner.stop_spawning()
@@ -674,6 +688,9 @@ func _on_back_pressed() -> void:
 		for enemy in enemies_container.get_children():
 			if enemy != enemy_spawner:
 				enemy.queue_free()
+
+	# Reset GameManager state before returning to menu
+	GameManager.current_state = GameManager.GameState.MENU
 
 	# Return to main scene
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
