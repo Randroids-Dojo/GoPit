@@ -308,6 +308,62 @@ See [docs/godot-ui-best-practices.md](docs/godot-ui-best-practices.md) for compr
 - `1` (PASS) - Processes and passes to parent
 - `2` (IGNORE) - Click-through (visual overlays)
 
+### CRITICAL: mouse_filter = IGNORE Is Not Enough on Web Builds
+
+**Setting `mouse_filter = IGNORE` doesn't fully disable input on web/HTML5 builds.** If a Control node has a `gui_input` signal connected, it can still intercept events and block input from reaching game controls underneath.
+
+**Symptoms:**
+- Touch/click input works in editor but not on web
+- Controls visually respond but game doesn't react
+- Input works after overlay fades out, then stops working
+
+**The Problem:**
+```gdscript
+# ❌ BAD - gui_input still connected, blocks input on web even with IGNORE
+func _ready() -> void:
+    mouse_filter = Control.MOUSE_FILTER_IGNORE
+    # But gui_input.connect() was called earlier or in scene...
+```
+
+**The Fix - Disconnect gui_input when hiding overlays:**
+```gdscript
+# ✅ GOOD - disconnect signal AND set mouse_filter
+func hide_overlay() -> void:
+    # Disconnect gui_input to stop intercepting events
+    if gui_input.is_connected(_on_gui_input):
+        gui_input.disconnect(_on_gui_input)
+
+    mouse_filter = Control.MOUSE_FILTER_IGNORE
+    visible = false
+
+func show_overlay() -> void:
+    # Reconnect when showing
+    if not gui_input.is_connected(_on_gui_input):
+        gui_input.connect(_on_gui_input)
+
+    mouse_filter = Control.MOUSE_FILTER_STOP
+    visible = true
+```
+
+**Alternative - Use process_mode to fully disable:**
+```gdscript
+func hide_overlay() -> void:
+    visible = false
+    mouse_filter = Control.MOUSE_FILTER_IGNORE
+    process_mode = Node.PROCESS_MODE_DISABLED  # Fully disables the node
+
+func show_overlay() -> void:
+    process_mode = Node.PROCESS_MODE_INHERIT
+    mouse_filter = Control.MOUSE_FILTER_STOP
+    visible = true
+```
+
+**Checklist for overlays/panels that fade in/out:**
+- [ ] Disconnect `gui_input` signal when hiding
+- [ ] Set `mouse_filter = IGNORE` when hidden
+- [ ] Consider `process_mode = DISABLED` for full deactivation
+- [ ] Test on web build, not just in editor
+
 ## Parallel Test Execution
 
 PlayGodot tests run in **parallel by default** (4 workers) for faster feedback.
