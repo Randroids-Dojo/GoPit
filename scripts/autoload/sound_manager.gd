@@ -75,7 +75,11 @@ enum SoundType {
 	EVOLUTION,       # Success fanfare
 	FISSION,         # Energy burst
 	# Combat feedback
-	WEAK_POINT_HIT  # Critical weak point hit (boss crown, etc.)
+	WEAK_POINT_HIT,  # Critical weak point hit (boss crown, etc.)
+	# UI sounds
+	BUTTON_CLICK,    # Short click for UI buttons
+	PAUSE,           # Pause game
+	UNPAUSE          # Unpause/resume game
 }
 
 # Per-sound pitch/volume variance settings
@@ -311,6 +315,13 @@ func _generate_sound(sound_type: SoundType) -> AudioStreamWAV:
 		# Combat feedback
 		SoundType.WEAK_POINT_HIT:
 			data = _generate_weak_point_hit()
+		# UI sounds
+		SoundType.BUTTON_CLICK:
+			data = _generate_blip(0.04, 800.0, 600.0)  # Short, crisp click
+		SoundType.PAUSE:
+			data = _generate_sweep(0.12, 500.0, 300.0)  # Descending tone
+		SoundType.UNPAUSE:
+			data = _generate_sweep(0.12, 300.0, 500.0)  # Ascending tone
 
 	wav.data = data
 	return wav
