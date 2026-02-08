@@ -557,6 +557,51 @@ gh run watch
 gh run view <RUN_ID> --log-failed
 ```
 
+## CI Workflow Rules: Never Swallow Errors
+
+**CRITICAL: CI steps that validate code MUST fail the build on errors. Never use `|| true` or equivalent to silence failures in validation steps.**
+
+### The Problem
+
+Godot's `--headless --import` step catches GDScript parse errors (missing enum members, bad extends, syntax errors) but its exit code can be unreliable. If the step silently continues, broken scripts ship to production and only surface as runtime errors in the browser console.
+
+### Rule 1: Never Use `|| true` on Validation Steps
+
+```yaml
+# BAD - parse errors silently ignored, broken code ships to production
+- run: godot --headless --import . --quit 2>&1 || true
+
+# GOOD - capture output, grep for errors, fail explicitly
+- run: |
+    godot --headless --import . --quit 2>&1 | tee import.log
+    if grep -q "SCRIPT ERROR" import.log; then
+      echo "=== GDScript Parse Errors Detected ==="
+      grep -A1 "SCRIPT ERROR" import.log
+      exit 1
+    fi
+```
+
+### Rule 2: Check Output, Not Just Exit Codes
+
+Godot may exit 0 even when scripts have parse errors. Always grep the output for `SCRIPT ERROR` to catch:
+- Missing enum members (`Cannot find member "X" in base`)
+- Unresolved class names (`Could not resolve class "X"`)
+- Syntax errors (`Parse Error`)
+- Failed script loads (`Failed to load script`)
+
+### Rule 3: Apply to ALL Import Steps
+
+The CI workflow has three import steps (PlayGodot tests, production build, PR preview). **All three** must validate - a parse error caught only in tests but not in the build step still ships broken code if tests are disabled.
+
+### Checklist for CI Changes
+
+- [ ] No `|| true` on any validation/import step
+- [ ] Output captured with `tee` and checked for `SCRIPT ERROR`
+- [ ] All import steps in all jobs have the same error checking
+- [ ] Test by intentionally introducing a parse error and confirming CI fails
+
+---
+
 ## GDScript Safe Node References
 
 **CRITICAL: Prevent "Node not found" and nil reference errors in CI/headless mode.**
