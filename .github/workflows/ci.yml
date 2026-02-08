@@ -53,8 +53,15 @@ jobs:
         run: |
           echo "=== Importing Godot Project ==="
           # Use Xvfb for headless display
+          # Capture output to check for SCRIPT ERROR (parse failures)
           xvfb-run --auto-servernum ./godot-automation/godot.linuxbsd.editor.x86_64.mono \
-            --headless --import . --quit 2>&1 || true
+            --headless --import . --quit 2>&1 | tee import.log
+          if grep -q "SCRIPT ERROR" import.log; then
+            echo ""
+            echo "=== GDScript Parse Errors Detected ==="
+            grep -A1 "SCRIPT ERROR" import.log
+            exit 1
+          fi
           echo "Import complete"
 
       - name: Run PlayGodot Tests
@@ -92,10 +99,16 @@ jobs:
           use-dotnet: false
           include-templates: true
 
-      # Import Godot project
+      # Import Godot project - fail on GDScript parse errors
       - name: Import Godot Project
         run: |
-          timeout 60 godot --headless --import . --quit 2>&1 || true
+          timeout 60 godot --headless --import . --quit 2>&1 | tee import.log
+          if grep -q "SCRIPT ERROR" import.log; then
+            echo ""
+            echo "=== GDScript Parse Errors Detected ==="
+            grep -A1 "SCRIPT ERROR" import.log
+            exit 1
+          fi
 
       # Build Web export
       - name: Build Web Export
@@ -174,10 +187,16 @@ jobs:
           use-dotnet: false
           include-templates: true
 
-      # Import and build
+      # Import and build - fail on GDScript parse errors
       - name: Build Web Export
         run: |
-          timeout 60 godot --headless --import . --quit 2>&1 || true
+          timeout 60 godot --headless --import . --quit 2>&1 | tee import.log
+          if grep -q "SCRIPT ERROR" import.log; then
+            echo ""
+            echo "=== GDScript Parse Errors Detected ==="
+            grep -A1 "SCRIPT ERROR" import.log
+            exit 1
+          fi
           mkdir -p build
           godot --headless --export-release "Web" ./build/index.html
           cp vercel.json build/
