@@ -67,7 +67,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	super._process(delta)
 	_pulse += delta * 2.0
 
 	# Update tentacle animation
@@ -329,8 +328,8 @@ func _do_void_attack() -> void:
 
 func _do_summon_attack() -> void:
 	# Summon a mix of enemies
-	var swarm_scene := load("res://scenes/entities/enemies/swarm.tscn")
-	var bat_scene := load("res://scenes/entities/enemies/bat.tscn")
+	var swarm_scene: PackedScene = load("res://scenes/entities/enemies/swarm.tscn")
+	var bat_scene: PackedScene = load("res://scenes/entities/enemies/bat.tscn")
 
 	spawn_adds(swarm_scene, 2, 100.0)
 	spawn_adds(bat_scene, 2, 120.0)

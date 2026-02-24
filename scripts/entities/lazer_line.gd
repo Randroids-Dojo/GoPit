@@ -9,7 +9,7 @@ signal effect_finished
 
 enum Orientation { HORIZONTAL, VERTICAL }
 
-var orientation: Orientation = Orientation.HORIZONTAL
+var orientation: int = Orientation.HORIZONTAL
 var line_color: Color = Color(1.0, 0.1, 0.1, 0.9)  # Bright red
 var glow_color: Color = Color(1.0, 0.4, 0.4, 0.4)  # Softer red glow
 var line_width: float = 8.0
@@ -110,7 +110,7 @@ func _deal_damage_to_enemies() -> void:
 
 	if enemies_hit > 0:
 		damage_dealt.emit(total_damage, enemies_hit)
-		SoundManager.play(SoundManager.SoundType.HIT)
+		SoundManager.play(SoundManager.SoundType.HIT_ENEMY)
 
 
 func _enemy_intersects_line(enemy: Node2D) -> bool:

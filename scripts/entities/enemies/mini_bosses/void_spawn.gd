@@ -44,7 +44,7 @@ func _perform_attack(attack_name: String) -> void:
 					GameManager.damage_player(damage_to_player)
 			_end_attack()
 		"summon":
-			var swarm_scene := load("res://scenes/entities/enemies/swarm.tscn")
+			var swarm_scene: PackedScene = load("res://scenes/entities/enemies/swarm.tscn")
 			var enemies := get_tree().get_first_node_in_group("enemies_container")
 			if enemies:
 				var swarm := swarm_scene.instantiate()

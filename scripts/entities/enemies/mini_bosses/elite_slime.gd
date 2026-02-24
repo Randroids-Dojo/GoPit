@@ -92,7 +92,7 @@ func _do_slam() -> void:
 
 func _do_split() -> void:
 	# Spawn 2 regular slimes
-	var slime_scene := load("res://scenes/entities/enemies/slime.tscn")
+	var slime_scene: PackedScene = load("res://scenes/entities/enemies/slime.tscn")
 	var enemies_container := get_tree().get_first_node_in_group("enemies_container")
 	if enemies_container:
 		for i in 2:

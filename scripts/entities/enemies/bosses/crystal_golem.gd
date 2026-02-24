@@ -54,8 +54,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	super._process(delta)
-
 	# Update shards
 	var to_remove := []
 	for i in range(_shards.size()):
@@ -289,7 +287,7 @@ func _do_shards_attack() -> void:
 
 
 func _do_summon_attack() -> void:
-	var golem_scene := load("res://scenes/entities/enemies/golem.tscn")
+	var golem_scene: PackedScene = load("res://scenes/entities/enemies/golem.tscn")
 	spawn_adds(golem_scene, 2, 100.0)
 	SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 	_end_attack()

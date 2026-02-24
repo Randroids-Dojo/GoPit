@@ -54,8 +54,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	super._process(delta)
-
 	# Update poison clouds
 	_cloud_timer += delta
 	if _cloud_timer >= 0.5 and _cloud_positions.size() > 0:
@@ -260,7 +258,7 @@ func _check_cloud_damage() -> void:
 
 
 func _do_swarm_attack() -> void:
-	var swarm_scene := load("res://scenes/entities/enemies/swarm.tscn")
+	var swarm_scene: PackedScene = load("res://scenes/entities/enemies/swarm.tscn")
 	spawn_adds(swarm_scene, 4, 120.0)
 	SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 	_end_attack()

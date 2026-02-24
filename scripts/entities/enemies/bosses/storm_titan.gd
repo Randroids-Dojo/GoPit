@@ -55,7 +55,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	super._process(delta)
 	_float_offset += delta * 2.0
 	queue_redraw()
 
@@ -272,7 +271,7 @@ func _do_chain_attack() -> void:
 
 
 func _do_storm_attack() -> void:
-	var bat_scene := load("res://scenes/entities/enemies/bat.tscn")
+	var bat_scene: PackedScene = load("res://scenes/entities/enemies/bat.tscn")
 	spawn_adds(bat_scene, 3, 100.0)
 	SoundManager.play(SoundManager.SoundType.LEVEL_UP)
 
