@@ -107,6 +107,17 @@ body {
 			<div id="status-notice"></div>
 		</div>
 
+		<script>
+// When embedded in a cross-origin iframe, browsers throttle requestAnimationFrame
+// and fire visibilitychange events that cause Godot to pause its main loop.
+// Override visibility APIs before Godot loads so the engine always sees an active page.
+if (window !== window.parent) {
+	Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
+	Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
+	document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
+}
+		</script>
+
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;
